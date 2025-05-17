@@ -8,25 +8,40 @@ import {
   useColorModeValue,
   Badge,
   Tooltip,
-  Image,
   HStack
 } from '@chakra-ui/react';
 import { FiExternalLink, FiCopy, FiLogOut } from 'react-icons/fi';
-import { useWallet } from '../../../contexts/WalletContext';
+import { 
+  useCurrentAccount, 
+  useCurrentWallet, 
+  useDisconnectWallet,
+  useSuiClientQuery
+} from '@mysten/dapp-kit';
 
 const WalletInfo = () => {
-  const { 
-    wallet, 
-    walletAddress, 
-    balance, 
-    disconnect, 
-    network 
-  } = useWallet();
+  const currentAccount = useCurrentAccount();
+  const { wallet } = useCurrentWallet();
+  const { mutate: disconnect } = useDisconnectWallet();
   
   const bgColor = useColorModeValue('white', '#18191b');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const textMutedColor = useColorModeValue('gray.600', 'gray.400');
+  
+  // Get wallet address
+  const walletAddress = currentAccount?.address || '';
+  
+  // Get wallet balance
+  const { data: balanceData, isPending } = useSuiClientQuery(
+    'getBalance',
+    {
+      owner: walletAddress,
+      coinType: '0x2::sui::SUI'
+    },
+    {
+      enabled: !!walletAddress
+    }
+  );
   
   // Format wallet address for display
   const formattedAddress = walletAddress 
@@ -43,33 +58,24 @@ const WalletInfo = () => {
   
   // Open explorer link
   const openExplorer = () => {
-    // Different explorers for different networks
-    const baseUrl = network?.name?.toLowerCase().includes('mainnet')
-      ? 'https://suiscan.xyz/mainnet/account/'
-      : network?.name?.toLowerCase().includes('testnet')
-        ? 'https://suiscan.xyz/testnet/account/'
-        : 'https://suiscan.xyz/devnet/account/';
+    // Explorer for Sui
+    const baseUrl = 'https://suiscan.xyz/testnet/account/';
     
     if (walletAddress) {
       window.open(`${baseUrl}${walletAddress}`, '_blank');
     }
   };
 
-  // Format balance for display with appropriate symbols
+  // Format balance for display
+  const balance = balanceData ? Number(balanceData.totalBalance) / 1000000000 : null;
   const formattedBalance = balance !== null 
     ? `${balance.toFixed(4)} SUI` 
-    : 'Loading...';
+    : isPending ? 'Loading...' : '0 SUI';
 
-  // Get the network display name
-  const getNetworkDisplayName = () => {
-    if (!network?.name) return 'Unknown';
-    
-    const name = network.name.toLowerCase();
-    if (name.includes('mainnet')) return 'Mainnet';
-    if (name.includes('testnet')) return 'Testnet';
-    if (name.includes('devnet')) return 'Devnet';
-    return network.name;
-  };
+  // If no wallet is connected, don't render
+  if (!currentAccount) {
+    return null;
+  }
 
   return (
     <Box 
@@ -83,39 +89,26 @@ const WalletInfo = () => {
     >
       <Flex justifyContent="space-between" alignItems="center" mb={3}>
         <HStack spacing={2}>
-          {wallet?.icon ? (
-            <Image 
-              src={wallet.icon} 
-              alt={`${wallet.name} icon`} 
-              boxSize="24px" 
-            />
-          ) : (
-            <Box 
-              w="24px" 
-              h="24px" 
-              bg="gray.500" 
-              color="white" 
-              borderRadius="full"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              fontWeight="bold"
-            >
-              {(wallet?.name || 'W').charAt(0)}
-            </Box>
-          )}
+          <Box 
+            w="24px" 
+            h="24px" 
+            bg="gray.500" 
+            color="white" 
+            borderRadius="full"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            fontWeight="bold"
+          >
+            {(wallet?.name || 'W').charAt(0)}
+          </Box>
           <Text fontWeight="bold" color={textColor}>
             {wallet?.name || 'Sui Wallet'}
           </Text>
         </HStack>
         
-        <Badge 
-          colorScheme={
-            getNetworkDisplayName() === 'Mainnet' ? 'green' : 
-            getNetworkDisplayName() === 'Testnet' ? 'purple' : 'orange'
-          }
-        >
-          {getNetworkDisplayName()}
+        <Badge colorScheme="purple">
+          Testnet
         </Badge>
       </Flex>
       
@@ -169,7 +162,7 @@ const WalletInfo = () => {
         variant="outline" 
         size="sm" 
         width="100%"
-        onClick={disconnect}
+        onClick={() => disconnect()}
       >
         Disconnect
       </Button>

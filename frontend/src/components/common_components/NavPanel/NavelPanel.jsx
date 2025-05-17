@@ -22,14 +22,13 @@ import {
   FiLogOut
 } from 'react-icons/fi';
 
-import { useWallet } from '../../../contexts/WalletContext';
-import WalletModal from '../WalletModal/WalletModal';
+import { ConnectButton } from '@mysten/dapp-kit';
+import { useCurrentAccount } from '@mysten/dapp-kit';
 
 import neura_icon_white from '../../../assets/icons/neura-black.svg';
 import neura_icon_dark from '../../../assets/icons/neura-white.svg';
 import aptos_apt_logo_black from '../../../assets/icons/Aptos_mark_BLK.svg';
 import aptos_apt_logo_white from '../../../assets/icons/Aptos_mark_WHT.svg';
-// Import these or create placeholder SVGs if they don't exist yet
 import wallet_connect from '../../../assets/icons/wallet-connect-no-bg.svg';
 
 const NavPanel = ({ 
@@ -38,19 +37,8 @@ const NavPanel = ({
   viewOnlyMode = false
 }) => {
   const { colorMode, toggleColorMode } = useColorMode();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const { 
-    connect, 
-    disconnect, 
-    account, 
-    wallet, 
-    connected,
-    connecting,
-    disconnecting,
-    walletAddress,
-    
-  } = useWallet();
-
+  const currentAccount = useCurrentAccount();
+  
   const bgColor = useColorModeValue('navbar.body.light', 'navbar.body.dark');
   const borderColor = useColorModeValue('navbar.border.light', 'navbar.border.dark');
   const iconColor = useColorModeValue('navbar.icon.light', 'navbar.icon.dark');
@@ -59,8 +47,6 @@ const NavPanel = ({
 
   // Add state to track the active button
   const [activeButton, setActiveButton] = useState(null);
-
-  console.log("NavPanel - Connected:", connected);
   
   // Update active button based on current path
   useEffect(() => {
@@ -80,16 +66,6 @@ const NavPanel = ({
       setActiveButton(null);
     }
   }, [currentPath]);
-  
-  // Handle wallet connection
-  const handleConnectWallet = async () => {
-    console.log("Button clicked");
-    if (connected) {
-      await disconnect();
-    } else {
-      onOpen();
-    }
-  };
 
   // Handle button clicks
   const handleButtonClick = (buttonName, action, route) => {
@@ -128,16 +104,6 @@ const NavPanel = ({
       }
     };
   };
-
-  // Determine wallet icon based on connection status
-  const walletIcon = connected 
-    ? wallet_connect
-    : (colorMode === 'light' ? aptos_apt_logo_black : aptos_apt_logo_white);
-  
-  // Set wallet tooltip text
-  const walletTooltip = connected 
-  ? `Connected: ${wallet?.name || 'Wallet'} (${walletAddress}...${walletAddress || ''})` 
-  : "Connect Wallet";
 
   return (
     <>
@@ -288,51 +254,49 @@ const NavPanel = ({
           
           <Box as="li" position="relative" w="100%" mb={3}>
             <Tooltip 
-              label={walletTooltip}
+              label={"Connect Wallet"} 
               placement="right" 
               bg={useColorModeValue("gray.900", "gray.900")} 
               hasArrow
             >
-              <Button 
-                {...getButtonStyles('wallet')}
-                onClick={handleConnectWallet}
-                aria-label={connected ? "Disconnect Wallet" : "Connect Wallet"}
-                disabled={viewOnlyMode || connecting || disconnecting}
-                position="relative"
-              >
-                {connecting ? (
-                  <Box position="relative" w="24px" h="24px" display="flex" alignItems="center" justifyContent="center">
-                    <Box 
-                      position="absolute"
-                      border="2px solid"
-                      borderColor={iconColor}
-                      borderRadius="full"
-                      width="24px"
-                      height="24px"
-                      borderBottomColor="transparent"
-                      animation="spin 1s linear infinite"
-                    />
-                  </Box>
-                ) : (
-                  <img 
-                    src={walletIcon} 
-                    alt={connected ? "Connected Wallet" : "Connect Wallet"} 
-                    width={25}
-                  />
-                )}
-                
-                {connected && (
-                  <Box 
-                    position="absolute"
-                    bottom="12px"
-                    right="12px"
-                    w="8px"
-                    h="8px"
-                    bg="green.400"
-                    borderRadius="full"
-                  />
-                )}
-              </Button>
+              {/* Replace the wallet button with ConnectButton from dApp Kit */}
+              {/* <Box display="flex" justifyContent="center" alignItems="center" h="56px"> */}
+    <Box position="relative">
+      <ConnectButton
+        connectText=""
+        connectedText=""
+        style={{
+          width: "100%",
+          height: "56px",
+          justifyContent: "center",
+          borderRadius: 0,
+          background: "transparent",
+          color: iconColor,
+          border: "none",
+          fontWeight: "normal",
+          fontSize: "inherit",
+          _hover: { 
+            background: hoverBgColor,
+            cursor: "pointer"
+          }
+        }}
+      />
+      {/* Overlay the wallet icon */}
+      <Box 
+        position="absolute" 
+        top="0" 
+        left="0" 
+        right="0" 
+        bottom="0" 
+        display="flex" 
+        alignItems="center" 
+        justifyContent="center" 
+        pointerEvents="none"
+      >
+        <img src={wallet_connect} alt="Wallet Connect" width="24px" height="24px" />
+      </Box>
+    </Box>
+              {/* </Box> */}
             </Tooltip>
           </Box>
           
@@ -355,7 +319,6 @@ const NavPanel = ({
           </Box>
         </VStack>
       </Box>
-      <WalletModal isOpen={isOpen} onClose={onClose} />
     </>
   );
 };

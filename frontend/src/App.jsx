@@ -9,7 +9,7 @@ import ChatInterfacePage from './pages/chat_interface_page';
 import AccessManagementPage from './pages/access_management_page';
 import theme from './theme';
 import { createNetworkConfig, SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
-import { getFullnodeUrl } from '@mysten/sui.js/client';
+import { getFullnodeUrl } from '@mysten/sui/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@mysten/dapp-kit/dist/index.css';
 import api_key from './api_key.json';
