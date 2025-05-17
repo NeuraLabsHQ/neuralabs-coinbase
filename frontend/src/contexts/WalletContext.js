@@ -1,187 +1,311 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  AptosWalletAdapterProvider, 
-  useWallet as useAptosWallet 
-} from '@aptos-labs/wallet-adapter-react';
-import { PetraWallet } from "petra-plugin-wallet-adapter";
-import { MartianWallet } from "@martianwallet/aptos-wallet-adapter";
-import { PontemWallet } from "@pontem/wallet-adapter-plugin";
-import { RiseWallet } from "@rise-wallet/wallet-adapter";
-import { FewchaWallet } from "fewcha-plugin-wallet-adapter";
-import { AptosClient } from 'aptos';
+import { SuiClient, getFullnodeUrl } from '@mysten/sui.js/client';
 
-// Create context for additional wallet-related state
+// Create context for wallet-related state
 const WalletContext = createContext(null);
 
 // Create provider component
 export const WalletContextProvider = ({ children, rpcUrl }) => {
-  // Initialize wallets
-  const wallets = [
-    new PetraWallet(),
-    new MartianWallet(),
-    new PontemWallet(),
-    new RiseWallet(),
-    new FewchaWallet()
-  ];
-
-  
-
   return (
-    <AptosWalletAdapterProvider
-      plugins={wallets}
-      autoConnect={true}
-      onError={(error) => {
-        console.error('Wallet error:', error);
-      }}
-    >
-      <InnerWalletContextProvider rpcUrl={rpcUrl}>
-        {children}
-      </InnerWalletContextProvider>
-    </AptosWalletAdapterProvider>
+    <InnerWalletContextProvider rpcUrl={rpcUrl}>
+      {children}
+    </InnerWalletContextProvider>
   );
 };
 
-// Inner provider that has access to the Aptos wallet context
+// Inner provider for wallet context
 const InnerWalletContextProvider = ({ children, rpcUrl }) => {
-  const { 
-    connect, 
-    disconnect, 
-    account, 
-    wallets, 
-    wallet, 
-    connected, 
-    connecting,
-    disconnecting,
-    network,
-    signAndSubmitTransaction,
-    signTransaction,
-    signMessage
-  } = useAptosWallet();
-
   const [client, setClient] = useState(null);
   const [walletAddress, setWalletAddress] = useState('');
   const [balance, setBalance] = useState(null);
-  const [isConnected, setConnected] = useState(false);
-  const [currentNetwork, setNetwork] = useState(null);
-  const [connectedWallet, setConnectedWallet] = useState(null);
+  const [connected, setConnected] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
+  const [network, setNetwork] = useState(rpcUrl ? 'custom' : 'testnet');
+  const [wallet, setWallet] = useState(null);
+  const [availableWallets, setAvailableWallets] = useState([]);
 
-  const safeConnect = async (connect, walletName) => {
-    try {
-      // Add a small delay to ensure wallet state is reset properly
-      await new Promise(resolve => setTimeout(resolve, 100));
-      return await connect(walletName);
-    } catch (error) {
-      // Handle ANS-related errors
-      if (error.message && (
-        error.message.includes("Cannot read properties of undefined") ||
-        error.message.includes("toString")
-      )) {
-        console.warn("Handled wallet connection ANS error:", error);
-        // Still consider this a successful connection if we have an account
-        return true;
-      }
-      // Re-throw other errors
-      throw error;
-    }
-  };
-
-  // Initialize Aptos client when RPC URL is provided
+  // Initialize Sui client
   useEffect(() => {
-    if (rpcUrl) {
-      const newClient = new AptosClient(rpcUrl);
+    try {
+      let endpoint;
+      if (rpcUrl) {
+        endpoint = rpcUrl;
+      } else {
+        // Use default endpoints based on network
+        endpoint = getFullnodeUrl('testnet');
+      }
+      
+      const newClient = new SuiClient({ url: endpoint });
       setClient(newClient);
+    } catch (error) {
+      console.error('Failed to initialize SUI client:', error);
     }
   }, [rpcUrl]);
 
-  // Update wallet address when account changes
+  // Detect and track available wallets
   useEffect(() => {
-    if (account) {
-      setWalletAddress(account.address);
+    const checkForWallets = () => {
+      const wallets = [];
       
-      // Fetch balance if client and account are available
-      if (client && account.address) {
-        fetchBalance(account.address);
+      if (window.slush) {
+        wallets.push({
+          name: 'Slush',
+          icon: 'https://slush.xyz/logo.png',
+          adapter: window.slush
+        });
       }
-    } else {
-      setWalletAddress('');
-      setBalance(null);
-    }
-  }, [account, client]);
+      
+      if (window.suiet) {
+        wallets.push({
+          name: 'Suiet',
+          icon: 'https://suiet.app/logo.png',
+          adapter: window.suiet
+        });
+      }
+      
+      if (window.sui) {
+        wallets.push({
+          name: 'Sui Wallet',
+          icon: 'https://sui.io/logo.png',
+          adapter: window.sui
+        });
+      }
+      
+      // Add other wallet detection as needed
+      
+      return wallets;
+    };
+    
+    // Initial check for wallets
+    const initialWallets = checkForWallets();
+    setAvailableWallets(initialWallets);
+    
+    // Function to handle wallet availability changes
+    const handleWalletChange = () => {
+      const updatedWallets = checkForWallets();
+      setAvailableWallets(updatedWallets);
+    };
+    
+    // Check for wallets periodically
+    const intervalId = setInterval(handleWalletChange, 2000);
+    
+    // Listen for wallet initialization events
+    window.addEventListener('load', handleWalletChange);
+    
+    // Cleanup
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('load', handleWalletChange);
+    };
+  }, []);
 
-  const disconnectWallet = () => {
-    if (connected) {
-      disconnect();
-    } else if (isConnected) {
-      // Manual disconnect for custom connections
+  // Connect to Slush wallet
+  const connectToSlush = async () => {
+    try {
+      setConnecting(true);
+      
+      if (!window.slush) {
+        throw new Error('Slush wallet not detected. Please install Slush wallet extension.');
+      }
+      
+      // Connect to wallet
+      const response = await window.slush.connect();
+      
+      // Set wallet details
+      if (response && response.accounts && response.accounts.length > 0) {
+        setWalletAddress(response.accounts[0]);
+        setConnected(true);
+        setWallet({
+          name: 'Slush',
+          icon: 'https://slush.xyz/logo.png',
+          adapter: window.slush
+        });
+        
+        // Fetch balance
+        if (client && response.accounts[0]) {
+          fetchBalance(response.accounts[0]);
+        }
+      } else {
+        throw new Error('No accounts found in wallet response');
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Failed to connect to Slush wallet:', error);
+      throw error;
+    } finally {
+      setConnecting(false);
+    }
+  };
+  
+  // Connect to any supported wallet by name
+  const connect = async (walletName) => {
+    try {
+      if (!walletName) {
+        throw new Error('Wallet name is required');
+      }
+      
+      setConnecting(true);
+      
+      // Normalize wallet name for comparison
+      const normalizedName = walletName.toLowerCase();
+      
+      // Find the wallet in available wallets
+      const targetWallet = availableWallets.find(w => 
+        w.name.toLowerCase() === normalizedName || 
+        w.name.toLowerCase().includes(normalizedName)
+      );
+      
+      if (!targetWallet) {
+        throw new Error(`${walletName} wallet not found. Please make sure it's installed.`);
+      }
+      
+      if (normalizedName === 'slush' || normalizedName.includes('slush')) {
+        return await connectToSlush();
+      }
+      
+      // Generic connect for other wallets
+      const response = await targetWallet.adapter.connect();
+      
+      if (response && response.accounts && response.accounts.length > 0) {
+        setWalletAddress(response.accounts[0]);
+        setConnected(true);
+        setWallet({
+          name: targetWallet.name,
+          icon: targetWallet.icon,
+          adapter: targetWallet.adapter
+        });
+        
+        if (client && response.accounts[0]) {
+          fetchBalance(response.accounts[0]);
+        }
+      } else {
+        throw new Error('No accounts found in wallet response');
+      }
+      
+      return response;
+    } catch (error) {
+      console.error(`Failed to connect to ${walletName} wallet:`, error);
+      throw error;
+    } finally {
+      setConnecting(false);
+    }
+  };
+  
+  // Disconnect from wallet
+  const disconnect = async () => {
+    try {
+      setDisconnecting(true);
+      
+      if (wallet?.adapter) {
+        try {
+          await wallet.adapter.disconnect();
+        } catch (error) {
+          console.warn('Error during disconnect:', error);
+          // Continue with state cleanup even if wallet disconnect fails
+        }
+      }
+      
+      // Reset wallet state
       setWalletAddress('');
       setBalance(null);
       setConnected(false);
-      setConnectedWallet(null);
+      setWallet(null);
+    } catch (error) {
+      console.error('Failed to disconnect wallet:', error);
+      throw error;
+    } finally {
+      setDisconnecting(false);
     }
   };
-
-//   const connectPetra = async () => {
-//     if (!window.aptos) {
-//       throw new Error('Petra Wallet not installed');
-//     }
-//     try {
-//       // Check Petra's network
-//       if (window.aptos.getNetwork) {
-//         const petraNetwork = await window.aptos.getNetwork();
-//         setNetwork(petraNetwork);
-        
-//         // if (petraNetwork !== 'Testnet') {
-//         //   throw new Error('Petra Wallet is not on Testnet. Please switch to Testnet in the Petra Wallet extension.');
-//         // }
-//       }
-
-//       const response = await window.aptos.connect();
-//       setWalletAddress(response.address);
-//       setConnected(true);
-//       setConnectedWallet('Petra');
-//       if (client && response.address) {
-//         fetchBalance(response.address);
-//       }
-//       return response;
-//     } catch (error) {
-//       throw error;
-//     }
-//   };
-
+  
   // Fetch account balance
   const fetchBalance = async (address) => {
     try {
-      const resources = await client.getAccountResources(address);
-      const aptosCoinResource = resources.find(
-        (r) => r.type === '0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>'
-      );
+      if (!client || !address) return;
       
-      if (aptosCoinResource) {
-        const coinBalance = aptosCoinResource.data.coin.value;
-        // Convert from octas (10^8) to APT
-        setBalance(parseInt(coinBalance) / 100000000);
-      }
+      const { totalBalance } = await client.getBalance({
+        owner: address,
+      });
+      
+      // Convert from MIST to SUI (1 SUI = 10^9 MIST)
+      setBalance(Number(totalBalance) / 1000000000);
     } catch (error) {
       console.error('Error fetching balance:', error);
     }
   };
+  
+  // Sign and execute transaction
+  const signAndExecuteTransaction = async (transaction) => {
+    if (!client || !walletAddress || !wallet?.adapter) {
+      throw new Error('Client, wallet address or wallet adapter not available');
+    }
+    
+    try {
+      const result = await wallet.adapter.signAndExecuteTransaction(transaction);
+      return result;
+    } catch (error) {
+      console.error('Transaction error:', error);
+      throw error;
+    }
+  };
+  
+  // Sign transaction (without executing)
+  const signTransaction = async (transaction) => {
+    if (!client || !walletAddress || !wallet?.adapter) {
+      throw new Error('Client, wallet address or wallet adapter not available');
+    }
+    
+    try {
+      const result = await wallet.adapter.signTransaction(transaction);
+      return result;
+    } catch (error) {
+      console.error('Transaction signing error:', error);
+      throw error;
+    }
+  };
+  
+  // Sign message
+  const signMessage = async (message) => {
+    if (!walletAddress || !wallet?.adapter) {
+      throw new Error('Wallet address or wallet adapter not available');
+    }
+    
+    try {
+      const result = await wallet.adapter.signMessage({
+        message: new TextEncoder().encode(message)
+      });
+      return result;
+    } catch (error) {
+      console.error('Message signing error:', error);
+      throw error;
+    }
+  };
+
+  // Account object for compatibility with existing components
+  const account = walletAddress ? { address: walletAddress } : null;
 
   return (
     <WalletContext.Provider 
       value={{ 
-        connect, 
-        disconnect, 
-        account, 
-        wallets, 
-        wallet, 
-        connected, 
+        connect,
+        connectToSlush,
+        disconnect,
+        account,
+        wallets: availableWallets,
+        wallet,
+        connected,
         connecting,
         disconnecting,
-        network,
+        network: {
+          name: network,
+          url: rpcUrl || getFullnodeUrl('testnet')
+        },
         walletAddress,
         balance,
         client,
-        signAndSubmitTransaction,
+        signAndExecuteTransaction,
         signTransaction,
         signMessage,
         fetchBalance

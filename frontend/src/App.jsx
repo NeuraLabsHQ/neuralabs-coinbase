@@ -8,57 +8,63 @@ import MarketplacePage from './pages/marketplace_page';
 import ChatInterfacePage from './pages/chat_interface_page';
 import AccessManagementPage from './pages/access_management_page';
 import theme from './theme';
-import { WalletContextProvider } from './contexts/WalletContext';
+import { createNetworkConfig, SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
+import { getFullnodeUrl } from '@mysten/sui.js/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import '@mysten/dapp-kit/dist/index.css';
 import api_key from './api_key.json';
 import { Buffer } from 'buffer';
 window.Buffer = window.Buffer || Buffer;
 
+// Config options for the networks you want to connect to
+const { networkConfig } = createNetworkConfig({
+  testnet: { url: getFullnodeUrl('testnet') },
+  mainnet: { url: getFullnodeUrl('mainnet') },
+});
 
-const API_URL = api_key.api_key;
-
+const queryClient = new QueryClient();
 
 function App() {
-
-  const aptosRpcUrl = API_URL;
-  // console.log("API_URL", aptosRpcUrl);
-
   return (
-    <ChakraProvider theme={theme}>
-      <ColorModeScript initialColorMode={theme.config.initialColorMode} />
-      <WalletContextProvider rpcUrl={aptosRpcUrl}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={
-            <Layout>
-              <DashboardPage />
-            </Layout>
-          } />
-          <Route path="/flow-builder" element={
-            <Layout>
-              <FlowBuilderPage />
-            </Layout>
-          } />
-          <Route path="/marketplace" element={
-            <Layout>
-              <MarketplacePage />
-            </Layout>
-          } />
-          <Route path="/chat" element={
-            <Layout>
-              <ChatInterfacePage />
-            </Layout>
-          } />
-          <Route path="/access-management" element={
-        <Layout>
-          <AccessManagementPage />
-        </Layout>
-          } />
-          {/* Add more routes as needed */}
-        </Routes>
-      </BrowserRouter>
-      </WalletContextProvider>
-    </ChakraProvider>
+    <QueryClientProvider client={queryClient}>
+      <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
+        <WalletProvider autoConnect={true} preferredWallets={['Slush']}>
+          <ChakraProvider theme={theme}>
+            <ColorModeScript initialColorMode={theme.config.initialColorMode} />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={
+                  <Layout>
+                    <DashboardPage />
+                  </Layout>
+                } />
+                <Route path="/flow-builder" element={
+                  <Layout>
+                    <FlowBuilderPage />
+                  </Layout>
+                } />
+                <Route path="/marketplace" element={
+                  <Layout>
+                    <MarketplacePage />
+                  </Layout>
+                } />
+                <Route path="/chat" element={
+                  <Layout>
+                    <ChatInterfacePage />
+                  </Layout>
+                } />
+                <Route path="/access-management" element={
+                  <Layout>
+                    <AccessManagementPage />
+                  </Layout>
+                } />
+              </Routes>
+            </BrowserRouter>
+          </ChakraProvider>
+        </WalletProvider>
+      </SuiClientProvider>
+    </QueryClientProvider>
   );
 }
 

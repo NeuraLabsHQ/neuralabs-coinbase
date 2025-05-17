@@ -45,12 +45,30 @@ const WalletInfo = () => {
   const openExplorer = () => {
     // Different explorers for different networks
     const baseUrl = network?.name?.toLowerCase().includes('mainnet')
-      ? 'https://explorer.aptoslabs.com/account/'
-      : 'https://explorer.aptoslabs.com/account/';
+      ? 'https://suiscan.xyz/mainnet/account/'
+      : network?.name?.toLowerCase().includes('testnet')
+        ? 'https://suiscan.xyz/testnet/account/'
+        : 'https://suiscan.xyz/devnet/account/';
     
     if (walletAddress) {
       window.open(`${baseUrl}${walletAddress}`, '_blank');
     }
+  };
+
+  // Format balance for display with appropriate symbols
+  const formattedBalance = balance !== null 
+    ? `${balance.toFixed(4)} SUI` 
+    : 'Loading...';
+
+  // Get the network display name
+  const getNetworkDisplayName = () => {
+    if (!network?.name) return 'Unknown';
+    
+    const name = network.name.toLowerCase();
+    if (name.includes('mainnet')) return 'Mainnet';
+    if (name.includes('testnet')) return 'Testnet';
+    if (name.includes('devnet')) return 'Devnet';
+    return network.name;
   };
 
   return (
@@ -65,22 +83,39 @@ const WalletInfo = () => {
     >
       <Flex justifyContent="space-between" alignItems="center" mb={3}>
         <HStack spacing={2}>
-          {wallet?.icon && (
+          {wallet?.icon ? (
             <Image 
               src={wallet.icon} 
               alt={`${wallet.name} icon`} 
               boxSize="24px" 
             />
+          ) : (
+            <Box 
+              w="24px" 
+              h="24px" 
+              bg="gray.500" 
+              color="white" 
+              borderRadius="full"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              fontWeight="bold"
+            >
+              {(wallet?.name || 'W').charAt(0)}
+            </Box>
           )}
           <Text fontWeight="bold" color={textColor}>
-            {wallet?.name || 'Wallet'}
+            {wallet?.name || 'Sui Wallet'}
           </Text>
         </HStack>
         
         <Badge 
-          colorScheme={network?.name?.toLowerCase().includes('mainnet') ? 'green' : 'purple'}
+          colorScheme={
+            getNetworkDisplayName() === 'Mainnet' ? 'green' : 
+            getNetworkDisplayName() === 'Testnet' ? 'purple' : 'orange'
+          }
         >
-          {network?.name || 'Testnet'}
+          {getNetworkDisplayName()}
         </Badge>
       </Flex>
       
@@ -122,7 +157,7 @@ const WalletInfo = () => {
           Balance
         </Text>
         <Text fontWeight="bold" fontSize="lg" color={textColor}>
-          {balance !== null ? `${balance.toFixed(4)} APT` : 'Loading...'}
+          {formattedBalance}
         </Text>
       </Box>
       
