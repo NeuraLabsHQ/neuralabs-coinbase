@@ -14,4 +14,5 @@ REDIS_PASSWORD=
 
 1. Make an .env file in the folder where the template.env and copy the field from template.env to the make env file
 2. then do `docker compose up -d` to start the docker container
+3. then do `/notebooks/initiate.ipynb` to initialize the database
 
