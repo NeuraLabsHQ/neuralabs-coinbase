@@ -1,0 +1,318 @@
+version: '1.0'
+
+# PostgreSQL Database Schema
+postgres:
+  # User and Authentication
+  tables:
+    USER_AUTH:
+      columns:
+        user_pub_key:
+          type: VARCHAR(255)
+          primary_key: true
+          description: "Public key of the user"
+        email:
+          type: VARCHAR(255)
+          nullable: true
+          description: "Optional email for the user"
+        chain_id:
+          type: INTEGER
+          references: CHAIN_DETAILS.chain_id
+          description: "Reference to the blockchain the user is associated with"
+    
+    # Agent Management
+    AGENT:
+      columns:
+        agent_id:
+          type: VARCHAR(64)
+          primary_key: true
+          description: "SHA256 hash of user_public_key and time_created"
+        creation_date:
+          type: TIMESTAMP
+          default: "CURRENT_TIMESTAMP"
+          description: "When the agent was created"
+        owner:
+          type: VARCHAR(255)
+          references: USER_AUTH.user_pub_key
+          description: "Owner of the agent"
+        status:
+          type: VARCHAR(20)
+          check: "IN ('Active', 'Not Published')"
+          description: "Current status of the agent"
+        tags:
+          type: JSONB
+          nullable: true
+          description: "Metadata tags for the agent"
+        license:
+          type: VARCHAR(100)
+          nullable: true
+          description: "License information"
+        fork:
+          type: VARCHAR(64)
+          nullable: true
+          description: "Reference to forked agent if applicable"
+        socials:
+          type: JSONB
+          nullable: true
+          description: "Social media links"
+        description:
+          type: TEXT
+          nullable: true
+          description: "Agent description"
+        name:
+          type: VARCHAR(255)
+          description: "Agent name"
+        chain_id:
+          type: INTEGER
+          references: CHAIN_DETAILS.chain_id
+          description: "Blockchain reference"
+    
+    UNPUBLISHED_AGENT:
+      columns:
+        agent_id:
+          type: VARCHAR(64)
+          primary_key: true
+          references: AGENT.agent_id
+          description: "References AGENT table"
+        last_edited_time:
+          type: TIMESTAMP
+          default: "CURRENT_TIMESTAMP"
+          description: "Timestamp of last modification"
+        workflow:
+          type: JSONB
+          description: "JSON object representing the agent's workflow"
+        md5:
+          type: VARCHAR(32)
+          description: "Hash of the workflow for integrity checking"
+    
+    PUBLISHED_AGENT:
+      columns:
+        agent_id:
+          type: VARCHAR(64)
+          primary_key: true
+          references: AGENT.agent_id
+          description: "References AGENT table"
+        last_edited_time:
+          type: TIMESTAMP
+          default: "CURRENT_TIMESTAMP"
+          description: "Timestamp of last modification"
+        workflow:
+          type: JSONB
+          description: "JSON object representing the agent's workflow"
+        md5:
+          type: VARCHAR(32)
+          description: "Hash of the workflow for integrity checking"
+    
+    METADATA:
+      columns:
+        agent_id:
+          type: VARCHAR(64)
+          primary_key: true
+          references: AGENT.agent_id
+          description: "References AGENT table"
+        markdown_object:
+          type: JSONB
+          description: "JSON containing markdown documentation"
+    
+    # Blockchain Integration
+    BLOCKCHAIN_AGENT_DATA:
+      columns:
+        agent_id:
+          type: VARCHAR(64)
+          primary_key: true
+          references: AGENT.agent_id
+          description: "References AGENT table"
+        version:
+          type: VARCHAR(20)
+          description: "Version of the agent on blockchain"
+        published_date:
+          type: TIMESTAMP
+          description: "When published to blockchain"
+        published_hash:
+          type: VARCHAR(64)
+          description: "Last updated blockchain hash"
+        contract_id:
+          type: VARCHAR(64)
+          references: CONTRACT_DETAILS.contract_id
+          description: "Smart contract reference"
+        nft_id:
+          type: VARCHAR(64)
+          description: "NFT identifier"
+        nft_mint_trx_id:
+          type: VARCHAR(64)
+          description: "Transaction ID for NFT minting"
+    
+    CHAIN_DETAILS:
+      columns:
+        chain_id:
+          type: INTEGER
+          primary_key: true
+          description: "Chain identifier"
+        chain:
+          type: VARCHAR(100)
+          description: "Name of the blockchain"
+        chain_status:
+          type: VARCHAR(50)
+          description: "Current status of the chain"
+        chain_explorer:
+          type: VARCHAR(255)
+          description: "URL to blockchain explorer"
+    
+    CONTRACT_DETAILS:
+      columns:
+        contract_id:
+          type: VARCHAR(64)
+          primary_key: true
+          description: "Contract identifier"
+        chain_id:
+          type: INTEGER
+          references: CHAIN_DETAILS.chain_id
+          description: "References CHAIN_DETAILS"
+        contract_name:
+          type: VARCHAR(100)
+          description: "Name of the smart contract"
+        contract_version:
+          type: VARCHAR(20)
+          description: "Version of the contract"
+    
+    # Access Control
+    NFT_ACCESS:
+      columns:
+        user_id:
+          type: VARCHAR(255)
+          references: USER_AUTH.user_pub_key
+          description: "User with access"
+        nft_id:
+          type: VARCHAR(64)
+          description: "NFT granting access"
+        access_level:
+          type: INTEGER
+          references: ACCESS_LEVEL_TABLE.access_level
+          description: "Permission level"
+        timestamp:
+          type: TIMESTAMP
+          default: "CURRENT_TIMESTAMP"
+          description: "When access was granted"
+      primary_key: ["user_id", "nft_id"]
+    
+    ACCESS_LEVEL_TABLE:
+      columns:
+        access_level:
+          type: INTEGER
+          primary_key: true
+          description: "Primary key, numeric level"
+        access_level_name:
+          type: VARCHAR(50)
+          description: "Name of the access tier"
+        descriptions_and_permissions:
+          type: JSONB
+          description: "Detailed permission descriptions"
+    
+    # Chat System
+    USERS:
+      columns:
+        user_id:
+          type: UUID
+          primary_key: true
+          default: "gen_random_uuid()"
+          description: "UUID primary key"
+        username:
+          type: VARCHAR(100)
+          description: "User's display name"
+        email:
+          type: VARCHAR(255)
+          nullable: true
+          description: "Contact email"
+        created_at:
+          type: TIMESTAMP
+          default: "CURRENT_TIMESTAMP"
+          description: "Account creation timestamp"
+    
+    CONVERSATIONS:
+      columns:
+        conversation_id:
+          type: UUID
+          primary_key: true
+          default: "gen_random_uuid()"
+          description: "UUID primary key"
+        user_id:
+          type: UUID
+          references: USERS.user_id
+          description: "References USERS table"
+        title:
+          type: VARCHAR(255)
+          description: "Conversation title"
+        created_at:
+          type: TIMESTAMP
+          default: "CURRENT_TIMESTAMP"
+          description: "When conversation started"
+    
+    MESSAGES:
+      columns:
+        message_id:
+          type: UUID
+          primary_key: true
+          default: "gen_random_uuid()"
+          description: "UUID primary key"
+        conversation_id:
+          type: UUID
+          references: CONVERSATIONS.conversation_id
+          description: "References CONVERSATIONS table"
+        sender_type:
+          type: VARCHAR(10)
+          check: "IN ('user', 'assistant')"
+          description: "Either 'user' or 'assistant'"
+        agent_id:
+          type: VARCHAR(64)
+          references: AGENT.agent_id
+          nullable: true
+          description: "Optional reference to an agent"
+        content:
+          type: TEXT
+          description: "The message text"
+        created_at:
+          type: TIMESTAMP
+          default: "CURRENT_TIMESTAMP"
+          description: "Message timestamp"
+
+# Redis Database Schema
+redis:
+  # Session Management
+  keys:
+    USER_SESSION:
+      key_pattern: "user_session:{user_id}"
+      type: hash
+      fields:
+        - name: user_id
+          description: "User identifier"
+        - name: session_id
+          description: "Session token"
+      ttl: 86400  # 24 hours in seconds
+    
+    # Real-time Workflow Editing
+    WORKFLOW_LIVE_EDITOR:
+      key_pattern: "workflow_live_editor:{agent_id}"
+      type: hash
+      fields:
+        - name: agent_id
+          description: "Key identifying the agent being edited"
+        - name: workflow
+          description: "JSON object of the workflow being edited"
+        - name: last_updated
+          description: "Timestamp of last update"
+      ttl: 3600  # 1 hour in seconds, reset on update
+
+# Synchronization System
+synchronization:
+  schedule_interval_seconds: 60  # Run every minute
+  sync_conditions:
+    - key_pattern: "workflow_live_editor:*"
+      idle_time_seconds: 120  # 2 minutes of no updates
+  actions:
+    - type: "sync_to_postgres"
+      source: "redis:WORKFLOW_LIVE_EDITOR"
+      destination: "postgres:UNPUBLISHED_AGENT"
+      fields_mapping:
+        workflow: workflow
+      additional_updates:
+        last_edited_time: "CURRENT_TIMESTAMP"
+        md5: "MD5(workflow)"
