@@ -1,0 +1,45 @@
+## Neuralabs API Configuration
+
+# Server settings
+server:
+  host: "0.0.0.0"
+  port: 8000
+  reload: true
+  workers: 4
+
+# Cross-Origin Resource Sharing settings
+cors:
+  allow_origins:
+    - "http://localhost:3000"
+    - "https://app.neuralabs.xyz"
+  allow_credentials: true
+
+# Database settings
+database:
+  postgres:
+    host: "localhost"
+    port: 5432
+    user: "neuralabs_postgres"
+    password: "neurapass@2025"
+    dbname: "neuralabs"
+  redis:
+    host: "localhost"
+    port: 6379
+    db: 0
+    password: null
+    
+# Blockchain settings
+blockchain:
+  supported_chains:
+    - chain_id: 1
+      name: "Ethereum"
+      rpc_url: "https://mainnet.infura.io/v3/your_infura_key"
+    - chain_id: 137
+      name: "Polygon"
+      rpc_url: "https://polygon-rpc.com"
+
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/neuralabs.log"

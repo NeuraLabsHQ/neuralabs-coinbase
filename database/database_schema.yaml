@@ -2,14 +2,18 @@ version: '1.0'
 
 # PostgreSQL Database Schema
 postgres:
-  # User and Authentication
+  # User and Authentication (Combined table)
   tables:
     USER_AUTH:
       columns:
         user_pub_key:
           type: VARCHAR(255)
           primary_key: true
-          description: "Public key of the user"
+          description: "Public key of the user, primary identifier"
+        username:
+          type: VARCHAR(100)
+          nullable: false
+          description: "User's display name"
         email:
           type: VARCHAR(255)
           nullable: true
@@ -18,6 +22,10 @@ postgres:
           type: INTEGER
           references: CHAIN_DETAILS.chain_id
           description: "Reference to the blockchain the user is associated with"
+        created_at:
+          type: TIMESTAMP
+          default: "CURRENT_TIMESTAMP"
+          description: "Account creation timestamp"
     
     # Agent Management
     AGENT:
@@ -208,25 +216,6 @@ postgres:
           description: "Detailed permission descriptions"
     
     # Chat System
-    USERS:
-      columns:
-        user_id:
-          type: UUID
-          primary_key: true
-          default: "gen_random_uuid()"
-          description: "UUID primary key"
-        username:
-          type: VARCHAR(100)
-          description: "User's display name"
-        email:
-          type: VARCHAR(255)
-          nullable: true
-          description: "Contact email"
-        created_at:
-          type: TIMESTAMP
-          default: "CURRENT_TIMESTAMP"
-          description: "Account creation timestamp"
-    
     CONVERSATIONS:
       columns:
         conversation_id:
@@ -235,9 +224,9 @@ postgres:
           default: "gen_random_uuid()"
           description: "UUID primary key"
         user_id:
-          type: UUID
-          references: USERS.user_id
-          description: "References USERS table"
+          type: VARCHAR(255)
+          references: USER_AUTH.user_pub_key
+          description: "References USER_AUTH table"
         title:
           type: VARCHAR(255)
           description: "Conversation title"
@@ -279,7 +268,7 @@ redis:
   # Session Management
   keys:
     USER_SESSION:
-      key_pattern: "user_session:{user_id}"
+      key_pattern: "user_session:jwt:{token}"  # Changed from user_id to token
       type: hash
       fields:
         - name: user_id
