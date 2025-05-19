@@ -9,10 +9,16 @@ from utils.logger import logger
 class LLMText(ElementBase):
     """LLM Text Generation Element."""
     
-    def __init__(self, element_id: str, name: str, description: str,
-                 input_schema: Dict[str, Any], output_schema: Dict[str, Any],
-                 model: str = "DeepSeek R1 AWS", temperature: float = 0.65,
-                 max_tokens: int = 1000, wrapper_prompt: str = ""):
+    def __init__(self, 
+                 element_id: str, 
+                 name: str, 
+                 description: str,
+                 input_schema: Dict[str, Any], 
+                 output_schema: Dict[str, Any],
+                 model: str = None, 
+                 temperature: float = 0.65,
+                 max_tokens: int = 1000, 
+                 wrapper_prompt: str = ""):
         super().__init__(
             element_id=element_id,
             name=name,
