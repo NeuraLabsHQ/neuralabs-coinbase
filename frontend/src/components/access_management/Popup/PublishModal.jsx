@@ -33,7 +33,7 @@ const PublishModal = ({ isOpen, onClose, onPublish }) => {
       <ModalOverlay />
       <ModalContent bg="#18191b" color="white" borderRadius="md">
         <ModalHeader fontSize="lg" fontWeight="bold">
-          Publish and Share Kedro-Viz
+          Publish and Deploy on Aptos Testnet
         </ModalHeader>
         <ModalBody>
           <VStack spacing={4} align="stretch">
@@ -43,11 +43,9 @@ const PublishModal = ({ isOpen, onClose, onPublish }) => {
                 Prerequisites
               </Text>
               <Text fontSize="xs" color="gray.400">
-                Deploying and hosting Kedro-Viz requires access keys or user
-                credentials, depending on the chosen service provider. To use
-                this feature, please add your ACCESS KEYS or credentials as
-                environment variables in your project. More information can be
-                found in the{" "}
+              Deploying workflow on Aptos Testnet requires a connected wallet with sufficient test APT tokens.
+        To use this feature, please ensure you have the Petra or Pontem wallet extension installed and connected
+        with your account. You can get free test tokens from the Aptos Faucet if needed.{" "}
                 <Text as="span" color="blue.400" textDecor="underline">
                   documentation
                 </Text>
@@ -61,8 +59,9 @@ const PublishModal = ({ isOpen, onClose, onPublish }) => {
                 Disclaimer
               </Text>
               <Text fontSize="xs" color="gray.400">
-                Kedro-Viz contains preview data for multiple datasets. You can
-                enable or disable all previews when publishing Kedro-Viz.
+              This workflow will be published to the Aptos Testnet blockchain and will be publicly visible.
+        The testnet environment is for development purposes only, and any tokens or data on the testnet
+        have no real-world value. Test thoroughly before deploying to mainnet.
               </Text>
             </Box>
 
@@ -72,7 +71,7 @@ const PublishModal = ({ isOpen, onClose, onPublish }) => {
                 Please enter the required information below.
               </Text>
 
-              <FormControl mb={3}>
+              {/* <FormControl mb={3}>
                 <FormLabel fontSize="sm">Hosting platform</FormLabel>
                 <Select
                   placeholder="Select a hosting platform"
@@ -84,12 +83,12 @@ const PublishModal = ({ isOpen, onClose, onPublish }) => {
                   <option value="gcp">GCP</option>
                   <option value="azure">Azure</option>
                 </Select>
-              </FormControl>
+              </FormControl> */}
 
               <FormControl mb={3}>
-                <FormLabel fontSize="sm">Version name</FormLabel>
+                <FormLabel fontSize="sm">Version Description</FormLabel>
                 <Input
-                  placeholder="Enter name"
+                  placeholder="Enter Description"
                   size="sm"
                   bg="gray.700"
                   borderColor="gray.600"
@@ -110,7 +109,7 @@ const PublishModal = ({ isOpen, onClose, onPublish }) => {
                 />
               </FormControl>
 
-              <FormControl display="flex" alignItems="center">
+              {/* <FormControl display="flex" alignItems="center">
                 <FormLabel fontSize="sm" mb={0}>
                   All dataset previews
                 </FormLabel>
@@ -121,7 +120,7 @@ const PublishModal = ({ isOpen, onClose, onPublish }) => {
                 <Text fontSize="sm" ml={2}>
                   {allPreviews ? "On" : "Off"}
                 </Text>
-              </FormControl>
+              </FormControl> */}
             </Box>
           </VStack>
         </ModalBody>
