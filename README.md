@@ -56,7 +56,7 @@
 
 This paper presents NeuraLabs, a novel platform that combines artificial intelligence (AI) workflows with blockchain technology to create an ecosystem where AI processes can be owned, traded, and executed as non-fungible tokens (NFTs). The platform introduces a granular access control system with six distinct levels of ownership, enabling unprecedented flexibility in how AI workflows can be shared, monetized, and utilized. 
 
-The system architecture consists of three primary components: the Neura Execution Engine (Backend 1), the Neura Message Passer (Backend 2), and the Client Application (Frontend), all working in concert with the Aptos blockchain. This paper details the technical implementation of these components, their interactions, data flow, storage mechanisms, and the role that blockchain technology plays in preserving intellectual property rights while fostering an open marketplace for AI workflows.
+The system architecture consists of three primary components: the Neura Execution Engine (Backend 1), the Neura Message Passer (Backend 2), and the Client Application (Frontend), all working in concert with the SUI blockchain. This paper details the technical implementation of these components, their interactions, data flow, storage mechanisms, and the role that blockchain technology plays in preserving intellectual property rights while fostering an open marketplace for AI workflows.
 
 The NeuraLabs platform represents a significant advancement in the intersection of artificial intelligence and distributed ledger technologies, creating new paradigms for intellectual property management in the rapidly evolving AI landscape. By tokenizing AI workflows and implementing granular access controls, the platform addresses key challenges in attribution, compensation, and rights management while enabling new business models for AI innovation.
 
@@ -64,7 +64,7 @@ The NeuraLabs platform represents a significant advancement in the intersection 
 
 The convergence of artificial intelligence and blockchain technology has created new opportunities for addressing ownership, attribution, and monetization of AI-generated content and workflows. As AI capabilities continue to advance, questions of who owns the processes, models, and outputs have become increasingly complex. Traditional intellectual property frameworks struggle to accommodate the collaborative, iterative nature of AI development and the ease with which digital assets can be replicated.
 
-NeuraLabs addresses these challenges by leveraging blockchain technology to create a transparent, secure system for managing ownership and access to AI workflows. By representing workflows as non-fungible tokens (NFTs) on the Aptos blockchain, the platform establishes clear provenance and enables fine-grained control over how workflows can be used, modified, and shared.
+NeuraLabs addresses these challenges by leveraging blockchain technology to create a transparent, secure system for managing ownership and access to AI workflows. By representing workflows as non-fungible tokens (NFTs) on the SUI blockchain, the platform establishes clear provenance and enables fine-grained control over how workflows can be used, modified, and shared.
 
 The key innovations of the NeuraLabs platform include:
 
@@ -107,7 +107,7 @@ Figure 1 illustrates the high-level architecture and interactions between these 
         ^                                    ^
         |                                    |
         v                                    v
-[Flow Creator Canvas]                [Aptos Blockchain]
+[Flow Creator Canvas]                [SUI Blockchain]
 [Chat Interface]                     [NFT Smart Contract]
 [Access Management]
 [Marketplace]
@@ -122,11 +122,11 @@ The bidirectional arrows represent real-time communication channels that enable 
 
 ### 2.2 Role of Blockchain in the System
 
-The Aptos blockchain forms the cryptographic foundation of the NeuraLabs ecosystem, providing immutable, transparent record-keeping and decentralized execution of access control logic. By leveraging blockchain technology, the platform creates a trustless environment where rights can be verified and enforced without requiring centralized authorities or manual oversight.
+The SUI blockchain forms the cryptographic foundation of the NeuraLabs ecosystem, providing immutable, transparent record-keeping and decentralized execution of access control logic. By leveraging blockchain technology, the platform creates a trustless environment where rights can be verified and enforced without requiring centralized authorities or manual oversight.
 
-The Aptos blockchain serves several critical functions within the NeuraLabs ecosystem:
+The SUI blockchain serves several critical functions within the NeuraLabs ecosystem:
 
-1. **Ownership Registry**: The blockchain maintains an authoritative record of which users own which AI workflow NFTs. This ownership registry cannot be altered except through cryptographically signed transactions from the current owner, ensuring that ownership claims remain secure and verifiable. The Move-based smart contract implements a resource-oriented approach to represent workflow ownership, aligning with Aptos's resource-focused programming model.
+1. **Ownership Registry**: The blockchain maintains an authoritative record of which users own which AI workflow NFTs. This ownership registry cannot be altered except through cryptographically signed transactions from the current owner, ensuring that ownership claims remain secure and verifiable. The Move-based smart contract implements a resource-oriented approach to represent workflow ownership, aligning with SUI's resource-focused programming model.
 
 2. **Access Control**: Beyond simple ownership, the blockchain manages the granular access permissions for each workflow. The smart contract implements sophisticated logic for tracking which users have been granted which access levels, including default access levels for users not explicitly listed. This on-chain access control system ensures that permission rules cannot be circumvented or modified by unauthorized parties.
 
@@ -138,7 +138,7 @@ The Aptos blockchain serves several critical functions within the NeuraLabs ecos
 
 The blockchain ensures that access to AI workflows is cryptographically secure, transparently tracked, and properly compensated. By moving the ownership and access control to the blockchain, the system can operate in a trustless manner where even the operators of the execution engine cannot violate the access rights of workflow creators. This creates a foundation for a sustainable ecosystem where intellectual property rights are protected while enabling flexible sharing and monetization models.
 
-The choice of Aptos as the blockchain platform leverages its high-performance Move virtual machine, parallel execution capabilities, and resource-oriented programming model. These features make it particularly well-suited for managing the complex ownership and access patterns required for AI workflow NFTs.
+The choice of SUI as the blockchain platform leverages its high-performance Move virtual machine, parallel execution capabilities, and resource-oriented programming model. These features make it particularly well-suited for managing the complex ownership and access patterns required for AI workflow NFTs.
 
 ## 3. Technical Components
 
@@ -173,7 +173,7 @@ The Execution Engine implements a modular architecture with well-defined compone
 
 - **StreamManager**: This component handles the streaming of execution events and results to listeners via WebSockets. It implements different streaming strategies based on the listener type, supporting both Backend 2 connectivity and direct client connections. The StreamManager includes mechanisms for handling connection disruptions, ensuring message delivery even when temporary network issues occur.
 
-- **ServiceIntegrations**: These specialized components connect to external services like AWS Bedrock for AI model inference and the Aptos blockchain for data verification or recording. Each integration implements retry logic, error handling, and response transformation to present a consistent interface to the workflow elements regardless of the peculiarities of the external service.
+- **ServiceIntegrations**: These specialized components connect to external services like AWS Bedrock for AI model inference and the SUI blockchain for data verification or recording. Each integration implements retry logic, error handling, and response transformation to present a consistent interface to the workflow elements regardless of the peculiarities of the external service.
 
 - **Flow Control Elements**: These specialized elements manage the execution flow path based on conditions. They include components for branching, merging parallel paths, and selecting between alternative execution routes. Flow control elements enable workflows to implement sophisticated logic like if-then-else structures, loops, and dynamic path selection based on intermediate results.
 
@@ -263,7 +263,7 @@ The Message Passer implements multiple communication protocols to serve differen
 
 3. **RESTful API**: For non-streaming operations, the Message Passer exposes a comprehensive RESTful API that follows industry best practices for endpoint design, authentication, and error handling. This API provides access to workflow management functions, user settings, and historical data. The API is fully documented with OpenAPI specifications and includes appropriate rate limiting and security measures.
 
-4. **Blockchain RPC**: Communication with the Aptos blockchain nodes occurs through Remote Procedure Call (RPC) interfaces specific to the blockchain protocol. These interactions include transaction submission, state queries, and event monitoring. The blockchain RPC implementation includes retry logic, node failover, and transaction status tracking to ensure reliable operation even when individual blockchain nodes experience issues.
+4. **Blockchain RPC**: Communication with the SUI blockchain nodes occurs through Remote Procedure Call (RPC) interfaces specific to the blockchain protocol. These interactions include transaction submission, state queries, and event monitoring. The blockchain RPC implementation includes retry logic, node failover, and transaction status tracking to ensure reliable operation even when individual blockchain nodes experience issues.
 
 Each communication protocol implements appropriate security measures, including authentication, encryption, and input validation. The protocols are designed to work together seamlessly, enabling different interaction patterns while maintaining a consistent security model and user experience.
 
@@ -298,7 +298,7 @@ The frontend is implemented using modern web technologies that enable rich, resp
 
 - **WebSocket API**: The frontend maintains persistent connections to the Message Passer for real-time communication. These connections enable immediate updates as workflows execute and provide channels for interactive inputs. The WebSocket implementation includes sophisticated handling of connection management, including authentication, reconnection strategies, and message buffering during connection disruptions.
 
-- **Aptos Web3 SDK**: For blockchain interaction, the frontend integrates the Aptos Web3 SDK, which provides capabilities for transaction creation, signing, and submission. This integration allows users to authorize blockchain operations directly from the interface without requiring separate wallet applications. The implementation includes appropriate security measures for handling cryptographic operations and clear user confirmation flows for blockchain transactions.
+- **SUI Web3 SDK**: For blockchain interaction, the frontend integrates the SUI Web3 SDK, which provides capabilities for transaction creation, signing, and submission. This integration allows users to authorize blockchain operations directly from the interface without requiring separate wallet applications. The implementation includes appropriate security measures for handling cryptographic operations and clear user confirmation flows for blockchain transactions.
 
 - **Canvas-based Flow Editor**: The workflow creation interface is built on HTML5 Canvas technology, providing high-performance rendering of complex workflow graphs. The editor implements custom rendering algorithms optimized for workflow visualization and editing, with support for panning, zooming, and multi-element selection. It includes sophisticated interaction handling for operations like dragging connections between elements and resizing components.
 
@@ -308,7 +308,7 @@ The frontend implementation emphasizes performance and responsiveness, with care
 
 ### 3.4 Smart Contract Implementation
 
-The NeuraLabs NFT smart contract is implemented on the Aptos blockchain using the Move programming language. This contract provides the cryptographic foundation for ownership and access control, implementing the rules that govern how workflows can be owned, transferred, and accessed. The choice of Aptos and Move provides advantages in terms of resource-oriented programming, parallel execution, and formal verification capabilities.
+The NeuraLabs NFT smart contract is implemented on the SUI blockchain using the Move programming language. This contract provides the cryptographic foundation for ownership and access control, implementing the rules that govern how workflows can be owned, transferred, and accessed. The choice of SUI and Move provides advantages in terms of resource-oriented programming, parallel execution, and formal verification capabilities.
 
 ![Smart Contract Implementation](./documentation/images/05_blockchain.svg)
 
@@ -455,9 +455,9 @@ The NeuraLabs platform implements a sophisticated data management strategy that 
 
 ### 5.1 On-chain Data
 
-The platform leverages the Aptos blockchain for storing critical ownership and access control information that benefits from the transparency, immutability, and tamper-resistance of distributed ledger technology:
+The platform leverages the SUI blockchain for storing critical ownership and access control information that benefits from the transparency, immutability, and tamper-resistance of distributed ledger technology:
 
-1. **NFT Ownership Records**: The blockchain serves as the authoritative registry of who owns each workflow NFT. These ownership records are implemented as Move resources directly associated with user accounts, following Aptos's resource-oriented programming model. The ownership records include basic metadata about each workflow, such as its identifier, name, and creation date, while more extensive data remains off-chain for efficiency.
+1. **NFT Ownership Records**: The blockchain serves as the authoritative registry of who owns each workflow NFT. These ownership records are implemented as Move resources directly associated with user accounts, following SUI's resource-oriented programming model. The ownership records include basic metadata about each workflow, such as its identifier, name, and creation date, while more extensive data remains off-chain for efficiency.
 
 2. **Access Rights**: The blockchain stores the complete map of which users have been granted which access levels for each workflow. This information is structured as nested tables that associate user addresses with token identifiers and access level values. By keeping this information on-chain, the platform ensures that access rights remain transparent and cannot be modified except through authorized transactions from the workflow owner.
 
@@ -631,7 +631,7 @@ sequenceDiagram
     participant Frontend as Client Application
     participant Wallet as Wallet Provider
     participant Backend2 as Neura Message Passer
-    participant Blockchain as Aptos Blockchain
+    participant Blockchain as SUI Blockchain
     participant Backend1 as Neura Execution Engine
     participant AIService as AI Service (Bedrock)
     participant Database as Database & Storage
@@ -1028,7 +1028,7 @@ The platform implements a multi-layered security architecture that protects inte
 
 The security architecture includes several distinct layers:
 
-1. **Blockchain-based Authentication**: The platform leverages the Aptos blockchain's cryptographic capabilities to provide strong authentication of user identities. Users control their blockchain accounts through private keys that provide cryptographic proof of identity for all platform interactions. This authentication is non-repudiable, meaning users cannot later deny having performed actions signed with their private key. The authentication system supports various wallet integration options, including hardware wallets for enhanced security.
+1. **Blockchain-based Authentication**: The platform leverages the SUI blockchain's cryptographic capabilities to provide strong authentication of user identities. Users control their blockchain accounts through private keys that provide cryptographic proof of identity for all platform interactions. This authentication is non-repudiable, meaning users cannot later deny having performed actions signed with their private key. The authentication system supports various wallet integration options, including hardware wallets for enhanced security.
 
 2. **Smart Contract Enforcement**: The Move-based smart contract provides on-chain validation of access rights, implementing the rules that govern workflow ownership and permissions. This enforcement happens at the blockchain level, making it resistant to tampering or circumvention by any single party. The smart contract implementation leverages Move's resource-oriented programming model and formal verification capabilities to reduce the risk of security vulnerabilities. Key operations require cryptographic signatures that prove the requester has appropriate authority.
 
@@ -1282,7 +1282,7 @@ The NeuraLabs platform represents a novel intersection of artificial intelligenc
 
 The three-tier architecture—consisting of the Neura Execution Engine, the Neura Message Passer, and the Client Application—provides a robust foundation for creating, executing, and trading AI workflows. This architecture carefully separates concerns while maintaining efficient, secure communication between components. The Execution Engine provides the computational capabilities for running workflows, the Message Passer handles coordination and data persistence, and the Client Application delivers intuitive interfaces tailored to different user needs.
 
-The platform's integration with the Aptos blockchain ensures transparent ownership and access control through smart contracts implemented in the Move programming language. This blockchain foundation creates a trustless environment where intellectual property rights can be clearly established and securely enforced without requiring centralized authorities or manual oversight.
+The platform's integration with the SUI blockchain ensures transparent ownership and access control through smart contracts implemented in the Move programming language. This blockchain foundation creates a trustless environment where intellectual property rights can be clearly established and securely enforced without requiring centralized authorities or manual oversight.
 
 The granular access control system, with its six distinct levels, enables unprecedented flexibility in how AI workflows can be shared, monetized, and utilized. This system supports a range of business models from simple usage licensing to complex collaborative development, creating new economic opportunities throughout the AI ecosystem.
 
@@ -1294,7 +1294,7 @@ The NeuraLabs platform represents not just a technical achievement but a new mod
 
 ## References
 
-1. Aptos Labs. (2023). Move Programming Language Reference.
+1. SUI Labs. (2023). Move Programming Language Reference.
 2. FastAPI Development Team. (2023). FastAPI Documentation.
 3. WebSocket Protocol. IETF RFC 6455.
 4. Directed Acyclic Graph Execution Models in Distributed Systems.
