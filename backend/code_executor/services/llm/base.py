@@ -14,7 +14,7 @@ class BaseModel(abc.ABC):
             client: AWS Bedrock client
             model_id: AWS Bedrock model ID
         """
-        self.client = client
+        self.client:'boto3.Session.client'  = client
         self.model_id = model_id
     
     @abc.abstractmethod

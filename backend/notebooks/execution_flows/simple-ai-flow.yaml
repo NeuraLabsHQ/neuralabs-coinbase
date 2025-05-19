@@ -65,7 +65,10 @@ flow_definition:
       # model: anthropic.claude-3-sonnet-20240229-v1:0
       # model: deepseek.r1-v1:0
       # model: arn:aws:bedrock:us-east-2::foundation-model/deepseek.r1-v1:0
+      # model: arn:aws:bedrock:us-east-1:559050205657:inference-profile/us.deepseek.r1-v1:0
       model: arn:aws:bedrock:us-east-2:559050205657:inference-profile/us.deepseek.r1-v1:0
+      # model: arn:aws:bedrock:us-east-2:inference-profile/us.deepseek.r1-v1:0
+      
       temperature: 0.7
       max_tokens: 1000
       wrapper_prompt: "You are a helpful AI assistant. Please respond to the following: {prompt}\n\nContext: {context}, enclose the chain of thought in <think>  </think> tags. and answer in <answer> </answer> tags." 
