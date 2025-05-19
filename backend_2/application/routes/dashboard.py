@@ -228,6 +228,7 @@ async def get_flow_detail(
             status_code=404,
             detail="Flow not found"
         )
+    # log flow_detail
     
     # Sanitize data to ensure correct types
     flow_detail = sanitize_data(flow_detail)
