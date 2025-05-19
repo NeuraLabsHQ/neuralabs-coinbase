@@ -26,7 +26,13 @@ database:
     host: "localhost"
     port: 6379
     db: 0
-    password: null
+    password: neurapass@2025
+    
+# JWT Authentication settings
+jwt:
+  secret_key: "neuralabs_123qwerq" # Change this to a secure random string in production
+  algorithm: "HS256"
+  access_token_expire_minutes: 1440  # 24 hours
     
 # Blockchain settings
 blockchain:

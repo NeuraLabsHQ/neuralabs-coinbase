@@ -1,7 +1,7 @@
 """
 Dashboard routes for Neuralabs application
 """
-from fastapi import APIRouter, Depends, HTTPException, Query, Path
+from fastapi import APIRouter, Depends, HTTPException, Query, Path, Request
 from typing import List, Dict, Any, Optional, Union
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -137,7 +137,7 @@ router = APIRouter()
 
 
 @router.get("/all", response_model=DashboardResponse)
-async def get_dashboard_data(current_user: str = Depends(get_current_user)):
+async def get_dashboard_data(request: Request, current_user: str = Depends(get_current_user)):
     """
     Get all dashboard data, including My Flows and Other Flows categorized by access level
     """
@@ -159,6 +159,7 @@ async def get_dashboard_data(current_user: str = Depends(get_current_user)):
 
 @router.get("/flows/recent", response_model=List[FlowBase])
 async def get_recent_flows(
+    request: Request,
     limit: int = Query(10, description="Number of flows to return", ge=1, le=50),
     current_user: str = Depends(get_current_user)
 ):
@@ -172,7 +173,7 @@ async def get_recent_flows(
 
 
 @router.get("/flows/underdevelopment", response_model=List[FlowBase])
-async def get_underdevelopment_flows(current_user: str = Depends(get_current_user)):
+async def get_underdevelopment_flows(request: Request, current_user: str = Depends(get_current_user)):
     """
     Get flows under development (from UNPUBLISHED_AGENT table)
     """
@@ -183,7 +184,7 @@ async def get_underdevelopment_flows(current_user: str = Depends(get_current_use
 
 
 @router.get("/flows/published", response_model=List[FlowBase])
-async def get_active_flows(current_user: str = Depends(get_current_user)):
+async def get_active_flows(request: Request, current_user: str = Depends(get_current_user)):
     """
     Get published flows (from PUBLISHED_AGENT table)
     """
@@ -194,7 +195,7 @@ async def get_active_flows(current_user: str = Depends(get_current_user)):
 
 
 @router.get("/flows/shared", response_model=List[FlowBase])
-async def get_user_shared_flows(current_user: str = Depends(get_current_user)):
+async def get_user_shared_flows(request: Request, current_user: str = Depends(get_current_user)):
     """
     Get shared flows (flows that have more than one user with access)
     """
@@ -206,6 +207,7 @@ async def get_user_shared_flows(current_user: str = Depends(get_current_user)):
 
 @router.get("/flows/{agent_id}", response_model=FlowDetailResponse)
 async def get_flow_detail(
+    request: Request,
     agent_id: str = Path(..., description="ID of the agent/flow to retrieve"),
     current_user: str = Depends(get_current_user)
 ):
