@@ -42,6 +42,53 @@ async def get_current_user_from_header(x_public_key: Optional[str] = Header(None
     return x_public_key
 
 
+# async def get_current_user(
+#     request: Request,
+#     credentials: HTTPAuthorizationCredentials = Security(security)
+# ) -> str:
+#     """
+#     Get the current user from JWT token in Authorization header
+    
+#     Args:
+#         credentials: JWT token from Authorization header
+#         request: FastAPI request object
+        
+#     Returns:
+#         User's public key from the token
+        
+#     Raises:
+#         HTTPException: If the token is invalid
+#     """
+#     token = credentials.credentials
+    
+#     # First, check if token exists in Redis (high speed check)
+#     token_data = redis_jwt_storage.validate_token(token)
+#     if not token_data:
+#         # If not in Redis, try to decode and validate the token
+#         payload = jwt_handler.verify_token(token)
+#         if not payload:
+#             raise HTTPException(
+#                 status_code=status.HTTP_401_UNAUTHORIZED,
+#                 detail="Invalid or expired token",
+#                 headers={"WWW-Authenticate": "Bearer"},
+#             )
+        
+#         # If token is valid but not in Redis (e.g., after server restart),
+#         # restore it in Redis
+#         user_id = payload.get("sub")
+#         session_id = payload.get("session_id")
+#         if user_id and session_id:
+#             redis_jwt_storage.store_token(token, user_id, session_id)
+#             return user_id
+#         else:
+#             raise HTTPException(
+#                 status_code=status.HTTP_401_UNAUTHORIZED,
+#                 detail="Invalid token payload",
+#                 headers={"WWW-Authenticate": "Bearer"},
+#             )
+    
+#     # If token exists in Redis, return the user_id
+#     return token_data.get("user_id")
 async def get_current_user(
     request: Request,
     credentials: HTTPAuthorizationCredentials = Security(security)
@@ -64,32 +111,16 @@ async def get_current_user(
     # First, check if token exists in Redis (high speed check)
     token_data = redis_jwt_storage.validate_token(token)
     if not token_data:
-        # If not in Redis, try to decode and validate the token
-        payload = jwt_handler.verify_token(token)
-        if not payload:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid or expired token",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        
-        # If token is valid but not in Redis (e.g., after server restart),
-        # restore it in Redis
-        user_id = payload.get("sub")
-        session_id = payload.get("session_id")
-        if user_id and session_id:
-            redis_jwt_storage.store_token(token, user_id, session_id)
-            return user_id
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token payload",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+        # If token is not in Redis, it's considered invalid
+        # This prevents users from using tokens after logout
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     
     # If token exists in Redis, return the user_id
     return token_data.get("user_id")
-
 
 # Optional: Flexible authentication that tries JWT first, then falls back to header
 async def get_current_user_flexible(
