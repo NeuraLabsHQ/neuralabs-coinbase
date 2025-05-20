@@ -37,12 +37,10 @@ jwt:
 # Blockchain settings
 blockchain:
   supported_chains:
-    - chain_id: 1
-      name: "Ethereum"
-      rpc_url: "https://mainnet.infura.io/v3/your_infura_key"
-    - chain_id: 137
-      name: "Polygon"
-      rpc_url: "https://polygon-rpc.com"
+    - chain_id: 101
+      name: "SUI"
+      chain_explorer: "https://explorer.sui.network/"
+      chainstatus: "Active"
 
 # Logging configuration
 logging:
