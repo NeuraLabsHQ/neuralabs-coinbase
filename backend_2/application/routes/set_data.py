@@ -58,6 +58,9 @@ class GrantAccessRequest(BaseModel):
     target_user_id: str = Field(..., description="Public key of user to grant access to")
     access_level: int = Field(..., ge=1, description="Access level to grant")
 
+class RevokeAccessRequest(BaseModel):
+    target_user_id: str = Field(..., description="Public key of user to revoke access from")
+
 
 # Create router
 router = APIRouter()
@@ -187,10 +190,10 @@ async def grant_access_to_nft(
     }
 
 
-@router.delete("/nft/{nft_id}/revoke-access/{target_user_id}")
+@router.post("/nft/{nft_id}/revoke-access")
 async def revoke_access_from_nft(
     nft_id: str = Path(..., description="NFT ID to revoke access from"),
-    target_user_id: str = Path(..., description="User to revoke access from"),
+    data : RevokeAccessRequest = Body(...),
     current_user: str = Depends(get_current_user)
 ):
     """
@@ -198,7 +201,7 @@ async def revoke_access_from_nft(
     """
     success, error_message = await revoke_nft_access(
         nft_id,
-        target_user_id,
+        data.target_user_id,
         current_user
     )
     
@@ -207,6 +210,6 @@ async def revoke_access_from_nft(
     
     return {
         "nft_id": nft_id,
-        "target_user": target_user_id,
+        "target_user": data.target_user_id,
         "message": "Access revoked successfully"
     }

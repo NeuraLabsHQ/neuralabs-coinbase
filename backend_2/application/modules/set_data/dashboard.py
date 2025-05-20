@@ -233,6 +233,181 @@ async def save_agent_metadata(
     return True, None
 
 
+async def move_workflow_to_published(pg_conn, agent_id, user_pub_key) -> Tuple[bool, Optional[str]]:
+    """
+    Move workflow from UNPUBLISHED_AGENT to PUBLISHED_AGENT
+    
+    Args:
+        pg_conn: PostgreSQL connection
+        agent_id: ID of the agent
+        user_pub_key: Public key of the user (owner)
+        
+    Returns:
+        Tuple containing (success, error_message)
+    """
+    # Check if the agent has a workflow in the UNPUBLISHED_AGENT table
+    unpublished_query = "SELECT workflow, md5 FROM UNPUBLISHED_AGENT WHERE agent_id = %s"
+    unpublished_result = await pg_conn.execute_query(unpublished_query, (agent_id,))
+
+    if not unpublished_result:
+        return False, "Cannot publish agent without a workflow. Save a workflow first."
+    
+    # Move data from UNPUBLISHED_AGENT to PUBLISHED_AGENT
+    workflow = unpublished_result[0]["workflow"]
+    md5 = unpublished_result[0]["md5"]
+    
+    workflow_json = json.dumps(workflow, sort_keys=True)
+    
+    # Check if entry already exists in PUBLISHED_AGENT
+    published_check_query = "SELECT agent_id FROM PUBLISHED_AGENT WHERE agent_id = %s"
+    published_result = await pg_conn.execute_query(published_check_query, (agent_id,))
+    
+    if published_result:
+        # Update existing published agent
+        published_update_query = """
+        UPDATE PUBLISHED_AGENT 
+        SET workflow = %s, last_edited_time = %s, md5 = %s
+        WHERE agent_id = %s
+        """
+        await pg_conn.execute_query(published_update_query, (workflow_json, datetime.now(), md5, agent_id))
+    else:
+        # Insert new published agent
+        published_insert_query = """
+        INSERT INTO PUBLISHED_AGENT (agent_id, last_edited_time, workflow, md5)
+        VALUES (%s, %s, %s, %s)
+        """
+        await pg_conn.execute_query(published_insert_query, (agent_id, datetime.now(), workflow_json, md5))
+    
+    # Delete from UNPUBLISHED_AGENT
+    delete_query = "DELETE FROM UNPUBLISHED_AGENT WHERE agent_id = %s"
+    await pg_conn.execute_query(delete_query, (agent_id,))
+    
+    return True, None
+
+
+async def update_blockchain_data(pg_conn, agent_id, blockchain_data, chain_id) -> Tuple[bool, Optional[str], str]:
+    """
+    Update or insert blockchain data for an agent
+    
+    Args:
+        pg_conn: PostgreSQL connection
+        agent_id: ID of the agent
+        blockchain_data: Blockchain publication details
+        chain_id: ID of the blockchain
+        
+    Returns:
+        Tuple containing (success, error_message, nft_id)
+    """
+    # Ensure the contract exists in CONTRACT_DETAILS
+    contract_id = blockchain_data.get("contract_id")
+    contract_success, contract_error = await create_or_get_contract_details(
+        contract_id,
+        chain_id,
+        blockchain_data.get("contract_name", "NeuraSynthesis"),
+        blockchain_data.get("contract_version", "1.0.0")
+    )
+    
+    if not contract_success:
+        return False, contract_error, ""
+    
+    # Get the NFT ID from the blockchain data
+    nft_id = blockchain_data.get("nft_id")
+    if not nft_id:
+        return False, "NFT ID is required for publishing", ""
+    
+    # Check if blockchain data already exists
+    check_query = "SELECT agent_id FROM BLOCKCHAIN_AGENT_DATA WHERE agent_id = %s"
+    result = await pg_conn.execute_query(check_query, (agent_id,))
+    
+    if result:
+        # Update existing blockchain data
+        update_query = """
+        UPDATE BLOCKCHAIN_AGENT_DATA
+        SET version = %s, published_date = %s, published_hash = %s, 
+            contract_id = %s, nft_id = %s, nft_mint_trx_id = %s
+        WHERE agent_id = %s
+        """
+        params = (
+            blockchain_data.get("version"),
+            datetime.now() if blockchain_data.get("published_date") is None else blockchain_data.get("published_date"),
+            blockchain_data.get("published_hash"),
+            contract_id,
+            nft_id,
+            blockchain_data.get("nft_mint_trx_id"),
+            agent_id
+        )
+        
+        await pg_conn.execute_query(update_query, params)
+    else:
+        # Insert new blockchain data
+        insert_query = """
+        INSERT INTO BLOCKCHAIN_AGENT_DATA (
+            agent_id, version, published_date, published_hash, 
+            contract_id, nft_id, nft_mint_trx_id
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        params = (
+            agent_id,
+            blockchain_data.get("version"),
+            datetime.now() if blockchain_data.get("published_date") is None else blockchain_data.get("published_date"),
+            blockchain_data.get("published_hash"),
+            contract_id,
+            nft_id,
+            blockchain_data.get("nft_mint_trx_id")
+        )
+        
+        await pg_conn.execute_query(insert_query, params)
+    
+    return True, None, nft_id
+
+
+async def ensure_owner_access(pg_conn, user_pub_key, nft_id) -> Tuple[bool, Optional[str]]:
+    """
+    Ensure the owner has level 6 access to the NFT
+    
+    Args:
+        pg_conn: PostgreSQL connection
+        user_pub_key: Public key of the owner
+        nft_id: ID of the NFT
+        
+    Returns:
+        Tuple containing (success, error_message)
+    """
+    # First check if access level 6 exists, create if not
+    access_level_check = "SELECT access_level FROM ACCESS_LEVEL_TABLE WHERE access_level = 6"
+    access_level_result = await pg_conn.execute_query(access_level_check)
+    
+    if not access_level_result:
+        # Create access level 6 (owner)
+        create_access_level = """
+        INSERT INTO ACCESS_LEVEL_TABLE (access_level, access_level_name, descriptions_and_permissions)
+        VALUES (6, 'Owner', '{"description": "Full ownership rights", "permissions": ["read", "write", "execute", "transfer", "grant", "revoke"]}')
+        """
+        await pg_conn.execute_query(create_access_level)
+    
+    # Check if owner already has access
+    access_check = "SELECT user_id FROM NFT_ACCESS WHERE user_id = %s AND nft_id = %s"
+    access_result = await pg_conn.execute_query(access_check, (user_pub_key, nft_id))
+    
+    if access_result:
+        # Update existing access to level 6
+        update_access = """
+        UPDATE NFT_ACCESS
+        SET access_level = 6, timestamp = %s
+        WHERE user_id = %s AND nft_id = %s
+        """
+        await pg_conn.execute_query(update_access, (datetime.now(), user_pub_key, nft_id))
+    else:
+        # Grant new access at level 6
+        grant_access = """
+        INSERT INTO NFT_ACCESS (user_id, nft_id, access_level, timestamp)
+        VALUES (%s, %s, 6, %s)
+        """
+        await pg_conn.execute_query(grant_access, (user_pub_key, nft_id, datetime.now()))
+    
+    return True, None
+
+
 async def publish_agent_to_blockchain(
     agent_id: str,
     blockchain_data: Dict[str, Any],
@@ -261,103 +436,18 @@ async def publish_agent_to_blockchain(
     if result[0]["owner"] != user_pub_key:
         return False, "You don't have permission to publish this agent"
     
-    # First, check if the agent has a workflow in the UNPUBLISHED_AGENT table
-    unpublished_query = "SELECT workflow, md5 FROM UNPUBLISHED_AGENT WHERE agent_id = %s"
-    unpublished_result = await pg_conn.execute_query(unpublished_query, (agent_id,))
-
-    if unpublished_result:
-        # Move data from UNPUBLISHED_AGENT to PUBLISHED_AGENT
-        workflow = unpublished_result[0]["workflow"]
-        md5 = unpublished_result[0]["md5"]
-        
-        workflow_json = json.dumps(workflow, sort_keys=True)
-        
-        # Check if entry already exists in PUBLISHED_AGENT
-        published_check_query = "SELECT agent_id FROM PUBLISHED_AGENT WHERE agent_id = %s"
-        published_result = await pg_conn.execute_query(published_check_query, (agent_id,))
-        
-        if published_result:
-            # Update existing published agent
-            published_update_query = """
-            UPDATE PUBLISHED_AGENT 
-            SET workflow = %s, last_edited_time = %s, md5 = %s
-            WHERE agent_id = %s
-            """
-            # No need to convert workflow to JSON string as it's already coming from the database
-            await pg_conn.execute_query(published_update_query, (workflow_json, datetime.now(), md5, agent_id))
-        else:
-            # Insert new published agent
-            published_insert_query = """
-            INSERT INTO PUBLISHED_AGENT (agent_id, last_edited_time, workflow, md5)
-            VALUES (%s, %s, %s, %s)
-            """
-            # No need to convert workflow to JSON string as it's already coming from the database
-            await pg_conn.execute_query(published_insert_query, (agent_id, datetime.now(), workflow_json, md5))
-        
-        # Delete from UNPUBLISHED_AGENT
-        delete_query = "DELETE FROM UNPUBLISHED_AGENT WHERE agent_id = %s"
-        await pg_conn.execute_query(delete_query, (agent_id,))
-    else:
-        # No unpublished workflow found
-        return False, "Cannot publish agent without a workflow. Save a workflow first."
+    # Move workflow from unpublished to published
+    workflow_success, workflow_error = await move_workflow_to_published(pg_conn, agent_id, user_pub_key)
+    if not workflow_success:
+        return False, workflow_error
     
     # Get the chain_id from the agent or from the blockchain data
     chain_id = blockchain_data.get("chain_id") or result[0].get("chain_id", 1)
     
-    # Ensure the contract exists in CONTRACT_DETAILS
-    contract_id = blockchain_data.get("contract_id")
-    contract_success, contract_error = await create_or_get_contract_details(
-        contract_id,
-        chain_id,
-        blockchain_data.get("contract_name", "NeuraSynthesis"),
-        blockchain_data.get("contract_version", "1.0.0")
-    )
-    
-    if not contract_success:
-        return False, contract_error
-    
-    # Check if blockchain data already exists
-    check_query = "SELECT agent_id FROM BLOCKCHAIN_AGENT_DATA WHERE agent_id = %s"
-    result = await pg_conn.execute_query(check_query, (agent_id,))
-    
-    if result:
-        # Update existing blockchain data
-        update_query = """
-        UPDATE BLOCKCHAIN_AGENT_DATA
-        SET version = %s, published_date = %s, published_hash = %s, 
-            contract_id = %s, nft_id = %s, nft_mint_trx_id = %s
-        WHERE agent_id = %s
-        """
-        params = (
-            blockchain_data.get("version"),
-            datetime.now() if blockchain_data.get("published_date") is None else blockchain_data.get("published_date"),
-            blockchain_data.get("published_hash"),
-            contract_id,
-            blockchain_data.get("nft_id"),
-            blockchain_data.get("nft_mint_trx_id"),
-            agent_id
-        )
-        
-        await pg_conn.execute_query(update_query, params)
-    else:
-        # Insert new blockchain data
-        insert_query = """
-        INSERT INTO BLOCKCHAIN_AGENT_DATA (
-            agent_id, version, published_date, published_hash, 
-            contract_id, nft_id, nft_mint_trx_id
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """
-        params = (
-            agent_id,
-            blockchain_data.get("version"),
-            datetime.now() if blockchain_data.get("published_date") is None else blockchain_data.get("published_date"),
-            blockchain_data.get("published_hash"),
-            contract_id,
-            blockchain_data.get("nft_id"),
-            blockchain_data.get("nft_mint_trx_id")
-        )
-        
-        await pg_conn.execute_query(insert_query, params)
+    # Update blockchain data
+    blockchain_success, blockchain_error, nft_id = await update_blockchain_data(pg_conn, agent_id, blockchain_data, chain_id)
+    if not blockchain_success:
+        return False, blockchain_error
     
     # Update agent status to Active
     update_status_query = """
@@ -366,6 +456,11 @@ async def publish_agent_to_blockchain(
     WHERE agent_id = %s
     """
     await pg_conn.execute_query(update_status_query, (agent_id,))
+    
+    # Ensure owner has level 6 access to the NFT
+    access_success, access_error = await ensure_owner_access(pg_conn, user_pub_key, nft_id)
+    if not access_success:
+        return False, access_error
     
     return True, None
 
@@ -389,20 +484,35 @@ async def grant_nft_access(
     """
     pg_conn = PostgresConnection()
     
-    # Verify ownership by checking if the NFT is associated with an agent owned by owner_pub_key
-    query = """
-    SELECT a.agent_id, a.owner 
-    FROM AGENT a
-    JOIN BLOCKCHAIN_AGENT_DATA ba ON a.agent_id = ba.agent_id
-    WHERE ba.nft_id = %s
+    # Verify that the user has owner access level (level 6) for this NFT
+    owner_query = """
+    SELECT na.access_level, a.owner
+    FROM NFT_ACCESS na
+    JOIN BLOCKCHAIN_AGENT_DATA ba ON na.nft_id = ba.nft_id
+    JOIN AGENT a ON ba.agent_id = a.agent_id
+    WHERE na.nft_id = %s AND na.user_id = %s
     """
-    result = await pg_conn.execute_query(query, (nft_id,))
+    owner_result = await pg_conn.execute_query(owner_query, (nft_id, owner_pub_key))
     
-    if not result:
-        return False, "NFT not found"
+    # Check if the user is the actual owner or has access level 6
+    is_owner = False
+    if owner_result:
+        is_owner = owner_result[0]["access_level"] == 6
+    else:
+        # If no explicit access level, check if they're the agent owner
+        agent_query = """
+        SELECT a.owner
+        FROM AGENT a
+        JOIN BLOCKCHAIN_AGENT_DATA ba ON a.agent_id = ba.agent_id
+        WHERE ba.nft_id = %s
+        """
+        agent_result = await pg_conn.execute_query(agent_query, (nft_id,))
+        
+        if agent_result and agent_result[0]["owner"] == owner_pub_key:
+            is_owner = True
     
-    if result[0]["owner"] != owner_pub_key:
-        return False, "You don't have permission to grant access to this NFT"
+    if not is_owner:
+        return False, "You must have owner access (level 6) to grant access to this NFT"
     
     # Check if the target user exists
     user_query = "SELECT user_pub_key FROM USER_AUTH WHERE user_pub_key = %s"
@@ -413,12 +523,16 @@ async def grant_nft_access(
         insert_user_query = "INSERT INTO USER_AUTH (user_pub_key, username) VALUES (%s, %s)"
         await pg_conn.execute_query(insert_user_query, (target_user_id, f"user_{target_user_id[:8]}"))
     
-    # Verify access level exists
+    # Verify access level exists and is not higher than the owner's level
     access_query = "SELECT access_level FROM ACCESS_LEVEL_TABLE WHERE access_level = %s"
     access_result = await pg_conn.execute_query(access_query, (access_level,))
     
     if not access_result:
         return False, f"Invalid access level: {access_level}"
+    
+    # Owner can't give higher access than their own level (6)
+    if access_level > 6:
+        return False, f"Cannot grant access level higher than owner level (6)"
     
     # Check if access already exists
     check_query = "SELECT user_id FROM NFT_ACCESS WHERE user_id = %s AND nft_id = %s"
@@ -475,20 +589,51 @@ async def revoke_nft_access(
     """
     pg_conn = PostgresConnection()
     
-    # Verify ownership
-    query = """
-    SELECT a.agent_id, a.owner 
-    FROM AGENT a
-    JOIN BLOCKCHAIN_AGENT_DATA ba ON a.agent_id = ba.agent_id
-    WHERE ba.nft_id = %s
+    # Verify that the user has owner access level (level 6) for this NFT
+    owner_query = """
+    SELECT na.access_level
+    FROM NFT_ACCESS na
+    WHERE na.nft_id = %s AND na.user_id = %s
     """
-    result = await pg_conn.execute_query(query, (nft_id,))
+    owner_result = await pg_conn.execute_query(owner_query, (nft_id, owner_pub_key))
     
-    if not result:
-        return False, "NFT not found"
+    if not owner_result or owner_result[0]["access_level"] != 6:
+        # If no access level 6, check if they're the agent owner as a fallback
+        agent_query = """
+        SELECT a.owner 
+        FROM AGENT a
+        JOIN BLOCKCHAIN_AGENT_DATA ba ON a.agent_id = ba.agent_id
+        WHERE ba.nft_id = %s
+        """
+        agent_result = await pg_conn.execute_query(agent_query, (nft_id,))
+        
+        if not agent_result or agent_result[0]["owner"] != owner_pub_key:
+            return False, "You must have owner access (level 6) to revoke access to this NFT"
     
-    if result[0]["owner"] != owner_pub_key:
-        return False, "You don't have permission to revoke access to this NFT"
+    # Prevent revocation of owner's own access
+    if target_user_id == owner_pub_key:
+        return False, "Cannot revoke owner's access to their own NFT"
+    
+    # Check if target user has level 6 access
+    target_query = """
+    SELECT access_level
+    FROM NFT_ACCESS
+    WHERE nft_id = %s AND user_id = %s
+    """
+    target_result = await pg_conn.execute_query(target_query, (nft_id, target_user_id))
+    
+    if target_result and target_result[0]["access_level"] == 6:
+        # Check if this is the original creator
+        agent_query = """
+        SELECT a.owner 
+        FROM AGENT a
+        JOIN BLOCKCHAIN_AGENT_DATA ba ON a.agent_id = ba.agent_id
+        WHERE ba.nft_id = %s
+        """
+        agent_result = await pg_conn.execute_query(agent_query, (nft_id,))
+        
+        if agent_result and agent_result[0]["owner"] == target_user_id:
+            return False, "Cannot revoke access from the original creator of the NFT"
     
     # Delete access record
     delete_query = """
