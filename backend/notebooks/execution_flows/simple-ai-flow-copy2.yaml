@@ -66,11 +66,10 @@ flow_definition:
       # model: deepseek.r1-v1:0
       # model: arn:aws:bedrock:us-east-1:559050205657:inference-profile/us.deepseek.r1-v1:0
       # model: arn:aws:bedrock:us-east-2:559050205657:inference-profile/us.deepseek.r1-v1:0
-      # model: arn:aws:bedrock:us-east-2:559050205657:foundation-model/meta.llama3-3-70b-instruct-v1:0
       
       temperature: 0.7
       max_tokens: 1000
-      wrapper_prompt: "You are a helpful AI assistant. Please respond to the following: {prompt}\n\nContext: {context}, enclose the chain of thought inside <think> Thought </think> tags. and answer within <answer> </answer> tags." 
+      wrapper_prompt: "You are a helpful AI assistant. Please respond to the following: {prompt}\n\nContext: {context}, enclose the chain of thought in <think>  </think> tags. and answer in <answer> </answer> tags." 
     end_node:
       type: end
       element_id: end_node
@@ -115,7 +114,7 @@ flow_definition:
     description: A simple flow that takes user input and generates a response using an LLM
 initial_inputs:
   chat_input:
-    chat_input: How to write a python script?
+    chat_input: What is the capital of France? Think Carefully and tell me its significance
   context_history:
     context_history:
-      - Hello, I'm a harsh
+      - Hello, I'm a geography enthusiast.
