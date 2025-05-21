@@ -11,6 +11,7 @@ from ..modules.authentication.jwt.token import JWTHandler
 from ..modules.authentication.jwt.redis_storage import RedisJWTStorage
 from ..modules.authentication import get_current_user, security
 from ..modules.database.postgresconn import PostgresConnection
+from ..modules.set_data.login import get_or_create_salt
 
 # Create router
 router = APIRouter()
@@ -25,13 +26,17 @@ class LoginRequest(BaseModel):
     public_key: str = Field(..., description="User's public key")
     signature: Optional[str] = Field(None, description="Signature to verify (optional for now)")
     message: Optional[str] = Field(None, description="Message that was signed (optional for now)")
-
+class ZKLoginRequest(BaseModel):
+    email: str = Field(..., description="User's email address")
 
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int
     user_id: str
+
+class Zk_LoginResponse(BaseModel):
+    salt: str
 
 
 @router.post("/login", response_model=TokenResponse, status_code=status.HTTP_200_OK)
@@ -89,6 +94,38 @@ async def login(login_data: LoginRequest):
         "user_id": user_data["user_pub_key"]
     }
 
+@router.post("/zklogin", response_model=Zk_LoginResponse, status_code=status.HTTP_200_OK)
+async def zk_login(
+    zk_login: ZKLoginRequest,
+    request: Request
+):
+    """
+    ZK login endpoint that verifies user credentials and returns a JWT token
+    
+    Args:
+        zk_login: ZK login request with email
+        request: FastAPI request object
+        
+    Returns:
+        Response with salt and email
+    """
+    # Get email from request
+    email = zk_login.email
+    
+    # Get or create salt for the email
+    success, result = await get_or_create_salt(email)
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving salt: {result}"
+        )
+    
+    # Return the salt and email
+    return {
+        "salt": result  # Now correctly using the salt value from the tuple
+    
+    }
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
 async def logout(

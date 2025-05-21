@@ -37,7 +37,7 @@ class ZkLoginService {
     }
     
     this.clientId = clientId;
-    console.log('Google Client ID set successfully:', this.clientId);
+    // console.log('Google Client ID set successfully:', this.clientId);
   }
 
   // Get the current SUI epoch data
@@ -112,9 +112,28 @@ class ZkLoginService {
     try {
       // Decode the JWT
       const decodedJwt = jwtDecode(jwt);
+      // console.log('Decoded JWT:', decodedJwt);
       
+      const email = decodedJwt.email;
+      // backend url is in REACT_APP_BACKEND_URL
+      const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/auth/zklogin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: email,
+        })
+      });
+      if (!response.ok) {
+        throw new Error(`Backend service error: ${response.status} ${response.statusText}`);
+      }
+      const data = await response.json();
 
-      const userSalt = this._generateSalt();
+      const userSalt = data.salt;
+
+      // const userSalt = this._generateSalt();
+      // console.log('Generated user salt:', userSalt);
       sessionStorage.setItem(this.STORAGE_SALT, userSalt);
 
 
