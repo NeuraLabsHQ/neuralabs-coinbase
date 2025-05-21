@@ -634,6 +634,12 @@ async def revoke_nft_access(
         
         if agent_result and agent_result[0]["owner"] == target_user_id:
             return False, "Cannot revoke access from the original creator of the NFT"
+    # check if the target user has access
+    check_query = "SELECT user_id FROM NFT_ACCESS WHERE user_id = %s AND nft_id = %s"
+    # if not then write "user does not have access"
+    result = await pg_conn.execute_query(check_query, (target_user_id, nft_id))
+    if not result:
+        return False, "User does not have access to this NFT"
     
     # Delete access record
     delete_query = """

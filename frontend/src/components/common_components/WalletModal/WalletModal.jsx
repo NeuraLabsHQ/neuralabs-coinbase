@@ -27,6 +27,9 @@ const WalletModal = ({ isOpen, onClose }) => {
   const { connect, wallets, connecting, connected, disconnect } = useWallet();
   const [connectingWalletName, setConnectingWalletName] = useState(null);
   const toast = useToast();
+
+  console.log("Wallets available:", wallets);
+
   
   const bgColor = useColorModeValue('white', '#18191b');
   const textColor = useColorModeValue('gray.800', 'white');
@@ -38,6 +41,8 @@ const WalletModal = ({ isOpen, onClose }) => {
     wallet.name.toLowerCase() === 'slush' || 
     wallet.name.toLowerCase().includes('slush')
   );
+
+  console.log("Wallets available:", wallets);
   
   // Move Slush wallet to the top if it exists
   const sortedWallets = [...(wallets || [])].sort((a, b) => {
@@ -58,11 +63,12 @@ const WalletModal = ({ isOpen, onClose }) => {
       
       // Add a small delay to ensure previous state is cleared
       await new Promise(resolve => setTimeout(resolve, 200));
-      
+
+      console.log("Connected to wallet:", walletName);
       // Attempt to connect
       await connect(walletName);
       
-      console.log("Connected to wallet:", walletName);
+      
       
       // Close modal
       if (isOpen) onClose();

@@ -1,4 +1,6 @@
-import React from 'react';
+// frontend/src/components/common_components/CustomConnectButton/CustomConnectButton.jsx
+
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Button, 
@@ -9,13 +11,13 @@ import {
 import { 
   useCurrentAccount, 
   useCurrentWallet, 
-  useDisconnectWallet,
-  ConnectModal
+  useDisconnectWallet
 } from '@mysten/dapp-kit';
 import sui_connected from '../../../assets/icons/sui_connected.svg';
 import sui_light from '../../../assets/icons/sui_light_2.svg';
 import sui_dark from '../../../assets/icons/sui_dark_2.svg';
-import { useState } from 'react';
+import WalletMethodSelector from '../WalletMethodSelector/WalletMethodSelector';
+import { useZkLogin } from '../../../contexts/ZkLoginContext';
 
 const CustomConnectButton = ({ 
   iconColor, 
@@ -27,26 +29,44 @@ const CustomConnectButton = ({
   const { wallet } = useCurrentWallet();
   const { mutate: disconnect, isPending: disconnecting } = useDisconnectWallet();
   
+  // Use zkLogin hook
+  const { isAuthenticated: isZkLoggedIn, zkLoginAddress, logout: zkLogout } = useZkLogin();
+  
   // Get color mode (light/dark)
   const { colorMode } = useColorMode();
   
-  // State for modal
-  const [modalOpen, setModalOpen] = useState(false);
+  // State for modals
+  const [methodSelectorOpen, setMethodSelectorOpen] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
   
-  // Check if wallet is connected
-  const connected = !!currentAccount;
+  // Check if any wallet is connected (either dapp-kit or zkLogin)
+  const connected = !!currentAccount || isZkLoggedIn;
   
-  // Get wallet address
-  const walletAddress = currentAccount?.address || '';
+  // Get appropriate wallet address
+  const walletAddress = currentAccount?.address || zkLoginAddress || '';
   
   // Handle wallet action
   const handleWalletAction = async () => {
     if (connected) {
-      // Disconnect wallet
-      disconnect();
+      // Disconnect appropriate wallet
+      setIsDisconnecting(true);
+      
+      try {
+        if (currentAccount) {
+          // Disconnect dapp-kit wallet
+          await disconnect();
+        } else if (isZkLoggedIn) {
+          // Disconnect zkLogin
+          zkLogout();
+        }
+      } catch (error) {
+        console.error("Error disconnecting wallet:", error);
+      } finally {
+        setIsDisconnecting(false);
+      }
     } else {
-      // Open the wallet connect modal
-      setModalOpen(true);
+      // Open the wallet method selector
+      setMethodSelectorOpen(true);
     }
   };
   
@@ -57,7 +77,9 @@ const CustomConnectButton = ({
     
   // Set wallet tooltip text
   const walletTooltip = connected 
-    ? `Connected: ${wallet?.name || 'Wallet'} (${formattedAddress})` 
+    ? isZkLoggedIn 
+      ? `Connected: zkLogin (${formattedAddress})` 
+      : `Connected: ${wallet?.name || 'Wallet'} (${formattedAddress})` 
     : "Connect Wallet";
   
   // Determine which icon to show based on connection state and color mode
@@ -97,9 +119,9 @@ const CustomConnectButton = ({
           {...buttonStyles}
           onClick={handleWalletAction}
           aria-label={connected ? "Disconnect Wallet" : "Connect Wallet"}
-          disabled={viewOnlyMode || disconnecting}
+          disabled={viewOnlyMode || isDisconnecting}
         >
-          {disconnecting ? (
+          {isDisconnecting ? (
             <Box 
               position="relative" 
               w="24px" 
@@ -137,10 +159,10 @@ const CustomConnectButton = ({
         </Button>
       </Tooltip>
       
-      {/* The ConnectModal from dApp Kit */}
-      <ConnectModal
-        open={modalOpen}
-        onOpenChange={(isOpen) => setModalOpen(isOpen)}
+      {/* Our custom wallet method selector */}
+      <WalletMethodSelector
+        isOpen={methodSelectorOpen}
+        onClose={() => setMethodSelectorOpen(false)}
       />
     </>
   );

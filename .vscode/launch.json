@@ -18,6 +18,14 @@
 
             ],
             "jinja": true
-        }
+        },
+
+        {
+      "type": "msedge",
+      "request": "launch",
+      "name": "Launch Microsoft Edge and open the Edge DevTools",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}"
+    }
     ]
 }
