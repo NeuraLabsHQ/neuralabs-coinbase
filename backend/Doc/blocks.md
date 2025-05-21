@@ -1,5 +1,6 @@
 - [Flow Executor Documentation](#flow-executor-documentation)
   - [Overview](#overview)
+  - [Common componets of a flow element](#common-componets-of-a-flow-element)
   - [Component Categories and Element Reference Tables](#component-categories-and-element-reference-tables)
     - [Flow Control Elements](#flow-control-elements)
     - [Input Elements](#input-elements)
@@ -45,6 +46,25 @@
 The Flow Executor is a powerful backend system designed to execute workflow definitions composed of interconnected elements. Each element performs a specific function, and together they form a complete flow that can process data, make API calls, interact with blockchain services, generate AI responses, and more.
 
 The system is built around the concept of elements that have inputs and outputs. These elements can be connected together, where the output from one element becomes the input to another, creating a directed flow of data and execution. The executor handles the execution order, data passing between elements, and streaming of events during execution.
+
+## Common componets of a flow element
+
+  llm_text_345678901234:
+    type: llm_text
+    element_id: llm_text_345678901234
+    name: AI Text Generator
+    description: Generates a response using the LLM
+
+  | Name | Description | type |
+  |------|-------------|--------|
+  | type | The type of the element (e.g., llm_text, selector, etc.) | string |
+  | element_id | A unique identifier for the element  generally also the key of element in a flow| string |
+  | name | A human-readable name for the element | string | 
+  | description | A brief description of what the element does | string |
+  | input_schema | A schema defining the expected inputs for the element | dict |
+  | output_schema | A schema defining the outputs produced by the element | dict |
+  | parameters | Additional parameters specific to the element type | dict |
+  | processing_message | A message shown in the chat when the element is processing | string | 
 
 ## Component Categories and Element Reference Tables
 
