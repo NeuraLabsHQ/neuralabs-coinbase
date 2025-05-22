@@ -18,6 +18,7 @@ import sui_light from '../../../assets/icons/sui_light_2.svg';
 import sui_dark from '../../../assets/icons/sui_dark_2.svg';
 import WalletMethodSelector from '../WalletMethodSelector/WalletMethodSelector';
 import { useZkLogin } from '../../../contexts/ZkLoginContext';
+import * as WalletAuth from '../../../components/auth/WalletSignatureService';
 
 const CustomConnectButton = ({ 
   iconColor, 
@@ -28,6 +29,7 @@ const CustomConnectButton = ({
   const currentAccount = useCurrentAccount();
   const { wallet } = useCurrentWallet();
   const { mutate: disconnect, isPending: disconnecting } = useDisconnectWallet();
+  
   
   // Use zkLogin hook
   const { isAuthenticated: isZkLoggedIn, zkLoginAddress, logout: zkLogout } = useZkLogin();
@@ -55,6 +57,8 @@ const CustomConnectButton = ({
         if (currentAccount) {
           // Disconnect dapp-kit wallet
           await disconnect();
+          await WalletAuth.logout();
+ 
         } else if (isZkLoggedIn) {
           // Disconnect zkLogin
           zkLogout();

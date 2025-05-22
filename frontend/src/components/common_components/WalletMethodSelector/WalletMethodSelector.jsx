@@ -1,6 +1,6 @@
 // frontend/src/components/common_components/WalletMethodSelector/WalletMethodSelector.jsx
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Modal,
@@ -23,16 +23,92 @@ import {
 } from '@mysten/dapp-kit';
 import { FaGoogle } from 'react-icons/fa';
 import { useZkLogin } from '../../../contexts/ZkLoginContext';
+import { useSignPersonalMessage, useCurrentAccount } from '@mysten/dapp-kit';
+import * as WalletAuth from '../../../components/auth/WalletSignatureService';
+
 
 const WalletMethodSelector = ({ isOpen, onClose }) => {
   const [connectModalOpen, setConnectModalOpen] = useState(false);
+  const [hasAuthenticated, setHasAuthenticated] = useState(false); // Add this state to track authentication
+
   const { startZkLogin, isLoading } = useZkLogin();
   const toast = useToast();
+  const { mutate: signPersonalMessage } = useSignPersonalMessage();
+  const currentAccount = useCurrentAccount();
   
   const bgColor     = useColorModeValue('white', '#18191b');
   const textColor   = useColorModeValue('gray.800', 'white');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const hoverColor  = useColorModeValue('gray.50', 'gray.700');
+
+  const isAlreadyAuthenticated = () => {
+    // Check multiple sources for existing authentication
+    const hasAuthToken = sessionStorage.getItem('wallet_auth_token');
+
+    return hasAuthToken;
+  };
+
+
+  useEffect(() => {
+    const authenticateWithWallet = async () => {
+      // Only authenticate if user just connected and is not already authenticated
+      if (currentAccount && !isAlreadyAuthenticated()) {
+        console.log('Starting wallet authentication for new connection...');
+        
+        try {
+          const result = await WalletAuth.authenticateWallet(
+            currentAccount.address,
+            signPersonalMessage
+          );
+        
+          if (result.success) {
+            console.log('Wallet authentication successful:', result);
+            
+            // Store authentication state in sessionStorage
+            sessionStorage.setItem('wallet_authenticated', 'true');
+            sessionStorage.setItem('last_authenticated_address', currentAccount.address);
+            if (result.token) {
+              sessionStorage.setItem('wallet_auth_token', result.token);
+            }
+            
+            toast({
+              title: 'Authentication Successful',
+              description: 'You are now logged in with your wallet',
+              status: 'success',
+              duration: 5000,
+              isClosable: true,
+            });
+            
+            // Close the modal after successful authentication
+            onClose();
+          } else {
+            console.error('Wallet authentication failed:', result.error);
+            toast({
+              title: 'Authentication Failed',
+              description: result.error || 'Failed to authenticate with wallet',
+              status: 'error',
+              duration: 5000,
+              isClosable: true,
+            });
+          }
+        } catch (error) {
+          console.error('Authentication error:', error);
+          toast({
+            title: 'Authentication Error',
+            description: error.message || 'An unexpected error occurred',
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+          });
+        }
+      } else if (currentAccount && isAlreadyAuthenticated()) {
+        console.log('User already authenticated, skipping authentication');
+      }
+    };
+
+    authenticateWithWallet();
+  }, [currentAccount, signPersonalMessage, toast, onClose]);
+
 
   const handleWalletConnect = () => {
     // Close this modal and open the wallet connect modal
