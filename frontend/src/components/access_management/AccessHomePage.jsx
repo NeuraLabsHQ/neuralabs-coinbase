@@ -23,6 +23,7 @@ import {
   Icon,
   ButtonGroup,
   IconButton,
+  useToast,
 } from "@chakra-ui/react";
 import {
   FiSearch,
@@ -36,32 +37,25 @@ import {
   FiPieChart,
   FiActivity
 } from "react-icons/fi";
+import { useNavigate } from 'react-router-dom';
 import { accessManagementApi } from "../../utils/access-api";
+import { agentAPI } from "../../utils/agent-api";
+import CreateAgentModal from "./Popup/CreateAgentModal";
 import templateImage1 from "../../assets/template.png";
-// import templateImage2 from '../../assets/templates/template2.jpg';
-// import templateImage3 from '../../assets/templates/template3.jpg';
-// import templateImage4 from '../../assets/templates/template4.jpg';
-// import templateImage5 from '../../assets/templates/template5.jpg';
-
-// import AccessLevelBadge from './AccessLevelBadge';
 
 const TemplateCard = ({ title, hasButton = false, onClick, imageUrl }) => {
-
-
-      
-
-    const bgColor = useColorModeValue("white", "gray.800");
-    const hoverBgColor = useColorModeValue("gray.50", "gray.700");
-    const textColor = useColorModeValue("gray.800", "white");
-    const borderColor = useColorModeValue("gray.200", "gray.700");
-    const hoverBorderColor = useColorModeValue("blue.400", "blue.400");
-    const overlayBgColor = useColorModeValue("rgba(255,255,255,0.8)", "rgba(7, 3, 3, 0.6)");
-    const overlayTextColor = useColorModeValue("gray.800", "white");
+  const bgColor = useColorModeValue("white", "gray.800");
+  const hoverBgColor = useColorModeValue("gray.50", "gray.700");
+  const textColor = useColorModeValue("gray.800", "white");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const hoverBorderColor = useColorModeValue("blue.400", "blue.400");
+  const overlayBgColor = useColorModeValue("rgba(255,255,255,0.8)", "rgba(7, 3, 3, 0.6)");
+  const overlayTextColor = useColorModeValue("gray.800", "white");
 
   return (
     <Box
       w="100%"
-      h="160px" // Increased height from 120px to 160px
+      h="160px"
       bg={bgColor}
       borderRadius="md"
       position="relative"
@@ -79,7 +73,6 @@ const TemplateCard = ({ title, hasButton = false, onClick, imageUrl }) => {
       }}
     >
       {hasButton ? (
-        // Create New button card
         <Flex
           direction="column"
           align="center"
@@ -88,64 +81,59 @@ const TemplateCard = ({ title, hasButton = false, onClick, imageUrl }) => {
           p={4}
           color={textColor}
         >
-          <Icon as={FiPlus} boxSize={10} mb={4} /> {/* Increased icon size */}
+          <Icon as={FiPlus} boxSize={10} mb={4} />
           <Text fontWeight="bold" fontSize="xl">
             Create New
-          </Text>{" "}
-          {/* Increased text size */}
+          </Text>
         </Flex>
       ) : (
-        // Template card with image
         <>
-          {/* Image background filling the entire card */}
           <Box
-              position="absolute"
-              top="0"
-              left="0"
-              w="100%"
-              h="100%"
-              bgImage={`url(${imageUrl})`}
-              bgSize="cover"
-              bgPosition="center"
-              _before={{
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                bottom: 0,
-                left: 0,
-                bgGradient: "linear(to-r, rgba(255,255,255,0.1), rgba(255,255,255,0.05))",
-                backdropFilter: "blur(1.5px)",
-                WebkitBackdropFilter: "blur(1.5px)",
-                mixBlendMode: "overlay",
-              }}
-              _after={{
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                bottom: 0,
-                left: 0,
-                background: "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWx0ZXI9InVybCgjYSkiIG9wYWNpdHk9Ii4wNSIvPjwvc3ZnPg==')",
-                opacity: 0.2,
-                mixBlendMode: "multiply",
-                pointerEvents: "none"
-              }}
-            />
-
-          {/* Text overlay at the bottom */}
+            position="absolute"
+            top="0"
+            left="0"
+            w="100%"
+            h="100%"
+            bgImage={`url(${imageUrl})`}
+            bgSize="cover"
+            bgPosition="center"
+            _before={{
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
+              bgGradient: "linear(to-r, rgba(255,255,255,0.1), rgba(255,255,255,0.05))",
+              backdropFilter: "blur(1.5px)",
+              WebkitBackdropFilter: "blur(1.5px)",
+              mixBlendMode: "overlay",
+            }}
+            _after={{
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
+              background: "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWx0ZXI9InVybCgjYSkiIG9wYWNpdHk9Ii4wNSIvPjwvc3ZnPg==')",
+              opacity: 0.2,
+              mixBlendMode: "multiply",
+              pointerEvents: "none"
+            }}
+          />
           <Box
             position="absolute"
             bottom="0"
             left="0"
             right="0"
             bg="rgba(0,0,0,0.7)"
-            p={4} // Increased padding
+            p={4}
           >
             <Text
               color={textColor}
               fontWeight="medium"
-              fontSize="md" // Increased font size
+              fontSize="md"
               textAlign="center"
             >
               {title || "Template"}
@@ -158,12 +146,10 @@ const TemplateCard = ({ title, hasButton = false, onClick, imageUrl }) => {
 };
 
 const QuickAccessTab = ({ label, isActive, count, onClick }) => {
-
-    const activeBg = useColorModeValue("blue.50", "gray.700");
-    const inactiveBg = useColorModeValue("gray.100", "gray.800");
-    const activeTextColor = useColorModeValue("blue.600", "white");
-    const inactiveTextColor = useColorModeValue("gray.600", "gray.400");
-
+  const activeBg = useColorModeValue("blue.50", "gray.700");
+  const inactiveBg = useColorModeValue("gray.100", "gray.800");
+  const activeTextColor = useColorModeValue("blue.600", "white");
+  const inactiveTextColor = useColorModeValue("gray.600", "gray.400");
 
   return (
     <Button
@@ -181,10 +167,10 @@ const QuickAccessTab = ({ label, isActive, count, onClick }) => {
 };
 
 const TablePagination = ({ currentPage, totalPages, onPageChange }) => {
-    const buttonBg = useColorModeValue("gray.100", "gray.800");
-    const activeBg = useColorModeValue("blue.50", "gray.700");
-    const textColor = useColorModeValue("gray.800", "white");
-    const mutedTextColor = useColorModeValue("gray.400", "gray.400");
+  const buttonBg = useColorModeValue("gray.100", "gray.800");
+  const activeBg = useColorModeValue("blue.50", "gray.700");
+  const textColor = useColorModeValue("gray.800", "white");
+  const mutedTextColor = useColorModeValue("gray.400", "gray.400");
 
   const handlePrevious = () => {
     if (currentPage > 1) {
@@ -196,86 +182,6 @@ const TablePagination = ({ currentPage, totalPages, onPageChange }) => {
     if (currentPage < totalPages) {
       onPageChange(currentPage + 1);
     }
-  };
-
-  // Generate page buttons
-  const renderPageButtons = () => {
-    const buttons = [];
-    const maxVisiblePages = 5;
-
-    // Determine range of pages to show
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-    // Adjust start if we're near the end
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
-    // Add first page button
-    if (startPage > 1) {
-      buttons.push(
-        <Button
-          key="first"
-          size="sm"
-          bg={buttonBg}
-          color={textColor}
-          onClick={() => onPageChange(1)}
-        >
-          1
-        </Button>
-      );
-
-      // Add ellipsis if needed
-      if (startPage > 2) {
-        buttons.push(
-          <Box key="ellipsis1" px={2} color={mutedTextColor}>
-            ...
-          </Box>
-        );
-      }
-    }
-
-    // Add page buttons
-    for (let i = startPage; i <= endPage; i++) {
-      buttons.push(
-        <Button
-          key={i}
-          size="sm"
-          bg={i === currentPage ? activeBg : buttonBg}
-          color={textColor}
-          onClick={() => onPageChange(i)}
-        >
-          {i}
-        </Button>
-      );
-    }
-
-    // Add last page button
-    if (endPage < totalPages) {
-      // Add ellipsis if needed
-      if (endPage < totalPages - 1) {
-        buttons.push(
-          <Box key="ellipsis2" px={2} color={mutedTextColor}>
-            ...
-          </Box>
-        );
-      }
-
-      buttons.push(
-        <Button
-          key="last"
-          size="sm"
-          bg={buttonBg}
-          color={textColor}
-          onClick={() => onPageChange(totalPages)}
-        >
-          {totalPages}
-        </Button>
-      );
-    }
-
-    return buttons;
   };
 
   return (
@@ -291,10 +197,6 @@ const TablePagination = ({ currentPage, totalPages, onPageChange }) => {
       >
         Previous
       </Button>
-
-      {/* <HStack spacing={1}>
-          {renderPageButtons()}
-        </HStack> */}
 
       <Button
         size="sm"
@@ -317,9 +219,13 @@ const AccessHomePage = ({ onSelectFlow }) => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("recent");
-  const [viewMode, setViewMode] = useState("list"); // 'list' or 'grid'
+  const [viewMode, setViewMode] = useState("list");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Show 10 rows at a time
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const itemsPerPage = 5;
+
+  const navigate = useNavigate();
+  const toast = useToast();
 
   const bgColor = useColorModeValue("white", "gray.900");
   const cardBgColor = useColorModeValue("gray.50", "gray.800");
@@ -333,6 +239,7 @@ const AccessHomePage = ({ onSelectFlow }) => {
   const inactiveTabBg = useColorModeValue("gray.100", "gray.800");
   const buttonBgColor = useColorModeValue("gray.100", "gray.800");
   const activeBgColor = useColorModeValue("blue.50", "gray.700");
+
   // Reset to first page when search query or active tab changes
   useEffect(() => {
     setCurrentPage(1);
@@ -341,16 +248,13 @@ const AccessHomePage = ({ onSelectFlow }) => {
   // Add some dummy creation dates to flows
   const addCreationDates = (flowList) => {
     const currentDate = new Date();
-
     return flowList.map((flow, index) => {
-      // Create dates ranging from 2 days to 60 days ago
       const daysAgo = 2 + ((index * 5) % 60);
       const date = new Date();
       date.setDate(currentDate.getDate() - daysAgo);
-
       return {
         ...flow,
-        creationDate: date.toISOString().split("T")[0], // YYYY-MM-DD format
+        creationDate: date.toISOString().split("T")[0],
       };
     });
   };
@@ -365,9 +269,7 @@ const AccessHomePage = ({ onSelectFlow }) => {
           accessManagementApi.getAccessLevels(),
         ]);
 
-        // Add creation dates to flows
         const flowsWithDates = addCreationDates(flowsResponse.data);
-
         setFlows(flowsWithDates);
         setAccessLevels(levelsResponse.data.levels);
       } catch (error) {
@@ -380,14 +282,51 @@ const AccessHomePage = ({ onSelectFlow }) => {
     fetchData();
   }, []);
 
+  // Handle creating new agent
+  const handleCreateAgent = async (agentData) => {
+    try {
+      const response = await agentAPI.createAgent(agentData);
+      
+      toast({
+        title: "Agent Created Successfully",
+        description: `Agent "${agentData.name}" has been created.`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
+
+      // Navigate to flow builder with the new agent ID
+      if (response.agent_id) {
+        navigate(`/flow-builder/${response.agent_id}`);
+      } else {
+        console.error("No agent_id returned from API");
+        toast({
+          title: "Warning",
+          description: "Agent created but ID not returned. Please check manually.",
+          status: "warning",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to create agent:", error);
+      toast({
+        title: "Error Creating Agent",
+        description: error.message || "Failed to create agent. Please try again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
   // Filter flows based on search and active tab
   const filteredFlows = flows.filter((flow) => {
-    // Search filter
     const matchesSearch =
       flow.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       flow.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // Tab filter
     if (activeTab === "recent") {
       return matchesSearch;
     } else if (activeTab === "development") {
@@ -395,7 +334,7 @@ const AccessHomePage = ({ onSelectFlow }) => {
     } else if (activeTab === "published") {
       return matchesSearch && flow.accessLevel > 0;
     } else if (activeTab === "shared") {
-      return matchesSearch && flow.accessLevel >= 4; // Just for demo purposes
+      return matchesSearch && flow.accessLevel >= 4;
     }
 
     return matchesSearch;
@@ -423,7 +362,7 @@ const AccessHomePage = ({ onSelectFlow }) => {
     <TemplateCard
       key={0}
       hasButton={true}
-      onClick={() => console.log("Create new template")}
+      onClick={() => setIsCreateModalOpen(true)}
     />,
     <TemplateCard
       key={1}
@@ -458,7 +397,6 @@ const AccessHomePage = ({ onSelectFlow }) => {
   ];
 
   const getFlowIcon = (accessLevel) => {
-    // Rotate between different graph icons based on access level
     switch (accessLevel % 3) {
       case 0:
         return FiBarChart2;
@@ -501,31 +439,18 @@ const AccessHomePage = ({ onSelectFlow }) => {
       </Box>
 
       {/* Template section */}
-      {/* <Box px={6} mb={8}>
-          <Text color={textColor}  mb={4} fontSize="sm">Create new or choose a template</Text>
-          <SimpleGrid columns={{ base: 2, md: 3, lg: 6 }} spacing={4}>
-            {templateCards}
-          </SimpleGrid>
-        </Box>
-         */}
-
       <Box px={6} mb={10}>
-        {" "}
-        {/* Increased horizontal padding from 6 to 8 */}
         <Text color={textColor} mb={5} fontSize="xl" fontWeight="medium">
           Create new
         </Text>
         <SimpleGrid
           columns={{ base: 2, md: 3, lg: 6 }}
-          spacing={9} // Increased spacing from 4 to 6
-          // maxW="1300px" // Added explicit max width
-          // mx="auto" // Center the grid
-          
-          //justifyContent="center" // Center the grid items
+          spacing={9}
         >
           {templateCards}
         </SimpleGrid>
       </Box>
+
       {/* Quick access section */}
       <Box px={6} mb={4}>
         <Flex justify="space-between" align="center" mb={4}>
@@ -563,21 +488,21 @@ const AccessHomePage = ({ onSelectFlow }) => {
           </HStack>
           <ButtonGroup size="sm" isAttached variant="outline">
             <Button
-                leftIcon={<FiUpload />}
-                size="sm"
-                colorScheme="gray"
-                variant="ghost" 
-                onClick={() => console.log("Upload clicked")}
-                mr={2}
-                >
-                Upload
-                </Button>
+              leftIcon={<FiUpload />}
+              size="sm"
+              colorScheme="gray"
+              variant="ghost" 
+              onClick={() => console.log("Upload clicked")}
+              mr={2}
+            >
+              Upload
+            </Button>
             <Box 
-                height="24px" 
-                width="1px" 
-                bg={useColorModeValue("gray.300", "gray.600")} 
-                mx={1}
-                my={1} 
+              height="24px" 
+              width="1px" 
+              bg={useColorModeValue("gray.300", "gray.600")} 
+              mx={1}
+              my={1} 
             />
             
             <IconButton
@@ -608,23 +533,6 @@ const AccessHomePage = ({ onSelectFlow }) => {
         overflow="hidden"
       >
         <Table variant="simple" size="sm">
-          {/* <Thead bg="#1f1f1f">
-            <Tr h="10px">
-              {" "}
-      
-              <Th color={mutedTextColor} width="60px" py={2} fontSize="sm">
-              </Th>
-              <Th color={mutedTextColor} py={2} fontSize="sm">
-                Name
-              </Th>
-              <Th color={mutedTextColor} width="150px" py={2} fontSize="sm">
-                Creation date
-              </Th>
-              <Th color={mutedTextColor} width="150px" py={2} fontSize="sm">
-                Access level
-              </Th>
-            </Tr>
-          </Thead> */}
           <Tbody>
             {paginatedFlows.map((flow) => (
               <Tr
@@ -633,7 +541,7 @@ const AccessHomePage = ({ onSelectFlow }) => {
                 onClick={() => onSelectFlow && onSelectFlow(flow)}
               >
                 <Td width={"10px"}>
-                <Box
+                  <Box
                     p={2}
                     borderRadius="md"
                     bg={`black.${(flow.accessLevel * 100) % 900 || 500}`}
@@ -642,14 +550,13 @@ const AccessHomePage = ({ onSelectFlow }) => {
                     alignItems="center"
                     justifyContent="center"
                     maxWidth={"30px"}
-                >
+                  >
                     <Icon 
-                    as={getFlowIcon(flow.accessLevel)} 
-                    boxSize={4} 
-                    maxWidth={"30px"}
-
+                      as={getFlowIcon(flow.accessLevel)} 
+                      boxSize={4} 
+                      maxWidth={"30px"}
                     />
-                </Box>
+                  </Box>
                 </Td>
                 <Td color={textColor}>
                   <Text fontWeight="medium">{flow.name}</Text>
@@ -682,6 +589,13 @@ const AccessHomePage = ({ onSelectFlow }) => {
           />
         )}
       </Box>
+
+      {/* Create Agent Modal */}
+      <CreateAgentModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreateAgent={handleCreateAgent}
+      />
     </Box>
   );
 };

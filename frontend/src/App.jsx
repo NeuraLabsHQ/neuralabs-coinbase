@@ -55,6 +55,12 @@ function App() {
                       <FlowBuilderPage />
                     </Layout>
                   } />
+                  {/* Add route with agent_id parameter */}
+                  <Route path="/flow-builder/:agentId" element={
+                    <Layout>
+                      <FlowBuilderPage />
+                    </Layout>
+                  } />
                   <Route path="/marketplace" element={
                     <Layout>
                       <MarketplacePage />

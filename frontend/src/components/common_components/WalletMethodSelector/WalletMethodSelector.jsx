@@ -77,6 +77,8 @@ const WalletMethodSelector = ({ isOpen, onClose }) => {
               status: 'success',
               duration: 5000,
               isClosable: true,
+              position: 'top',
+
             });
             
             // Close the modal after successful authentication
@@ -89,6 +91,7 @@ const WalletMethodSelector = ({ isOpen, onClose }) => {
               status: 'error',
               duration: 5000,
               isClosable: true,
+              position: 'top',
             });
           }
         } catch (error) {
@@ -99,6 +102,8 @@ const WalletMethodSelector = ({ isOpen, onClose }) => {
             status: 'error',
             duration: 5000,
             isClosable: true,
+            position: 'top',
+
           });
         }
       } else if (currentAccount && isAlreadyAuthenticated()) {
