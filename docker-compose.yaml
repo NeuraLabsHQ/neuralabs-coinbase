@@ -26,10 +26,14 @@ services:
     image: mysten/zklogin:prover-stable
     volumes:
       # The ZKEY environment variable must be set to the path of the zkey file.
-      - ./prover-service/zkLogin-main.zkey:/app/binaries/zkLogin.zkey
+      - ./prover-service/zklogin-ceremony-contributions/zkLogin-main.zkey:/app/binaries/zkLogin.zkey
     environment:
       - ZKEY=/app/binaries/zkLogin.zkey
       - WITNESS_BINARIES=/app/binaries
+    
+    networks:
+      - neuralabs_sui_network
+      - traefik-proxy
 
   sui-prover-frontend:
     image: mysten/zklogin:prover-fe-stable
@@ -58,6 +62,10 @@ services:
 
       - "traefik.http.routers.sui-prover.service=sui-prover-server"
       - "traefik.http.routers.sui-prover.middlewares=sui-prover-cors"
+    
+    networks:
+      - neuralabs_sui_network
+      - traefik-proxy
 
 networks:
   neuralabs_sui_network:
