@@ -249,7 +249,8 @@ const NavPanel = ({
             <CustomConnectButton 
               iconColor={iconColor} 
               hoverBgColor={hoverBgColor}
-              viewOnlyMode={viewOnlyMode} 
+              viewOnlyMode={viewOnlyMode}
+              
             />
           </Box>
           

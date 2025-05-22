@@ -1,0 +1,4 @@
+.env
+!template.env
+/data/**
+!/data/__placeholder__

@@ -2,6 +2,7 @@
 **/__pycache__/
 build/
 .env
+config.yaml
 
 backend/code_executor/logs
 

@@ -29,6 +29,7 @@ import {
   FiSend, // Added for Publish icon
 } from "react-icons/fi";
 import { FaAngleDoubleLeft, FaAngleDoubleRight } from "react-icons/fa";
+import { useCurrentWallet } from "@mysten/dapp-kit";
 import { useWallet } from "../../contexts/WalletContext";
 import { useExecuteContractFunction } from "../../utils/transaction";
 import flowIcons from "../../utils/my-flow-icons.json";
@@ -38,7 +39,12 @@ const FlowActionPanel = ({ toggleSidebar, sidebarOpen }) => {
   const [activeAction, setActiveAction] = useState(null);
   const [isModalOpen, setModalOpen] = useState(false);
   const [contractValue, setContractValue] = useState("0");
-  const { signAndSubmitTransaction, connected, wallet, account } = useWallet();
+  const { currentWallet } = useCurrentWallet();
+  // const { signAndSubmitTransaction, account } = useWallet();
+  const signAndSubmitTransaction = currentWallet?.signAndSubmitTransaction;
+  const account = "12344";
+  const connected = !!currentWallet;
+  const wallet = currentWallet;
   const toast = useToast();
 
   const executeContract = useExecuteContractFunction(

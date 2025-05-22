@@ -57,7 +57,7 @@ const AccessDetailPanel = ({ flowDetails, onClose }) => {
         <Flex flex="1" overflow="auto">
           {/* Flow Detail Component */}
           <Box 
-            w="80%" 
+            w="100%" 
             p={6} 
             borderRight="1px solid" 
             borderColor={borderColor}
@@ -71,12 +71,12 @@ const AccessDetailPanel = ({ flowDetails, onClose }) => {
           </Box>
           
           {/* Flow Description Component */}
-          <Box w="20%" p={6} overflow="auto">
+          {/* <Box w="20%" p={6} overflow="auto">
             <FlowDescriptionComponent 
               flowDetails={flowDetails} 
               currentHoveredItem={hoveredItem}
             />
-          </Box>
+          </Box> */}
         </Flex>
       </Flex>
     </Flex>

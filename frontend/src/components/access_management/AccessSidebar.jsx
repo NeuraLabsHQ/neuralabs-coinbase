@@ -256,6 +256,7 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
           size="sm" 
           w="100%"
           onClick={() => console.log('Create new project')}
+          bgColor={"#0f0f11"}
         >
           Create new project
         </Button>

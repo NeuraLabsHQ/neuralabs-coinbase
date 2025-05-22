@@ -1,4 +1,5 @@
-// src/components/FlowDetailComponent.jsx
+// export default FlowDetailComponent;
+// src/components/access_management/FlowDetailComponent.jsx
 import React from "react";
 import {
   Box,
@@ -9,7 +10,10 @@ import {
   Badge,
   Divider,
   useColorModeValue,
+  Tooltip,
 } from "@chakra-ui/react";
+import { InfoIcon } from "@chakra-ui/icons";
+import { FaTwitter, FaGithub } from "react-icons/fa"; 
 
 const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
   const textColor = useColorModeValue("gray.800", "white");
@@ -21,32 +25,64 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
 
   const defaultFlowData = {
     name: "Portfolio Manager",
-    description: "An AI Blockchain driven portfolio management system that optimizes asset allocation and risk management in Aptos.",
+    description:
+      "An AI Blockchain driven portfolio management system that optimizes asset allocation and risk management in Aptos.",
     tags: ["AI", "Blockchain", "Deep Learning"],
     creationDate: "8 day ago (March-16-2025 07:15:39 UTC)",
     owner: "0x22b7e94bb08eb07d59d1a56345e572a5b4409563bc0c0c8fd3eec0ec0bea8d46",
-    lastEdited: "1 day ago (March-23-2025 06:47:59 UTC)",
+    lastEdited: "0 day ago (March-23-2025 08:42:29 UTC)",
     license: "MIT",
     fork: "Original",
     socials: "X: @harshp_16 | GitHub: harshpoddar03",
     actions: "Edit | Chat | Visualize | Duplicate",
     deploymentStatus: "Active",
     md5: "e67044f2cc088c8f5c359faf3c21e7e1",
-    version: "v0.2",
-    publishedDate: "1 day ago (March-23-2025 04:24:29 UTC)",
-    publishHash: "0x20dd388a619f40aaabc36da3314278d0ad763ceb814d838e9853cbe944159af3",
+    version: "v0.3",
+    publishedDate: "0 day ago (March-23-2025 08:42:49 UTC)",
+    publishHash:
+      "0x1c66d49cc66cdc29d45d93b8388acdd62079cf18713de64a84c5260ed40ba0bb",
     chain: "APTOS Testnet",
     chainId: "0x1",
     chainStatus: "Active",
     chainExplorer: "explorer.aptoslabs.com/?network=testnet",
     contractName: "NeuraSynthesis",
     contractVersion: "v0.01",
-    contractId: "0x48b3475fd2c5d2ae55b80154ea006e6ed6ffb78c8e7dbfd14288168d7da3f7e6",
+    contractId:
+      "0x48b3475fd2c5d2ae55b80154ea006e6ed6ffb78c8e7dbfd14288168d7da3f7e6",
     nftId: "NFT-001",
-    nftMintHash: "0x20dd388a619f40aaabc36da3314278d0ad763ceb814d838e9853cbe944159af3",
+    nftMintHash:
+      "0x20dd388a619f40aaabc36da3314278d0ad763ceb814d838e9853cbe944159af3",
     myAccess: "Level 6",
     noOfAccess: "2",
     monetization: "None",
+  };
+
+  // Define tooltips for each key (excluding name, description, tags)
+  const tooltips = {
+    creationDate: "Date when the workflow was first created",
+    owner: "The blockchain address of the workflow owner",
+    lastEdited: "Date when the workflow was last modified",
+    license: "The licensing terms under which the workflow is distributed",
+    fork: "Indicates if this is an original workflow or forked from another",
+    socials: "Social media and GitHub handles of the creator",
+    actions: "Available actions to interact with the workflow",
+    deploymentStatus: "Current deployment status of the workflow",
+    md5: "MD5 hash of the workflow for integrity verification",
+    version: "Current version of the workflow",
+    publishedDate: "Date when the workflow was published",
+    publishHash: "Blockchain hash of the published workflow",
+    chain: "Blockchain network on which the workflow is deployed",
+    chainId: "Unique identifier of the blockchain network",
+    chainStatus: "Current status of the blockchain network",
+    chainExplorer: "Link to the blockchain explorer for the network",
+    contractName: "Name of the smart contract associated with the workflow",
+    contractVersion: "Version of the smart contract",
+    contractId: "Unique identifier of the smart contract",
+    nftId: "Identifier of the NFT associated with the workflow",
+    nftMintHash: "Blockchain hash of the NFT minting transaction",
+    myAccess: "Your access level to the workflow",
+    noOfAccess: "Number of users with access to the workflow",
+    monetization: "Monetization status or strategy of the workflow",
   };
 
   const data = defaultFlowData;
@@ -62,6 +98,44 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
       onLeaveItem();
     }
   };
+
+  // Helper function to render field with tooltip
+  const renderField = (key, label) => (
+    <Flex
+      w="100%"
+      align="start"
+      key={key}
+      onMouseEnter={() => handleHover(key)}
+      onMouseLeave={handleLeave}
+    >
+      <Flex align="center" w="180px">
+        {tooltips[key] && (
+          <Tooltip
+            label={tooltips[key]}
+            placement="top"
+            maxW="200px"
+            hasArrow
+            fontSize="xs"
+            bg="gray.700"
+            color="white"
+          >
+            <InfoIcon
+              boxSize="14px"
+              color={mutedTextColor}
+              cursor="help"
+              opacity={0.7}
+              mr={2}
+              _hover={{ opacity: 1 }}
+            />
+          </Tooltip>
+        )}
+        <Text fontWeight="medium" color={mutedTextColor}>
+          {label}
+        </Text>
+      </Flex>
+      <Text color={textColor}>{data[key]}</Text>
+    </Flex>
+  );
 
   return (
     <Box>
@@ -84,11 +158,15 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
         onMouseEnter={() => handleHover("generalWorkflow")}
         onMouseLeave={handleLeave}
       >
-    Workflow Summary
+        Workflow Summary
       </Heading>
 
       <VStack align="start" spacing={3} mb={4}>
-        <Flex w="100%" onMouseEnter={() => handleHover("description")} onMouseLeave={handleLeave}>
+        <Flex
+          w="100%"
+          onMouseEnter={() => handleHover("description")}
+          onMouseLeave={handleLeave}
+        >
           <Text fontWeight="medium" mr={2} color={mutedTextColor}>
             Description:
           </Text>
@@ -129,98 +207,28 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
         <VStack align="start" spacing={4}>
           {/* Creation Details */}
           <VStack align="start" spacing={2} w="100%">
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("creationDate")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                Creation Date:
-              </Text>
-              <Text color={textColor}>{data.creationDate}</Text>
-            </Flex>
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("owner")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                Owner:
-              </Text>
-              <Text color={textColor}>{data.owner}</Text>
-            </Flex>
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("lastEdited")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                Last Edited:
-              </Text>
-              <Text color={textColor}>{data.lastEdited}</Text>
-            </Flex>
+            {renderField("creationDate", "Creation Date:")}
+            {renderField("owner", "Owner:")}
+            {renderField("lastEdited", "Last Edited:")}
           </VStack>
 
           <Divider borderColor="gray.600" />
 
           {/* License Info */}
           <VStack align="start" spacing={2} w="100%">
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("license")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                License:
-              </Text>
-              <Text color={textColor}>{data.license}</Text>
-            </Flex>
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("fork")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                Fork of:
-              </Text>
-              <Text color={textColor}>{data.fork}</Text>
-            </Flex>
+            {renderField("license", "License:")}
+            {renderField("fork", "Fork of:")}
           </VStack>
 
           <Divider borderColor="gray.600" />
 
           {/* Socials */}
-          <Flex
-            w="100%"
-            align="start"
-            onMouseEnter={() => handleHover("socials")}
-            onMouseLeave={handleLeave}
-          >
-            <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-              Socials:
-            </Text>
-            <Text color={textColor}>{data.socials}</Text>
-          </Flex>
+          {renderField("socials", "Socials:")}
 
           <Divider borderColor="gray.600" />
 
           {/* Actions */}
-          <Flex
-            w="100%"
-            align="start"
-            onMouseEnter={() => handleHover("actions")}
-            onMouseLeave={handleLeave}
-          >
-            <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-              Actions:
-            </Text>
-            <Text color={textColor}>{data.actions}</Text>
-          </Flex>
+          {renderField("actions", "Actions:")}
         </VStack>
       </Box>
 
@@ -242,216 +250,46 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
         <VStack align="start" spacing={4}>
           {/* Deployment Details */}
           <VStack align="start" spacing={2} w="100%">
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("deploymentStatus")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                Status:
-              </Text>
-              <Text color={textColor}>{data.deploymentStatus}</Text>
-            </Flex>
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("md5")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                MD5:
-              </Text>
-              <Text color={textColor}>{data.md5}</Text>
-            </Flex>
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("version")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                Version:
-              </Text>
-              <Text color={textColor}>{data.version}</Text>
-            </Flex>
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("publishedDate")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                Published Date:
-              </Text>
-              <Text color={textColor}>{data.publishedDate}</Text>
-            </Flex>
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("publishHash")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                Publish Hash:
-              </Text>
-              <Text color={textColor}>{data.publishHash}</Text>
-            </Flex>
+            {renderField("deploymentStatus", "Status:")}
+            {renderField("md5", "MD5:")}
+            {renderField("version", "Version:")}
+            {renderField("publishedDate", "Published Date:")}
+            {renderField("publishHash", "Publish Hash:")}
           </VStack>
 
           <Divider borderColor="gray.600" />
 
           {/* Chain Info */}
           <VStack align="start" spacing={2} w="100%">
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("chain")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                Chain:
-              </Text>
-              <Text color={textColor}>{data.chain}</Text>
-            </Flex>
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("chainId")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                Chain ID:
-              </Text>
-              <Text color={textColor}>{data.chainId}</Text>
-            </Flex>
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("chainStatus")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                Chain Status:
-              </Text>
-              <Text color={textColor}>{data.chainStatus}</Text>
-            </Flex>
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("chainExplorer")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                Chain Explorer:
-              </Text>
-              <Text color={textColor}>{data.chainExplorer}</Text>
-            </Flex>
+            {renderField("chain", "Chain:")}
+            {renderField("chainId", "Chain ID:")}
+            {renderField("chainStatus", "Chain Status:")}
+            {renderField("chainExplorer", "Chain Explorer:")}
           </VStack>
 
           <Divider borderColor="gray.600" />
 
           {/* Contract Info */}
           <VStack align="start" spacing={2} w="100%">
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("contractName")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                Contract Name:
-              </Text>
-              <Text color={textColor}>{data.contractName}</Text>
-            </Flex>
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("contractVersion")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                Contract Version:
-              </Text>
-              <Text color={textColor}>{data.contractVersion}</Text>
-            </Flex>
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("contractId")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                Contract ID:
-              </Text>
-              <Text color={textColor}>{data.contractId}</Text>
-            </Flex>
+            {renderField("contractName", "Contract Name:")}
+            {renderField("contractVersion", "Contract Version:")}
+            {renderField("contractId", "Contract ID:")}
           </VStack>
 
           <Divider borderColor="gray.600" />
 
           {/* NFT Info */}
           <VStack align="start" spacing={2} w="100%">
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("nftId")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                NFT ID:
-              </Text>
-              <Text color={textColor}>{data.nftId}</Text>
-            </Flex>
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("nftMintHash")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                NFT Mint Hash:
-              </Text>
-              <Text color={textColor}>{data.nftMintHash}</Text>
-            </Flex>
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("myAccess")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                My Access:
-              </Text>
-              <Text color={textColor}>{data.myAccess}</Text>
-            </Flex>
-            <Flex
-              w="100%"
-              align="start"
-              onMouseEnter={() => handleHover("noOfAccess")}
-              onMouseLeave={handleLeave}
-            >
-              <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-                No of Access:
-              </Text>
-              <Text color={textColor}>{data.noOfAccess}</Text>
-            </Flex>
+            {renderField("nftId", "NFT ID:")}
+            {renderField("nftMintHash", "NFT Mint Hash:")}
+            {renderField("myAccess", "My Access:")}
+            {renderField("noOfAccess", "No of Access:")}
           </VStack>
 
           <Divider borderColor="gray.600" />
 
           {/* Monetization */}
-          <Flex
-            w="100%"
-            align="start"
-            onMouseEnter={() => handleHover("monetization")}
-            onMouseLeave={handleLeave}
-          >
-            <Text fontWeight="medium" w="180px" color={mutedTextColor}>
-              Monetization:
-            </Text>
-            <Text color={textColor}>{data.monetization}</Text>
-          </Flex>
+          {renderField("monetization", "Monetization:")}
         </VStack>
       </Box>
     </Box>

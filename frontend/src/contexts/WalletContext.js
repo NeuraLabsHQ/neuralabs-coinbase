@@ -167,7 +167,7 @@ const InnerWalletContextProvider = ({ children, rpcUrl }) => {
       
       // Generic connect for other wallets
       const response = await targetWallet.adapter.connect();
-      
+      console.log('Wallet response:', response);
       if (response && response.accounts && response.accounts.length > 0) {
         setWalletAddress(response.accounts[0]);
         setConnected(true);
@@ -283,6 +283,26 @@ const InnerWalletContextProvider = ({ children, rpcUrl }) => {
     }
   };
 
+    // Request zkLogin signature
+  const requestZkLoginSignature = async (params) => {
+    if (!client || !walletAddress || !wallet?.adapter) {
+      throw new Error('Client, wallet address or wallet adapter not available');
+    }
+    if (wallet.name !== 'Sui Wallet') {
+      throw new Error('zkLogin is only supported by Sui Wallet');
+    }
+    try {
+      const response = await wallet.adapter.request({
+        method: 'sui_signZkLogin',
+        params: params
+      });
+      return response;
+    } catch (error) {
+      console.error('Error requesting zkLogin signature:', error);
+      throw error;
+    }
+  };
+
   // Account object for compatibility with existing components
   const account = walletAddress ? { address: walletAddress } : null;
 
@@ -308,7 +328,8 @@ const InnerWalletContextProvider = ({ children, rpcUrl }) => {
         signAndExecuteTransaction,
         signTransaction,
         signMessage,
-        fetchBalance
+        fetchBalance,
+        requestZkLoginSignature
       }}
     >
       {children}
