@@ -116,7 +116,7 @@ class ZkLoginService {
       
       const email = decodedJwt.email;
       // backend url is in REACT_APP_BACKEND_URL
-      const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/auth/zklogin', {
+      const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/zk-login/zklogin-salt', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

@@ -11,7 +11,7 @@ from ..modules.authentication.jwt.token import JWTHandler
 from ..modules.authentication.jwt.redis_storage import RedisJWTStorage
 from ..modules.authentication import get_current_user, security
 from ..modules.database.postgresconn import PostgresConnection
-from ..modules.set_data.login import get_or_create_salt
+from ..modules.zk_login.zk_login import get_or_create_salt
 
 # Create router
 router = APIRouter()
@@ -60,6 +60,8 @@ async def login(login_data: LoginRequest):
     if not result:
         # If user doesn't exist, create a new one with default username
         # In a real implementation, you might want to handle this differently
+        
+        
         username = f"user_{secrets.token_hex(4)}"
         insert_query = "INSERT INTO USER_AUTH (user_pub_key, username) VALUES (%s, %s)"
         await pg_conn.execute_query(insert_query, (login_data.public_key, username))
@@ -94,38 +96,7 @@ async def login(login_data: LoginRequest):
         "user_id": user_data["user_pub_key"]
     }
 
-@router.post("/zklogin", response_model=Zk_LoginResponse, status_code=status.HTTP_200_OK)
-async def zk_login(
-    zk_login: ZKLoginRequest,
-    request: Request
-):
-    """
-    ZK login endpoint that verifies user credentials and returns a JWT token
-    
-    Args:
-        zk_login: ZK login request with email
-        request: FastAPI request object
-        
-    Returns:
-        Response with salt and email
-    """
-    # Get email from request
-    email = zk_login.email
-    
-    # Get or create salt for the email
-    success, result = await get_or_create_salt(email)
-    
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving salt: {result}"
-        )
-    
-    # Return the salt and email
-    return {
-        "salt": result  # Now correctly using the salt value from the tuple
-    
-    }
+
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
 async def logout(
