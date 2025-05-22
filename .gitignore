@@ -9,3 +9,7 @@ backend/code_executor/logs
 
 backend/notebooks/flow_outputs/**
 !backend/notebooks/flow_outputs/__placeholder__
+
+
+prover-service/**
+!./prover-service/__placeholder__

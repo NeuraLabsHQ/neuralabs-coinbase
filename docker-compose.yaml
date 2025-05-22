@@ -3,27 +3,64 @@ version: '1.0'
 services:
   
 
-  neuralabs_aptos:
-    build: 
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "2030:80"
-    volumes:
-      - ./frontend/.logs:/var/log/nginx
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    command: ["nginx", "-g", "daemon off;"]
+  # neuralabs_aptos:
+  #   build: 
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "2030:80"
+  #   volumes:
+  #     - ./frontend/.logs:/var/log/nginx
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
+  #   command: ["nginx", "-g", "daemon off;"]
 
-    networks:
-      - neuralabs_aptos_network
-      - traefik-proxy
+  #   networks:
+  #     - neuralabs_aptos_network
+  #     - traefik-proxy
+
+  sui-prover-backend:
+    image: mysten/zklogin:prover-stable
+    volumes:
+      # The ZKEY environment variable must be set to the path of the zkey file.
+      - ./prover-service/zkLogin-main.zkey:/app/binaries/zkLogin.zkey
+    environment:
+      - ZKEY=/app/binaries/zkLogin.zkey
+      - WITNESS_BINARIES=/app/binaries
+
+  sui-prover-frontend:
+    image: mysten/zklogin:prover-fe-stable
+    command: '8080'
+    ports:
+      # The PROVER_PORT environment variable must be set to the desired port.
+      - '2015:8080'
+    environment:
+      - PROVER_URI=http://sui-prover-backend:8080/input
+      - NODE_ENV=production
+      - DEBUG=zkLogin:info,jwks
+      - PROVER_TIMEOUT=30
+    labels:
+      - "traefik.enable=true"
+      # Service
+      - "traefik.http.services.sui-prover-server.loadbalancer.server.port=8080"
+      # CORS middleware
+      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowmethods=*"
+      # config
+      - "traefik.http.routers.sui-prover.rule=Host(`prover.sui.neuralabs.org`)"
+      - "traefik.http.routers.sui-prover.entrypoints=websecure"
+      - "traefik.http.routers.sui-prover.tls=true"
+      - "traefik.http.routers.sui-prover.tls.certresolver=letsencrypt"
+
+      # connecting the router to the service and the middleware
+
+      - "traefik.http.routers.sui-prover.service=sui-prover-server"
+      - "traefik.http.routers.sui-prover.middlewares=sui-prover-cors"
 
 networks:
-  neuralabs_aptos_network:
+  neuralabs_sui_network:
     driver: bridge
   traefik-proxy:
     external: true
