@@ -14,7 +14,7 @@ class ZkLoginService {
   constructor() {
     this.clientId = '';
     this.redirectUrl = window.location.origin + '/auth/callback';
-    this.fullnodeUrl = 'https://fullnode.devnet.sui.io';
+    this.fullnodeUrl = `https://fullnode.${process.env.REACT_APP_SUI_NETWORK}.sui.io`;
     this.suiClient = new SuiClient({ url: this.fullnodeUrl });
     
     // Storage keys

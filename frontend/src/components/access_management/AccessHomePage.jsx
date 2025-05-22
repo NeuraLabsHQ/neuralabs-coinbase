@@ -239,6 +239,9 @@ const AccessHomePage = ({ onSelectFlow }) => {
   const inactiveTabBg = useColorModeValue("gray.100", "gray.800");
   const buttonBgColor = useColorModeValue("gray.100", "gray.800");
   const activeBgColor = useColorModeValue("blue.50", "gray.700");
+  const listhoverBgColor =  useColorModeValue('#fdfdfd', '#1e1f21');
+
+
 
   // Reset to first page when search query or active tab changes
   useEffect(() => {
@@ -537,7 +540,7 @@ const AccessHomePage = ({ onSelectFlow }) => {
             {paginatedFlows.map((flow) => (
               <Tr
                 key={flow.id}
-                _hover={{ bg: "gray.800", cursor: "pointer" }}
+                _hover={{ bg: listhoverBgColor }}
                 onClick={() => onSelectFlow && onSelectFlow(flow)}
               >
                 <Td width={"10px"}>

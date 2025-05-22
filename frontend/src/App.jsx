@@ -37,8 +37,8 @@ const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CREDENTIALS;
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <SuiClientProvider networks={networkConfig} defaultNetwork="devnet">
-        <WalletProvider autoConnect={true} preferredWallets={['Slush']}>
+        <SuiClientProvider networks={networkConfig} defaultNetwork={process.env.REACT_APP_SUI_NETWORK}>        
+          <WalletProvider autoConnect={true} preferredWallets={['Slush']}>
           <ZkLoginContextProvider googleClientId={GOOGLE_CLIENT_ID}>
             <ChakraProvider theme={theme}>
               <ColorModeScript initialColorMode={theme.config.initialColorMode} />

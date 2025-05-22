@@ -9,6 +9,24 @@ from ...modules.database.postgresconn import PostgresConnection
 from ...modules.authentication.jwt.token import JWTHandler
 from ...modules.authentication.jwt.redis_storage import RedisJWTStorage
 import requests
+from pathlib import Path
+import yaml
+
+def load_config() -> Dict:
+    """
+    Load configuration from config.yaml
+    
+    Returns:
+        Configuration dictionary
+    """
+    config_path = Path(__file__).parent.parent.parent.parent / "config.yaml"
+    with open(config_path, "r") as file:
+        return yaml.safe_load(file)
+
+    
+config = load_config()
+
+
 
 # Initialize JWT handler and Redis storage
 jwt_handler = JWTHandler()
@@ -54,7 +72,7 @@ async def verify_zklogin_signature_graphql(
     signature_b64: str, 
     author: str, 
     intent_scope: str = "PERSONAL_MESSAGE",
-    network: str = "devnet"
+    network: str = config["network_used"]["sui_network"] 
 ) -> Dict[str, Any]:
     """
     Verify zkLogin signature using Sui GraphQL endpoint
@@ -77,7 +95,7 @@ async def verify_zklogin_signature_graphql(
         "devnet": "https://sui-devnet.mystenlabs.com/graphql"
     }
     
-    graphql_url = graphql_urls.get(network, graphql_urls["devnet"])
+    graphql_url = graphql_urls.get(network, graphql_urls[config["network_used"]["sui_network"]])
     print("bytes_b64", bytes_b64)
     print("signature_b64", signature_b64)
     print("author", author)

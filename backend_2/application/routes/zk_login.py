@@ -6,6 +6,8 @@ Authentication routes for zkLogin authentication and token management
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
+from pathlib import Path
+import yaml
 from typing import Optional, Dict, Any
 from datetime import timedelta
 import secrets
@@ -16,6 +18,20 @@ from ..modules.authentication import get_current_user, security
 from ..modules.database.postgresconn import PostgresConnection
 from ..modules.zk_login.zk_login import get_or_create_salt , verify_zklogin_signature_graphql, get_or_create_zklogin_user
 
+# load configuration from config.yaml
+
+def load_config() -> Dict[str, Any]:
+    """
+    Load configuration from config.yaml
+    
+    Returns:
+        Configuration dictionary
+    """
+    config_path = Path(__file__).parent.parent.parent / "config.yaml"
+    with open(config_path, "r") as file:
+        return yaml.safe_load(file)
+    
+config = load_config()
 # Create router
 router = APIRouter()
 
@@ -110,7 +126,7 @@ async def verify_zklogin_signature_and_authenticate(
             signature_b64=request.signature,
             author=request.author,
             intent_scope=request.intent_scope,  # Should be 0 for personal message
-            network="devnet"  # Use appropriate network
+            network=config["network_used"]["sui_network"]  # Use the network from config
         )
         
         print("Verification result:", verification_result)
@@ -198,7 +214,7 @@ async def verify_zklogin_transaction_signature(
             signature_b64=request.signature,
             author=request.author,
             intent_scope=request.intent_scope,  # Should be 3 for transaction
-            network="devnet"
+            network=config["network_used"]["sui_network"] 
         )
         
         return {
@@ -243,7 +259,7 @@ async def verify_zklogin_message_signature(
             signature_b64=request.signature,
             author=request.author,
             intent_scope=0,  # 0 for personal message
-            network="devnet"
+            network=config["network_used"]["sui_network"] 
         )
         
         if not verification_result.get("success", False):
