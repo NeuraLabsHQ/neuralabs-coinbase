@@ -55,7 +55,7 @@ services:
 
       - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowmethods=*"
       - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolalloworiginlist=*"
-      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowheaders=Upgrade,Connection,Origin,Sec-WebSocket-Key,Sec-WebSocket-Version,Sec-WebSocket-Extensions,Sec-WebSocket-Protocol"
+      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowheaders=*"
       - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolmaxage=100"
       - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowcredentials=true"
       
