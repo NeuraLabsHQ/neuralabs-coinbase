@@ -51,7 +51,14 @@ services:
       # Service
       - "traefik.http.services.sui-prover-server.loadbalancer.server.port=8080"
       # CORS middleware
+      # - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowmethods=*"
+
       - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowmethods=*"
+      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolalloworiginlist=*"
+      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowheaders=Upgrade,Connection,Origin,Sec-WebSocket-Key,Sec-WebSocket-Version,Sec-WebSocket-Extensions,Sec-WebSocket-Protocol"
+      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolmaxage=100"
+      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowcredentials=true"
+      
       # config
       - "traefik.http.routers.sui-prover.rule=Host(`prover.sui.neuralabs.org`)"
       - "traefik.http.routers.sui-prover.entrypoints=websecure"
