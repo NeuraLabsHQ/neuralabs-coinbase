@@ -5,3 +5,7 @@ build/
 config.yaml
 
 backend/code_executor/logs
+
+
+backend/notebooks/flow_outputs/**
+!backend/notebooks/flow_outputs/__placeholder__

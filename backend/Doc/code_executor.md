@@ -41,6 +41,8 @@ The system is built around a modular architecture with the following key compone
    APTOS_NODE_URL=https://testnet.aptoslabs.com
    APTOS_PRIVATE_KEY=your_private_key
    
+   DEFAULT_MODEL_ID=deepseek.r1-v1:0
+
    # Application settings
    LOG_LEVEL=INFO
    ALLOW_CUSTOM_CODE=true

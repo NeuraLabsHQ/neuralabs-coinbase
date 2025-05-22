@@ -9,10 +9,17 @@ from utils.logger import logger
 class LLMText(ElementBase):
     """LLM Text Generation Element."""
     
-    def __init__(self, element_id: str, name: str, description: str,
-                 input_schema: Dict[str, Any], output_schema: Dict[str, Any],
-                 model: str = "DeepSeek R1 AWS", temperature: float = 0.65,
-                 max_tokens: int = 1000, wrapper_prompt: str = ""):
+    def __init__(self, 
+                 element_id: str, 
+                 name: str, 
+                 description: str,
+                 input_schema: Dict[str, Any], 
+                 output_schema: Dict[str, Any],
+                 model: str = None, 
+                 temperature: float = 0.65,
+                 max_tokens: int = 1000, 
+                 wrapper_prompt: str = ""):
+        
         super().__init__(
             element_id=element_id,
             name=name,
@@ -26,16 +33,20 @@ class LLMText(ElementBase):
         self.max_tokens = max_tokens
         self.wrapper_prompt = wrapper_prompt
     
-    async def execute(self, executor, backtracking=False) -> Dict[str, Any]:
+    async def execute(self, 
+                      executor, 
+                      backtracking=False) -> Dict[str, Any]:
+        
         """Execute LLM text generation."""
+        
         if not self.validate_inputs():
             missing_inputs = [name for name, schema in self.input_schema.items() 
                              if schema.get('required', False) and name not in self.inputs]
             raise ValueError(f"Missing required inputs for LLM Text element: {missing_inputs}")
         
         # Get inputs
-        prompt = self.inputs.get("prompt", "")
-        context = self.inputs.get("context", [])
+        prompt          = self.inputs.get("prompt", "")
+        context         = self.inputs.get("context", [])
         additional_data = self.inputs.get("additional_data", {})
         
         # Format the prompt with wrapper and context
@@ -51,7 +62,11 @@ class LLMText(ElementBase):
         })
         
         # Initialize Bedrock service from config
-        config = executor.config
+        config          = executor.config
+        
+        if self.model is None:
+            self.model = config.get("default_model_id", "arn:aws:bedrock:us-east-2:559050205657:inference-profile/us.deepseek.r1-v1:0")
+        
         bedrock_service = BedrockService(
                                             region_name=config.get("aws_region", "us-west-2"),
                                             aws_access_key_id=config.get("aws_access_key_id"),

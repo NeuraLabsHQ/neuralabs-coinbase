@@ -1,0 +1,5 @@
+jupyter
+notebook
+nest_asyncio
+websockets
+pygame

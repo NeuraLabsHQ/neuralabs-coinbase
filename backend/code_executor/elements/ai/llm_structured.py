@@ -9,10 +9,16 @@ from utils.logger import logger
 class LLMStructured(ElementBase):
     """LLM Structured Output Generation Element."""
     
-    def __init__(self, element_id: str, name: str, description: str,
-                 input_schema: Dict[str, Any], output_schema: Dict[str, Any],
-                 model: str = "DeepSeek R1 AWS", temperature: float = 0.3,
-                 max_tokens: int = 1000, wrapper_prompt: str = "",
+    def __init__(self, 
+                 element_id     : str, 
+                 name           : str, 
+                 description    : str,
+                 input_schema   : Dict[str, Any], 
+                 output_schema  : Dict[str, Any],
+                 model          : str = "DeepSeek R1 AWS", 
+                 temperature    : float = 0.3,
+                 max_tokens     : int = 1000, 
+                 wrapper_prompt : str = "",
                  llm_hidden_prompt: str = ""):
         super().__init__(
             element_id=element_id,
@@ -22,11 +28,11 @@ class LLMStructured(ElementBase):
             input_schema=input_schema,
             output_schema=output_schema
         )
-        self.model = model
-        self.temperature = temperature
-        self.max_tokens = max_tokens
-        self.wrapper_prompt = wrapper_prompt
-        self.llm_hidden_prompt = llm_hidden_prompt
+        self.model              = model
+        self.temperature        = temperature
+        self.max_tokens         = max_tokens
+        self.wrapper_prompt     = wrapper_prompt
+        self.llm_hidden_prompt  = llm_hidden_prompt
     
     async def execute(self, executor, backtracking=False) -> Dict[str, Any]:
         """Execute LLM structured output generation."""
@@ -36,39 +42,44 @@ class LLMStructured(ElementBase):
             raise ValueError(f"Missing required inputs for LLM Structured element: {missing_inputs}")
         
         # Get inputs
-        prompt = self.inputs.get("prompt", "")
-        context = self.inputs.get("context", [])
+        prompt          = self.inputs.get("prompt", "")
+        context         = self.inputs.get("context", [])
         additional_data = self.inputs.get("additional_data", {})
         
         # Format the complete prompt
         formatted_prompt = self._format_prompt(prompt, context, additional_data)
         
+
         # Stream event for the prompt
         await executor._stream_event("llm_prompt", {
-            "element_id": self.element_id,
-            "prompt": formatted_prompt,
-            "model": self.model,
-            "temperature": self.temperature,
-            "max_tokens": self.max_tokens
-        })
+                                                        "element_id"    : self.element_id,
+                                                        "prompt"        : formatted_prompt,
+                                                        "model"         : self.model,
+                                                        "temperature"   : self.temperature,
+                                                        "max_tokens"    : self.max_tokens
+                                                    })
         
         # Initialize Bedrock service
-        config = executor.config
-        bedrock_service = BedrockService(
-            region_name=config.get("aws_region", "us-west-2"),
-            aws_access_key_id=config.get("aws_access_key_id"),
-            aws_secret_access_key=config.get("aws_secret_access_key"),
-            model_id=self.model
-        )
+        config          = executor.config
         
+        if self.model is None:
+            self.model = config.get("default_model_id", "arn:aws:bedrock:us-east-2:559050205657:inference-profile/us.deepseek.r1-v1:0")
+        
+        bedrock_service = BedrockService(
+                                            region_name             = config.get("aws_region", "us-west-2"),
+                                            aws_access_key_id       = config.get("aws_access_key_id"),
+                                            aws_secret_access_key   = config.get("aws_secret_access_key"),
+                                            model_id                = self.model
+                                        )
+                                        
         # Generate structured output
         try:
             structured_output = await bedrock_service.generate_structured_output(
-                prompt=formatted_prompt,
-                output_schema=self.output_schema,
-                temperature=self.temperature,
-                max_tokens=self.max_tokens
-            )
+                                                                                    prompt          = formatted_prompt,
+                                                                                    output_schema   = self.output_schema,
+                                                                                    temperature     = self.temperature,
+                                                                                    max_tokens      = self.max_tokens
+                                                                                )
             
             # Check if there was an error in parsing
             if "error" in structured_output:
