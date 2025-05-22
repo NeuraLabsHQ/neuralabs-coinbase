@@ -8,7 +8,7 @@ import json
 from ...modules.database.postgresconn import PostgresConnection
 from ...modules.authentication.jwt.token import JWTHandler
 from ...modules.authentication.jwt.redis_storage import RedisJWTStorage
-
+import requests
 
 # Initialize JWT handler and Redis storage
 jwt_handler = JWTHandler()
@@ -53,7 +53,7 @@ async def verify_zklogin_signature_graphql(
     bytes_b64: str, 
     signature_b64: str, 
     author: str, 
-    intent_scope: int = 3,
+    intent_scope: str = "PERSONAL_MESSAGE",
     network: str = "devnet"
 ) -> Dict[str, Any]:
     """
@@ -63,7 +63,7 @@ async def verify_zklogin_signature_graphql(
         bytes_b64: Base64-encoded transaction/message bytes
         signature_b64: Base64-encoded zkLogin signature
         author: zkLogin Sui address
-        intent_scope: Intent scope (3 for transaction)
+        intent_scope: Intent scope ("PERSONAL_MESSAGE" or "TRANSACTION_DATA")
         network: Network to use (mainnet, testnet, devnet)
         
     Returns:
@@ -78,7 +78,12 @@ async def verify_zklogin_signature_graphql(
     }
     
     graphql_url = graphql_urls.get(network, graphql_urls["devnet"])
+    print("bytes_b64", bytes_b64)
+    print("signature_b64", signature_b64)
+    print("author", author)
+    print("intent_scope", intent_scope)
     
+    print(f"Using GraphQL URL: {graphql_url}")
     query = """
     query VerifyZkloginSignature(
         $bytes: Base64!
@@ -101,34 +106,38 @@ async def verify_zklogin_signature_graphql(
     variables = {
         "bytes": bytes_b64,
         "signature": signature_b64,
-        "intentScope": intent_scope,
+        "intentScope": "PERSONAL_MESSAGE",
         "author": author
     }
+    print("variables", variables)
     
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                graphql_url,
-                json={"query": query, "variables": variables},
-                headers={"Content-Type": "application/json"}
-            ) as response:
-                if response.status != 200:
-                    raise HTTPException(
-                        status_code=500,
-                        detail=f"GraphQL request failed with status {response.status}"
-                    )
-                
-                result = await response.json()
-                
-                if "errors" in result:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"GraphQL errors: {result['errors']}"
-                    )
-                
-                return result["data"]["verifyZkloginSignature"]
-                
-    except aiohttp.ClientError as e:
+    
+        
+        response = requests.post(
+            graphql_url,
+            json={"query": query, "variables": variables},
+            headers={"Content-Type": "application/json"}
+        )
+        
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=500,
+                detail=f"GraphQL request failed with status {response.status_code}"
+            )
+        
+        result = response.json()
+        
+        if "errors" in result:
+            raise HTTPException(
+                status_code=400,
+                detail=f"GraphQL errors: {result['errors']}"
+            )
+            
+        print("GraphQL result:", result)
+        return result["data"]["verifyZkloginSignature"]
+            
+    except requests.RequestException as e:
         raise HTTPException(
             status_code=500,
             detail=f"Network error during signature verification: {str(e)}"
@@ -151,6 +160,8 @@ async def get_or_create_zklogin_user(email: str, zklogin_address: str) -> Dict[s
     Returns:
         Dictionary with user information
     """
+    
+    print("email", email)
     pg_conn = PostgresConnection()
     
     # First, try to find user by zkLogin address

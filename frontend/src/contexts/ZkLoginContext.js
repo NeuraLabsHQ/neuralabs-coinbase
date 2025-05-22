@@ -13,6 +13,7 @@ export const ZkLoginContextProvider = ({ children, googleClientId }) => {
   const [userInfo, setUserInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [jwtToken, setJwtToken] = useState(null);
 
   // Set client ID when provided
   useEffect(() => {
@@ -26,8 +27,9 @@ export const ZkLoginContextProvider = ({ children, googleClientId }) => {
     const checkExistingSession = () => {
       const savedAddress = sessionStorage.getItem('zkLoginAddress');
       const savedJwt = sessionStorage.getItem('zkLoginJwt');
+      const savedAuthToken = ZkLoginService.getStoredAuthToken();
       
-      if (savedAddress && savedJwt) {
+      if (savedAddress && savedJwt && savedAuthToken) {
         try {
           // Decode JWT to get user info
           const { jwtDecode } = require('jwt-decode');
@@ -35,6 +37,7 @@ export const ZkLoginContextProvider = ({ children, googleClientId }) => {
           
           setIsAuthenticated(true);
           setZkLoginAddress(savedAddress);
+          setJwtToken(savedAuthToken);
           setUserInfo({
             sub: decodedJwt.sub,
             email: decodedJwt.email,
@@ -43,8 +46,8 @@ export const ZkLoginContextProvider = ({ children, googleClientId }) => {
           });
         } catch (err) {
           console.error('Failed to restore zkLogin session:', err);
-          sessionStorage.removeItem('zkLoginAddress');
-          sessionStorage.removeItem('zkLoginJwt');
+          // Clear corrupted session data
+          logout();
         }
       }
     };
@@ -61,7 +64,7 @@ export const ZkLoginContextProvider = ({ children, googleClientId }) => {
       // Initialize zkLogin flow
       const { loginUrl } = await ZkLoginService.beginLogin();
       
-      // Open the Google OAuth login window
+      // Redirect to Google OAuth login
       window.location.href = loginUrl;
       
       return { success: true };
@@ -80,16 +83,14 @@ export const ZkLoginContextProvider = ({ children, googleClientId }) => {
       setIsLoading(true);
       setError(null);
       
+      // Complete the login process - this now includes authentication with backend
       const result = await ZkLoginService.completeLogin(jwt);
       
       if (result.success) {
-        // Store the address and JWT for future use
-        sessionStorage.setItem('zkLoginAddress', result.address);
-        sessionStorage.setItem('zkLoginJwt', jwt);
-        
-        // Update state
+        // Update state with authentication data
         setIsAuthenticated(true);
         setZkLoginAddress(result.address);
+        setJwtToken(result.jwtToken);
         
         // Extract user info from JWT
         const { decodedJwt } = result;
@@ -100,6 +101,7 @@ export const ZkLoginContextProvider = ({ children, googleClientId }) => {
           picture: decodedJwt.picture
         });
         
+        console.log('zkLogin authentication completed successfully!');
         return result;
       } else {
         throw new Error(result.error || 'Authentication failed');
@@ -127,18 +129,68 @@ export const ZkLoginContextProvider = ({ children, googleClientId }) => {
     }
   };
 
+  // Make authenticated API calls using the JWT token
+  const makeAuthenticatedRequest = async (url, options = {}) => {
+    try {
+      return await ZkLoginService.makeAuthenticatedRequest(url, options);
+    } catch (err) {
+      if (err.message.includes('expired')) {
+        // Token expired - trigger logout
+        logout();
+      }
+      throw err;
+    }
+  };
+
   // Logout
-  const logout = () => {
-    ZkLoginService.logout();
-    
-    // Clear state
-    setIsAuthenticated(false);
-    setZkLoginAddress(null);
-    setUserInfo(null);
-    
-    // Remove from sessionStorage
-    sessionStorage.removeItem('zkLoginAddress');
-    sessionStorage.removeItem('zkLoginJwt');
+  const logout = async () => {
+    try {
+      // If we have a token, call backend logout endpoint
+      if (jwtToken) {
+        try {
+          await makeAuthenticatedRequest(process.env.REACT_APP_BACKEND_URL + '/api/zk-login/zklogin-logout', {
+            method: 'POST'
+          });
+        } catch (err) {
+          console.warn('Backend logout failed:', err);
+          // Continue with local logout even if backend fails
+        }
+      }
+    } catch (err) {
+      console.error('Error during logout:', err);
+    } finally {
+      // Clear local state and storage
+      ZkLoginService.logout();
+      
+      setIsAuthenticated(false);
+      setZkLoginAddress(null);
+      setUserInfo(null);
+      setJwtToken(null);
+      setError(null);
+    }
+  };
+
+  // Validate current token
+  const validateToken = async () => {
+    try {
+      if (!jwtToken) {
+        return { valid: false, error: 'No token found' };
+      }
+
+      const response = await makeAuthenticatedRequest(
+        process.env.REACT_APP_BACKEND_URL + '/api/zk-login/zklogin-validate'
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        return { valid: true, userData: data };
+      } else {
+        throw new Error('Token validation failed');
+      }
+    } catch (err) {
+      console.error('Token validation error:', err);
+      return { valid: false, error: err.message };
+    }
   };
 
   // Context value
@@ -148,9 +200,12 @@ export const ZkLoginContextProvider = ({ children, googleClientId }) => {
     userInfo,
     isLoading,
     error,
+    jwtToken,
     startZkLogin,
     completeZkLogin,
     signTransaction,
+    makeAuthenticatedRequest,
+    validateToken,
     logout
   };
 
