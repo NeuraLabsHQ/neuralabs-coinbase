@@ -210,7 +210,7 @@ def populate_flowbuilder_blocks(cursor):
     
     blockchain_blocks = [
         {
-            'type': 'ReadBlockchainData',
+            'type': 'ReadBlockchain',
             'element_description': 'Read data from blockchain smart contracts',
             'input_schema': {"function_params": {"type": "object", "description": "Parameters for the blockchain function call", "required": False}},
             'output_schema': {"data": {"type": "any", "description": "Response data from blockchain", "required": True}, "transaction_hash": {"type": "string", "description": "Transaction hash if applicable", "required": False}},
@@ -219,7 +219,7 @@ def populate_flowbuilder_blocks(cursor):
             'category': 'Blockchain'
         },
         {
-            'type': 'BuildTransactionJSON',
+            'type': 'BuildTransaction',
             'element_description': 'Create transaction payload for blockchain submission',
             'input_schema': {"transaction_params": {"type": "object", "description": "Parameters for transaction building", "required": True}},
             'output_schema': {"transaction_json": {"type": "object", "description": "Complete transaction payload", "required": True}, "estimated_gas": {"type": "number", "description": "Estimated gas cost", "required": False}},

@@ -239,24 +239,18 @@ const BlocksPanel = ({
           <Tab>Pipelines</Tab>
         </TabList>
         
-        <TabPanels flex="1" overflowY="auto"
-          // css={{
-          //   // Add custom CSS to ensure proper scrolling
-          //   '&::-webkit-scrollbar': {
-          //     width: '6px',
-          //   },
-          //   '&::-webkit-scrollbar-track': {
-          //     width: '8px',
-          //     background: useColorModeValue('gray.100', 'gray.700'),
-          //   },
-          //   '&::-webkit-scrollbar-thumb': {
-          //     background: useColorModeValue('gray.400', 'gray.500'),
-          //     borderRadius: '24px',
-          //   },
-          // }}
-        
+        <TabPanels 
+          flex="1" 
+          overflowY="auto"
+          css={{
+            '&::-webkit-scrollbar': {
+              display: 'none',
+            },
+            '-ms-overflow-style': 'none',  /* IE and Edge */
+            'scrollbar-width': 'none',  /* Firefox */
+          }}
         >
-          <TabPanel p={4} h="100%">
+          <TabPanel p={4} h="100%" overflowY="auto" overflowX="hidden">
             <Flex position="relative">
               <Input
                 placeholder="Search blocks..."
