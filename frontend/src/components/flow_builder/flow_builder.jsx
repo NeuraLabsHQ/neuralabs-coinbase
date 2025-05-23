@@ -10,6 +10,7 @@ import DetailsPanel from './DetailsPanel/DetailsPanel';
 import TemplatePanel from './TemplatePanel/TemplatePanel';
 import VisualizePanel from './VisualizePanel/VisualizePanel';
 import CodePanel from './CodePanel/CodePanel';
+import ConnectionPopup from './ConnectionPopup/ConnectionPopup';
 import MarketplaceSidebar from '../marketplace/MarketplacePanel/MarketplaceSidebar';
 import MarketplaceDetailPanel from '../marketplace/MarketplaceContent/MarketplaceDetailPanel';
 import { beautifyFlow } from '../../utils/flowBeautifier';
@@ -59,6 +60,12 @@ const FlowBuilder = () => {
   
   const [nodeTypes, setNodeTypes] = useState({});
   const [nodeCategories, setNodeCategories] = useState([]);
+  
+  // Connection popup state
+  const [connectionPopupOpen, setConnectionPopupOpen] = useState(false);
+  const [connectionSource, setConnectionSource] = useState(null);
+  const [connectionTarget, setConnectionTarget] = useState(null);
+  const [selectedEdge, setSelectedEdge] = useState(null);
 
   useEffect(() => {
     const fetchNodeData = async () => {
@@ -207,35 +214,88 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
   const handleAddEdge = (source, target, sourcePort = 0, targetPort = 0) => {
     if (viewOnlyMode) return;
     
-    // First check if this connection already exists
-    const connectionExists = edges.some(edge => 
-      edge.source === source && 
-      edge.target === target && 
-      edge.sourcePort === sourcePort && 
-      edge.targetPort === targetPort
-    );
+    // Find the source and target nodes
+    const sourceNode = nodes.find(n => n.id === source);
+    const targetNode = nodes.find(n => n.id === target);
     
-    if (connectionExists) {
-      console.log("Connection already exists");
+    if (!sourceNode || !targetNode) {
+      console.error("Source or target node not found");
       return;
     }
     
-    // Create a new unique ID for the edge
-    const newEdge = {
-      id: `edge-${Date.now()}`,
-      source,
-      target,
-      sourcePort,
-      targetPort
-    };
+    // Check if a connection already exists between these nodes
+    const existingEdge = edges.find(edge => 
+      edge.source === source && edge.target === target
+    );
     
-    // Update the edges state
-    const updatedEdges = [...edges, newEdge];
-    setEdges(updatedEdges);
+    // Open the connection popup
+    setConnectionSource(sourceNode);
+    setConnectionTarget(targetNode);
+    setSelectedEdge(existingEdge);
+    setConnectionPopupOpen(true);
+  };
+  
+  // Handle clicking on an edge to edit connection
+  const handleEdgeClick = (edge) => {
+    if (!edge) return;
     
-    // If beautify mode is active, reapply beautify after adding an edge
+    const sourceNode = nodes.find(n => n.id === edge.source);
+    const targetNode = nodes.find(n => n.id === edge.target);
+    
+    if (sourceNode && targetNode) {
+      setConnectionSource(sourceNode);
+      setConnectionTarget(targetNode);
+      setSelectedEdge(edge);
+      setConnectionPopupOpen(true);
+    }
+  };
+  
+  // Handle saving connection from popup
+  const handleSaveConnection = (mappings) => {
+    if (!connectionSource || !connectionTarget) return;
+    
+    // Find existing edge if any
+    const existingEdgeIndex = edges.findIndex(edge => 
+      edge.source === connectionSource.id && 
+      edge.target === connectionTarget.id
+    );
+    
+    let updatedEdgesList;
+    
+    if (existingEdgeIndex >= 0) {
+      // Update existing edge with new mappings
+      const updatedEdges = [...edges];
+      updatedEdges[existingEdgeIndex] = {
+        ...updatedEdges[existingEdgeIndex],
+        mappings,
+        sourceName: connectionSource.name,
+        targetName: connectionTarget.name
+      };
+      setEdges(updatedEdges);
+      updatedEdgesList = updatedEdges;
+    } else {
+      // Create new edge with mappings
+      const newEdge = {
+        id: `edge-${Date.now()}`,
+        source: connectionSource.id,
+        target: connectionTarget.id,
+        sourceName: connectionSource.name,
+        targetName: connectionTarget.name,
+        mappings
+      };
+      const newEdges = [...edges, newEdge];
+      setEdges(newEdges);
+      updatedEdgesList = newEdges;
+    }
+    
+    // Clear connection state
+    setConnectionSource(null);
+    setConnectionTarget(null);
+    setSelectedEdge(null);
+    
+    // If beautify mode is active, reapply beautify after adding/updating an edge
     if (beautifyMode) {
-      applyBeautify(nodes, updatedEdges);
+      applyBeautify(nodes, updatedEdgesList);
     }
   };
 
@@ -867,6 +927,7 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
           onSelectNode={handleNodeSelect}
           selectedNode={selectedNode}
           onUpdateNodePosition={handleUpdateNodePosition}
+          onEdgeClick={handleEdgeClick}
           scale={scale}
           translate={translate}
           setScale={setScale}
@@ -937,6 +998,22 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
           codeOpen={codeOpen}
         />
       )}
+      
+      {/* Connection Popup */}
+      <ConnectionPopup
+        isOpen={connectionPopupOpen}
+        onClose={() => {
+          setConnectionPopupOpen(false);
+          setConnectionSource(null);
+          setConnectionTarget(null);
+          setSelectedEdge(null);
+        }}
+        sourceNode={connectionSource}
+        targetNode={connectionTarget}
+        onSave={handleSaveConnection}
+        existingMappings={selectedEdge?.mappings || []}
+        allEdges={edges}
+      />
     </Flex>
   );
 };

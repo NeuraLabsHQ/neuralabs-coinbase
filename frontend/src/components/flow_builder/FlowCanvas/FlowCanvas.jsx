@@ -59,7 +59,8 @@ const FlowCanvas = ({
   hideTextLabels,
   viewOnlyMode = false,
   nodeTypes = {},
-  onImportFlow
+  onImportFlow,
+  onEdgeClick
 }) => {
   const svgRef = useRef(null);
   const canvasRef = useRef(null);
@@ -614,13 +615,13 @@ const renderNode = (node) => {
         </div>
       </foreignObject>
       
-      {/* Input ports - centered horizontally regardless of box width */}
-      {Array.from({ length: inputCount }).map((_, i) => (
-        <g key={`input-${i}`} transform={`translate(0, ${-30 - (i * 20)})`}>
+      {/* Single input port */}
+      {inputCount > 0 && (
+        <g transform={`translate(0, -30)`}>
           <circle
             cx="0"
             cy="0"
-            r="5"
+            r="6"
             className="node-port"
             fill={colorMode === 'dark' ? 'white' : 'black'}
             stroke={getNodeColors(node.type).ringColor}
@@ -630,19 +631,30 @@ const renderNode = (node) => {
             }}
             data-node-id={node.id}
             data-port-type="input"
-            data-port-index={i}
-            onMouseDown={(e) => handlePortMouseDown(e, node.id, 'input', i)}
+            data-port-index={0}
+            onMouseDown={(e) => handlePortMouseDown(e, node.id, 'input', 0)}
           />
+          {inputCount > 1 && (
+            <text
+              x="12"
+              y="5"
+              fill={colorMode === 'dark' ? '#A0AEC0' : '#718096'}
+              fontSize="10"
+              fontWeight="bold"
+            >
+              {inputCount}
+            </text>
+          )}
         </g>
-      ))}
+      )}
       
-      {/* Output ports - centered horizontally regardless of box width */}
-      {Array.from({ length: outputCount }).map((_, i) => (
-        <g key={`output-${i}`} transform={`translate(0, ${30 + (i * 20)})`}>
+      {/* Single output port */}
+      {outputCount > 0 && (
+        <g transform={`translate(0, 30)`}>
           <circle
             cx="0"
             cy="0"
-            r="5"
+            r="6"
             className="node-port"
             fill={colorMode === 'dark' ? 'white' : 'black'}
             stroke={getNodeColors(node.type).ringColor}
@@ -652,11 +664,22 @@ const renderNode = (node) => {
             }}
             data-node-id={node.id}
             data-port-type="output"
-            data-port-index={i}
-            onMouseDown={(e) => handlePortMouseDown(e, node.id, 'output', i)}
+            data-port-index={0}
+            onMouseDown={(e) => handlePortMouseDown(e, node.id, 'output', 0)}
           />
+          {outputCount > 1 && (
+            <text
+              x="12"
+              y="5"
+              fill={colorMode === 'dark' ? '#A0AEC0' : '#718096'}
+              fontSize="10"
+              fontWeight="bold"
+            >
+              {outputCount}
+            </text>
+          )}
         </g>
-      ))}
+      )}
     </g>
   );
 }
@@ -674,12 +697,9 @@ const renderNode = (node) => {
       return null;
     }
     
-    const sourcePortIndex = edge.sourcePort || 0;
-    const targetPortIndex = edge.targetPort || 0;
-    
-    // Calculate port positions
-    const sourceY = sourceNode.y + 30 + (sourcePortIndex * 20);
-    const targetY = targetNode.y - 30 - (targetPortIndex * 20);
+    // Single port positions - output port is at the bottom, input port is at the top
+    const sourceY = sourceNode.y + 30;
+    const targetY = targetNode.y - 30;
     
     // Create a smooth bezier curve
     const path = `M ${sourceNode.x} ${sourceY} C ${sourceNode.x} ${sourceY + 50}, ${targetNode.x} ${targetY - 50}, ${targetNode.x} ${targetY}`;
@@ -701,7 +721,16 @@ const renderNode = (node) => {
         fill="none"
         markerEnd={isHighlighted ? "url(#arrow-highlighted)" : "url(#arrow)"}
         data-edge-id={edge.id}
-        style={{ transition: 'stroke 0.3s, stroke-width 0.3s' }}
+        style={{ 
+          transition: 'stroke 0.3s, stroke-width 0.3s',
+          cursor: 'pointer'
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (onEdgeClick) {
+            onEdgeClick(edge);
+          }
+        }}
       />
     );
   };

@@ -151,6 +151,7 @@ const SchemaPopup = ({
                           value={field.type}
                           onChange={(e) => handleUpdateRow(index, 'type', e.target.value)}
                           size="sm"
+                          width={"100px"}
                           bg={inputBg}
                         >
                           <option value="string">String</option>
