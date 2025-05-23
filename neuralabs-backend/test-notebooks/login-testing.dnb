@@ -1,0 +1,99 @@
+{
+  "cells": [
+    {
+      "language": "python",
+      "value": "public_key",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "bytes.fromhex(public_key)",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "signature",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "message",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "print( \"public_key: \", public_key )\nprint( \"signature: \", signature )\nprint( \"message: \", message )",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "SuiSignature(signature_b64)",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "graphql_urls = {\n    \"mainnet\": \"https://sui-mainnet.mystenlabs.com/graphql\",\n    \"testnet\": \"https://sui-testnet.mystenlabs.com/graphql\", \n    \"devnet\": \"https://sui-devnet.mystenlabs.com/graphql\"\n}",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "graphql_url = \"https://sui-testnet.mystenlabs.com/graphql\"\n",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "PublicKey.from_serialized(public_key)",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "verify_obj = SuiKeyPair()",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "b64decode(signature)",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "b64encode(signature_bytes)",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "verify_obj.verify_personal_message(message, signature)",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "message_bytes",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "signature_b64 = b64encode(signature_bytes).decode('utf-8')",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "verify_obj.verify_personal_message(message_with_intent, signature_b64)",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "public_key_obj = PublicKey.from_serialized(public_key)",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "pfc.verify(\n            scheme,\n            pub_key_bytes,\n            b64encode(hashed_msg).decode(),\n            b64encode(signature_bytes).decode()\n        )\n",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "",
+      "kind": 2
+    }
+  ]
+}

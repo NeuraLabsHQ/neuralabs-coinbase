@@ -87,6 +87,7 @@ async def create_or_update_agent(
         )
         
         await pg_conn.execute_query(insert_query, params)
+    
         return True, agent_id, None
 
 

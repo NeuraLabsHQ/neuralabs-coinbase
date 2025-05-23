@@ -1,146 +1,87 @@
 from fastapi import HTTPException, status
-from pysui.sui.sui_crypto import SuiSignature
+from pysui.sui.sui_crypto import IntentScope, SignatureScheme
+import pysui_fastcrypto as pfc
 from base64 import b64decode, b64encode
-import binascii
-import json
-import logging
-
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+import hashlib
 
 def verify_sui_signature(public_key: str, signature: str, message: str) -> bool:
     """
-    Verify a signature from Sui wallet using pysui's Ed25519 verification.
+    Verify a signature from Sui wallet using pysui's approach.
 
     Args:
-        public_key (str): Hex-encoded Sui address (with or without '0x' prefix) or Base64-encoded public key.
-        signature (str): Hex, Base64-encoded signature, or JSON-serialized signature object from Sui wallet.
-        message (str): The original message that was signed.
+        public_key (str): Hex-encoded Sui address (with or without '0x' prefix)
+        signature (str): Base64-encoded signature from Sui wallet
+        message (str): The original message that was signed
 
     Returns:
-        bool: True if the signature is valid, False otherwise.
+        bool: True if the signature is valid
 
     Raises:
-        HTTPException: If the public key or signature is invalid.
+        HTTPException: If the signature verification fails
     """
     try:
         # Clean public key
         public_key = public_key.strip()
         if public_key.startswith("0x"):
-            public_key = public_key[2:]  # Remove '0x' prefix
-
-        # Decode public key (try hex, then Base64)
-        try:
-            pub_key_bytes = bytes.fromhex(public_key)
-            logger.debug(f"Public key decoded as hex: {pub_key_bytes.hex()}")
-        except ValueError:
-            try:
-                pub_key_bytes = b64decode(public_key)
-                logger.debug(f"Public key decoded as Base64: {pub_key_bytes.hex()}")
-            except binascii.Error as e:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid public key format: {str(e)}"
-                )
-
-        # Ensure public key is 32 bytes (Ed25519 public key length)
-        if len(pub_key_bytes) != 32:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid public key length: {len(pub_key_bytes)} bytes, expected 32"
-            )
-
-        # Clean signature
-        signature = signature.strip()
-        if signature.startswith("0x"):
-            signature = signature[2:]  # Remove '0x' prefix
-
-        # Try parsing signature as JSON (in case it's a serialized object)
-        signature_bytes = None
-        try:
-            parsed = json.loads(signature)
-            logger.debug(f"Signature parsed as JSON: {parsed}")
-            if isinstance(parsed, dict) and "signature" in parsed:
-                signature = parsed["signature"]
-                logger.debug(f"Extracted signature from JSON: {signature}")
-            else:
-                raise ValueError("No 'signature' field in JSON object")
-        except json.JSONDecodeError:
-            logger.debug("Signature is not JSON, proceeding with direct decoding")
-
-        # Decode signature (try hex, then Base64)
-        try:
-            signature_bytes = bytes.fromhex(signature)
-            logger.debug(f"Signature decoded as hex: {signature_bytes.hex()}")
-        except ValueError:
-            try:
-                signature_bytes = b64decode(signature)
-                logger.debug(f"Signature decoded as Base64: {signature_bytes.hex()}")
-            except binascii.Error as e:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid signature format: {str(e)}"
-                )
-
-        # Log raw signature for debugging
-        logger.debug(f"Raw signature: {signature}")
-        logger.debug(f"Signature length: {len(signature_bytes)} bytes")
-
-        # Handle Sui signature (64 bytes for Ed25519 + optional 1-byte scheme flag)
-        if len(signature_bytes) == 65 and signature_bytes[0] in [0x00, 0x01]:
-            signature_bytes = signature_bytes[1:]  # Strip flag
-            logger.debug(f"Stripped signature scheme flag, new length: {len(signature_bytes)}")
-        elif len(signature_bytes) > 64:
-            # Attempt to extract 64-byte signature (e.g., from 97-byte input)
-            # Assuming flag + 64-byte signature + extra bytes
-            if signature_bytes[0] in [0x00, 0x01]:
-                signature_bytes = signature_bytes[1:65]  # Extract flag + 64 bytes
-                logger.debug(f"Extracted 64-byte signature, new length: {len(signature_bytes)}")
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid signature length: {len(signature_bytes)} bytes, expected 64 or 65"
-                )
-        elif len(signature_bytes) != 64:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid signature length: {len(signature_bytes)} bytes, expected 64 or 65"
-            )
-
-        # Encode message with Sui PersonalMessage intent
-        # Sui prepends: 0x00 (intent) + 0x00 (PersonalMessage) + 0x00 (version) + message length (u32) + message
+            public_key = public_key[2:]
+        
+        # Decode public key from hex
+        pub_key_bytes = bytes.fromhex(public_key)
+        
+        # Decode signature from Base64
+        signature_bytes = b64decode(signature)
+        
+        # Extract scheme flag and signature
+        scheme_flag = 0x00  # Default to ED25519
+        if len(signature_bytes) > 64:
+            scheme_flag = signature_bytes[0]
+            signature_bytes = signature_bytes[1:65]
+        
+        # Determine signature scheme
+        if scheme_flag == 0x00:
+            scheme = SignatureScheme.ED25519
+        elif scheme_flag == 0x01:
+            scheme = SignatureScheme.SECP256K1
+        elif scheme_flag == 0x02:
+            scheme = SignatureScheme.SECP256R1
+        else:
+            scheme = SignatureScheme.ED25519
+        
+        # Build intent message with Sui PersonalMessage scope
+        intent_msg = bytearray([IntentScope.PersonalMessage, 0, 0])
         message_bytes = message.encode('utf-8')
-        message_len = len(message_bytes).to_bytes(4, byteorder='big')
-        intent_prefix = b"\x00\x00\x00"
-        message_bytes = intent_prefix + message_len + message_bytes
-        logger.debug(f"Message with intent: {message_bytes.hex()}")
-
-        # Convert to Base64 for SuiSignature
-        pub_key_b64 = b64encode(pub_key_bytes).decode('utf-8')
-        signature_b64 = b64encode(signature_bytes).decode('utf-8')
-
-        # Create and verify SuiSignature
-        try:
-            sui_sig = SuiSignature(pub_key_b64, signature_b64)
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Failed to create SuiSignature: {str(e)}"
-            )
-
-        if not sui_sig.verify(message_bytes):
+        
+        # Encode message length in ULEB128 format
+        message_len = len(message_bytes)
+        while message_len >= 0x80:
+            intent_msg.append((message_len & 0x7F) | 0x80)
+            message_len >>= 7
+        intent_msg.append(message_len)
+        
+        # Append the actual message
+        intent_msg.extend(message_bytes)
+        
+        # Hash the intent message
+        hashed_msg = hashlib.blake2b(intent_msg, digest_size=32).digest()
+        
+        # Verify using pysui_fastcrypto
+        result = pfc.verify(
+            scheme,
+            pub_key_bytes,
+            b64encode(hashed_msg).decode(),
+            b64encode(signature_bytes).decode()
+        )
+        
+        if not result:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Signature verification failed"
             )
-
-        logger.debug("Signature verified successfully")
+        
         return True
-
+        
     except Exception as e:
-        logger.error(f"Signature verification error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid signature data: {str(e)}"
+            detail=f"Signature verification error: {str(e)}"
         )

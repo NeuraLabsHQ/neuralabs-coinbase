@@ -12,7 +12,8 @@ import {
   useColorModeValue,
   Icon,
   Spinner,
-  Collapse
+  Collapse,
+  Tooltip
 } from '@chakra-ui/react';
 import { FiSearch, FiPlus, FiHome, FiList, FiChevronRight, FiChevronDown } from 'react-icons/fi';
 import { accessManagementApi } from '../../utils/access-api'; // Updated import path
@@ -20,41 +21,92 @@ import SidebarItem from './SidebarItem';
 
 
 const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = false }) => {
-  const [accessLevels, setAccessLevels] = useState([]);
-  const [flows, setFlows] = useState([]);
+  const [myFlows, setMyFlows] = useState([]);
+  const [otherFlows, setOtherFlows] = useState({});
+  const [publishedFlows, setPublishedFlows] = useState([]);
+  const [underDevelopmentFlows, setUnderDevelopmentFlows] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedSections, setExpandedSections] = useState({
     myFlows: true,
-    otherFlows: true,
-    projects: true
+    otherFlows: true
   });
   const [expandedLevels, setExpandedLevels] = useState({});
   const [view, setView] = useState('home'); // 'home', 'all', 'myFlows', 'otherFlows', etc.
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const bgColor = useColorModeValue('white', '#18191b');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const hoverBgColor = useColorModeValue('gray.100', 'gray.700');
 
-  // Fetch access levels and flows
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = sessionStorage.getItem('wallet_auth_token') || sessionStorage.getItem('zklogin_jwt_token');
+      setIsAuthenticated(!!token);
+      
+      // Clear flows data if not authenticated
+      if (!token) {
+        setMyFlows([]);
+        setOtherFlows({});
+        setPublishedFlows([]);
+        setUnderDevelopmentFlows([]);
+      }
+    };
+    
+    checkAuth();
+    
+    // Listen for storage changes (logout from other tabs)
+    const handleStorageChange = (e) => {
+      if (e.key === 'wallet_auth_token' || e.key === 'zklogin_jwt_token') {
+        checkAuth();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check periodically in case of programmatic token removal
+    const interval = setInterval(checkAuth, 1000);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Fetch flows data
   useEffect(() => {
     const fetchData = async () => {
+      if (!isAuthenticated) return;
+      
       setIsLoading(true);
       try {
-        // Fetch access levels
-        const levelsResponse = await accessManagementApi.getAccessLevels();
-        setAccessLevels(levelsResponse.data.levels);
+        // Fetch all flows data
+        const response = await accessManagementApi.getAllFlowsData();
+        const data = response.data;
         
-        // Initialize expanded state for levels
-        const initialExpandedLevels = {};
-        levelsResponse.data.levels.forEach(level => {
-          initialExpandedLevels[level.id] = false;
-        });
-        setExpandedLevels(initialExpandedLevels);
+        // Set my flows
+        if (data.my_flows) {
+          setMyFlows(data.my_flows);
+          
+          // Separate published and under development flows
+          const published = data.my_flows.filter(flow => flow.status === 'Active');
+          const underDev = data.my_flows.filter(flow => flow.status !== 'Active');
+          setPublishedFlows(published);
+          setUnderDevelopmentFlows(underDev);
+        }
         
-        // Fetch all flows
-        const flowsResponse = await accessManagementApi.getAllFlows();
-        setFlows(flowsResponse.data);
+        // Set other flows
+        if (data.other_flows) {
+          setOtherFlows(data.other_flows);
+          
+          // Initialize expanded state for levels
+          const initialExpandedLevels = {};
+          Object.keys(data.other_flows).forEach(level => {
+            initialExpandedLevels[level] = false;
+          });
+          setExpandedLevels(initialExpandedLevels);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -63,19 +115,29 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
     };
     
     fetchData();
-  }, []);
+  }, [isAuthenticated]);
 
   // Filter flows by search query
-  const filteredFlows = flows.filter(flow => 
-    flow.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    flow.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filterFlows = (flows) => {
+    if (!searchQuery) return flows;
+    return flows.filter(flow => 
+      flow.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (flow.description && flow.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  };
 
-  // Group flows by their access level
-  const flowsByAccessLevel = accessLevels.reduce((acc, level) => {
-    acc[level.id] = filteredFlows.filter(flow => flow.accessLevel === level.id);
-    return acc;
-  }, {});
+  // Apply search filter to all flows
+  const filteredMyFlows = filterFlows(myFlows);
+  const filteredPublishedFlows = filterFlows(publishedFlows);
+  const filteredUnderDevelopmentFlows = filterFlows(underDevelopmentFlows);
+  
+  const filteredOtherFlows = {};
+  Object.entries(otherFlows).forEach(([level, flows]) => {
+    const filtered = filterFlows(flows);
+    if (filtered.length > 0) {
+      filteredOtherFlows[level] = filtered;
+    }
+  });
   
   // Toggle section expansion
   const toggleSection = (section) => {
@@ -199,41 +261,58 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
             onClick={() => toggleSection('otherFlows')}
           />
           
-          {expandedSections.otherFlows && accessLevels.map((level) => (
-          <SidebarItem 
-            key={level.id}
-            label={level.name}
-            indentLevel={1}
-            isActive={view === `level-${level.id}`}
-            onClick={() => handleViewChange(`level-${level.id}`)}
-            // Count badge showing number of flows at this level
-          
-          />
-        ))}
-          {/* Projects Section */}
-          <SidebarItem 
-            label="Projects" 
-            isSection 
-            isExpanded={expandedSections.projects}
-            onClick={() => toggleSection('projects')}
-          />
-          
-          {expandedSections.projects && (
+          {expandedSections.otherFlows && (
             <>
               <SidebarItem 
-                label="Project 1" 
+                label="Access Level 6"
                 indentLevel={1}
-                isActive={view === 'project-1'}
-                onClick={() => handleViewChange('project-1')}
+                isActive={view === 'level-Access Level 6'}
+                onClick={() => handleViewChange('level-Access Level 6')}
               />
               <SidebarItem 
-                label="Project 2" 
+                label="Access Level 5"
                 indentLevel={1}
-                isActive={view === 'project-2'}
-                onClick={() => handleViewChange('project-2')}
+                isActive={view === 'level-Access Level 5'}
+                onClick={() => handleViewChange('level-Access Level 5')}
+              />
+              <SidebarItem 
+                label="Access Level 4"
+                indentLevel={1}
+                isActive={view === 'level-Access Level 4'}
+                onClick={() => handleViewChange('level-Access Level 4')}
+              />
+              <SidebarItem 
+                label="Access Level 3"
+                indentLevel={1}
+                isActive={view === 'level-Access Level 3'}
+                onClick={() => handleViewChange('level-Access Level 3')}
+              />
+              <SidebarItem 
+                label="Access Level 2"
+                indentLevel={1}
+                isActive={view === 'level-Access Level 2'}
+                onClick={() => handleViewChange('level-Access Level 2')}
+              />
+              <SidebarItem 
+                label="Access Level 1"
+                indentLevel={1}
+                isActive={view === 'level-Access Level 1'}
+                onClick={() => handleViewChange('level-Access Level 1')}
               />
             </>
           )}
+          
+          {/* Projects Section - Coming Soon */}
+          <Tooltip label="Coming Soon" placement="right" hasArrow>
+            <Box>
+              <SidebarItem 
+                label="Projects" 
+                isSection 
+                isExpanded={false}
+                onClick={() => {}} // Disabled for now
+              />
+            </Box>
+          </Tooltip>
         </VStack>
         
         {/* Loading indicator */}

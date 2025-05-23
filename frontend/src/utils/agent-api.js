@@ -12,7 +12,7 @@ class AgentAPI {
     // Replace this with your actual token retrieval logic
     // For example, from sessionStorage, context, or wherever you store the token
     console.log('Retrieving auth token');
-    const token = sessionStorage.getItem('wallet_auth_token');
+    const token = sessionStorage.getItem('wallet_auth_token') || sessionStorage.getItem('zklogin_jwt_token');
     return token
   }
 
