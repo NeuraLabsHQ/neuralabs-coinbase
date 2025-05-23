@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   ModalOverlay,
@@ -23,6 +23,11 @@ const DescriptionPopup = ({
   title = 'Description'
 }) => {
   const [localDescription, setLocalDescription] = useState(description);
+  
+  // Update local description when prop changes
+  useEffect(() => {
+    setLocalDescription(description);
+  }, [description]);
   
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   ModalOverlay,
@@ -37,6 +37,11 @@ const SchemaPopup = ({
   nodeType
 }) => {
   const [localSchema, setLocalSchema] = useState(schema);
+  
+  // Update local schema when prop changes
+  useEffect(() => {
+    setLocalSchema(schema);
+  }, [schema]);
   
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
