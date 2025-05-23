@@ -13,3 +13,7 @@ backend/notebooks/flow_outputs/**
 
 prover-service/**
 !./prover-service/__placeholder__
+
+CLAUDE.local.md
+
+.claude_assets

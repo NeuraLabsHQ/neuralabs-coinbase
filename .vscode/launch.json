@@ -21,6 +21,17 @@
         },
 
         {
+            "name": "backend neuralabs",
+            "type": "debugpy",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/neuralabs-backend",
+            "program": "${workspaceFolder}/neuralabs-backend/run.py",
+            "console": "integratedTerminal",
+            "jinja": true
+        },
+
+
+        {
       "type": "msedge",
       "request": "launch",
       "name": "Launch Microsoft Edge and open the Edge DevTools",

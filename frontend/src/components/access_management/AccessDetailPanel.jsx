@@ -16,7 +16,7 @@ import {
 import { FiX, FiPlus } from 'react-icons/fi';
 import FlowActionPanel from './FlowActionPanel';
 import FlowDetailComponent from './FlowDetailComponent';
-import FlowDescriptionComponent from './FlowDescriptionComponent';
+// import FlowDescriptionComponent from './FlowDescriptionComponent';
 
 const AccessDetailPanel = ({ flowDetails, onClose }) => {
   const [flowPanelOpen, setFlowPanelOpen] = useState(true);
