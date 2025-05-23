@@ -12,8 +12,8 @@ import WalrusStorage from './components/WalrusStorage'
 
 // Configuration
 const CONFIG = {
-  PACKAGE_ID: import.meta.env.VITE_PACKAGE_ID || '0x0',
-  REGISTRY_ID: import.meta.env.VITE_REGISTRY_ID || 'YOUR_REGISTRY_ID',
+  PACKAGE_ID: process.env.REACT_APP_PACKAGE_ID || '0x0',
+  REGISTRY_ID: process.env.REACT_APP_REGISTRY_ID || 'YOUR_REGISTRY_ID',
   SEAL_KEY_SERVERS: [
     {
       name: 'mysten-testnet-1',

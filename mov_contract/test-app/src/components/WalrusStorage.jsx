@@ -122,7 +122,7 @@ function WalrusStorage({ config }) {
         target: `${config.PACKAGE_ID}::nft::add_encrypted_data`,
         arguments: [
           tx.object(data.nftObjectId),
-          tx.object(config.COLLECTION_ID),
+          tx.object(config.REGISTRY_ID),
           tx.pure(data.walrusBlobId),
           tx.pure.vector('u8', keyIdBytes),
           tx.pure(JSON.stringify({

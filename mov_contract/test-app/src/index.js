@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
+import App from './App'
 import './index.css'
 
 // Sui imports
@@ -19,7 +19,8 @@ const networks = {
   devnet: { url: getFullnodeUrl('devnet') },
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+const root = ReactDOM.createRoot(document.getElementById('root'))
+root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <SuiClientProvider networks={networks} defaultNetwork="testnet">
@@ -28,5 +29,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         </WalletProvider>
       </SuiClientProvider>
     </QueryClientProvider>
-  </React.StrictMode>,
+  </React.StrictMode>
 )

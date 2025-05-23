@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useCurrentAccount, useSuiClient } from '@mysten/dapp-kit'
-import { SealClient, SessionKey } from '@mysten/seal'
+import { SessionKey, encrypt, getAllowlistedKeyServers } from '@mysten/seal'
 import { TransactionBlock } from '@mysten/sui.js/transactions'
 import toast from 'react-hot-toast'
 
@@ -12,8 +12,8 @@ function SealEncryption({ config }) {
   const account = useCurrentAccount()
   const client = useSuiClient()
   
-  const [sealClient, setSealClient] = useState(null)
   const [sessionKey, setSessionKey] = useState(null)
+  const [keyServers, setKeyServers] = useState([])
   
   const [encryptForm, setEncryptForm] = useState({
     tokenId: '',
@@ -31,17 +31,20 @@ function SealEncryption({ config }) {
   const [isEncrypting, setIsEncrypting] = useState(false)
   const [isDecrypting, setIsDecrypting] = useState(false)
 
-  // Initialize Seal client
+  // Get key servers
   React.useEffect(() => {
-    if (client) {
-      const seal = new SealClient({
-        suiClient: client,
-        serverObjectIds: config.SEAL_KEY_SERVERS.map(s => s.objectId),
-        verifyKeyServers: false // Set to true in production
-      })
-      setSealClient(seal)
+    async function fetchKeyServers() {
+      try {
+        const servers = await getAllowlistedKeyServers(client)
+        setKeyServers(servers)
+      } catch (error) {
+        console.error('Error fetching key servers:', error)
+      }
     }
-  }, [client, config])
+    if (client) {
+      fetchKeyServers()
+    }
+  }, [client])
 
   // Create session key
   const createSessionKey = async () => {
@@ -87,8 +90,8 @@ function SealEncryption({ config }) {
   const encryptFile = async (e) => {
     e.preventDefault()
     
-    if (!sealClient || !encryptForm.file || !encryptForm.tokenId) {
-      toast.error('Please fill all fields')
+    if (!encryptForm.file || !encryptForm.tokenId || keyServers.length === 0) {
+      toast.error('Please fill all fields and ensure key servers are loaded')
       return
     }
 
@@ -111,13 +114,13 @@ function SealEncryption({ config }) {
       id.set(new Uint8Array(tokenIdBytes), 0)
       id.set(nonce, 8)
       
-      // Encrypt data
-      const { encryptedObject, key } = await sealClient.encrypt({
-        threshold: parseInt(encryptForm.threshold),
-        packageId: config.PACKAGE_ID,
-        id: id,
-        data: data
-      })
+      // Encrypt data using the direct encrypt function
+      const { encryptedObject, key } = await encrypt(
+        data,
+        id,
+        parseInt(encryptForm.threshold),
+        keyServers.slice(0, 2).map(s => s.publicKey) // Use first 2 key servers
+      )
       
       // Store encrypted file info
       const encryptedFile = {
@@ -150,7 +153,7 @@ function SealEncryption({ config }) {
   const decryptFile = async (e) => {
     e.preventDefault()
     
-    if (!sealClient || !sessionKey || !decryptForm.encryptedData || !decryptForm.tokenId) {
+    if (!sessionKey || !decryptForm.encryptedData || !decryptForm.tokenId) {
       toast.error('Please fill all fields and create session key')
       return
     }
@@ -182,15 +185,18 @@ function SealEncryption({ config }) {
       
       const txBytes = await tx.build({ client, onlyTransactionKind: true })
       
-      // Decrypt data
-      const encryptedBytes = Buffer.from(decryptForm.encryptedData, 'base64')
-      const decryptedData = await sealClient.decrypt({
-        data: encryptedBytes,
-        sessionKey,
-        txBytes
-      })
+      // Decrypt data - NOTE: This needs to be implemented with the new Seal SDK API
+      // For now, we'll show a message that decryption is not yet implemented
+      toast.error('Decryption functionality needs to be updated for the new Seal SDK', { id: toastId })
+      return
       
-      // Create download link
+      /* TODO: Implement decryption with new SDK
+      const encryptedBytes = Buffer.from(decryptForm.encryptedData, 'base64')
+      const decryptedData = await decrypt(...)
+      */
+      
+      // Download link code will be uncommented when decryption is implemented
+      /* 
       const blob = new Blob([decryptedData], { type: 'application/octet-stream' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -200,6 +206,7 @@ function SealEncryption({ config }) {
       URL.revokeObjectURL(url)
       
       toast.success('File decrypted and downloaded!', { id: toastId })
+      */
       
     } catch (error) {
       console.error('Error decrypting file:', error)
@@ -295,7 +302,7 @@ function SealEncryption({ config }) {
           
           <button
             type="submit"
-            disabled={isEncrypting || !sealClient}
+            disabled={isEncrypting || keyServers.length === 0}
             className="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
           >
             {isEncrypting ? 'Encrypting...' : 'Encrypt File'}
