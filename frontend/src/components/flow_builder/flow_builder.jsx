@@ -979,6 +979,9 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
           codeOpen={codeOpen}
           viewOnlyMode={viewOnlyMode}
           availableLayers={availableLayers}
+          nodes={nodes}
+          edges={edges}
+          onConnectionClick={(edge) => handleEdgeClick(edge)}
         />
       )}
       
@@ -1011,6 +1014,21 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
         sourceNode={connectionSource}
         targetNode={connectionTarget}
         onSave={handleSaveConnection}
+        onDelete={() => {
+          if (selectedEdge) {
+            // Remove the edge
+            setEdges(edges.filter(e => e.id !== selectedEdge.id));
+            
+            // Show success toast
+            toast({
+              title: "Connection deleted",
+              description: "The connection has been removed successfully.",
+              status: "success",
+              duration: 3000,
+              isClosable: true,
+            });
+          }
+        }}
         existingMappings={selectedEdge?.mappings || []}
         allEdges={edges}
       />

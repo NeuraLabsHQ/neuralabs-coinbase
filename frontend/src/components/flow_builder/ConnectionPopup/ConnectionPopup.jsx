@@ -30,6 +30,7 @@ const ConnectionPopup = ({
   sourceNode,
   targetNode,
   onSave,
+  onDelete,
   existingMappings = [],
   allEdges = []
 }) => {
@@ -260,20 +261,21 @@ const ConnectionPopup = ({
           <HStack justify="space-between">
             <Text>Connection: {sourceNode.name} → {targetNode.name}</Text>
             <HStack>
-              <IconButton
-                icon={<FiPlus />}
-                size="sm"
-                variant="ghost"
-                aria-label="Add row"
-                isDisabled
-              />
-              <IconButton
-                icon={<FiMoreHorizontal />}
-                size="sm"
-                variant="ghost"
-                aria-label="More options"
-                isDisabled
-              />
+              {onDelete && existingMappings.length > 0 && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  colorScheme="red"
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to delete this connection?')) {
+                      onDelete();
+                      onClose();
+                    }
+                  }}
+                >
+                  Delete Connection
+                </Button>
+              )}
             </HStack>
           </HStack>
         </ModalHeader>

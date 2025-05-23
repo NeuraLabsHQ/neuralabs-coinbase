@@ -25,12 +25,22 @@ export const exportFlowAsJSON = (nodes, edges) => {
             y: node.y,
             inputs: node.inputs || [],
             outputs: node.outputs || [],
-            metadata: node.metadata || {}
+            hyperparameters: node.hyperparameters || [],
+            description: node.description || '',
+            processing_message: node.processing_message || '',
+            layer: node.layer || 0,
+            tags: node.tags || [],
+            code: node.code || '',
+            metadata: node.metadata || {},
+            templateId: node.templateId || null
           })),
           edges: edges.map(edge => ({
             id: edge.id,
             source: edge.source,
             target: edge.target,
+            sourceName: edge.sourceName || '',
+            targetName: edge.targetName || '',
+            mappings: edge.mappings || [],
             sourcePort: edge.sourcePort || 0,
             targetPort: edge.targetPort || 0
           })),

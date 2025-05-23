@@ -39,9 +39,11 @@ import {
   FiList,
   FiGrid,
   FiSettings,
+  FiLink,
 } from 'react-icons/fi';
 import SchemaPopup from './SchemaPopup';
 import DescriptionPopup from './DescriptionPopup';
+import ConnectionsListPopup from './ConnectionsListPopup';
 
 const DetailsPanel = ({ 
   selectedNode, 
@@ -51,7 +53,10 @@ const DetailsPanel = ({
   onToggleCode, 
   codeOpen,
   viewOnlyMode = false,
-  availableLayers = []
+  availableLayers = [],
+  nodes = [],
+  edges = [],
+  onConnectionClick
 }) => {
   const [tabIndex, setTabIndex] = useState(viewOnlyMode ? 1 : 0);
   const [layer, setLayer] = useState(selectedNode?.layer || 0);
@@ -66,6 +71,7 @@ const DetailsPanel = ({
   const { isOpen: isInputOpen, onOpen: onInputOpen, onClose: onInputClose } = useDisclosure();
   const { isOpen: isOutputOpen, onOpen: onOutputOpen, onClose: onOutputClose } = useDisclosure();
   const { isOpen: isParamsOpen, onOpen: onParamsOpen, onClose: onParamsClose } = useDisclosure();
+  const { isOpen: isConnectionsOpen, onOpen: onConnectionsOpen, onClose: onConnectionsClose } = useDisclosure();
 
   // Update tab index when view mode changes
   useEffect(() => {
@@ -459,6 +465,30 @@ const DetailsPanel = ({
                     </HStack>
                   </Box>
                 </FormControl>
+                
+                {/* Connections Field */}
+                <FormControl>
+                  <FormLabel fontSize="sm" fontWeight="medium" color={textColor} display="flex" alignItems="center">
+                    <FiLink style={{ marginRight: '8px' }} /> Connections
+                  </FormLabel>
+                  <Box
+                    py={3}
+                    px={4}
+                    bg={clickableBg}
+                    borderRadius="md"
+                    cursor="pointer"
+                    onClick={onConnectionsOpen}
+                    _hover={{ bg: clickableHoverBg }}
+                    transition="background 0.2s"
+                  >
+                    <HStack justify="space-between">
+                      <Text fontSize="sm" color={textColor}>
+                        {edges.filter(e => e.target === selectedNode.id).length} incoming connection{edges.filter(e => e.target === selectedNode.id).length !== 1 ? 's' : ''}
+                      </Text>
+                      <FiLink size={16} color={mutedTextColor} />
+                    </HStack>
+                  </Box>
+                </FormControl>
 
                 <Divider />
                 
@@ -742,6 +772,15 @@ const DetailsPanel = ({
         isCustomBlock={nodeData.isCustom}
         onSave={handleSaveHyperparameters}
         nodeType={nodeData.type}
+      />
+
+      <ConnectionsListPopup
+        isOpen={isConnectionsOpen}
+        onClose={onConnectionsClose}
+        node={selectedNode}
+        nodes={nodes}
+        edges={edges}
+        onConnectionClick={onConnectionClick}
       />
     </>
   );

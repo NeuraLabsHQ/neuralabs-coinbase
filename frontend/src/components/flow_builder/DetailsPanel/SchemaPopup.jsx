@@ -43,12 +43,12 @@ const SchemaPopup = ({
     setLocalSchema(schema);
   }, [schema]);
   
-  const bgColor = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
-  const headerBg = useColorModeValue('gray.50', 'gray.700');
-  const inputBg = useColorModeValue('gray.100', 'gray.700');
-  const textColor = useColorModeValue('gray.800', 'white');
-  const mutedTextColor = useColorModeValue('gray.600', 'gray.400');
+  const bgColor = useColorModeValue('gray.900', 'gray.900');
+  const borderColor = useColorModeValue('gray.700', 'gray.700');
+  const headerBg = useColorModeValue('gray.800', 'gray.800');
+  const inputBg = useColorModeValue('gray.800', 'gray.800');
+  const textColor = useColorModeValue('white', 'white');
+  const mutedTextColor = useColorModeValue('gray.400', 'gray.400');
 
   const handleValueChange = (index, value) => {
     const updated = [...localSchema];
@@ -107,12 +107,12 @@ const SchemaPopup = ({
       returnFocusOnClose={false}
       isCentered
     >
-      <ModalOverlay />
+      <ModalOverlay bg="rgba(0, 0, 0, 0.8)" />
       <ModalContent bg={bgColor} maxW="50%">
-        <ModalHeader borderBottom="1px solid" borderColor={borderColor}>
+        <ModalHeader borderBottom="1px solid" borderColor={borderColor} color={textColor}>
           <HStack justify="space-between">
             <Text>{title}</Text>
-            {nodeType && <Badge colorScheme="blue">{nodeType}</Badge>}
+            {nodeType && <Badge colorScheme="cyan">{nodeType}</Badge>}
           </HStack>
         </ModalHeader>
         {/* <ModalCloseButton /> */}
@@ -122,10 +122,10 @@ const SchemaPopup = ({
             <Table variant="simple" size="sm">
               <Thead bg={headerBg}>
                 <Tr>
-                  <Th color={mutedTextColor} width="25%">Name</Th>
-                  <Th color={mutedTextColor} width="15%">Type</Th>
-                  <Th color={mutedTextColor} width="35%">Value</Th>
-                  {isCustomBlock && <Th color={mutedTextColor} width="20%">Description</Th>}
+                  <Th color={mutedTextColor} width="25%" fontSize="xs" textTransform="uppercase">Name</Th>
+                  <Th color={mutedTextColor} width="15%" fontSize="xs" textTransform="uppercase">Type</Th>
+                  <Th color={mutedTextColor} width="35%" fontSize="xs" textTransform="uppercase">Value</Th>
+                  {isCustomBlock && <Th color={mutedTextColor} width="20%" fontSize="xs" textTransform="uppercase">Description</Th>}
                   {isCustomBlock && <Th color={mutedTextColor} width="5%"></Th>}
                 </Tr>
               </Thead>
@@ -234,7 +234,7 @@ const SchemaPopup = ({
             Cancel
           </Button>
           {(isEditable || isCustomBlock) && (
-            <Button colorScheme="blue" onClick={handleSave}>
+            <Button bg="gray.600" _hover={{ bg: 'gray.500' }} color="white" onClick={handleSave}>
               Save Changes
             </Button>
           )}

@@ -29,10 +29,10 @@ const DescriptionPopup = ({
     setLocalDescription(description);
   }, [description]);
   
-  const bgColor = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
-  const textareaBg = useColorModeValue('gray.50', 'gray.700');
-  const textColor = useColorModeValue('gray.800', 'white');
+  const bgColor = useColorModeValue('gray.900', 'gray.900');
+  const borderColor = useColorModeValue('gray.700', 'gray.700');
+  const textareaBg = useColorModeValue('gray.800', 'gray.800');
+  const textColor = useColorModeValue('white', 'white');
 
   const handleSave = () => {
     if (onSave) {
@@ -51,9 +51,9 @@ const DescriptionPopup = ({
       returnFocusOnClose={false}
       isCentered
     >
-      <ModalOverlay />
+      <ModalOverlay bg="rgba(0, 0, 0, 0.8)" />
       <ModalContent bg={bgColor}>
-        <ModalHeader borderBottom="1px solid" borderColor={borderColor}>
+        <ModalHeader borderBottom="1px solid" borderColor={borderColor} color={textColor}>
           {title}
         </ModalHeader>
         {/* <ModalCloseButton /> */}
@@ -68,9 +68,13 @@ const DescriptionPopup = ({
               minH="150px"
               bg={textareaBg}
               color={textColor}
+              border="1px solid"
+              borderColor={borderColor}
+              _hover={{ borderColor: 'gray.600' }}
+              _focus={{ borderColor: 'gray.500', boxShadow: 'none' }}
             />
           ) : (
-            <Box p={4} bg={textareaBg} borderRadius="md" minH="150px">
+            <Box p={4} bg={textareaBg} borderRadius="md" minH="150px" border="1px solid" borderColor={borderColor}>
               <Text color={textColor}>
                 {description || 'No description available.'}
               </Text>
@@ -79,11 +83,11 @@ const DescriptionPopup = ({
         </ModalBody>
 
         <ModalFooter borderTop="1px solid" borderColor={borderColor}>
-          <Button variant="ghost" mr={3} onClick={onClose}>
+          <Button variant="ghost" mr={3} onClick={onClose} color={textColor}>
             {isEditable ? 'Cancel' : 'Close'}
           </Button>
           {isEditable && (
-            <Button colorScheme="blue" onClick={handleSave}>
+            <Button bg="gray.600" _hover={{ bg: 'gray.500' }} color="white" onClick={handleSave}>
               Save
             </Button>
           )}
