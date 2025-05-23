@@ -233,7 +233,7 @@ const BlocksPanel = ({
         <Heading as="h1" size="md" color={headingColor}>Flow Designer</Heading>
       </Box>
 
-      <Tabs isFitted flex="1" display="flex" flexDirection="column">
+      <Tabs isFitted flex="1" minH="0" display="flex" flexDirection="column">
         <TabList>
           <Tab>Blocks</Tab>
           <Tab>Pipelines</Tab>
@@ -241,17 +241,24 @@ const BlocksPanel = ({
         
         <TabPanels 
           flex="1" 
-          overflowY="auto"
-          css={{
-            '&::-webkit-scrollbar': {
-              display: 'none',
-            },
-            '-ms-overflow-style': 'none',  /* IE and Edge */
-            'scrollbar-width': 'none',  /* Firefox */
-          }}
+          overflow="hidden"
         >
-          <TabPanel p={4} h="100%" overflowY="auto" overflowX="hidden">
-            <Flex position="relative">
+          <TabPanel p={0} h="100%" display="flex" flexDirection="column">
+            <Box 
+              flex="1" 
+              minH="0"
+              overflowY="auto" 
+              overflowX="hidden" 
+              p={4}
+              css={{
+                '&::-webkit-scrollbar': {
+                  display: 'none',
+                },
+                '-ms-overflow-style': 'none',
+                'scrollbar-width': 'none',
+              }}
+            >
+              <Flex position="relative">
               <Input
                 placeholder="Search blocks..."
                 value={searchTerm}
@@ -481,6 +488,7 @@ const BlocksPanel = ({
                 </SimpleGrid>
               </>
             )}
+            </Box>
           </TabPanel>
           
           <TabPanel p={4}>
