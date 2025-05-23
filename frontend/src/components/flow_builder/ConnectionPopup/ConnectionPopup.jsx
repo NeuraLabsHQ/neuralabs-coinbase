@@ -37,14 +37,27 @@ const ConnectionPopup = ({
   const [mappings, setMappings] = useState([]);
   const [isValid, setIsValid] = useState(false);
   
-  const bgColor = useColorModeValue('gray.900', 'gray.900');
-  const borderColor = useColorModeValue('gray.700', 'gray.700');
-  const headerBg = useColorModeValue('gray.800', 'gray.800');
-  const inputBg = useColorModeValue('gray.800', 'gray.800');
-  const textColor = useColorModeValue('white', 'white');
-  const mutedTextColor = useColorModeValue('gray.400', 'gray.400');
-  const validBorderColor = useColorModeValue('cyan.400', 'cyan.400');
+  const bgColor = useColorModeValue('white', 'gray.900');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const headerBg = useColorModeValue('gray.50', 'gray.800');
+  const inputBg = useColorModeValue('gray.50', 'gray.800');
+  const textColor = useColorModeValue('gray.800', 'white');
+  const mutedTextColor = useColorModeValue('gray.600', 'gray.400');
+  const validBorderColor = useColorModeValue('green.400', 'cyan.400');
   const errorBorderColor = useColorModeValue('red.500', 'red.500');
+  
+  // Additional color mode values for functions
+  const validRowBg = useColorModeValue('green.50', 'cyan.900');
+  const errorRowBg = useColorModeValue('red.50', 'red.900');
+  const validTextColor = useColorModeValue('green.600', 'cyan.400');
+  const errorTextColor = useColorModeValue('red.600', 'red.400');
+  const warningTextColor = useColorModeValue('orange.600', 'orange.400');
+  const yellowTextColor = useColorModeValue('yellow.600', 'yellow.400');
+  const grayTextColor = useColorModeValue('gray.600', 'gray.400');
+  const hoverBorderColor = useColorModeValue('gray.300', 'gray.600');
+  const focusBorderColor = useColorModeValue('blue.400', 'cyan.500');
+  const buttonBg = useColorModeValue('blue.500', 'cyan.600');
+  const buttonHoverBg = useColorModeValue('blue.600', 'cyan.700');
 
   // Initialize mappings when modal opens
   useEffect(() => {
@@ -198,9 +211,9 @@ const ConnectionPopup = ({
   const getRowColor = (validation) => {
     switch (validation.status) {
       case 'valid':
-        return 'cyan.900';
+        return validRowBg;
       case 'error':
-        return 'red.900';
+        return errorRowBg;
       default:
         return 'transparent';
     }
@@ -209,13 +222,13 @@ const ConnectionPopup = ({
   const getMessageColor = (validation) => {
     switch (validation.status) {
       case 'valid':
-        return 'cyan.400';
+        return validTextColor;
       case 'error':
-        if (validation.message === 'Type mismatch') return 'red.400';
-        if (validation.message.includes('already assigned')) return 'orange.400';
-        return 'yellow.400';
+        if (validation.message === 'Type mismatch') return errorTextColor;
+        if (validation.message.includes('already assigned')) return warningTextColor;
+        return yellowTextColor;
       default:
-        return 'gray.400';
+        return grayTextColor;
     }
   };
 
@@ -287,19 +300,19 @@ const ConnectionPopup = ({
                 <Tr>
                   <Th color={mutedTextColor} width="35%" fontSize="xs" textTransform="uppercase">
                     <HStack spacing={1}>
-                      <Box w="3" h="3" borderRadius="full" bg="gray.600" />
+                      <Box w="3" h="3" borderRadius="full" bg={mutedTextColor} />
                       <Text>FROM OUTPUT</Text>
                     </HStack>
                   </Th>
                   <Th color={mutedTextColor} width="35%" fontSize="xs" textTransform="uppercase">
                     <HStack spacing={1}>
-                      <Box w="3" h="3" borderRadius="full" bg="gray.600" />
+                      <Box w="3" h="3" borderRadius="full" bg={mutedTextColor} />
                       <Text>TO INPUT</Text>
                     </HStack>
                   </Th>
                   <Th color={mutedTextColor} width="25%" fontSize="xs" textTransform="uppercase">
                     <HStack spacing={1}>
-                      <Box w="3" h="3" borderRadius="full" bg="gray.600" />
+                      <Box w="3" h="3" borderRadius="full" bg={mutedTextColor} />
                       <Text>IS VALID</Text>
                     </HStack>
                   </Th>
@@ -320,8 +333,8 @@ const ConnectionPopup = ({
                           border="1px solid"
                           borderColor={borderColor}
                           color={textColor}
-                          _hover={{ borderColor: 'gray.600' }}
-                          _focus={{ borderColor: 'cyan.500', boxShadow: 'none' }}
+                          _hover={{ borderColor: hoverBorderColor }}
+                          _focus={{ borderColor: focusBorderColor, boxShadow: 'none' }}
                         >
                           <option value="" style={{ backgroundColor: inputBg }}>Select output</option>
                           {sourceOutputs.map((output, idx) => (
@@ -344,8 +357,8 @@ const ConnectionPopup = ({
                           border="1px solid"
                           borderColor={borderColor}
                           color={textColor}
-                          _hover={{ borderColor: 'gray.600' }}
-                          _focus={{ borderColor: 'cyan.500', boxShadow: 'none' }}
+                          _hover={{ borderColor: hoverBorderColor }}
+                          _focus={{ borderColor: focusBorderColor, boxShadow: 'none' }}
                         >
                           <option value="" style={{ backgroundColor: inputBg }}>Select input</option>
                           {targetInputs.map((input, idx) => (
@@ -416,7 +429,9 @@ const ConnectionPopup = ({
             Cancel
           </Button>
           <Button 
-            colorScheme="cyan" 
+            bg={buttonBg} 
+            _hover={{ bg: buttonHoverBg }}
+            color="white"
             onClick={handleSave}
             isDisabled={!isValid}
           >

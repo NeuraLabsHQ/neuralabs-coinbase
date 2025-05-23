@@ -30,12 +30,12 @@ const ConnectionsListPopup = ({
   edges = [],
   onConnectionClick
 }) => {
-  const bgColor = useColorModeValue('gray.900', 'gray.900');
-  const borderColor = useColorModeValue('gray.700', 'gray.700');
-  const headerBg = useColorModeValue('gray.800', 'gray.800');
-  const rowHoverBg = useColorModeValue('gray.800', 'gray.800');
-  const textColor = useColorModeValue('white', 'white');
-  const mutedTextColor = useColorModeValue('gray.400', 'gray.400');
+  const bgColor = useColorModeValue('white', 'gray.900');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const headerBg = useColorModeValue('gray.50', 'gray.800');
+  const rowHoverBg = useColorModeValue('gray.50', 'gray.800');
+  const textColor = useColorModeValue('gray.800', 'white');
+  const mutedTextColor = useColorModeValue('gray.600', 'gray.400');
 
   if (!node) return null;
 

@@ -29,10 +29,14 @@ const DescriptionPopup = ({
     setLocalDescription(description);
   }, [description]);
   
-  const bgColor = useColorModeValue('gray.900', 'gray.900');
-  const borderColor = useColorModeValue('gray.700', 'gray.700');
-  const textareaBg = useColorModeValue('gray.800', 'gray.800');
-  const textColor = useColorModeValue('white', 'white');
+  const bgColor = useColorModeValue('white', 'gray.900');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const textareaBg = useColorModeValue('gray.50', 'gray.800');
+  const textColor = useColorModeValue('gray.800', 'white');
+  const hoverBorderColor = useColorModeValue('gray.300', 'gray.600');
+  const focusBorderColor = useColorModeValue('blue.400', 'gray.500');
+  const buttonBg = useColorModeValue('blue.500', 'gray.600');
+  const buttonHoverBg = useColorModeValue('blue.600', 'gray.500');
 
   const handleSave = () => {
     if (onSave) {
@@ -70,8 +74,8 @@ const DescriptionPopup = ({
               color={textColor}
               border="1px solid"
               borderColor={borderColor}
-              _hover={{ borderColor: 'gray.600' }}
-              _focus={{ borderColor: 'gray.500', boxShadow: 'none' }}
+              _hover={{ borderColor: hoverBorderColor }}
+              _focus={{ borderColor: focusBorderColor, boxShadow: 'none' }}
             />
           ) : (
             <Box p={4} bg={textareaBg} borderRadius="md" minH="150px" border="1px solid" borderColor={borderColor}>
@@ -87,7 +91,7 @@ const DescriptionPopup = ({
             {isEditable ? 'Cancel' : 'Close'}
           </Button>
           {isEditable && (
-            <Button bg="gray.600" _hover={{ bg: 'gray.500' }} color="white" onClick={handleSave}>
+            <Button bg={buttonBg} _hover={{ bg: buttonHoverBg }} color="white" onClick={handleSave}>
               Save
             </Button>
           )}
