@@ -84,6 +84,25 @@ const ICON_MAP = {
     'layout': FiLayout,
     'code': FiCode,
     'md-info': MdInfo,
+    // Additional icons from API
+    'FiCode': FiCode,
+    'FiFileText': FiFileText,
+    'FiPlayCircle': FiPlayCircle,
+    'FiXCircle': FiXCircle,
+    'FiGitBranch': FiGitBranch,
+    'FiMessageCircle': FiMessageCircle,
+    'FiBookOpen': FiBookOpen,
+    'FiDatabase': FiDatabase,
+    'FiServer': FiServer,
+    'FiGlobe': FiGlobe,
+    'FiInfo': MdInfo,
+    'FiLink': FiLink,
+    'FiDollarSign': FiExternalLink,
+    'FiFilter': FiFilter,
+    'FiGitMerge': FiGitMerge,
+    'FiShuffle': FiShuffle,
+    'FiClock': FiClock,
+    'FiCpu': FiCpu,
 };
 
 export default ICON_MAP;

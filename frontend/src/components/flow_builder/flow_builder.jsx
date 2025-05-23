@@ -17,7 +17,7 @@ import * as d3 from 'd3';
 import { exportFlowAsPNG } from '../../utils/flowExport';
 import {exportFlowAsJSON} from '../../utils/flowExportJson';
 import {importFlowFromJSON} from '../../utils/flowImportJson';
-import { nodeApi } from '../../utils/api';
+import { flowBuilderAPI } from '../../utils/flow-builder-api';
 
 
 import ICON_MAP from './Common/IconMap'
@@ -63,12 +63,12 @@ const FlowBuilder = () => {
   useEffect(() => {
     const fetchNodeData = async () => {
       try {
-        // Fetch node types
-        const nodeTypesResponse = await nodeApi.getNodeTypes();
+        // Fetch blocks and categories from the database
+        const { nodeTypes, nodeCategories } = await flowBuilderAPI.getBlocksForPanel();
         
-        // Transform the API response to include the actual icon components
+        // Transform the nodeTypes to include the actual icon components
         const transformedNodeTypes = {};
-        Object.entries(nodeTypesResponse.data).forEach(([key, nodeType]) => {
+        Object.entries(nodeTypes).forEach(([key, nodeType]) => {
           transformedNodeTypes[key] = {
             ...nodeType,
             icon: ICON_MAP[nodeType.icon] || "activity" // Default to FiActivity if icon not found
@@ -76,21 +76,25 @@ const FlowBuilder = () => {
         });
         
         setNodeTypes(transformedNodeTypes);
-        console.log('Node types fetched:', transformedNodeTypes);
+        console.log('Node types fetched from database:', transformedNodeTypes);
         
-        // Fetch node categories
-        const categoriesResponse = await nodeApi.getNodeCategories();
-        console.log('Raw categories data:', categoriesResponse.data);
-        setNodeCategories(categoriesResponse.data);
+        setNodeCategories(nodeCategories);
+        console.log('Categories fetched from database:', nodeCategories);
         
       } catch (err) {
-        console.error('Error fetching node data:', err);
-        // Fallback code if needed
+        console.error('Error fetching node data from database:', err);
+        toast({
+          title: "Error loading blocks",
+          description: "Failed to load blocks from the server. Please try again.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
       }
     };
     
     fetchNodeData();
-  }, []);
+  }, [toast]);
   
 
   // Handle adding nodes
