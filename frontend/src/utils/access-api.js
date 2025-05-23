@@ -159,6 +159,19 @@ export const accessManagementApi = {
     }
   },
 
+  // Get agent details (alias for getFlowDetails)
+  getAgentDetails: async (agentId) => {
+    try {
+      const response = await api.makeAuthenticatedRequest(
+        `${api.baseURL}/api/dashboard/flows/${agentId}`
+      );
+      return response;
+    } catch (error) {
+      console.error('Failed to fetch agent details:', error);
+      throw error;
+    }
+  },
+
   // Get all access levels (kept for compatibility)
   getAccessLevels: () => simulateApiCall({
     levels: [

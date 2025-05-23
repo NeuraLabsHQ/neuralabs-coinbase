@@ -71,7 +71,19 @@ function App() {
                       <ChatInterfacePage />
                     </Layout>
                   } />
+                  {/* Add route with agent_id parameter for chat */}
+                  <Route path="/chat/:agentId" element={
+                    <Layout>
+                      <ChatInterfacePage />
+                    </Layout>
+                  } />
                   <Route path="/access-management" element={
+                    <Layout>
+                      <AccessManagementPage />
+                    </Layout>
+                  } />
+                  {/* Add route with agent_id parameter for agent detail */}
+                  <Route path="/access-management/:agentId" element={
                     <Layout>
                       <AccessManagementPage />
                     </Layout>

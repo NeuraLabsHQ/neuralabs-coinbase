@@ -14,6 +14,7 @@ import {
 } from "@chakra-ui/react";
 import { InfoIcon } from "@chakra-ui/icons";
 import { FaTwitter, FaGithub } from "react-icons/fa"; 
+import colors from '../../color';
 
 const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
   const textColor = useColorModeValue("gray.800", "white");
@@ -85,7 +86,7 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
     monetization: "Monetization status or strategy of the workflow",
   };
 
-  const data = defaultFlowData;
+  const data = flowDetails || defaultFlowData;
 
   const handleHover = (itemKey) => {
     if (onHoverItem) {
@@ -183,7 +184,7 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
             Tags:
           </Text>
           <Flex gap={2} wrap="wrap">
-            {data.tags &&
+            {data.tags && Array.isArray(data.tags) && data.tags.length > 0 ? (
               data.tags.map((tag, index) => (
                 <Badge
                   key={index}
@@ -197,7 +198,10 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
                 >
                   {tag}
                 </Badge>
-              ))}
+              ))
+            ) : (
+              <Text color={mutedTextColor} fontSize="sm">No tags</Text>
+            )}
           </Flex>
         </Flex>
       </VStack>
@@ -212,7 +216,7 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
             {renderField("lastEdited", "Last Edited:")}
           </VStack>
 
-          <Divider borderColor="gray.600" />
+          <Divider borderColor={colors.gray[600]} />
 
           {/* License Info */}
           <VStack align="start" spacing={2} w="100%">
@@ -220,19 +224,19 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
             {renderField("fork", "Fork of:")}
           </VStack>
 
-          <Divider borderColor="gray.600" />
+          <Divider borderColor={colors.gray[600]} />
 
           {/* Socials */}
           {renderField("socials", "Socials:")}
 
-          <Divider borderColor="gray.600" />
+          <Divider borderColor={colors.gray[600]} />
 
           {/* Actions */}
           {renderField("actions", "Actions:")}
         </VStack>
       </Box>
 
-      <Divider my={4} borderColor="gray.600" />
+      <Divider my={4} borderColor={colors.gray[600]} />
 
       {/* Deployment Summary Section */}
       <Heading
@@ -257,7 +261,7 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
             {renderField("publishHash", "Publish Hash:")}
           </VStack>
 
-          <Divider borderColor="gray.600" />
+          <Divider borderColor={colors.gray[600]} />
 
           {/* Chain Info */}
           <VStack align="start" spacing={2} w="100%">
@@ -267,7 +271,7 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
             {renderField("chainExplorer", "Chain Explorer:")}
           </VStack>
 
-          <Divider borderColor="gray.600" />
+          <Divider borderColor={colors.gray[600]} />
 
           {/* Contract Info */}
           <VStack align="start" spacing={2} w="100%">
@@ -276,7 +280,7 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
             {renderField("contractId", "Contract ID:")}
           </VStack>
 
-          <Divider borderColor="gray.600" />
+          <Divider borderColor={colors.gray[600]} />
 
           {/* NFT Info */}
           <VStack align="start" spacing={2} w="100%">
@@ -286,7 +290,7 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
             {renderField("noOfAccess", "No of Access:")}
           </VStack>
 
-          <Divider borderColor="gray.600" />
+          <Divider borderColor={colors.gray[600]} />
 
           {/* Monetization */}
           {renderField("monetization", "Monetization:")}

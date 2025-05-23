@@ -33,7 +33,7 @@ const PublishModal = ({ isOpen, onClose, onPublish }) => {
       <ModalOverlay />
       <ModalContent bg="#18191b" color="white" borderRadius="md">
         <ModalHeader fontSize="lg" fontWeight="bold">
-          Publish and Deploy on Aptos Testnet
+          Publish and Deploy on SUI Testnet
         </ModalHeader>
         <ModalBody>
           <VStack spacing={4} align="stretch">
@@ -43,9 +43,9 @@ const PublishModal = ({ isOpen, onClose, onPublish }) => {
                 Prerequisites
               </Text>
               <Text fontSize="xs" color="gray.400">
-              Deploying workflow on Aptos Testnet requires a connected wallet with sufficient test APT tokens.
-        To use this feature, please ensure you have the Petra or Pontem wallet extension installed and connected
-        with your account. You can get free test tokens from the Aptos Faucet if needed.{" "}
+              Deploying workflow on SUI Testnet requires a connected wallet with sufficient test SUI tokens.
+        To use this feature, please ensure you have the Sui Wallet or supported wallet extension installed and connected
+        with your account. You can get free test tokens from the SUI Faucet if needed.{" "}
                 <Text as="span" color="blue.400" textDecor="underline">
                   documentation
                 </Text>
@@ -59,7 +59,7 @@ const PublishModal = ({ isOpen, onClose, onPublish }) => {
                 Disclaimer
               </Text>
               <Text fontSize="xs" color="gray.400">
-              This workflow will be published to the Aptos Testnet blockchain and will be publicly visible.
+              This workflow will be published to the SUI Testnet blockchain and will be publicly visible.
         The testnet environment is for development purposes only, and any tokens or data on the testnet
         have no real-world value. Test thoroughly before deploying to mainnet.
               </Text>

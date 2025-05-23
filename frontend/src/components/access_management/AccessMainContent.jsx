@@ -103,14 +103,12 @@ const AccessMainContent = ({ currentView }) => {
     fetchFlowsData();
   }, [isAuthenticated]);
 
-  // Handle flow click - navigate to portfolio manager (or flow builder for now)
+  // Handle flow click - navigate to agent detail page
   const handleFlowClick = (flow) => {
-    // TODO: Update this to navigate to portfolio manager once it's implemented
-    // For now, we'll show an alert or navigate to flow builder
     console.log('Selected flow:', flow);
     
-    // Navigate to flow builder with the flow data
-    navigate('/flow-builder', { state: { flowId: flow.agent_id, flowData: flow } });
+    // Navigate to agent detail page with the agent ID
+    navigate(`/access-management/${flow.agent_id}`);
   };
 
   // Get flows to display based on current view
@@ -218,9 +216,9 @@ const AccessMainContent = ({ currentView }) => {
                 </AlertDescription>
               </Box>
             </Alert>
-            <Button colorScheme="blue" onClick={() => navigate('/dashboard')}>
+            {/* <Button colorScheme="blue" onClick={() => navigate('/dashboard')}>
               Go to Dashboard
-            </Button>
+            </Button> */}
           </VStack>
         </Center>
       </Box>
@@ -405,7 +403,7 @@ const AccessMainContent = ({ currentView }) => {
                         </MenuItem>
                         <MenuItem onClick={(e) => {
                           e.stopPropagation();
-                          navigate('/flow-builder', { state: { flowId: flow.agent_id } });
+                          navigate(`/access-management/${flow.agent_id}?page=edit-flow`);
                         }}>
                           Edit Flow
                         </MenuItem>

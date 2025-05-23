@@ -34,9 +34,10 @@ import { useWallet } from "../../contexts/WalletContext";
 import { useExecuteContractFunction } from "../../utils/transaction";
 import flowIcons from "../../utils/my-flow-icons.json";
 import PublishModal from "./Popup/PublishModal"; // Import the new modal
+import colors from '../../color';
 
-const FlowActionPanel = ({ toggleSidebar, sidebarOpen }) => {
-  const [activeAction, setActiveAction] = useState(null);
+const FlowActionPanel = ({ toggleSidebar, sidebarOpen, currentPage, onPageChange }) => {
+  const [activeAction, setActiveAction] = useState('Summary');
   const [isModalOpen, setModalOpen] = useState(false);
   const [contractValue, setContractValue] = useState("0");
   const { currentWallet } = useCurrentWallet();
@@ -46,6 +47,31 @@ const FlowActionPanel = ({ toggleSidebar, sidebarOpen }) => {
   const connected = !!currentWallet;
   const wallet = currentWallet;
   const toast = useToast();
+  
+  // Update active action based on current page
+  React.useEffect(() => {
+    const pageToAction = {
+      'summary': 'Home',
+      'chat': 'Chat',
+      'access': 'Access',
+      'edit-flow': 'Edit Flow',
+      'flow-view': 'Flow View',
+      'settings': 'Settings',
+      'metadata': 'Metadata',
+      'version': 'Versions',
+      'blockchain': 'Blockchain',
+      'download': 'Download',
+      'analytics': 'Analytics',
+      'cost-estimation': 'Cost',
+      'monetization': 'Monetization',
+      'dependencies': 'Dependencies',
+      'collaborators': 'Collaborators'
+    };
+    
+    if (currentPage && pageToAction[currentPage]) {
+      setActiveAction(pageToAction[currentPage]);
+    }
+  }, [currentPage]);
 
   const executeContract = useExecuteContractFunction(
     signAndSubmitTransaction,
@@ -54,11 +80,11 @@ const FlowActionPanel = ({ toggleSidebar, sidebarOpen }) => {
     wallet
   );
 
-  const bgColor = useColorModeValue("white", "#18191b");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const iconColor = useColorModeValue("black", "gray.400");
-  const hoverBgColor = useColorModeValue("gray.100", "gray.700");
-  const activeColor = useColorModeValue("blue.600", "blue.300");
+  const bgColor = useColorModeValue(colors.accessManagement.sidebar.bg.light, colors.accessManagement.sidebar.bg.dark);
+  const borderColor = useColorModeValue(colors.accessManagement.sidebar.border.light, colors.accessManagement.sidebar.border.dark);
+  const iconColor = useColorModeValue(colors.gray[900], colors.gray[400]);
+  const hoverBgColor = useColorModeValue(colors.accessManagement.sidebar.itemHover.light, colors.accessManagement.sidebar.itemHover.dark);
+  const activeColor = useColorModeValue(colors.blue[700], colors.blue[300]);
 
   const iconMapping = {
     FiHome: FiHome,
@@ -93,8 +119,33 @@ const FlowActionPanel = ({ toggleSidebar, sidebarOpen }) => {
   const handleActionClick = (actionName) => {
     setActiveAction(actionName);
     console.log(`Action clicked: ${actionName}`);
+    
     if (actionName === "Publish") {
       setModalOpen(true); // Open the modal instead of directly publishing
+    } else if (onPageChange) {
+      // Map action names to page names
+      const pageMapping = {
+        'Home': 'summary',
+        'Chat': 'chat',
+        'Access': 'access',
+        'Edit Flow': 'edit-flow',
+        'Flow View': 'flow-view',
+        'Settings': 'settings',
+        'Metadata': 'metadata',
+        'Versions': 'version',
+        'Blockchain': 'blockchain',
+        'Download': 'download',
+        'Analytics': 'analytics',
+        'Cost': 'cost-estimation',
+        'Monetization': 'monetization',
+        'Dependencies': 'dependencies',
+        'Collaborators': 'collaborators'
+      };
+      
+      const pageName = pageMapping[actionName];
+      if (pageName) {
+        onPageChange(pageName);
+      }
     }
   };
 
@@ -107,7 +158,7 @@ const FlowActionPanel = ({ toggleSidebar, sidebarOpen }) => {
       const address = account.address; // The address of the account
       console.log("Account Address:", address); // Log the account address
       const name = "My NFT 2";
-      const levelofOwnership = 6;
+      const levelOfOwnership = 6;
     
 
       if (!connected || !account) {
@@ -132,7 +183,7 @@ const FlowActionPanel = ({ toggleSidebar, sidebarOpen }) => {
         moduleName,
         functionName,
         [], // type_arguments
-        [name, levelofOwnership], // args
+        [name, levelOfOwnership], // args
         // { maxGasAmount: "2000", gasUnitPrice: "100" } // options
       );
     // await executeContract(
@@ -192,11 +243,11 @@ const FlowActionPanel = ({ toggleSidebar, sidebarOpen }) => {
             >
               {sidebarOpen ? (
                 <Flex alignItems="center" justifyContent="center">
-                  <Box as={FaAngleDoubleRight} size="24px" ml="-7px" />
+                  <Box as={FaAngleDoubleLeft} size="24px" ml="-7px" />
                 </Flex>
               ) : (
                 <Flex alignItems="center" justifyContent="center">
-                  <Box as={FaAngleDoubleLeft} size="24px" ml="-7px" />
+                  <Box as={FaAngleDoubleRight} size="24px" ml="-7px" />
                 </Flex>
               )}
             </Button>
@@ -209,7 +260,7 @@ const FlowActionPanel = ({ toggleSidebar, sidebarOpen }) => {
             <Tooltip
               label={option.newName}
               placement="right"
-              bg={"gray.900"}
+              bg={colors.gray[900]}
               hasArrow
             >
               <Button
