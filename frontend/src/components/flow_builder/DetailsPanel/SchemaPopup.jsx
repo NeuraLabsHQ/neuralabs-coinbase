@@ -93,9 +93,17 @@ const SchemaPopup = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="4xl">
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      size="4xl"
+      blockScrollOnMount={false}
+      preserveScrollBarGap={true}
+      returnFocusOnClose={false}
+      isCentered
+    >
       <ModalOverlay />
-      <ModalContent bg={bgColor} maxW="80%">
+      <ModalContent bg={bgColor} maxW="50%">
         <ModalHeader borderBottom="1px solid" borderColor={borderColor}>
           <HStack justify="space-between">
             <Text>{title}</Text>

@@ -37,7 +37,15 @@ const DescriptionPopup = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      size="xl"
+      blockScrollOnMount={false}
+      preserveScrollBarGap={true}
+      returnFocusOnClose={false}
+      isCentered
+    >
       <ModalOverlay />
       <ModalContent bg={bgColor}>
         <ModalHeader borderBottom="1px solid" borderColor={borderColor}>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Box, 
   Flex, 
@@ -57,6 +57,8 @@ const DetailsPanel = ({
   const [layer, setLayer] = useState(selectedNode?.layer || 0);
   const [newTag, setNewTag] = useState("");
   const [nodeData, setNodeData] = useState(null);
+  const propertiesScrollRef = useRef(null);
+  const previewScrollRef = useRef(null);
   
   // Popup controls
   const { isOpen: isDescOpen, onOpen: onDescOpen, onClose: onDescClose } = useDisclosure();
@@ -243,6 +245,7 @@ const DetailsPanel = ({
         borderColor={borderColor}
         display="flex"
         flexDirection="column"
+        overflow="hidden"
       >
         <Flex justify="space-between" align="center" p={4} borderBottom="1px solid" borderColor={borderColor}>
           <Flex align="center" gap={2}>
@@ -288,6 +291,7 @@ const DetailsPanel = ({
         
         <Tabs 
           flex="1" 
+          minH="0"
           display="flex" 
           flexDirection="column"
           index={tabIndex}
@@ -299,7 +303,7 @@ const DetailsPanel = ({
             <Tab>Preview</Tab>
           </TabList>
           
-          <TabPanels flex="1" overflowY="hidden">
+          <TabPanels flex="1" overflow="hidden">
             {/* Properties Tab */}
             <TabPanel 
               p={0} 
@@ -308,7 +312,9 @@ const DetailsPanel = ({
               flexDirection="column"
             >
               <Box 
+                ref={propertiesScrollRef}
                 flex="1" 
+                minH="0"
                 overflowY="auto" 
                 overflowX="hidden" 
                 p={4}
@@ -535,7 +541,9 @@ const DetailsPanel = ({
               flexDirection="column"
             >
               <Box 
+                ref={previewScrollRef}
                 flex="1" 
+                minH="0"
                 overflowY="auto" 
                 overflowX="hidden" 
                 p={4}
