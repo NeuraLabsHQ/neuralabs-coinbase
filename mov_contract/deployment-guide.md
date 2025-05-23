@@ -82,6 +82,11 @@ sudo apt install -y librocksdb-dev
 
 # Install Sui CLI
 cargo install --locked --git https://github.com/MystenLabs/sui.git --branch testnet sui
+
+# Install Older Version (if needed)
+
+cargo install --locked --git https://github.com/MystenLabs/sui.git --tag testnet-v1.47.0 sui
+
 ```
 
 ### Option 2: Using Homebrew (macOS)

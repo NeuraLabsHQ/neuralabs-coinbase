@@ -6,11 +6,14 @@
 /// Level 4 and above can decrypt files stored on Walrus using Seal threshold encryption.
 module neuralnft::nft {
     use std::string::{Self, String};
+    use std::vector;
     use sui::clock::Clock;
     use sui::table::{Self, Table};
     use sui::dynamic_field as df;
     use sui::event;
-    use sui::vec_map::{Self, VecMap};
+    use sui::object::{Self, UID, ID};
+    use sui::transfer;
+    use sui::tx_context::{Self, TxContext};
     
     // Error codes
     const E_NOT_AUTHORIZED: u64 = 1;

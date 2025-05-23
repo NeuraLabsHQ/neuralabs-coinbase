@@ -1,0 +1,10 @@
+[package]
+name = "NeuraLabsNFT"
+edition = "2024.beta" # edition = "legacy" to use legacy (pre-2024) Move
+version = "0.0.1"
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
+
+[addresses]
+neuralnft = "0x0"

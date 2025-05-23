@@ -1,0 +1,47 @@
+{
+  "network": "testnet",
+  "rpcUrl": "https://fullnode.testnet.sui.io:443",
+  "packageId": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "collectionId": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "testAccounts": {
+    "owner": {
+      "address": "0x0000000000000000000000000000000000000000000000000000000000000001",
+      "privateKey": "suiprivkey1..."
+    },
+    "user1": {
+      "address": "0x0000000000000000000000000000000000000000000000000000000000000002",
+      "privateKey": "suiprivkey2..."
+    },
+    "user2": {
+      "address": "0x0000000000000000000000000000000000000000000000000000000000000003",
+      "privateKey": "suiprivkey3..."
+    }
+  },
+  "seal": {
+    "keyServers": [
+      {
+        "name": "mysten-testnet-1",
+        "url": "https://seal-key-server-testnet-1.mystenlabs.com",
+        "objectId": "0x13a86a87ab1bf3a2e81b3c13b2e7a3b0db8b3c4d5e6f708192a3b4c5d6e7f809"
+      },
+      {
+        "name": "mysten-testnet-2",
+        "url": "https://seal-key-server-testnet-2.mystenlabs.com",
+        "objectId": "0x23b97b98bc2cf4a3f92c4d14c3f8b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6"
+      }
+    ],
+    "threshold": 1,
+    "keyServerCount": 2
+  },
+  "walrus": {
+    "endpoint": "https://testnet.walrus.io",
+    "maxFileSize": 10485760
+  },
+  "gasLimits": {
+    "createCollection": 10000000,
+    "createNft": 10000000,
+    "grantAccess": 5000000,
+    "revokeAccess": 5000000,
+    "addEncryptedData": 20000000
+  }
+}

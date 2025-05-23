@@ -1,0 +1,44 @@
+{
+  "name": "neuralabs-test-scripts",
+  "version": "1.0.0",
+  "description": "JavaScript test scripts for NeuraLabs Seal integration",
+  "type": "module",
+  "scripts": {
+    "test": "jest",
+    "test:seal": "jest seal-integration.test.js",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "dependencies": {
+    "@mysten/sui.js": "^0.50.0",
+    "@mysten/seal": "^0.1.0",
+    "@mysten/zklogin": "^0.7.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.22.0",
+    "@babel/preset-env": "^7.22.0",
+    "@jest/globals": "^29.6.0",
+    "babel-jest": "^29.6.0",
+    "jest": "^29.6.0",
+    "jest-environment-node": "^29.6.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {
+      "^.+\\.js$": "babel-jest"
+    },
+    "testMatch": [
+      "**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "*.js",
+      "!*.test.js",
+      "!jest.config.js"
+    ]
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "author": "NeuraLabs",
+  "license": "MIT"
+}

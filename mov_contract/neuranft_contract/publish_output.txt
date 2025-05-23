@@ -1,0 +1,13 @@
+[Note]: Dependency sources are no longer verified automatically during publication and upgrade. You can pass the `--verify-deps` option if you would like to verify them as part of publication or upgrade.
+INCLUDING DEPENDENCY Bridge
+INCLUDING DEPENDENCY SuiSystem
+INCLUDING DEPENDENCY Sui
+INCLUDING DEPENDENCY MoveStdlib
+BUILDING NeuraLabsNFT
+Skipping dependency verification
+
+thread 'main' panicked at /home/sid/.cargo/git/checkouts/sui-e0a047c8ed89192d/3b1d6b3/external-crates/move/crates/move-bytecode-utils/src/lib.rs:29:17:
+Duplicate module found: 0x0000000000000000000000000000000000000000000000000000000000000002::priority_queue
+2025-05-23T02:07:09.481236Z ERROR telemetry_subscribers: panicked at /home/sid/.cargo/git/checkouts/sui-e0a047c8ed89192d/3b1d6b3/external-crates/move/crates/move-bytecode-utils/src/lib.rs:29:17:
+Duplicate module found: 0x0000000000000000000000000000000000000000000000000000000000000002::priority_queue panic.file="/home/sid/.cargo/git/checkouts/sui-e0a047c8ed89192d/3b1d6b3/external-crates/move/crates/move-bytecode-utils/src/lib.rs" panic.line=29 panic.column=17
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
