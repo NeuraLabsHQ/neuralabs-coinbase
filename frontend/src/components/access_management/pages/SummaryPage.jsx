@@ -7,6 +7,17 @@ import colors from '../../../color';
 const SummaryPage = ({ agentData }) => {
   const bgColor = useColorModeValue(colors.accessManagement.mainContent.bg.light, colors.accessManagement.mainContent.bg.dark);
   
+  // Helper function to format socials
+  const formatSocials = (socials) => {
+    if (!socials || typeof socials !== 'object') return 'Not specified';
+    const parts = [];
+    if (socials.twitter) parts.push(`X: ${socials.twitter}`);
+    if (socials.github) parts.push(`GitHub: ${socials.github}`);
+    if (socials.linkedin) parts.push(`LinkedIn: ${socials.linkedin}`);
+    if (socials.website) parts.push(`Website: ${socials.website}`);
+    return parts.length > 0 ? parts.join(' | ') : 'Not specified';
+  };
+  
   // Transform agent data to flow details format expected by FlowDetailComponent
   const flowDetails = {
     name: agentData.name || 'Unnamed Agent',
@@ -37,17 +48,6 @@ const SummaryPage = ({ agentData }) => {
     noOfAccess: agentData.access_count || '1',
     monetization: agentData.monetization || 'None',
   };
-  
-  // Helper function to format socials
-  function formatSocials(socials) {
-    if (!socials || typeof socials !== 'object') return 'Not specified';
-    const parts = [];
-    if (socials.twitter) parts.push(`X: ${socials.twitter}`);
-    if (socials.github) parts.push(`GitHub: ${socials.github}`);
-    if (socials.linkedin) parts.push(`LinkedIn: ${socials.linkedin}`);
-    if (socials.website) parts.push(`Website: ${socials.website}`);
-    return parts.length > 0 ? parts.join(' | ') : 'Not specified';
-  }
 
   return (
     <Box 

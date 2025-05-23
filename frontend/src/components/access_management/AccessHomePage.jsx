@@ -541,7 +541,8 @@ const AccessHomePage = ({ onSelectFlow }) => {
               <Tr
                 key={flow.id}
                 _hover={{ bg: listhoverBgColor }}
-                onClick={() => onSelectFlow && onSelectFlow(flow)}
+                onClick={() => navigate(`/access-management/${flow.id || flow.agent_id}`)}
+                cursor="pointer"
               >
                 <Td width={"10px"}>
                   <Box
