@@ -24,6 +24,7 @@ import {
   FiMoreVertical
 } from 'react-icons/fi';
 import { FaAngleDoubleLeft, FaAngleDoubleRight } from 'react-icons/fa';
+import colors from '../../../color';
 
 const ChatHistoryPanel = ({ 
   isOpen, 
@@ -40,15 +41,15 @@ const ChatHistoryPanel = ({
   setNewTitle
 }) => {
   // Colors that adapt to light/dark mode
-  const bgColor = useColorModeValue("gray.50", "#1a1a1a");
-  const borderColor = useColorModeValue("gray.200", "#333");
-  const textColor = useColorModeValue("gray.800", "white");
-  const mutedTextColor = useColorModeValue("gray.500", "gray.400");
-  const selectedBgColor = useColorModeValue("blue.50", "#333");
-  const hoverBgColor = useColorModeValue("gray.100", "#282828");
-  const buttonBgColor = useColorModeValue("white", "#333");
-  const buttonHoverBgColor = useColorModeValue("gray.100", "#444");
-  const iconColor = useColorModeValue("gray.500", "gray.400");
+  const bgColor = useColorModeValue(colors.chat.bgTertiary.light, colors.gray[800]);
+  const borderColor = useColorModeValue(colors.chat.borderColor.light, colors.chat.borderLight.dark);
+  const textColor = useColorModeValue(colors.chat.textPrimary.light, colors.chat.textPrimary.dark);
+  const mutedTextColor = useColorModeValue(colors.chat.textMuted.light, colors.chat.textMuted.dark);
+  const selectedBgColor = useColorModeValue(colors.chat.bgSelected.light, colors.chat.bgSelected.dark);
+  const hoverBgColor = useColorModeValue(colors.chat.bgHover.light, colors.gray[700]);
+  const buttonBgColor = useColorModeValue(colors.chat.bgButton.light, colors.chat.bgButton.dark);
+  const buttonHoverBgColor = useColorModeValue(colors.chat.bgButtonHover.light, colors.chat.bgButtonHover.dark);
+  const iconColor = useColorModeValue(colors.chat.iconColor.light, colors.chat.iconColor.dark);
   
   const handleEditClick = (chatId, currentTitle) => {
     setEditingChatId(chatId);
@@ -87,7 +88,7 @@ const ChatHistoryPanel = ({
               w="30px" 
               h="30px" 
               borderRadius="full" 
-              bg="gray.700"
+              bg={colors.gray[700]}
               alignItems="center" 
               justifyContent="center"
             >

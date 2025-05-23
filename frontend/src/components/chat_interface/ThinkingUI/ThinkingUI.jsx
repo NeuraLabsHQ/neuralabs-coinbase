@@ -15,6 +15,7 @@ import { FiCheck, FiList } from "react-icons/fi";
 import { motion } from "framer-motion";
 import thinkresponse from "../../../utils/thinkresponse.json";
 import thinkingStepTemplates from "../../../utils/thinkingStepTemplates.json";
+import colors from "../../../color";
 
 
 const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true }) => {
@@ -32,15 +33,15 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true }) => {
   const typingSpeed = 30; // milliseconds per character
 
   // Color variables
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const bgColor = useColorModeValue("white", "#1E1E1E");
-  const textColor = useColorModeValue("gray.800", "white");
-  const secondaryColor = useColorModeValue("gray.600", "gray.400");
-  const sourceBgColor = useColorModeValue("gray.50", "gray.800");
-  const checkmarkBgColor = useColorModeValue("black", "black");
-  const spinnerBgColor = useColorModeValue("gray.200", "gray.700");
-  const spinnerColor = useColorModeValue("gray.500", "gray.300");
-  const linkColor = useColorModeValue("blue.500", "blue.300");
+  const borderColor = useColorModeValue(colors.chat.borderColor.light, colors.chat.borderColor.dark);
+  const bgColor = useColorModeValue(colors.chat.bgPrimary.light, colors.chat.bgSecondary.dark);
+  const textColor = useColorModeValue(colors.chat.textPrimary.light, colors.chat.textPrimary.dark);
+  const secondaryColor = useColorModeValue(colors.chat.textSecondary.light, colors.chat.textSecondary.dark);
+  const sourceBgColor = useColorModeValue(colors.chat.bgSource.light, colors.chat.bgSource.dark);
+  const checkmarkBgColor = useColorModeValue(colors.gray[900], colors.gray[900]);
+  const spinnerBgColor = useColorModeValue(colors.chat.spinnerBgColor.light, colors.chat.spinnerBgColor.dark);
+  const spinnerColor = useColorModeValue(colors.chat.spinnerColor.light, colors.chat.spinnerColor.dark);
+  const linkColor = useColorModeValue(colors.chat.linkColor.light, colors.chat.linkColor.dark);
   const scrollbarColor = useColorModeValue('rgba(0,0,0,0.05)', 'rgba(255,255,255,0.05)');
   const scrollbarTrackColor = useColorModeValue('rgba(0,0,0,0.2)', 'rgba(255,255,255,0.2)');
 

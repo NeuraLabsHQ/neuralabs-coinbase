@@ -12,17 +12,18 @@ import {
   Badge,
   Tooltip
 } from '@chakra-ui/react';
+import colors from '../../color';
 
 const FlowCard = ({ flow, onClick }) => {
   const [isHovering, setIsHovering] = useState(false);
   
-  const bgColor = useColorModeValue('white', '#1f1f1f');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const textColor = useColorModeValue('gray.800', 'white');
-  const subtextColor = useColorModeValue('gray.600', 'gray.400');
-  const iconBgColor = useColorModeValue('blue.500', 'blue.600');
-  const iconTextColor = useColorModeValue('white', 'white');
-  const hoverBorderColor = useColorModeValue('blue.300', 'blue.500');
+  const bgColor = useColorModeValue(colors.accessManagement.flowCard.bg.light, colors.accessManagement.flowCard.bg.dark);
+  const borderColor = useColorModeValue(colors.accessManagement.flowCard.border.light, colors.accessManagement.flowCard.border.dark);
+  const textColor = useColorModeValue(colors.gray[800], colors.gray[100]);
+  const subtextColor = useColorModeValue(colors.gray[600], colors.gray[400]);
+  const iconBgColor = useColorModeValue(colors.accessManagement.flowCard.iconBg.light, colors.accessManagement.flowCard.iconBg.dark);
+  const iconTextColor = useColorModeValue(colors.accessManagement.flowCard.iconText.light, colors.accessManagement.flowCard.iconText.dark);
+  const hoverBorderColor = useColorModeValue(colors.blue[300], colors.blue[500]);
   
   // Handle case where flow might be undefined or missing properties
   if (!flow) {

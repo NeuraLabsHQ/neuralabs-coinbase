@@ -34,6 +34,7 @@ import {
 import { FiSearch, FiFilter, FiMoreHorizontal, FiFile } from 'react-icons/fi';
 import { accessManagementApi } from '../../utils/access-api';
 import { useNavigate } from 'react-router-dom';
+import colors from '../../color';
 
 const AccessMainContent = ({ currentView }) => {
   const [flowsData, setFlowsData] = useState({ my_flows: [], other_flows: {} });
@@ -42,12 +43,12 @@ const AccessMainContent = ({ currentView }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
   
-  const bgColor = useColorModeValue('white', '#18191b');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const headingColor = useColorModeValue('gray.800', 'white');
-  const textColor = useColorModeValue('gray.600', 'gray.300');
-  const tableHeaderBg = useColorModeValue('gray.50', '#0f0f11');
-  const hoverBg = useColorModeValue('gray.50', 'gray.800');
+  const bgColor = useColorModeValue(colors.accessManagement.mainContent.bg.light, colors.accessManagement.mainContent.bg.dark);
+  const borderColor = useColorModeValue(colors.accessManagement.sidebar.border.light, colors.accessManagement.sidebar.border.dark);
+  const headingColor = useColorModeValue(colors.accessManagement.mainContent.heading.light, colors.accessManagement.mainContent.heading.dark);
+  const textColor = useColorModeValue(colors.gray[600], colors.gray[300]);
+  const tableHeaderBg = useColorModeValue(colors.gray[50], colors.gray[900]);
+  const hoverBg = useColorModeValue(colors.gray[50], colors.gray[800]);
   const inputbgcolor = useColorModeValue('white', '#1f1f1f');
   
   // Check authentication status
@@ -254,7 +255,7 @@ const AccessMainContent = ({ currentView }) => {
           {/* Search Input */}
           <InputGroup size="md" maxW="400px">
             <InputLeftElement pointerEvents="none">
-              <FiSearch color="gray.500" />
+              <FiSearch color={colors.gray[500]} />
             </InputLeftElement>
             <Input
               placeholder="Search my files"
@@ -262,7 +263,7 @@ const AccessMainContent = ({ currentView }) => {
               onChange={(e) => setSearchQuery(e.target.value)}
               bg={inputbgcolor}
               borderColor={borderColor}
-              _placeholder={{ color: 'gray.500' }}
+              _placeholder={{ color: colors.gray[500] }}
             />
           </InputGroup>
           
@@ -290,7 +291,7 @@ const AccessMainContent = ({ currentView }) => {
         {isLoading && (
           <Center h="full" py={10}>
             <VStack spacing={4}>
-              <Spinner size="lg" color="blue.500" />
+              <Spinner size="lg" color={colors.blue[500]} />
               <Text color={textColor}>Loading flows...</Text>
             </VStack>
           </Center>

@@ -3,6 +3,7 @@
 import ICON_MAP from '../Common/IconMap'
 
 import React, { useState, useEffect } from 'react';
+import colors from '../../../color';
 
 import { 
   Box, 
@@ -109,19 +110,19 @@ const BlocksPanel = ({
     }
   }, [nodeTypes]);
   
-  const bgColor = useColorModeValue('sidepanel.body.light', 'sidepanel.body.dark');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const headingColor = useColorModeValue('gray.800', 'white');
-  const accordionBgColor = useColorModeValue('gray.50', 'gray.600');
-  const layerHeaderBg = useColorModeValue('blockpanel.listhoverBg.light', 'blockpanel.listhoverBg.dark');
-  const layerHeaderColor = useColorModeValue('blue.700', 'blue.300');
-  const iconColor = useColorModeValue('blockpanel.icon.light', 'blockpanel.icon.dark');
-  const itemBgColor = useColorModeValue('blockpanel.itemBg.light', 'blockpanel.itemBg.dark');
-  const hoverBgColor = useColorModeValue('gray.100', 'gray.600');
-  const emptyStateIconColor = useColorModeValue('gray.300', 'gray.600');
-  const errorColor = useColorModeValue('red.500', 'red.300');
-  const categoryColor = useColorModeValue('gray.700', 'gray.300');
-  const listhoverBgColor = useColorModeValue('blockpanel.listhoverBg.light', 'blockpanel.listhoverBg.dark');
+  const bgColor = useColorModeValue(colors.sidepanel.body.light, colors.sidepanel.body.dark);
+  const borderColor = useColorModeValue(colors.gray[200], colors.gray[700]);
+  const headingColor = useColorModeValue(colors.gray[800], colors.gray[100]);
+  const accordionBgColor = useColorModeValue(colors.gray[50], colors.gray[600]);
+  const layerHeaderBg = useColorModeValue(colors.blockpanel.listhoverBg.light, colors.blockpanel.listhoverBg.dark);
+  const layerHeaderColor = useColorModeValue(colors.blue[700], colors.blue[300]);
+  const iconColor = useColorModeValue(colors.blockpanel.icon.light, colors.blockpanel.icon.dark);
+  const itemBgColor = useColorModeValue(colors.blockpanel.itemBg.light, colors.blockpanel.itemBg.dark);
+  const hoverBgColor = useColorModeValue(colors.gray[100], colors.gray[600]);
+  const emptyStateIconColor = useColorModeValue(colors.gray[300], colors.gray[600]);
+  const errorColor = useColorModeValue(colors.red[500], colors.red[300]);
+  const categoryColor = useColorModeValue(colors.gray[700], colors.gray[300]);
+  const listhoverBgColor = useColorModeValue(colors.blockpanel.listhoverBg.light, colors.blockpanel.listhoverBg.dark);
   
   // Define message based on beautify mode
   const emptyStateMessage = beautifyMode 

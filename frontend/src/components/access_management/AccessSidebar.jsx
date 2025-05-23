@@ -18,6 +18,7 @@ import {
 import { FiSearch, FiPlus, FiHome, FiList, FiChevronRight, FiChevronDown } from 'react-icons/fi';
 import { accessManagementApi } from '../../utils/access-api'; // Updated import path
 import SidebarItem from './SidebarItem';
+import colors from '../../color';
 
 
 const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = false }) => {
@@ -35,9 +36,9 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const bgColor = useColorModeValue('white', '#18191b');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const hoverBgColor = useColorModeValue('gray.100', 'gray.700');
+  const bgColor = useColorModeValue(colors.accessManagement.sidebar.bg.light, colors.accessManagement.sidebar.bg.dark);
+  const borderColor = useColorModeValue(colors.accessManagement.sidebar.border.light, colors.accessManagement.sidebar.border.dark);
+  const hoverBgColor = useColorModeValue(colors.accessManagement.sidebar.itemHover.light, colors.accessManagement.sidebar.itemHover.dark);
 
   // Check authentication status
   useEffect(() => {
@@ -192,18 +193,18 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
         <Text fontWeight="bold" fontSize="xl">My Flows</Text>
         <InputGroup size="sm" mt={3}>
         <InputLeftElement pointerEvents="none" height="100%" pl={1}>
-          <Icon as={FiSearch} color="gray.500" fontSize="14px" />
+          <Icon as={FiSearch} color={colors.gray[500]} fontSize="14px" />
         </InputLeftElement>
         <Input 
           placeholder="Search..." 
           value={searchQuery}
           onChange={handleSearchChange}
           borderRadius="md"
-          bg={useColorModeValue("white", "#1f1f1f")}
-          _placeholder={{ color: "gray.500", fontSize: "13px" }}
+          bg={useColorModeValue(colors.accessManagement.sidebar.bg.light, colors.gray[800])}
+          _placeholder={{ color: colors.gray[500], fontSize: "13px" }}
           _focus={{ 
-            borderColor: "blue.400", 
-            boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)" 
+            borderColor: colors.blue[300], 
+            boxShadow: `0 0 0 1px ${colors.blue[300]}` 
           }}
         />
       </InputGroup>
@@ -318,7 +319,7 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
         {/* Loading indicator */}
         {(isLoading || loading) && (
           <Flex justify="center" my={4}>
-            <Spinner size="sm" color="blue.500" />
+            <Spinner size="sm" color={colors.blue[500]} />
           </Flex>
         )}
       </Box>
@@ -335,7 +336,7 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
           size="sm" 
           w="100%"
           onClick={() => console.log('Create new project')}
-          bgColor={"#0f0f11"}
+          bgColor={colors.gray[900]}
         >
           Create new project
         </Button>

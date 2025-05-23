@@ -44,6 +44,7 @@ import {
 import SchemaPopup from './SchemaPopup';
 import DescriptionPopup from './DescriptionPopup';
 import ConnectionsListPopup from './ConnectionsListPopup';
+import colors from '../../../color';
 
 const DetailsPanel = ({ 
   selectedNode, 
@@ -104,14 +105,14 @@ const DetailsPanel = ({
     }
   }, [selectedNode]);
 
-  const panelBgColor = useColorModeValue('detailpanel.body.light', 'detailpanel.body.dark');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
-  const textColor = useColorModeValue('gray.800', 'white');
-  const mutedTextColor = useColorModeValue('gray.500', 'gray.400');
-  const sectionBgColor = useColorModeValue('gray.50', 'gray.600');
-  const formBgColor = useColorModeValue('detailpanel.inputbg.light', 'detailpanel.inputbg.dark');
-  const clickableBg = useColorModeValue('gray.100', 'gray.700');
-  const clickableHoverBg = useColorModeValue('gray.200', 'gray.600');
+  const panelBgColor = useColorModeValue(colors.detailpanel.body.light, colors.detailpanel.body.dark);
+  const borderColor = useColorModeValue(colors.gray[200], colors.gray[600]);
+  const textColor = useColorModeValue(colors.gray[800], colors.gray[100]);
+  const mutedTextColor = useColorModeValue(colors.gray[500], colors.gray[400]);
+  const sectionBgColor = useColorModeValue(colors.gray[50], colors.gray[600]);
+  const formBgColor = useColorModeValue(colors.detailpanel.inputbg.light, colors.detailpanel.inputbg.dark);
+  const clickableBg = useColorModeValue(colors.gray[100], colors.gray[700]);
+  const clickableHoverBg = useColorModeValue(colors.gray[200], colors.gray[600]);
   
   const getNodeTypeColor = (type) => {
     switch (type) {

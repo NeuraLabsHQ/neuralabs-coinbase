@@ -23,6 +23,7 @@ import CustomConnectButton from '../CustomConnectButton/CustomConnectButton';
 
 import neura_icon_white from '../../../assets/icons/neura-black.svg';
 import neura_icon_dark from '../../../assets/icons/neura-white.svg';
+import colors from '../../../color';
 
 const NavPanel = ({ 
   onNavigate,
@@ -124,7 +125,7 @@ const NavPanel = ({
             <Flex 
               w="32px" 
               h="32px" 
-              bg="gray.500"
+              bg={colors.gray[500]}
               color="white"
               alignItems="center" 
               justifyContent="center"
@@ -146,7 +147,7 @@ const NavPanel = ({
             <Tooltip 
               label={"Dashboard"} 
               placement="right" 
-              bg={useColorModeValue("gray.900", "gray.900")} 
+              bg={colors.gray[900]} 
               hasArrow
             >
               <Button 
@@ -164,7 +165,7 @@ const NavPanel = ({
             <Tooltip 
               label={"Chat"} 
               placement="right" 
-              bg={useColorModeValue("gray.900", "gray.900")} 
+              bg={colors.gray[900]} 
               hasArrow
             >
               <Button 
@@ -182,7 +183,7 @@ const NavPanel = ({
             <Tooltip 
               label={"Access Management"} 
               placement="right" 
-              bg={useColorModeValue("gray.900", "gray.900")} 
+              bg={colors.gray[900]} 
               hasArrow
             >
               <Button 
@@ -200,7 +201,7 @@ const NavPanel = ({
             <Tooltip 
               label={"Flow Builder"} 
               placement="right" 
-              bg={useColorModeValue("gray.900", "gray.900")} 
+              bg={colors.gray[900]} 
               hasArrow
             >
               <Button 
@@ -218,7 +219,7 @@ const NavPanel = ({
             <Tooltip 
               label={"Marketplace"} 
               placement="right" 
-              bg={useColorModeValue("gray.900", "gray.900")} 
+              bg={colors.gray[900]} 
               hasArrow
             >
               <Button 
@@ -233,7 +234,7 @@ const NavPanel = ({
           </Box>
           
           <Box as="li" position="relative" w="100%" mt="auto">
-            <Tooltip label="Toggle Theme" placement="right" bg={useColorModeValue("gray.900", "gray.900")} hasArrow>
+            <Tooltip label="Toggle Theme" placement="right" bg={colors.gray[900]} hasArrow>
               <Button 
                 {...getButtonStyles('theme')}
                 onClick={() => handleButtonClick('theme', toggleColorMode)}
@@ -258,7 +259,7 @@ const NavPanel = ({
             <Tooltip 
               label={"Settings"} 
               placement="right" 
-              bg={useColorModeValue("gray.900", "gray.900")} 
+              bg={colors.gray[900]} 
               hasArrow
             >
               <Button 

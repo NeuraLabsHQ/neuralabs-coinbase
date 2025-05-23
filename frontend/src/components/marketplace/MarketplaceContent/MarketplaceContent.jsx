@@ -16,17 +16,18 @@ import {
 } from '@chakra-ui/react';
 import { FiSearch, FiX } from 'react-icons/fi';
 import MarketplaceDetailPanel from './MarketplaceDetailPanel';
+import colors from '../../../color';
 
 // MarketplaceCard component - extracted from marketplace.jsx
 const MarketplaceCard = ({ item, onClick }) => {
-  const bgColor = useColorModeValue('marketplace.marketplaceCardbg.light', 'marketplace.marketplaceCardbg.dark');
-  const borderColor = useColorModeValue('marketplace.border.light', 'marketplace.border.dark');
-  const hoverBorderColor = useColorModeValue('marketplace.hoverBorder.light', 'marketplace.hoverBorder.dark');
-  const tagColor = useColorModeValue('marketplace.tag.light', 'marketplace.tag.dark');
-  const tagTextColor = useColorModeValue('marketplace.tagText.light', 'marketplace.tagText.dark');
-  const cardheadingColor = useColorModeValue('marketplace.heading.light', 'marketplace.heading.dark');
-  const carddescriptionColor = useColorModeValue('marketplace.description.light', 'marketplace.description.dark');
-  const loading_color = useColorModeValue('black', 'white');
+  const bgColor = useColorModeValue(colors.marketplace.marketplaceCardbg.light, colors.marketplace.marketplaceCardbg.dark);
+  const borderColor = useColorModeValue(colors.marketplace.border.light, colors.marketplace.border.dark);
+  const hoverBorderColor = useColorModeValue(colors.marketplace.hoverBorder.light, colors.marketplace.hoverBorder.dark);
+  const tagColor = useColorModeValue(colors.marketplace.tag.light, colors.marketplace.tag.dark);
+  const tagTextColor = useColorModeValue(colors.marketplace.tagText.light, colors.marketplace.tagText.dark);
+  const cardheadingColor = useColorModeValue(colors.marketplace.heading.light, colors.marketplace.heading.dark);
+  const carddescriptionColor = useColorModeValue(colors.gray[600], colors.gray[300]);
+  const loading_color = useColorModeValue(colors.gray[900], colors.gray[100]);
 
 
   
@@ -68,7 +69,7 @@ const MarketplaceCard = ({ item, onClick }) => {
         {/* Name and description */}
         <Box>
           <Heading as="h3" size="md" color={cardheadingColor} mb={1}>{item.name}</Heading>
-          <Text color="gray.300" fontSize="sm" mb={2} noOfLines={2}>{item.description}</Text>
+          <Text color={carddescriptionColor} fontSize="sm" mb={2} noOfLines={2}>{item.description}</Text>
         </Box>
         
         {/* Tags */}
@@ -119,9 +120,9 @@ const MarketplaceContent = ({
   const headingColor = useColorModeValue('marketplace.heading.light', 'marketplace.heading.dark');
 
 
-  const inputBgColor = useColorModeValue('white', 'gray.800');
-  const inputBorderColor = useColorModeValue('gray.200', 'gray.600');
-  const inputTextColor = useColorModeValue('gray.800', 'white');
+  const inputBgColor = useColorModeValue(colors.gray[100], colors.gray[800]);
+  const inputBorderColor = useColorModeValue(colors.gray[200], colors.gray[600]);
+  const inputTextColor = useColorModeValue(colors.gray[800], colors.gray[100]);
 
   // Handle search input changes
   const handleSearchChange = (e) => {
@@ -257,8 +258,8 @@ return (
                   bg={inputBgColor}
                   color={inputTextColor}
                   borderColor={inputBorderColor}
-                  _hover={{ borderColor: 'blue.300' }}
-                  _focus={{ borderColor: 'blue.500', boxShadow: '0 0 0 1px var(--chakra-colors-blue-500)' }}
+                  _hover={{ borderColor: colors.blue[300] }}
+                  _focus={{ borderColor: colors.blue[500], boxShadow: `0 0 0 1px ${colors.blue[500]}` }}
                   pr="4.5rem"
                 />
                 <InputRightElement width="4.5rem">

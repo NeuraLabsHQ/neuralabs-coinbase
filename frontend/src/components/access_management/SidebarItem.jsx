@@ -90,6 +90,7 @@ import {
   FiUsers,
   FiCode
 } from 'react-icons/fi';
+import colors from '../../color';
 
 const SidebarItem = ({ 
   label, 
@@ -102,15 +103,15 @@ const SidebarItem = ({
   count,
   onClick 
 }) => {
-  const bgColor = useColorModeValue('white', '#18191b');
-  const hoverBgColor = useColorModeValue('#fdfdfd', '#1e1f21');
-  const activeBgColor = useColorModeValue('#fdfdfd', '#1e1f21');
-  const activeTextColor = useColorModeValue('#1e1f21', '#fdfdfd');
-  const textColor = useColorModeValue('gray.800', 'gray.100');
-  const mutedTextColor = useColorModeValue('gray.600', '#525355');
-  const hovericonColor = useColorModeValue('gray.800', 'white');
-  const badgeBg = useColorModeValue('gray.100', 'gray.700');
-  const badgeColor = useColorModeValue('gray.600', 'gray.300');
+  const bgColor = useColorModeValue(colors.accessManagement.sidebar.bg.light, colors.accessManagement.sidebar.bg.dark);
+  const hoverBgColor = useColorModeValue(colors.accessManagement.sidebar.itemHover.light, colors.accessManagement.sidebar.itemHover.dark);
+  const activeBgColor = useColorModeValue(colors.accessManagement.sidebar.selected.light, colors.accessManagement.sidebar.selected.dark);
+  const activeTextColor = useColorModeValue(colors.accessManagement.sidebar.selectedText.light, colors.accessManagement.sidebar.selectedText.dark);
+  const textColor = useColorModeValue(colors.gray[800], colors.gray[100]);
+  const mutedTextColor = useColorModeValue(colors.accessManagement.sidebar.icon.light, colors.accessManagement.sidebar.icon.dark);
+  const hovericonColor = useColorModeValue(colors.gray[800], colors.gray[100]);
+  const badgeBg = useColorModeValue(colors.gray[100], colors.gray[700]);
+  const badgeColor = useColorModeValue(colors.gray[600], colors.gray[300]);
   
   // Default icon based on indentation level and content
   const getDefaultIcon = () => {
@@ -185,8 +186,8 @@ const SidebarItem = ({
         <Badge 
           fontSize="xs" 
           colorScheme={isActive ? "blue" : "gray"}
-          bg={isActive ? "blue.50" : badgeBg}
-          color={isActive ? "blue.600" : badgeColor}
+          bg={isActive ? colors.blue[300] : badgeBg}
+          color={isActive ? colors.blue[700] : badgeColor}
           borderRadius="full"
           px={2}
           ml={2}
