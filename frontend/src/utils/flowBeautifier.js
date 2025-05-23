@@ -21,8 +21,10 @@ export const beautifyFlow = (nodes, edges) => {
     
     // Populate adjacency maps
     edges.forEach(edge => {
-      outgoingMap[edge.source].push(edge.target);
-      incomingMap[edge.target].push(edge.source);
+      if (edge.source && edge.target && outgoingMap[edge.source] && incomingMap[edge.target]) {
+        outgoingMap[edge.source].push(edge.target);
+        incomingMap[edge.target].push(edge.source);
+      }
     });
     
     // 2. Find source nodes (nodes with no incoming edges)
@@ -46,7 +48,24 @@ export const beautifyFlow = (nodes, edges) => {
       
       if (visited.has(id)) {
         // If we've seen this node before, update its layer to be the maximum
-        nodeToLayer[id] = Math.max(nodeToLayer[id], layer);
+        const currentLayer = nodeToLayer[id];
+        if (layer > currentLayer) {
+          // Remove from old layer
+          const oldLayerNodes = layerToNodes[currentLayer];
+          if (oldLayerNodes) {
+            const index = oldLayerNodes.indexOf(id);
+            if (index > -1) {
+              oldLayerNodes.splice(index, 1);
+            }
+          }
+          
+          // Add to new layer
+          nodeToLayer[id] = layer;
+          if (!layerToNodes[layer]) {
+            layerToNodes[layer] = [];
+          }
+          layerToNodes[layer].push(id);
+        }
         continue;
       }
       
@@ -60,9 +79,11 @@ export const beautifyFlow = (nodes, edges) => {
       layerToNodes[layer].push(id);
       
       // Add all outgoing nodes to queue with incremented layer
-      outgoingMap[id].forEach(targetId => {
-        queue.push({ id: targetId, layer: layer + 1 });
-      });
+      if (outgoingMap[id]) {
+        outgoingMap[id].forEach(targetId => {
+          queue.push({ id: targetId, layer: layer + 1 });
+        });
+      }
     }
     
     // Handle nodes not visited in BFS (disconnected components)
@@ -91,8 +112,14 @@ export const beautifyFlow = (nodes, edges) => {
     // Create updated nodes with new positions
     const updatedNodes = nodes.map(node => {
       const layer = nodeToLayer[node.id];
-      const nodesInLayer = layerToNodes[layer];
+      const nodesInLayer = layerToNodes[layer] || [];
       const indexInLayer = nodesInLayer.indexOf(node.id);
+      
+      // If node not found in layer (shouldn't happen but defensive coding)
+      if (indexInLayer === -1) {
+        console.warn(`Node ${node.id} not found in its assigned layer ${layer}`);
+        return node; // Return original position
+      }
       
       // Calculate position in the layer
       const layerWidth = (nodesInLayer.length - 1) * HORIZONTAL_SPACING;
