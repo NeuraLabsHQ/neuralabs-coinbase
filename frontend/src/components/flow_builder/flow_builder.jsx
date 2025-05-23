@@ -759,7 +759,7 @@ if (nodeType === 'custom-script') {
 
   const exportFlowJSON = () => {
     exportFlowAsJSON(nodes, edges)
-      .then(({ data, url, filename }) => {
+      .then(({ url, filename }) => {
         // Create download link
         const link = document.createElement('a');
         link.download = filename;

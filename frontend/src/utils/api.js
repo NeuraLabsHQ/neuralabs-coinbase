@@ -1,7 +1,6 @@
 // src/utils/api.js
 import axios from 'axios';
 import marketplaceData from './marketplace-data';
-import nodeData from './node-data';
 
 // Base API configuration - will be used in the future when backend is available
 const api = axios.create({
@@ -65,12 +64,6 @@ export const marketplaceApi = {
   getCategories: () => simulateApiCall(marketplaceData.categories),
 };
 
-export const nodeApi = {
-  // Get all available node types
-  getNodeTypes: () => simulateApiCall(nodeData.nodeTypes),
-
-  getNodeCategories: () => simulateApiCall(nodeData.categories),
-};
 
 // Define all flows data in one place to ensure consistency
 const flowsData = [
