@@ -65,6 +65,8 @@ The system is built around the concept of elements that have inputs and outputs.
   | output_schema | A schema defining the outputs produced by the element | dict |
   | parameters | Additional parameters specific to the element type | dict |
   | processing_message | A message shown in the chat when the element is processing | string | 
+  |Tags| A list of tags associated with the element - user can create new similar to notion select and multiselect | list |
+  |Layer| The layer in which the element is placed - user can create new similar to notion select | string |
 
 ## Component Categories and Element Reference Tables
 
