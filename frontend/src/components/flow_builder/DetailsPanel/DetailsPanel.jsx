@@ -93,7 +93,7 @@ const DetailsPanel = ({
         processing_message: selectedNode.processing_message || 'Processing...',
         tags: selectedNode.tags || [],
         layer: selectedNode.layer || 0,
-        isCustom: selectedNode.type === 'custom-script'
+        isCustom: selectedNode.type === 'custom-script' || selectedNode.type === 'Custom'
       });
     }
   }, [selectedNode]);

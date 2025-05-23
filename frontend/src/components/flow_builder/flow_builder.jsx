@@ -106,42 +106,40 @@ const FlowBuilder = () => {
     );
     
     // Define inputs and outputs based on the node type
-    let inputs = [], outputs = [];
+    let inputs = [], outputs = [], hyperparameters = [], description = '', processing_message = '';
     
     if (typeof template === 'object') {
       inputs = template.inputs || [];
       outputs = template.outputs || [];
+      hyperparameters = template.hyperparameters || [];
+      description = template.description || '';
+      processing_message = template.processing_message || 'Processing...';
+    } else if (nodeTypes[nodeType]) {
+      // Get inputs/outputs from nodeTypes data fetched from API
+      const nodeTypeData = nodeTypes[nodeType];
+      console.log('Adding node with type:', nodeType);
+      console.log('Node type data:', nodeTypeData);
+      inputs = nodeTypeData.inputs || [];
+      outputs = nodeTypeData.outputs || [];
+      hyperparameters = nodeTypeData.hyperparameters || [];
+      description = nodeTypeData.description || '';
+      processing_message = nodeTypeData.processing_message || 'Processing...';
     } else {
-      // Default inputs/outputs for built-in node types
-      if (nodeType === 'data' || nodeType === 'chat-input' || nodeType === 'context-history' ||
-          nodeType === 'datablocks' || nodeType === 'sql-database' || nodeType === 'rest-api') {
-        outputs = [{ name: 'data', type: 'any' }];
-      } else if (nodeType === 'task' || nodeType === 'custom-script' || nodeType === 'blockchain-read' ||
-                nodeType === 'transaction-json' || nodeType === 'selector' || nodeType === 'merger' ||
-                nodeType === 'random-generator' || nodeType === 'time') {
-        inputs = [{ name: 'input', type: 'any' }];
-        outputs = [{ name: 'output', type: 'any' }];
-      } else if (nodeType === 'parameters') {
-        outputs = [{ name: 'params', type: 'any' }];
-      } else if (nodeType === 'start') {
+      // Fallback for any missing node types
+      if (nodeType === 'start') {
         outputs = [{ name: 'start', type: 'any' }];
       } else if (nodeType === 'end') {
         inputs = [{ name: 'end', type: 'any' }];
-      } else if (nodeType === 'case') {
-        inputs = [{ name: 'condition', type: 'any' }];
-        outputs = [
-          { name: 'true', type: 'any' },
-          { name: 'false', type: 'any' }
-        ];
-      } else if (nodeType === 'llm-free' || nodeType === 'llm-structured') {
-        inputs = [{ name: 'prompt', type: 'any' }];
-        outputs = [{ name: 'response', type: 'any' }];
+      } else {
+        // Default for unknown types
+        inputs = [{ name: 'input', type: 'any' }];
+        outputs = [{ name: 'output', type: 'any' }];
       }
     }
 
     // Create initial code for custom script nodes
     let initialCode = '';
-    if (nodeType === 'custom-script') {
+    if (nodeType === 'custom-script' || nodeType === 'Custom') {
       initialCode = `// Custom script for processing data
 // This code will be executed when the node is processed
 
@@ -171,9 +169,13 @@ module.exports = processData;`;
       name: typeof template === 'object' ? template.name : `${nodeType.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}`,
       inputs,
       outputs,
+      hyperparameters,
+      description,
+      processing_message,
       layer: 0, // Default layer
       templateId: typeof template === 'object' ? template.id : null,
-      code: initialCode // Add code property for custom script nodes
+      code: initialCode, // Add code property for custom script nodes
+      tags: [] // Initialize empty tags array
     };
     
     const updatedNodes = [...nodes, newNode];
@@ -186,7 +188,7 @@ module.exports = processData;`;
 
     // Automatically open appropriate panel based on node type
 // Update the handleAddNode function to open both panels for custom script nodes
-if (nodeType === 'custom-script') {
+if (nodeType === 'custom-script' || nodeType === 'Custom') {
   setSelectedNode(newNode);
   setDetailsOpen(true); // Open details panel 
   setCodeOpen(false); // Open code panel
