@@ -1,13 +1,16 @@
-// Copyright (c) 2024, Your Name
+// Copyright (c) 2024, NeuraLabs
 // SPDX-License-Identifier: Apache-2.0
 
 /// NFT Contract with Seal integration for encrypted data storage on Walrus
+/// This contract manages NFT-based access control for AI workflows with 6 levels of access.
+/// Level 4 and above can decrypt files stored on Walrus using Seal threshold encryption.
 module neuralnft::nft {
     use std::string::{Self, String};
     use sui::clock::Clock;
     use sui::table::{Self, Table};
     use sui::dynamic_field as df;
     use sui::event;
+    use sui::vec_map::{Self, VecMap};
     
     // Error codes
     const E_NOT_AUTHORIZED: u64 = 1;
@@ -29,7 +32,7 @@ module neuralnft::nft {
     // Marker for dynamic fields
     const ENCRYPTED_DATA_MARKER: u64 = 1;
     
-    /// NFT Object
+    /// NFT Object representing an AI workflow
     public struct NFT has key, store {
         id: UID,
         name: String,
@@ -38,6 +41,8 @@ module neuralnft::nft {
         current_owner: address,
         creation_date: u64,
         level_of_ownership: u8,
+        // Token ID for internal tracking
+        token_id: u64,
         // Dynamic fields will store encrypted data references
     }
     
@@ -57,7 +62,7 @@ module neuralnft::nft {
         collection_id: ID,
     }
     
-    /// Encrypted data stored on Walrus
+    /// Encrypted data stored on Walrus with Seal integration
     public struct EncryptedData has store, copy, drop {
         walrus_blob_id: String,
         seal_encrypted_key_id: vector<u8>,
@@ -65,6 +70,8 @@ module neuralnft::nft {
         file_hash: String,
         file_size: u64,
         content_type: String,
+        encryption_threshold: u8, // t-out-of-n threshold
+        key_server_count: u8,     // n key servers used
     }
     
     // Events
@@ -146,6 +153,7 @@ module neuralnft::nft {
             current_owner: creator,
             creation_date: clock.timestamp_ms(),
             level_of_ownership,
+            token_id,
         };
         
         // Grant absolute ownership to creator
@@ -186,6 +194,7 @@ module neuralnft::nft {
             current_owner: _,
             creation_date,
             level_of_ownership,
+            token_id,
         } = nft;
         
         let updated_nft = NFT {
@@ -196,6 +205,7 @@ module neuralnft::nft {
             current_owner: recipient,
             creation_date,
             level_of_ownership,
+            token_id,
         };
         
         // Transfer access rights
@@ -299,6 +309,8 @@ module neuralnft::nft {
             file_hash,
             file_size,
             content_type,
+            encryption_threshold: 1, // Default to 1-out-of-n
+            key_server_count: 2,     // Default to 2 key servers
         };
         
         // Store encrypted data as dynamic field
@@ -349,19 +361,41 @@ module neuralnft::nft {
     
     /// Seal approve function for decryption access
     /// This follows the Seal pattern for access control
+    /// The id format should be: [token_id][nonce] where token_id is 8 bytes
     entry fun seal_approve(
-        collection: &NFTCollection,
         id: vector<u8>,
-        token_id: u64,
+        collection: &NFTCollection,
         ctx: &TxContext
     ) {
         let user = ctx.sender();
         
-        // Check if user has sufficient access for decryption
-        assert!(can_decrypt_files(collection, token_id, user), E_INSUFFICIENT_ACCESS);
+        // Extract token_id from the id (first 8 bytes)
+        assert!(vector::length(&id) >= 8, E_INVALID_ACCESS_LEVEL);
+        let token_id_bytes = vector::slice(&id, 0, 8);
+        let token_id = bytes_to_u64(token_id_bytes);
         
-        // The id parameter should match the expected format for Seal encryption
-        // Format: [package_id][token_id][nonce]
+        // Check if user has sufficient access for decryption (level 4 or above)
+        assert!(can_decrypt_files(collection, token_id, user), E_INSUFFICIENT_ACCESS);
+    }
+    
+    /// Alternative seal approve function for multiple file access
+    entry fun seal_approve_batch(
+        ids: vector<vector<u8>>,
+        collection: &NFTCollection,
+        ctx: &TxContext
+    ) {
+        let user = ctx.sender();
+        let i = 0;
+        let len = vector::length(&ids);
+        
+        while (i < len) {
+            let id = vector::borrow(&ids, i);
+            assert!(vector::length(id) >= 8, E_INVALID_ACCESS_LEVEL);
+            let token_id_bytes = vector::slice(id, 0, 8);
+            let token_id = bytes_to_u64(token_id_bytes);
+            assert!(can_decrypt_files(collection, token_id, user), E_INSUFFICIENT_ACCESS);
+            i = i + 1;
+        };
     }
     
     // ===== Internal helper functions =====
@@ -420,14 +454,15 @@ module neuralnft::nft {
         }
     }
     
-    public fun get_nft_info(nft: &NFT): (String, String, address, address, u64, u8) {
+    public fun get_nft_info(nft: &NFT): (String, String, address, address, u64, u8, u64) {
         (
             nft.name,
             nft.description,
             nft.creator,
             nft.current_owner,
             nft.creation_date,
-            nft.level_of_ownership
+            nft.level_of_ownership,
+            nft.token_id
         )
     }
     
@@ -440,10 +475,41 @@ module neuralnft::nft {
         df::borrow(&nft.id, field_name)
     }
     
-    fun get_token_id_from_nft(_nft: &NFT): u64 {
-        // In a real implementation, you'd extract this from the NFT object
-        // For now, we'll use a placeholder
-        0 // This should be implemented properly based on your needs
+    public fun get_all_encrypted_data_keys(nft: &NFT): vector<String> {
+        // This is a simplified version - in production you'd iterate through dynamic fields
+        vector::empty<String>()
+    }
+    
+    fun get_token_id_from_nft(nft: &NFT): u64 {
+        nft.token_id
+    }
+    
+    /// Convert 8 bytes to u64 (big-endian)
+    fun bytes_to_u64(bytes: vector<u8>): u64 {
+        assert!(vector::length(&bytes) == 8, E_INVALID_ACCESS_LEVEL);
+        let result = 0u64;
+        let i = 0;
+        while (i < 8) {
+            result = (result << 8) | (*vector::borrow(&bytes, i) as u64);
+            i = i + 1;
+        };
+        result
+    }
+    
+    /// Convert u64 to 8 bytes (big-endian)
+    public fun u64_to_bytes(value: u64): vector<u8> {
+        let bytes = vector::empty<u8>();
+        let i = 0;
+        while (i < 8) {
+            vector::push_back(&mut bytes, ((value >> (56 - i * 8)) & 0xFF) as u8);
+            i = i + 1;
+        };
+        bytes
+    }
+    
+    /// Generate namespace for Seal encryption based on token_id
+    public fun get_seal_namespace(token_id: u64): vector<u8> {
+        u64_to_bytes(token_id)
     }
     
     // ===== Test-only functions =====
@@ -457,6 +523,16 @@ module neuralnft::nft {
             default_access_levels,
         } = collection;
         object::delete(id);
+        
+        // Destroy all inner tables in access_rights
+        let keys = table::keys(&access_rights);
+        let i = 0;
+        while (i < vector::length(&keys)) {
+            let key = vector::borrow(&keys, i);
+            let inner_table = table::remove(&mut access_rights, *key);
+            table::drop(inner_table);
+            i = i + 1;
+        };
         table::destroy_empty(access_rights);
         table::destroy_empty(default_access_levels);
         
@@ -484,6 +560,7 @@ module neuralnft::nft {
             current_owner: creator,
             creation_date: clock.timestamp_ms(),
             level_of_ownership: ACCESS_ABSOLUTE_OWNERSHIP,
+            token_id: 0, // Test token id
         };
         
         grant_access_internal(collection, creator, token_id, ACCESS_ABSOLUTE_OWNERSHIP);
