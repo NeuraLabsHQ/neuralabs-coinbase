@@ -285,7 +285,7 @@ const AccessMainContent = ({ currentView }) => {
       </Flex>
 
       {/* Table Section */}
-      <Box flex="1" overflowY="auto">
+      <Box flex="1" overflowY="auto" p={6}>
         {/* Loading State */}
         {isLoading && (
           <Center h="full" py={10}>
@@ -319,20 +319,26 @@ const AccessMainContent = ({ currentView }) => {
           </Center>
         )}
 
-        {/* Table */}
+        {/* Table Container with Border */}
         {!isLoading && filteredFlows.length > 0 && (
-          <Table variant="simple" size="md">
-            <Thead bg={tableHeaderBg}>
-              <Tr>
-                <Th color={textColor}>Name</Th>
-                <Th color={textColor}>Description</Th>
-                <Th color={textColor}>Access Level</Th>
-                <Th color={textColor}>Date Created</Th>
-                <Th color={textColor}>Status</Th>
-                <Th width="50px"></Th>
-              </Tr>
-            </Thead>
-            <Tbody>
+          <Box
+            border="1px solid"
+            borderColor={borderColor}
+            borderRadius="lg"
+            overflow="hidden"
+          >
+            <Table variant="simple" size="md">
+              <Thead bg={tableHeaderBg}>
+                <Tr>
+                  <Th color={textColor}>Name</Th>
+                  <Th color={textColor}>Description</Th>
+                  <Th color={textColor}>Access Level</Th>
+                  <Th color={textColor}>Date Created</Th>
+                  <Th color={textColor}>Status</Th>
+                  <Th width="50px"></Th>
+                </Tr>
+              </Thead>
+              <Tbody>
               {filteredFlows.map((flow) => (
                 <Tr 
                   key={flow.agent_id}
@@ -413,8 +419,9 @@ const AccessMainContent = ({ currentView }) => {
                   </Td>
                 </Tr>
               ))}
-            </Tbody>
-          </Table>
+              </Tbody>
+            </Table>
+          </Box>
         )}
       </Box>
     </Box>
