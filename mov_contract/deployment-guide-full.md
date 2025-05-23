@@ -30,9 +30,14 @@ Before starting, ensure you have:
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
 
+#Rust update
+rustup update
+
 # Install Sui
 cargo install --locked --git https://github.com/MystenLabs/sui.git --branch testnet sui
 ```
+
+>update rust if getting errors
 
 ### 2. Verify Installation
 

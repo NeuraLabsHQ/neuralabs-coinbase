@@ -26,21 +26,21 @@ function ContractInfo({ config }) {
     enabled: config.PACKAGE_ID !== '0x0'
   })
 
-  // Fetch collection info
-  const { data: collectionInfo, isLoading: collectionLoading } = useQuery({
-    queryKey: ['collection', config.COLLECTION_ID],
+  // Fetch registry info
+  const { data: registryInfo, isLoading: registryLoading } = useQuery({
+    queryKey: ['registry', config.REGISTRY_ID],
     queryFn: async () => {
       try {
         return await client.getObject({
-          id: config.COLLECTION_ID,
+          id: config.REGISTRY_ID,
           options: { showContent: true, showType: true }
         })
       } catch (error) {
-        console.error('Error fetching collection:', error)
+        console.error('Error fetching registry:', error)
         return null
       }
     },
-    enabled: config.COLLECTION_ID !== '0x0'
+    enabled: config.REGISTRY_ID !== '0x0' && config.REGISTRY_ID !== 'YOUR_REGISTRY_ID'
   })
 
   return (
@@ -80,30 +80,35 @@ function ContractInfo({ config }) {
         </div>
       </div>
 
-      {/* Collection Information */}
+      {/* Registry Information */}
       <div className="border rounded-lg p-4">
         <h3 className="font-medium mb-2 flex items-center">
-          🗂️ Collection Details
-          {collectionLoading && <span className="ml-2 text-sm text-gray-500">Loading...</span>}
+          🗂️ Access Registry
+          {registryLoading && <span className="ml-2 text-sm text-gray-500">Loading...</span>}
         </h3>
         <div className="space-y-2 text-sm">
           <div>
-            <span className="font-medium">Collection ID:</span>
+            <span className="font-medium">Registry ID:</span>
             <code className="ml-2 bg-gray-100 px-2 py-1 rounded text-xs">
-              {config.COLLECTION_ID}
+              {config.REGISTRY_ID || 'Not initialized'}
             </code>
           </div>
-          {collectionInfo && collectionInfo.data && (
+          {registryInfo && registryInfo.data && (
             <>
               <div>
                 <span className="font-medium">Status:</span>
-                <span className="ml-2 text-green-600">✓ Initialized</span>
+                <span className="ml-2 text-green-600">✓ Active</span>
               </div>
               <div>
                 <span className="font-medium">Type:</span>
-                <span className="ml-2">NFTCollection</span>
+                <span className="ml-2">AccessRegistry</span>
               </div>
             </>
+          )}
+          {config.REGISTRY_ID === 'YOUR_REGISTRY_ID' && (
+            <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+              ⚠️ Run <code>python initialize.py</code> to create the AccessRegistry
+            </div>
           )}
         </div>
       </div>

@@ -56,6 +56,12 @@ public fun create_access_cap(nft: &NeuraLabsNFT, ctx: &mut TxContext): AccessCap
     }
 }
 
+/// Entry function to create and transfer access cap to sender
+entry fun create_access_cap_entry(nft: &NeuraLabsNFT, ctx: &mut TxContext) {
+    let cap = create_access_cap(nft, ctx);
+    transfer::transfer(cap, ctx.sender());
+}
+
 /// Grant access to a user for an NFT
 public fun grant_access(
     registry: &mut AccessRegistry,

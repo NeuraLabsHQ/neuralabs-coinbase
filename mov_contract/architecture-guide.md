@@ -74,9 +74,9 @@ graph LR
     L4 --> L5
     L5 --> L6
     
-    style L4 fill:#90EE90
-    style L5 fill:#90EE90
-    style L6 fill:#90EE90
+    style L4 fill:#1cb01c
+    style L5 fill:#1cb01c
+    style L6 fill:#1cb01c
     
     L4 -.->|Minimum for<br/>Decryption| SEAL[Seal Access]
 ```
