@@ -23,6 +23,7 @@ import {
   Badge,
 } from '@chakra-ui/react';
 import { FiPlus, FiX, FiMoreHorizontal } from 'react-icons/fi';
+import DeleteConnectionPopup from './DeleteConnectionPopup';
 
 const ConnectionPopup = ({
   isOpen,
@@ -36,6 +37,7 @@ const ConnectionPopup = ({
 }) => {
   const [mappings, setMappings] = useState([]);
   const [isValid, setIsValid] = useState(false);
+  const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   
   const bgColor = useColorModeValue('white', 'gray.900');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
@@ -253,6 +255,7 @@ const ConnectionPopup = ({
   const targetInputs = targetNode.inputs || [];
 
   return (
+    <>
     <Modal 
       isOpen={isOpen} 
       onClose={onClose} 
@@ -279,12 +282,7 @@ const ConnectionPopup = ({
                   size="sm"
                   variant="ghost"
                   colorScheme="red"
-                  onClick={() => {
-                    if (window.confirm('Are you sure you want to delete this connection?')) {
-                      onDelete();
-                      onClose();
-                    }
-                  }}
+                  onClick={() => setIsDeletePopupOpen(true)}
                 >
                   Delete Connection
                 </Button>
@@ -440,6 +438,18 @@ const ConnectionPopup = ({
         </ModalFooter>
       </ModalContent>
     </Modal>
+    
+    <DeleteConnectionPopup
+      isOpen={isDeletePopupOpen}
+      onClose={() => setIsDeletePopupOpen(false)}
+      onConfirm={() => {
+        onDelete();
+        onClose();
+      }}
+      sourceNode={sourceNode}
+      targetNode={targetNode}
+    />
+  </>
   );
 };
 
