@@ -115,7 +115,7 @@ const SchemaPopup = ({
             {nodeType && <Badge colorScheme="blue">{nodeType}</Badge>}
           </HStack>
         </ModalHeader>
-        <ModalCloseButton />
+        {/* <ModalCloseButton /> */}
         
         <ModalBody py={6}>
           <TableContainer>

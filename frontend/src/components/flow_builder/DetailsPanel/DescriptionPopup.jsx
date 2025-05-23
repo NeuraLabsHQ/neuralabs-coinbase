@@ -56,7 +56,7 @@ const DescriptionPopup = ({
         <ModalHeader borderBottom="1px solid" borderColor={borderColor}>
           {title}
         </ModalHeader>
-        <ModalCloseButton />
+        {/* <ModalCloseButton /> */}
         
         <ModalBody py={6}>
           {isEditable ? (
