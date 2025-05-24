@@ -38,6 +38,8 @@ import {
   useDisclosure,
   VStack,
   HStack,
+  Icon,
+  Collapse,
 } from '@chakra-ui/react';
 
 import { 
@@ -136,6 +138,10 @@ const BlocksPanel = ({
   const errorColor = useColorModeValue(colors.red[500], colors.red[300]);
   const categoryColor = useColorModeValue(colors.gray[700], colors.gray[300]);
   const listhoverBgColor = useColorModeValue(colors.blockpanel.listhoverBg.light, colors.blockpanel.listhoverBg.dark);
+  const mutedTextColor = useColorModeValue(colors.gray[600], colors.gray[400]);
+  const badgeBg = useColorModeValue(colors.gray[100], colors.gray[700]);
+  const badgeColor = useColorModeValue(colors.gray[600], colors.gray[300]);
+  const textColor = useColorModeValue(colors.gray[800], colors.gray[100]);
   
   // Define message based on beautify mode
   const emptyStateMessage = beautifyMode 
@@ -520,88 +526,140 @@ const BlocksPanel = ({
             </Box>
           </TabPanel>
           
-          <TabPanel p={4}>
-            <Flex align="center" justify="space-between" mb={3}>
-              <Heading as="h2" size="sm" color={headingColor}>Flow Layers</Heading>
-              {beautifyMode && (
-                <Badge colorScheme="blue" display="flex" alignItems="center" px={2} py={1}>
-                  <FiMaximize2 style={{ marginRight: '4px' }} />
-                  Beautified
-                </Badge>
-              )}
-            </Flex>
-            
-            {Object.keys(layerMap).length > 0 ? (
-              <Accordion allowMultiple defaultIndex={[0]}>
-                {Object.keys(layerMap).map((layer) => (
-                  <AccordionItem key={layer} mb={2} border="1px solid" borderColor={borderColor} borderRadius="md" overflow="hidden">
-                    <h2>
-                      <AccordionButton bg={layerHeaderBg}>
-                        <Box flex="1" textAlign="left" fontWeight="medium" color={layerHeaderColor}>
-                          <Flex align="center">
-                            <FiLayers style={{ marginRight: '8px' }} />
-                            Layer {layer} ({layerMap[layer].length} node{layerMap[layer].length !== 1 ? 's' : ''})
-                          </Flex>
-                        </Box>
-                        <AccordionIcon />
-                      </AccordionButton>
-                    </h2>
-                    <AccordionPanel pb={4} bg={accordionBgColor}>
-                      <List spacing={2}>
-                        {layerMap[layer].map((node) => (
-                          <ListItem 
-                            key={node.id} 
-                            p={2} 
-                            borderRadius="md" 
-                            bg={itemBgColor}
-                            cursor="pointer"
-                            _hover={{ bg: hoverBgColor }} 
-                            onClick={() => onNodeClick && onNodeClick(node.id)}
-                          >
-                            <Flex align="center">
-                              <Box
-                                w="24px"
-                                h="24px"
-                                borderRadius="md"
-                                bg={nodeTypes[node.type]?.color || 'gray.500'}
-                                display="flex"
-                                alignItems="center"
-                                justifyContent="center"
-                                mr={2}
-                              >
-                                {node.type && (
-                                  <Box 
-                                    as={getIconComponent(nodeTypes[node.type]?.icon)} 
-                                    color="white" 
-                                    size={14} 
-                                  />
-                                )}
-                              </Box>
-                              <Text fontWeight="medium" fontSize="sm">{node.name}</Text>
-                            </Flex>
-                          </ListItem>
-                        ))}
-                      </List>
-                    </AccordionPanel>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            ) : (
-              <Flex 
-                direction="column" 
-                align="center" 
-                justify="center" 
-                p={6} 
-                bg={itemBgColor} 
-                borderRadius="md"
-                h="200px"
-              >
-                <Box as={FiLayers} fontSize="40px" color={emptyStateIconColor} mb={4} />
-                <Text color="gray.500" textAlign="center">
-                  {emptyStateMessage}
-                </Text>
+          <TabPanel p={0} h="100%" display="flex" flexDirection="column">
+            <Box px={4} pt={4} pb={2}>
+              <Flex align="center" justify="space-between">
+                <Heading as="h2" size="sm" color={headingColor}>Flow Layers</Heading>
+                {beautifyMode && (
+                  <Badge colorScheme="blue" display="flex" alignItems="center" px={2} py={1}>
+                    <FiMaximize2 style={{ marginRight: '4px' }} />
+                    Beautified
+                  </Badge>
+                )}
               </Flex>
-            )}
+            </Box>
+            
+            <Box flex="1" overflowY="auto" overflowX="hidden">
+              {Object.keys(layerMap).length > 0 ? (
+                <VStack spacing={0} align="stretch">
+                  {Object.keys(layerMap).map((layer) => {
+                    const isLayerExpanded = expandedCategories[`layer-${layer}`] !== false;
+                    return (
+                      <Box key={layer}>
+                        {/* Layer Header */}
+                        <Flex
+                          py={2}
+                          px={4}
+                          bg={bgColor}
+                          align="center"
+                          cursor="pointer"
+                          transition="all 0.2s"
+                          role="group"
+                          _hover={{ bg: hoverBgColor }}
+                          onClick={() => toggleCategory(`layer-${layer}`)}
+                          userSelect="none"
+                        >
+                          <Icon 
+                            as={isLayerExpanded ? FiChevronDown : FiChevronRight} 
+                            mr={2} 
+                            color={mutedTextColor}
+                          />
+                          <Icon 
+                            as={FiLayers} 
+                            mr={2} 
+                            fontSize="sm"
+                            color={mutedTextColor}
+                          />
+                          <Text 
+                            color={textColor} 
+                            fontWeight="semibold"
+                            fontSize="sm"
+                            flex="1"
+                          >
+                            Layer {layer}
+                          </Text>
+                          <Badge 
+                            fontSize="xs" 
+                            colorScheme="gray"
+                            bg={badgeBg}
+                            color={badgeColor}
+                            borderRadius="full"
+                            px={2}
+                            ml={2}
+                          >
+                            {layerMap[layer].length}
+                          </Badge>
+                        </Flex>
+                        
+                        {/* Layer Nodes */}
+                        <Collapse in={isLayerExpanded} animateOpacity>
+                          <VStack spacing={0} align="stretch">
+                            {layerMap[layer].map((node) => {
+                              const NodeIcon = getIconComponent(nodeTypes[node.type]?.icon);
+                              return (
+                                <Flex
+                                  key={node.id}
+                                  py={2}
+                                  px={4 + 10} // Indented by 16px (2 levels)
+                                  bg={bgColor}
+                                  align="center"
+                                  cursor="pointer"
+                                  transition="all 0.2s"
+                                  role="group"
+                                  _hover={{ bg: hoverBgColor }}
+                                  onClick={() => onNodeClick && onNodeClick(node.id)}
+                                  userSelect="none"
+                                >
+                                  <Icon 
+                                    as={NodeIcon || FiActivity} 
+                                    mr={2} 
+                                    fontSize="sm"
+                                    color={mutedTextColor}
+                                    _groupHover={{ color: textColor }}
+                                  />
+                                  <Text 
+                                    color={textColor} 
+                                    fontSize="sm"
+                                    flex="1"
+                                  >
+                                    {node.name}
+                                  </Text>
+                                  {/* <Badge 
+                                    fontSize="xs" 
+                                    colorScheme={nodeTypes[node.type]?.color?.replace('.500', '') || 'gray'}
+                                    borderRadius="full"
+                                    px={2}
+                                    ml={2}
+                                  >
+                                    {node.type}
+                                  </Badge> */}
+                                </Flex>
+                              );
+                            })}
+                          </VStack>
+                        </Collapse>
+                      </Box>
+                    );
+                  })}
+                </VStack>
+              ) : (
+                <Flex 
+                  direction="column" 
+                  align="center" 
+                  justify="center" 
+                  p={6} 
+                  mx={4}
+                  bg={itemBgColor} 
+                  borderRadius="md"
+                  h="200px"
+                >
+                  <Box as={FiLayers} fontSize="40px" color={emptyStateIconColor} mb={4} />
+                  <Text color="gray.500" textAlign="center">
+                    {emptyStateMessage}
+                  </Text>
+                </Flex>
+              )}
+            </Box>
           </TabPanel>
         </TabPanels>
       </Tabs>
