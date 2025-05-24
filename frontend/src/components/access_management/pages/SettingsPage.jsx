@@ -24,6 +24,7 @@ import {
 } from '@chakra-ui/react';
 import { FiSave, FiTwitter, FiGithub, FiLinkedin, FiGlobe } from 'react-icons/fi';
 import colors from '../../../color';
+import { agentAPI } from '../../../utils/agent-api';
 
 const SettingsPage = ({ agentData, onUpdate }) => {
   const [formData, setFormData] = useState({
@@ -36,8 +37,8 @@ const SettingsPage = ({ agentData, onUpdate }) => {
       github: agentData.socials?.github || '',
       linkedin: agentData.socials?.linkedin || '',
       website: agentData.socials?.website || '',
-      website: agentData.socials?.discord || '',
-      website: agentData.socials?.telegram || ''
+      discord: agentData.socials?.discord || '',
+      telegram: agentData.socials?.telegram || ''
 
     }
   });
@@ -91,10 +92,23 @@ const SettingsPage = ({ agentData, onUpdate }) => {
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      // TODO: API call to update agent settings
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      // Convert tags array to object format expected by backend
+      const tagsObject = formData.tags.reduce((acc, tag, index) => {
+        acc[index.toString()] = tag;
+        return acc;
+      }, {});
       
-      // Update parent component
+      // Prepare data for API call
+      const updateData = {
+        ...formData,
+        tags: tagsObject,
+        chain_id: agentData.chain_id || 101 // Include chain_id from agentData
+      };
+      
+      // Call the API to update agent settings
+      await agentAPI.updateAgent(agentData.agent_id, updateData);
+      
+      // Update parent component with the new data
       onUpdate({
         ...agentData,
         ...formData
@@ -110,7 +124,7 @@ const SettingsPage = ({ agentData, onUpdate }) => {
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to save settings',
+        description: error.message || 'Failed to save settings',
         status: 'error',
         duration: 4000,
         isClosable: true,

@@ -16,9 +16,10 @@ import { FiSave, FiEye, FiEdit } from 'react-icons/fi';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import colors from '../../../color';
+import { agentAPI } from '../../../utils/agent-api';
 
 const MetadataPage = ({ agentData, onUpdate }) => {
-  const [markdown, setMarkdown] = useState(agentData.metadata || `# ${agentData.name || 'Agent Documentation'}
+  const [markdown, setMarkdown] = useState(agentData.markdown_object.content || `# ${agentData.name || 'Agent Documentation'}
 
 ## Overview
 ${agentData.description || 'Add your agent description here...'}
@@ -64,8 +65,15 @@ ${agentData.license || 'MIT'} License
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      // TODO: API call to update agent metadata
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      // Create a markdown object with the content and metadata
+      const markdownObject = {
+        content: markdown,
+        last_updated: new Date().toISOString(),
+        version: '1.0.0'
+      };
+      
+      // Call the API to save metadata
+      await agentAPI.saveMetadata(agentData.agent_id, markdownObject);
       
       // Update parent component
       onUpdate({
@@ -83,7 +91,7 @@ ${agentData.license || 'MIT'} License
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to save metadata',
+        description: error.message || 'Failed to save metadata',
         status: 'error',
         duration: 4000,
         isClosable: true,

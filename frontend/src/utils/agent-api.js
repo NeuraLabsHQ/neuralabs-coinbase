@@ -79,13 +79,19 @@ class AgentAPI {
     try {
       const token = this.getAuthToken();
       
-      const response = await fetch(`${this.baseURL}/api/set-data/agent/update/${agentId}`, {
+      // Include agent_id in the payload as expected by the backend
+      const payload = {
+        ...agentData,
+        agent_id: agentId
+      };
+      
+      const response = await fetch(`${this.baseURL}/api/set-data/agent/update`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(agentData)
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
@@ -179,6 +185,35 @@ class AgentAPI {
       return result;
     } catch (error) {
       console.error('Error saving workflow:', error);
+      throw error;
+    }
+  }
+
+  // Save metadata for an agent
+  async saveMetadata(agentId, markdownObject) {
+    try {
+      const token = this.getAuthToken();
+      
+      const response = await fetch(`${this.baseURL}/api/set-data/agent/${agentId}/metadata`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          markdown_object: markdownObject
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Error saving metadata:', error);
       throw error;
     }
   }
