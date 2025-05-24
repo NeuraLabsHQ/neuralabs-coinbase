@@ -20,11 +20,22 @@ const SummaryPage = ({ agentData }) => {
     return parts.length > 0 ? parts.join(' | ') : 'Not specified';
   };
   
+  // Helper function to convert tags object to array
+  const tagsToArray = (tags) => {
+    if (Array.isArray(tags)) {
+      return tags;
+    } else if (tags && typeof tags === 'object') {
+      // Convert object to array, sorting by keys
+      return Object.keys(tags).sort((a, b) => parseInt(a) - parseInt(b)).map(key => tags[key]);
+    }
+    return [];
+  };
+
   // Transform agent data to flow details format expected by FlowDetailComponent
   const flowDetails = {
     name: agentData.name || 'Unnamed Agent',
     description: agentData.description || 'No description available',
-    tags: Array.isArray(agentData.tags) ? agentData.tags : [],
+    tags: tagsToArray(agentData.tags),
     creationDate: agentData.created_at ? new Date(agentData.created_at).toLocaleString() : 'Unknown',
     owner: agentData.owner || 'Unknown',
     lastEdited: agentData.last_edited_time ? new Date(agentData.last_edited_time).toLocaleString() : 'Unknown',

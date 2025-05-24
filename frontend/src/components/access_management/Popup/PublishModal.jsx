@@ -16,12 +16,24 @@ import {
   FormControl,
   FormLabel,
   Box,
+  useColorModeValue,
 } from "@chakra-ui/react";
 
 const PublishModal = ({ isOpen, onClose, onPublish }) => {
   const [versionName, setVersionName] = useState("");
   const [versionNumber, setVersionNumber] = useState("");
   const [allPreviews, setAllPreviews] = useState(false);
+
+  // Color mode values
+  const bgColor = useColorModeValue("white", "#18191b");
+  const textColor = useColorModeValue("gray.800", "white");
+  const sectionBgColor = useColorModeValue("gray.50", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+  const inputBgColor = useColorModeValue("white", "gray.700");
+  const labelColor = useColorModeValue("gray.700", "gray.200");
+  const mutedTextColor = useColorModeValue("gray.600", "gray.400");
+  const linkColor = useColorModeValue("blue.600", "blue.400");
+  const tooltipBg = useColorModeValue("gray.900", "gray.900");
 
   const handlePublish = () => {
     onPublish({ versionName, versionNumber, allPreviews });
@@ -31,7 +43,7 @@ const PublishModal = ({ isOpen, onClose, onPublish }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} isCentered>
       <ModalOverlay />
-      <ModalContent bg="#18191b" color="white" borderRadius="md">
+      <ModalContent bg={bgColor} color={textColor} borderRadius="md">
         <ModalHeader fontSize="lg" fontWeight="bold">
           Publish and Deploy on SUI Testnet
         </ModalHeader>
@@ -39,14 +51,14 @@ const PublishModal = ({ isOpen, onClose, onPublish }) => {
           <VStack spacing={4} align="stretch">
             {/* Prerequisites Section */}
             <Box>
-              <Text fontSize="sm" fontWeight="bold" mb={1}>
+              <Text fontSize="sm" fontWeight="bold" mb={1} color={labelColor}>
                 Prerequisites
               </Text>
-              <Text fontSize="xs" color="gray.400">
+              <Text fontSize="xs" color={mutedTextColor}>
               Deploying workflow on SUI Testnet requires a connected wallet with sufficient test SUI tokens.
         To use this feature, please ensure you have the Sui Wallet or supported wallet extension installed and connected
         with your account. You can get free test tokens from the SUI Faucet if needed.{" "}
-                <Text as="span" color="blue.400" textDecor="underline">
+                <Text as="span" color={linkColor} textDecor="underline">
                   documentation
                 </Text>
                 .
@@ -55,10 +67,10 @@ const PublishModal = ({ isOpen, onClose, onPublish }) => {
 
             {/* Disclaimer Section */}
             <Box>
-              <Text fontSize="sm" fontWeight="bold" mb={1}>
+              <Text fontSize="sm" fontWeight="bold" mb={1} color={labelColor}>
                 Disclaimer
               </Text>
-              <Text fontSize="xs" color="gray.400">
+              <Text fontSize="xs" color={mutedTextColor}>
               This workflow will be published to the SUI Testnet blockchain and will be publicly visible.
         The testnet environment is for development purposes only, and any tokens or data on the testnet
         have no real-world value. Test thoroughly before deploying to mainnet.
@@ -67,7 +79,7 @@ const PublishModal = ({ isOpen, onClose, onPublish }) => {
 
             {/* Form Fields */}
             <Box>
-              <Text fontSize="xs" color="gray.400" mb={2}>
+              <Text fontSize="xs" color={mutedTextColor} mb={2}>
                 Please enter the required information below.
               </Text>
 
@@ -86,24 +98,24 @@ const PublishModal = ({ isOpen, onClose, onPublish }) => {
               </FormControl> */}
 
               <FormControl mb={3}>
-                <FormLabel fontSize="sm">Version Description</FormLabel>
+                <FormLabel fontSize="sm" color={labelColor}>Version Description</FormLabel>
                 <Input
                   placeholder="Enter Description"
                   size="sm"
-                  bg="gray.700"
-                  borderColor="gray.600"
+                  bg={inputBgColor}
+                  borderColor={borderColor}
                   value={versionName}
                   onChange={(e) => setVersionName(e.target.value)}
                 />
               </FormControl>
 
               <FormControl mb={3}>
-                <FormLabel fontSize="sm">Version number</FormLabel>
+                <FormLabel fontSize="sm" color={labelColor}>Version number</FormLabel>
                 <Input
                   placeholder="Enter number"
                   size="sm"
-                  bg="gray.700"
-                  borderColor="gray.600"
+                  bg={inputBgColor}
+                  borderColor={borderColor}
                   value={versionNumber}
                   onChange={(e) => setVersionNumber(e.target.value)}
                 />

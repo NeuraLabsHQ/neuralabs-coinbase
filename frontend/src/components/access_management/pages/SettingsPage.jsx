@@ -27,11 +27,22 @@ import colors from '../../../color';
 import { agentAPI } from '../../../utils/agent-api';
 
 const SettingsPage = ({ agentData, onUpdate }) => {
+  // Helper function to convert tags object to array
+  const tagsToArray = (tags) => {
+    if (Array.isArray(tags)) {
+      return tags;
+    } else if (tags && typeof tags === 'object') {
+      // Convert object to array, sorting by keys
+      return Object.keys(tags).sort((a, b) => parseInt(a) - parseInt(b)).map(key => tags[key]);
+    }
+    return [];
+  };
+
   const [formData, setFormData] = useState({
     name: agentData.name || '',
     description: agentData.description || '',
     license: agentData.license || 'MIT',
-    tags: Array.isArray(agentData.tags) ? agentData.tags : [],
+    tags: tagsToArray(agentData.tags),
     socials: {
       twitter: agentData.socials?.twitter || '',
       github: agentData.socials?.github || '',
