@@ -11,14 +11,22 @@ import {
   VStack,
   Text,
   Box,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { FiImage, FiFileText } from "react-icons/fi";
 
 const ExportModal = ({ isOpen, onClose, onExportFlow, onExportFlowJSON }) => {
+  const bgColor = useColorModeValue("white", "#18191b");
+  const textColor = useColorModeValue("gray.800", "white");
+  const mutedTextColor = useColorModeValue("gray.600", "gray.400");
+  const buttonBgColor = useColorModeValue("gray.700", "gray.700");
+  const buttonHoverBgColor = useColorModeValue("gray.700", "gray.600");
+  const linkColor = useColorModeValue("blue.500", "blue.400");
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} isCentered>
       <ModalOverlay />
-      <ModalContent bg="#18191b" color="white" borderRadius="md">
+      <ModalContent bg={bgColor} color={textColor} borderRadius="md">
         <ModalHeader fontSize="lg" fontWeight="bold">
           Export Flow
         </ModalHeader>
@@ -29,11 +37,11 @@ const ExportModal = ({ isOpen, onClose, onExportFlow, onExportFlowJSON }) => {
               <Text fontSize="sm" fontWeight="bold" mb={1}>
                 Prerequisites
               </Text>
-              <Text fontSize="xs" color="gray.400">
+              <Text fontSize="xs" color={mutedTextColor}>
                 Exporting your flow requires sufficient permissions and access to
                 the project. Ensure you have the necessary rights to export data.
                 More information can be found in the{" "}
-                <Text as="span" color="blue.400" textDecor="underline">
+                <Text as="span" color={linkColor} textDecor="underline">
                   documentation
                 </Text>
                 .
@@ -45,7 +53,7 @@ const ExportModal = ({ isOpen, onClose, onExportFlow, onExportFlowJSON }) => {
               <Text fontSize="sm" fontWeight="bold" mb={1}>
                 Disclaimer
               </Text>
-              <Text fontSize="xs" color="gray.400">
+              <Text fontSize="xs" color={mutedTextColor}>
                 Exported flows may contain sensitive data. Ensure you handle the
                 exported files securely and share them only with authorized
                 parties.
@@ -54,7 +62,7 @@ const ExportModal = ({ isOpen, onClose, onExportFlow, onExportFlowJSON }) => {
 
             {/* Export Options */}
             <Box>
-              <Text fontSize="xs" color="gray.400" mb={2}>
+              <Text fontSize="xs" color={mutedTextColor} mb={2}>
                 Select an export format below.
               </Text>
               <VStack spacing={2}>
@@ -62,9 +70,9 @@ const ExportModal = ({ isOpen, onClose, onExportFlow, onExportFlowJSON }) => {
                   leftIcon={<FiImage />}
                   width="100%"
                   size="sm"
-                  bg="gray.700"
-                  borderColor="gray.600"
-                  _hover={{ bg: "gray.600" }}
+                  bg={buttonBgColor}
+                  borderColor={buttonBgColor}
+                  _hover={{ bg: buttonHoverBgColor }}
                   onClick={() => {
                     onExportFlow();
                     onClose();
@@ -76,9 +84,9 @@ const ExportModal = ({ isOpen, onClose, onExportFlow, onExportFlowJSON }) => {
                   leftIcon={<FiFileText />}
                   width="100%"
                   size="sm"
-                  bg="gray.700"
-                  borderColor="gray.600"
-                  _hover={{ bg: "gray.600" }}
+                  bg={buttonBgColor}
+                  borderColor={buttonBgColor}
+                  _hover={{ bg: buttonHoverBgColor }}
                   onClick={() => {
                     onExportFlowJSON();
                     onClose();

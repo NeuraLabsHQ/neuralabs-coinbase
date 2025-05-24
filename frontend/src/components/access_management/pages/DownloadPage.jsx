@@ -11,15 +11,18 @@ import {
   useToast,
   Icon,
   Card,
-  CardBody
+  CardBody,
+  useColorMode
 } from '@chakra-ui/react';
 import { FiDownload, FiImage, FiFileText } from 'react-icons/fi';
 import colors from '../../../color';
-import { exportFlowAsImage, exportFlowAsJSON } from '../../../utils/flowExport';
+import { exportFlowAsPNG } from '../../../utils/flowExport';
+import { agentAPI } from '../../../utils/agent-api';
 
 const DownloadPage = ({ agentData }) => {
   const [isExporting, setIsExporting] = useState(false);
   const toast = useToast();
+  const { colorMode } = useColorMode();
   
   const bgColor = useColorModeValue(colors.accessManagement.mainContent.bg.light, colors.accessManagement.mainContent.bg.dark);
   const cardBg = useColorModeValue(colors.accessManagement.flowCard.bg.light, colors.accessManagement.flowCard.bg.dark);
@@ -30,21 +33,42 @@ const DownloadPage = ({ agentData }) => {
   const handleExportPNG = async () => {
     setIsExporting(true);
     try {
-      // For PNG export, we need to redirect to flow builder to capture the canvas
-      const flowBuilderUrl = `/flow-builder/${agentData.agent_id}?export=png`;
-      window.open(flowBuilderUrl, '_blank');
+      // Fetch the agent data to get the workflow
+      const agent = await agentAPI.getAgent(agentData.agent_id);
+      
+      if (!agent || !agent.workflow) {
+        throw new Error('No workflow data found');
+      }
+
+      // Parse the workflow data to get nodes and edges
+      const workflowData = typeof agent.workflow === 'string' 
+        ? JSON.parse(agent.workflow) 
+        : agent.workflow;
+
+      const nodes = workflowData.nodes || [];
+      const edges = workflowData.edges || [];
+
+      // Export the flow as PNG using the same mechanism as flow builder
+      const dataUrl = await exportFlowAsPNG(nodes, edges, null, colorMode);
+      
+      // Create download link
+      const link = document.createElement('a');
+      link.download = `${agentData.name || 'workflow'}-${agentData.agent_id}.png`;
+      link.href = dataUrl;
+      link.click();
       
       toast({
-        title: 'Export Started',
-        description: 'Opening flow builder to export as PNG...',
-        status: 'info',
+        title: 'Export Successful',
+        description: 'Flow diagram has been exported as a PNG image.',
+        status: 'success',
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
+      console.error('Export error:', error);
       toast({
         title: 'Export Failed',
-        description: 'Failed to export flow as PNG',
+        description: error.message || 'Failed to export flow as PNG',
         status: 'error',
         duration: 4000,
         isClosable: true,
@@ -204,7 +228,7 @@ const DownloadPage = ({ agentData }) => {
           <VStack align="start" spacing={2}>
             <Text fontWeight="bold" color={textColor}>Export Information</Text>
             <Text fontSize="sm" color={mutedColor}>
-              • PNG exports open the flow builder to capture the visual layout
+              • PNG exports create a visual representation of your workflow
             </Text>
             <Text fontSize="sm" color={mutedColor}>
               • JSON exports include all workflow data and metadata
