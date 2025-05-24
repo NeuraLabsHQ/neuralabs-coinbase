@@ -68,7 +68,8 @@ const config = {
         title: 'NeuraLabs',
         logo: {
           alt: 'NeuraLabs Logo',
-          src: 'img/logo.svg',
+          src: 'img/logo-light.svg',
+          srcDark: 'img/logo-dark.svg',
         },
         items: [
           {

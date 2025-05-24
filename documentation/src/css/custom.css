@@ -4,65 +4,441 @@
  * work well for content-centric websites.
  */
 
-/* You can override the default Infima variables here. */
+/* NeuraLabs Color Variables */
 :root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
+  /* NeuraLabs Brand Colors */
+  --neuralabs-blue-300: #63B3ED;
+  --neuralabs-blue-500: #3182CE;
+  --neuralabs-blue-700: #2C5282;
+  --neuralabs-blue-900: #1A365D;
+  
+  --neuralabs-green-300: #68D391;
+  --neuralabs-green-500: #38A169;
+  --neuralabs-green-700: #276749;
+  
+  --neuralabs-purple-300: #B794F4;
+  --neuralabs-purple-500: #805AD5;
+  --neuralabs-purple-700: #553C9A;
+  
+  --neuralabs-yellow-300: #F6E05E;
+  --neuralabs-yellow-500: #D69E2E;
+  --neuralabs-yellow-700: #975A16;
+  
+  --neuralabs-red-300: #FC8181;
+  --neuralabs-red-500: #E53E3E;
+  --neuralabs-red-700: #9B2C2C;
+  
+  /* NeuraLabs Gray Scale */
+  --neuralabs-gray-50: #f9f9f9;
+  --neuralabs-gray-100: #ebebeb;
+  --neuralabs-gray-200: #d9d9d9;
+  --neuralabs-gray-300: #c4c4c4;
+  --neuralabs-gray-400: #9d9d9d;
+  --neuralabs-gray-500: #7b7b7b;
+  --neuralabs-gray-600: #555555;
+  --neuralabs-gray-700: #333333;
+  --neuralabs-gray-800: #1f1f1f;
+  --neuralabs-gray-900: #141414;
+  
+  /* NeuraLabs Specific UI Colors - Light Mode */
+  --neuralabs-bg-primary: #f2f3f4;
+  --neuralabs-bg-secondary: #F9F9FA;
+  --neuralabs-bg-surface: #fdfdfd;
+  --neuralabs-bg-navbar: #F9F9FA;
+  --neuralabs-bg-footer: #F9F9FA;
+  
+  --neuralabs-text-primary: #333333;
+  --neuralabs-text-secondary: #202020;
+  --neuralabs-text-navbar: #202020;
+  --neuralabs-text-muted: #555555;
+  
+  --neuralabs-border-primary: #e0e2e4;
+  --neuralabs-border-hover: var(--neuralabs-blue-500);
+  
+  /* Primary Colors - Using NeuraLabs blue */
+  --ifm-color-primary: var(--neuralabs-blue-500);
+  --ifm-color-primary-dark: var(--neuralabs-blue-700);
+  --ifm-color-primary-darker: #2A4E7C;
+  --ifm-color-primary-darkest: var(--neuralabs-blue-900);
+  --ifm-color-primary-light: #4299E1;
+  --ifm-color-primary-lighter: var(--neuralabs-blue-300);
+  --ifm-color-primary-lightest: #90CDF4;
+  
+  /* Background Colors - Light Mode */
+  --ifm-background-color: var(--neuralabs-bg-primary);
+  --ifm-background-surface-color: var(--neuralabs-bg-secondary);
+  --ifm-navbar-background-color: var(--neuralabs-bg-navbar);
+  --ifm-footer-background-color: var(--neuralabs-bg-footer);
+  
+  /* Text Colors - Light Mode */
+  --ifm-font-color-base: var(--neuralabs-text-primary);
+  --ifm-heading-color: var(--neuralabs-text-secondary);
+  --ifm-navbar-link-color: var(--neuralabs-text-navbar);
+  
+  /* Borders - Light Mode */
+  --ifm-toc-border-color: var(--neuralabs-border-primary);
+  --ifm-hr-border-color: var(--neuralabs-border-primary);
+  --ifm-table-border-color: var(--neuralabs-border-primary);
+  
+  /* Code */
   --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  --ifm-code-background: var(--neuralabs-bg-surface);
+  --ifm-pre-background: var(--neuralabs-bg-surface);
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.05);
+  
+  /* Cards and Containers */
+  --ifm-card-background-color: var(--neuralabs-bg-surface);
+  --ifm-card-border-radius: 12px;
+  
+  /* Sidebar */
+  --ifm-menu-color-background-active: #E9F2FF;
+  --ifm-menu-color-active: #1E63EA;
 }
 
-/* For readability concerns, you should choose a lighter palette in dark mode. */
+/* Dark Mode - Matching Frontend Dark Theme */
 [data-theme='dark'] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  /* NeuraLabs Specific UI Colors - Dark Mode */
+  --neuralabs-bg-primary: #0f0f11;
+  --neuralabs-bg-secondary: #18191b;
+  --neuralabs-bg-surface: #18191b;
+  --neuralabs-bg-navbar: #0F0F11;
+  --neuralabs-bg-footer: #0F0F11;
+  --neuralabs-bg-input: #141516;
+  --neuralabs-bg-hover: #242526;
+  
+  --neuralabs-text-primary: #ffffff;
+  --neuralabs-text-secondary: #c4c4c4;
+  --neuralabs-text-navbar: #ffffff;
+  --neuralabs-text-muted: var(--neuralabs-gray-400);
+  
+  --neuralabs-border-primary: #3e4045;
+  --neuralabs-border-hover: var(--neuralabs-blue-300);
+  
+  /* Primary Colors remain blue in dark mode */
+  --ifm-color-primary: var(--neuralabs-blue-300);
+  --ifm-color-primary-dark: #4299E1;
+  --ifm-color-primary-darker: var(--neuralabs-blue-500);
+  --ifm-color-primary-darkest: var(--neuralabs-blue-700);
+  --ifm-color-primary-light: #90CDF4;
+  --ifm-color-primary-lighter: #BEE3F8;
+  --ifm-color-primary-lightest: #E6FFFA;
+  
+  /* Background Colors - Dark Mode */
+  --ifm-background-color: var(--neuralabs-bg-primary);
+  --ifm-background-surface-color: var(--neuralabs-bg-secondary);
+  --ifm-navbar-background-color: var(--neuralabs-bg-navbar);
+  --ifm-footer-background-color: var(--neuralabs-bg-footer);
+  --ifm-dropdown-background-color: var(--neuralabs-bg-secondary);
+  --ifm-dropdown-hover-background-color: var(--neuralabs-bg-hover);
+  
+  /* Text Colors - Dark Mode */
+  --ifm-font-color-base: var(--neuralabs-text-primary);
+  --ifm-font-color-secondary: var(--neuralabs-text-secondary);
+  --ifm-heading-color: var(--neuralabs-text-primary);
+  --ifm-navbar-link-color: var(--neuralabs-text-navbar);
+  --ifm-menu-color: var(--neuralabs-text-secondary);
+  
+  /* Borders - Dark Mode */
+  --ifm-toc-border-color: var(--neuralabs-border-primary);
+  --ifm-hr-border-color: var(--neuralabs-border-primary);
+  --ifm-table-border-color: var(--neuralabs-border-primary);
+  
+  /* Code */
+  --ifm-code-background: var(--neuralabs-bg-input);
+  --ifm-pre-background: var(--neuralabs-bg-input);
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.1);
+  
+  /* Cards and Containers */
+  --ifm-card-background-color: var(--neuralabs-bg-surface);
+  --ifm-hero-background-color: var(--neuralabs-bg-input);
+  
+  /* Sidebar */
+  --ifm-menu-color-background-active: #1F3458;
+  --ifm-menu-color-active: #5290FF;
+  --ifm-menu-color-background-hover: var(--neuralabs-bg-hover);
+  
+  /* Scrollbar */
+  --ifm-scrollbar-track-background-color: var(--neuralabs-bg-secondary);
+  --ifm-scrollbar-thumb-background-color: var(--neuralabs-border-primary);
+  --ifm-scrollbar-thumb-hover-background-color: var(--neuralabs-gray-600);
 }
 
-/* Custom styles for NeuraLabs */
+/* Override default Infima styles to match NeuraLabs */
+.navbar {
+  border-bottom: 1px solid var(--ifm-toc-border-color);
+  box-shadow: none;
+  padding: 0.75rem 0;
+}
+
+.navbar__brand {
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.navbar__item {
+  font-weight: 500;
+}
+
+.navbar__link:hover {
+  color: var(--ifm-color-primary);
+}
+
+/* Hero Section - Matching NeuraLabs gradient style */
 .hero {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--neuralabs-blue-500) 0%, var(--neuralabs-purple-500) 100%);
   color: white;
   padding: 4rem 0;
   text-align: center;
 }
 
+.hero--primary {
+  background: linear-gradient(135deg, var(--neuralabs-blue-500) 0%, var(--neuralabs-purple-500) 100%);
+}
+
+/* Buttons - Matching NeuraLabs style */
 .button {
   border-radius: 8px;
   padding: 12px 24px;
   font-weight: 600;
   transition: all 0.3s ease;
+  text-transform: none;
+  box-shadow: none;
 }
 
 .button:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-decoration: none;
 }
 
+.button--secondary {
+  background-color: white;
+  color: var(--neuralabs-blue-500);
+  border: 2px solid transparent;
+}
+
+.button--secondary:hover {
+  background-color: var(--neuralabs-gray-50);
+  color: var(--neuralabs-blue-700);
+}
+
+/* Cards */
 .card {
   background: var(--ifm-card-background-color);
-  border-radius: 12px;
+  border-radius: var(--ifm-card-border-radius);
+  border: 1px solid var(--ifm-toc-border-color);
   padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
 }
 
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-color: var(--neuralabs-border-hover);
 }
 
-/* Grid layout utilities */
+/* Sidebar */
+.menu__list-item-collapsible {
+  border-radius: 0.375rem;
+  transition: background-color 0.2s ease;
+}
+
+.menu__list-item-collapsible:hover {
+  background-color: var(--ifm-menu-color-background-hover);
+}
+
+.menu__link {
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+.menu__link:hover {
+  background-color: var(--ifm-menu-color-background-hover);
+  color: var(--ifm-font-color-base);
+}
+
+.menu__link--active {
+  background-color: var(--ifm-menu-color-background-active);
+  color: var(--ifm-menu-color-active);
+  font-weight: 600;
+}
+
+/* Footer - Enhanced to match NeuraLabs design */
+.footer {
+  background-color: var(--ifm-footer-background-color);
+  border-top: 1px solid var(--ifm-toc-border-color);
+  padding: 3rem 0 2rem;
+}
+
+.footer__title {
+  color: var(--ifm-heading-color);
+  font-weight: 600;
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+}
+
+.footer__item {
+  margin-bottom: 0.5rem;
+}
+
+.footer__link-item {
+  color: var(--neuralabs-text-muted);
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.footer__link-item:hover {
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+}
+
+.footer__copyright {
+  color: var(--neuralabs-text-muted);
+  font-size: 0.875rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--ifm-toc-border-color);
+  text-align: center;
+}
+
+.footer__logo {
+  margin-bottom: 1rem;
+  max-width: 150px;
+}
+
+.footer__col {
+  margin-bottom: 2rem;
+}
+
+/* Code blocks - Matching NeuraLabs style */
+pre {
+  border: 1px solid var(--ifm-toc-border-color);
+  border-radius: 0.5rem;
+}
+
+code {
+  border: 1px solid var(--ifm-toc-border-color);
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.875em;
+}
+
+/* Table of Contents */
+.table-of-contents {
+  border-left: 2px solid var(--ifm-toc-border-color);
+}
+
+.table-of-contents__link:hover {
+  color: var(--ifm-color-primary);
+}
+
+.table-of-contents__link--active {
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+/* Admonitions / Callouts */
+.admonition {
+  border-radius: 0.5rem;
+  border: 1px solid;
+  box-shadow: none;
+}
+
+.admonition-note {
+  border-color: var(--ifm-color-primary);
+  background-color: rgba(49, 130, 206, 0.1);
+}
+
+.admonition-tip {
+  border-color: var(--neuralabs-green-500);
+  background-color: rgba(56, 161, 105, 0.1);
+}
+
+.admonition-info {
+  border-color: var(--ifm-color-primary);
+  background-color: rgba(49, 130, 206, 0.1);
+}
+
+.admonition-caution {
+  border-color: var(--neuralabs-yellow-500);
+  background-color: rgba(214, 158, 46, 0.1);
+}
+
+.admonition-danger {
+  border-color: var(--neuralabs-red-500);
+  background-color: rgba(229, 62, 62, 0.1);
+}
+
+/* DocSidebar */
+.docSidebarContainer_node_modules-\@docusaurus-theme-classic-lib-theme-DocPage-Layout-Sidebar-styles-module {
+  border-right: 1px solid var(--ifm-toc-border-color);
+}
+
+/* Main content area */
+.docMainContainer_node_modules-\@docusaurus-theme-classic-lib-theme-DocPage-Layout-Main-styles-module {
+  padding: 2rem;
+}
+
+/* Pagination */
+.pagination-nav__link {
+  border: 1px solid var(--ifm-toc-border-color);
+  border-radius: 0.5rem;
+}
+
+.pagination-nav__link:hover {
+  border-color: var(--neuralabs-border-hover);
+  text-decoration: none;
+}
+
+/* Search */
+.DocSearch-Button {
+  border-radius: 0.5rem;
+  background-color: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-toc-border-color);
+}
+
+.DocSearch-Button:hover {
+  background-color: var(--ifm-dropdown-hover-background-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom scrollbar - Matching NeuraLabs */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ifm-scrollbar-track-background-color, var(--ifm-background-color));
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ifm-scrollbar-thumb-background-color, var(--neuralabs-gray-600));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ifm-scrollbar-thumb-hover-background-color, var(--neuralabs-gray-500));
+}
+
+/* Responsive adjustments */
+@media (max-width: 996px) {
+  .navbar__toggle {
+    color: var(--ifm-navbar-link-color);
+  }
+  
+  .navbar-sidebar {
+    background-color: var(--ifm-navbar-background-color);
+  }
+  
+  .navbar-sidebar__brand {
+    background-color: var(--ifm-navbar-background-color);
+    border-bottom: 1px solid var(--ifm-toc-border-color);
+  }
+}
+
+/* Grid and Flexbox utilities */
 .grid {
   display: grid;
   gap: 1rem;
@@ -82,7 +458,6 @@
   }
 }
 
-/* Flexbox utilities */
 .flex {
   display: flex;
 }
@@ -103,82 +478,108 @@
   margin-top: 2rem;
 }
 
-/* Custom component styles */
+/* Feature card matching NeuraLabs style */
 .feature-card {
   text-align: center;
   padding: 2rem;
+  background: var(--ifm-card-background-color);
+  border: 1px solid var(--ifm-toc-border-color);
+  border-radius: var(--ifm-card-border-radius);
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-color: var(--neuralabs-border-hover);
 }
 
 .feature-icon {
   font-size: 3rem;
   margin-bottom: 1rem;
-}
-
-/* Code blocks */
-.language-move {
-  color: #e06c75;
-}
-
-/* Callout styles */
-.callout {
-  padding: 1rem;
-  margin: 1rem 0;
-  border-left: 4px solid;
-  border-radius: 4px;
-}
-
-.callout-info {
-  background-color: rgba(66, 184, 221, 0.1);
-  border-color: #42b8dd;
-}
-
-.callout-warning {
-  background-color: rgba(255, 193, 7, 0.1);
-  border-color: #ffc107;
-}
-
-.callout-success {
-  background-color: rgba(40, 167, 69, 0.1);
-  border-color: #28a745;
-}
-
-.callout-danger {
-  background-color: rgba(220, 53, 69, 0.1);
-  border-color: #dc3545;
+  color: var(--ifm-color-primary);
 }
 
 /* Tabs customization */
-.tabs-container {
-  margin: 1rem 0;
+.tabs {
+  border-bottom: 1px solid var(--ifm-toc-border-color);
+}
+
+.tabs__item {
+  border-radius: 0.375rem 0.375rem 0 0;
+  font-weight: 500;
+  padding: 0.75rem 1.25rem;
+  margin-right: 0.5rem;
+}
+
+.tabs__item--active {
+  background-color: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-toc-border-color);
+  border-bottom: 1px solid var(--ifm-background-surface-color);
+  color: var(--ifm-color-primary);
 }
 
 /* Mermaid diagram container */
 .mermaid-container {
   text-align: center;
   margin: 2rem 0;
+  padding: 1rem;
+  background-color: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-toc-border-color);
+  border-radius: 0.5rem;
 }
 
-/* Responsive images */
+/* Images */
 img {
   max-width: 100%;
   height: auto;
+  border-radius: 0.5rem;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Markdown content */
+.markdown {
+  line-height: 1.75;
 }
 
-::-webkit-scrollbar-track {
-  background: var(--ifm-background-color);
+.markdown h1:first-child {
+  margin-top: 0;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--ifm-color-emphasis-400);
-  border-radius: 4px;
+.markdown > h2 {
+  margin-top: 2rem;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--ifm-color-emphasis-600);
+.markdown > h3 {
+  margin-top: 1.5rem;
+}
+
+/* Badge styles */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  background-color: var(--ifm-color-primary);
+  color: white;
+}
+
+.badge--secondary {
+  background-color: var(--ifm-background-surface-color);
+  color: var(--ifm-font-color-base);
+  border: 1px solid var(--ifm-toc-border-color);
+}
+
+/* Breadcrumbs */
+.breadcrumbs__item {
+  color: var(--ifm-font-color-secondary);
+}
+
+.breadcrumbs__link {
+  color: var(--ifm-font-color-secondary);
+}
+
+.breadcrumbs__link:hover {
+  color: var(--ifm-color-primary);
+  text-decoration: none;
 }
