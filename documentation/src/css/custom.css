@@ -163,11 +163,23 @@
   --ifm-scrollbar-thumb-hover-background-color: var(--neuralabs-gray-600);
 }
 
-/* Override default Infima styles to match NeuraLabs */
+/* Azure-inspired Navbar */
 .navbar {
   border-bottom: 1px solid var(--ifm-toc-border-color);
-  box-shadow: none;
-  padding: 0.75rem 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 0.75rem 0;
+  background-color: var(--ifm-navbar-background-color);
+  backdrop-filter: blur(20px);
+}
+
+/* Azure-style navbar container */
+.navbar__inner {
+  max-width: 1920px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .navbar__brand {
@@ -175,12 +187,29 @@
   font-size: 1.25rem;
 }
 
+/* Azure-style navbar items */
 .navbar__item {
   font-weight: 500;
+  font-size: 0.925rem;
+}
+
+.navbar__link {
+  color: var(--ifm-navbar-link-color);
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
 }
 
 .navbar__link:hover {
   color: var(--ifm-color-primary);
+  background-color: var(--ifm-menu-color-background-hover);
+  text-decoration: none;
+}
+
+.navbar__link--active {
+  color: var(--ifm-color-primary);
+  font-weight: 600;
 }
 
 /* Hero Section - Using NeuraLabs theme colors */
@@ -487,9 +516,51 @@ code {
   border-right: 1px solid var(--ifm-toc-border-color);
 }
 
-/* Main content area */
+/* Azure-inspired Documentation Layout Structure */
+
+/* Main container - constrained width like Azure docs */
+.main-wrapper {
+  max-width: 1920px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Main content area with Azure-style max-width and centering */
 .docMainContainer_node_modules-\@docusaurus-theme-classic-lib-theme-DocPage-Layout-Main-styles-module {
-  padding: 2rem;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 2rem 3rem;
+}
+
+/* Content wrapper - Azure's readable line length */
+.theme-doc-markdown.markdown {
+  max-width: 1024px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* Azure-style sidebar container */
+.docSidebarContainer_node_modules-\@docusaurus-theme-classic-lib-theme-DocPage-Layout-Sidebar-styles-module {
+  width: 280px;
+  min-width: 280px;
+  max-width: 280px;
+}
+
+/* TOC positioning similar to Azure */
+.tocCollapsible_node_modules-\@docusaurus-theme-classic-lib-theme-TOC-styles-module {
+  width: 240px;
+  min-width: 240px;
+  max-width: 240px;
+  position: sticky;
+  top: calc(var(--ifm-navbar-height) + 1rem);
+  max-height: calc(100vh - var(--ifm-navbar-height) - 2rem);
+  overflow-y: auto;
+}
+
+/* Azure-style page structure */
+.docPage {
+  max-width: 1920px;
+  margin: 0 auto;
 }
 
 /* Pagination */
@@ -534,8 +605,71 @@ code {
   background: var(--ifm-scrollbar-thumb-hover-background-color, var(--neuralabs-gray-500));
 }
 
-/* Responsive adjustments */
-@media (max-width: 996px) {
+/* Azure-style Typography and Spacing Structure */
+
+/* Azure-inspired heading hierarchy */
+.theme-doc-markdown h1 {
+  font-size: 2.25rem;
+  margin-bottom: 1.5rem;
+  margin-top: 0;
+  line-height: 1.2;
+}
+
+.theme-doc-markdown h2 {
+  font-size: 1.75rem;
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--ifm-toc-border-color);
+}
+
+.theme-doc-markdown h3 {
+  font-size: 1.375rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.theme-doc-markdown h4 {
+  font-size: 1.125rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Azure-style content spacing */
+.theme-doc-markdown p {
+  margin-bottom: 1.25rem;
+  line-height: 1.7;
+}
+
+.theme-doc-markdown ul,
+.theme-doc-markdown ol {
+  margin-bottom: 1.25rem;
+  padding-left: 1.5rem;
+}
+
+.theme-doc-markdown li {
+  margin-bottom: 0.5rem;
+  line-height: 1.7;
+}
+
+/* Responsive adjustments for Azure-style layout */
+@media (max-width: 1400px) {
+  .main-wrapper {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+  
+  .docMainContainer_node_modules-\@docusaurus-theme-classic-lib-theme-DocPage-Layout-Main-styles-module {
+    max-width: 100%;
+    padding: 2rem;
+  }
+  
+  .theme-doc-markdown.markdown {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 1200px) {
   .navbar {
     padding: 0.75rem 1rem;
   }
@@ -560,9 +694,21 @@ code {
     background-color: var(--ifm-navbar-background-color);
     border-bottom: 1px solid var(--ifm-toc-border-color);
   }
+  
+  .docMainContainer_node_modules-\@docusaurus-theme-classic-lib-theme-DocPage-Layout-Main-styles-module {
+    padding: 1.5rem;
+  }
+  
+  .theme-doc-markdown h1 {
+    font-size: 2rem;
+  }
+  
+  .theme-doc-markdown h2 {
+    font-size: 1.5rem;
+  }
 }
 
-@media (max-width: 576px) {
+@media (max-width: 750px) {
   .navbar {
     padding: 0.75rem 0.5rem;
   }
@@ -718,17 +864,42 @@ img {
   margin: 0;
 }
 
-/* Code block improvements */
+/* Azure-inspired Code Block Improvements */
 .collapsible-code-block {
-  margin: 1rem 0;
+  margin: 1.5rem 0;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--ifm-toc-border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .code-block-header {
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .code-block-header:hover {
   background: var(--ifm-color-emphasis-300) !important;
+  border-color: var(--ifm-color-primary);
+}
+
+/* Azure-style code blocks in general */
+.theme-doc-markdown pre {
+  margin: 1.5rem 0;
+  border-radius: 6px;
+  border: 1px solid var(--ifm-toc-border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Azure-style inline code */
+.theme-doc-markdown code:not(pre code) {
+  background-color: var(--ifm-code-background);
+  border: 1px solid var(--ifm-toc-border-color);
+  border-radius: 3px;
+  padding: 0.125rem 0.25rem;
+  font-size: 0.875em;
+  font-weight: 500;
+  color: var(--ifm-color-primary);
 }
 
 /* Card improvements */
@@ -757,18 +928,91 @@ img {
   border: 1px solid var(--ifm-toc-border-color);
 }
 
-/* Breadcrumbs */
+/* Azure-style Breadcrumbs */
+.breadcrumbs {
+  margin-bottom: 2rem;
+  padding: 0.75rem 0;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--ifm-toc-border-color);
+  background-color: transparent;
+}
+
 .breadcrumbs__item {
+  color: var(--ifm-color-primary);
+  font-weight: 500;
+}
+
+.breadcrumbs__item:not(:last-child)::after {
+  content: '/';
+  margin: 0 0.5rem;
   color: var(--ifm-font-color-secondary);
 }
 
 .breadcrumbs__link {
-  color: var(--ifm-font-color-secondary);
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 .breadcrumbs__link:hover {
+  color: var(--ifm-color-primary-dark);
+  text-decoration: underline;
+}
+
+/* Azure-style sidebar navigation */
+.menu {
+  padding: 1rem 0;
+}
+
+.menu__list {
+  margin: 0;
+  padding: 0;
+}
+
+.menu__list-item {
+  margin: 0.25rem 0;
+}
+
+.menu__link {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ifm-font-color-base);
+  transition: all 0.2s ease;
+}
+
+.menu__link:hover {
+  background-color: var(--ifm-menu-color-background-hover);
   color: var(--ifm-color-primary);
   text-decoration: none;
+}
+
+.menu__link--active {
+  background-color: var(--ifm-menu-color-background-active);
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+  border-left: 3px solid var(--ifm-color-primary);
+  margin-left: -3px;
+}
+
+/* Azure-style category headers */
+.menu__list-item-collapsible {
+  border-radius: 4px;
+  margin: 0.5rem 0;
+}
+
+.menu__caret {
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  color: var(--ifm-heading-color);
+  background-color: transparent;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.menu__caret:hover {
+  background-color: var(--ifm-menu-color-background-hover);
 }
 
 /* Documentation Icons - Theme-aware styling */

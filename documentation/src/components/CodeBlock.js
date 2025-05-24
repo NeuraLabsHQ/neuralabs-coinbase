@@ -16,34 +16,47 @@ export function CollapsibleCodeBlock({
         className="code-block-header"
         onClick={() => setIsCollapsed(!isCollapsed)}
         style={{
-          background: 'var(--ifm-color-emphasis-100)',
+          background: 'var(--ifm-color-emphasis-200)',
           padding: '12px 16px',
-          borderRadius: '8px 8px 0 0',
+          borderRadius: '6px 6px 0 0',
           cursor: 'pointer',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          border: '1px solid var(--ifm-color-emphasis-300)',
-          borderBottom: isCollapsed ? '1px solid var(--ifm-color-emphasis-300)' : 'none'
+          border: '1px solid var(--ifm-toc-border-color)',
+          borderBottom: isCollapsed ? '1px solid var(--ifm-toc-border-color)' : 'none',
+          transition: 'all 0.2s ease'
         }}
       >
-        <div>
-          <h4 style={{ margin: 0, color: 'var(--ifm-color-primary)' }}>
-            <img src="/img/icons/code.svg" width="16" height="16" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-            {title}
-          </h4>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <img src="/img/icons/code.svg" width="16" height="16" style={{ verticalAlign: 'middle' }} />
+            <h4 style={{ margin: 0, color: 'var(--ifm-color-primary)', fontSize: '1rem' }}>
+              {title}
+            </h4>
+            <span style={{ 
+              fontSize: '0.75rem', 
+              padding: '2px 6px',
+              backgroundColor: 'var(--ifm-color-primary)',
+              color: 'white',
+              borderRadius: '3px',
+              fontWeight: '600'
+            }}>
+              {language.toUpperCase()}
+            </span>
+          </div>
           {description && (
-            <p style={{ margin: '4px 0 0 0', fontSize: '0.9em', opacity: 0.8 }}>
+            <p style={{ margin: '0', fontSize: '0.875rem', color: 'var(--ifm-font-color-secondary)' }}>
               {description}
             </p>
           )}
-          <span style={{ fontSize: '0.8em', opacity: 0.7 }}>
-            Language: {language.toUpperCase()}
-          </span>
         </div>
         <div style={{ 
           transform: isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)',
-          transition: 'transform 0.2s ease'
+          transition: 'transform 0.2s ease',
+          fontSize: '0.875rem',
+          color: 'var(--ifm-font-color-secondary)',
+          marginLeft: '12px'
         }}>
           ▼
         </div>
@@ -51,9 +64,10 @@ export function CollapsibleCodeBlock({
       
       {!isCollapsed && (
         <div style={{ 
-          border: '1px solid var(--ifm-color-emphasis-300)',
+          border: '1px solid var(--ifm-toc-border-color)',
           borderTop: 'none',
-          borderRadius: '0 0 8px 8px'
+          borderRadius: '0 0 6px 6px',
+          overflow: 'hidden'
         }}>
           <CodeBlock language={language}>
             {children}
@@ -73,34 +87,47 @@ export function InlineCodeCard({ title, description, language, code, defaultExpa
         className="code-block-header"
         onClick={() => setIsExpanded(!isExpanded)}
         style={{
-          background: 'var(--ifm-color-emphasis-100)',
+          background: 'var(--ifm-color-emphasis-200)',
           padding: '12px 16px',
-          borderRadius: '8px 8px 0 0',
+          borderRadius: '6px 6px 0 0',
           cursor: 'pointer',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          border: '1px solid var(--ifm-color-emphasis-300)',
-          borderBottom: isExpanded ? 'none' : '1px solid var(--ifm-color-emphasis-300)'
+          border: '1px solid var(--ifm-toc-border-color)',
+          borderBottom: isExpanded ? 'none' : '1px solid var(--ifm-toc-border-color)',
+          transition: 'all 0.2s ease'
         }}
       >
-        <div>
-          <h4 style={{ margin: 0, color: 'var(--ifm-color-primary)' }}>
-            <img src="/img/icons/code.svg" width="16" height="16" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-            {title}
-          </h4>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <img src="/img/icons/code.svg" width="16" height="16" style={{ verticalAlign: 'middle' }} />
+            <h4 style={{ margin: 0, color: 'var(--ifm-color-primary)', fontSize: '1rem' }}>
+              {title}
+            </h4>
+            <span style={{ 
+              fontSize: '0.75rem', 
+              padding: '2px 6px',
+              backgroundColor: 'var(--ifm-color-primary)',
+              color: 'white',
+              borderRadius: '3px',
+              fontWeight: '600'
+            }}>
+              {language.toUpperCase()}
+            </span>
+          </div>
           {description && (
-            <p style={{ margin: '4px 0 0 0', fontSize: '0.9em', opacity: 0.8 }}>
+            <p style={{ margin: '0', fontSize: '0.875rem', color: 'var(--ifm-font-color-secondary)' }}>
               {description}
             </p>
           )}
-          <span style={{ fontSize: '0.8em', opacity: 0.7 }}>
-            Language: {language.toUpperCase()}
-          </span>
         </div>
         <div style={{ 
           transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-          transition: 'transform 0.2s ease'
+          transition: 'transform 0.2s ease',
+          fontSize: '0.875rem',
+          color: 'var(--ifm-font-color-secondary)',
+          marginLeft: '12px'
         }}>
           ▼
         </div>
@@ -108,9 +135,10 @@ export function InlineCodeCard({ title, description, language, code, defaultExpa
       
       {isExpanded && (
         <div style={{ 
-          border: '1px solid var(--ifm-color-emphasis-300)',
+          border: '1px solid var(--ifm-toc-border-color)',
           borderTop: 'none',
-          borderRadius: '0 0 8px 8px'
+          borderRadius: '0 0 6px 6px',
+          overflow: 'hidden'
         }}>
           <CodeBlock language={language}>
             {code}
