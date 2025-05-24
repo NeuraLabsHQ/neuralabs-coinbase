@@ -1,0 +1,10 @@
+{
+  "label": "Implementation Guides",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "title": "Implementation Guides",
+    "description": "Step-by-step guides for implementing and deploying each component of NeuraLabs",
+    "keywords": ["implementation", "deployment", "setup", "configuration"]
+  }
+}
