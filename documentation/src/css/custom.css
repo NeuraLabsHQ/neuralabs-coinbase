@@ -763,3 +763,40 @@ img {
   height: 48px !important;
   margin-right: 1rem;
 }
+
+/* Generated Index Page Styles */
+.generated-index-page .pagination-nav {
+  display: none;
+}
+
+/* Category cards on generated index */
+.generated-index .card {
+  height: 100%;
+  transition: all 0.2s ease;
+}
+
+.generated-index .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme='dark'] .generated-index .card:hover {
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+
+/* Icon support in generated index descriptions */
+.generated-index__description img[src*="/img/icons/"] {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+  display: inline-block;
+}
+
+/* Category page headers with icons */
+.theme-doc-markdown h1 img[src*="/img/icons/"] {
+  width: 32px;
+  height: 32px;
+  margin-right: 0.75rem;
+  vertical-align: middle;
+}

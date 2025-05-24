@@ -1,0 +1,130 @@
+---
+id: implementation-index
+title: Implementation Guides
+sidebar_label: Overview
+sidebar_position: 0
+---
+
+import { Card, CardHeader, CardTitle, CardDescription } from '@site/src/components/Card';
+
+# <img src="/img/icons/code.svg" width="32" height="32" style={{ verticalAlign: 'middle', marginRight: '12px' }} />Implementation Guides
+
+Step-by-step guides for implementing and deploying each component of the NeuraLabs platform.
+
+## Components Overview
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/database.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Database Architecture
+      </CardTitle>
+      <CardDescription>
+        Set up PostgreSQL and Redis for data persistence and caching
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/frontend.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Frontend Application
+      </CardTitle>
+      <CardDescription>
+        Build the React-based UI with visual workflow editor
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/backend.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Backend Services
+      </CardTitle>
+      <CardDescription>
+        Deploy FastAPI services for API and authentication
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/hpc.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        HPC Execution Node
+      </CardTitle>
+      <CardDescription>
+        Set up the workflow execution engine with AI providers
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/blockchain.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Smart Contracts
+      </CardTitle>
+      <CardDescription>
+        Deploy SUI Move contracts for NFT access control
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/prover.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Prover Service
+      </CardTitle>
+      <CardDescription>
+        Implement zero-knowledge authentication with zkLogin
+      </CardDescription>
+    </CardHeader>
+  </Card>
+</div>
+
+## Implementation Order
+
+For a successful deployment, we recommend following this order:
+
+1. **[Database Setup](./01-database/setup)** - Foundation for data storage
+2. **[Backend Services](./03-backend/setup)** - Core API functionality
+3. **[Smart Contracts](./05-smart-contracts/setup)** - Blockchain integration
+4. **[Frontend Application](./02-frontend/setup)** - User interface
+5. **[HPC Execution Node](./04-hpc-execution/setup)** - AI workflow processing
+6. **[Prover Service](./06-prover-service/overview)** - Authentication layer
+
+## Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/neuralabs/neuralabs-sui
+cd neuralabs-sui
+
+# Start all services with Docker
+docker-compose up -d
+
+# Or follow individual setup guides for manual installation
+```
+
+## Development Tips
+
+<div className="card padding--md mt-4">
+  <h3><img src="/img/icons/info.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />Before You Begin</h3>
+  <ul>
+    <li>Ensure you have Docker and Docker Compose installed</li>
+    <li>Have Python 3.12 with conda environment ready</li>
+    <li>Install SUI CLI tools for smart contract deployment</li>
+    <li>Review the architecture documentation first</li>
+  </ul>
+</div>
+
+## Need Help?
+
+- Check the [Troubleshooting Guide](/docs/troubleshooting)
+- Join our [Discord Community](https://discord.gg/neuralabs)
+- Browse [GitHub Issues](https://github.com/neuralabs/neuralabs-sui/issues)

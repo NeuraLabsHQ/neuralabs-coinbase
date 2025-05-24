@@ -10,9 +10,18 @@ export function Features({ children, className }) {
 }
 
 export function Feature({ icon, title, description }) {
+  // Support both emoji strings and image paths
+  const isImagePath = typeof icon === 'string' && icon.startsWith('/');
+  
   return (
     <div className="feature-card card">
-      <div className="feature-icon">{icon}</div>
+      <div className="feature-icon">
+        {isImagePath ? (
+          <img src={icon} alt="" width="32" height="32" />
+        ) : (
+          icon
+        )}
+      </div>
       <h3>{title}</h3>
       <p>{description}</p>
     </div>
