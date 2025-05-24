@@ -731,6 +731,12 @@ img {
   height: 24px;
 }
 
+/* Dark mode: Invert black SVG icons to white */
+[data-theme='dark'] .markdown img[src*="/img/icons/"],
+[data-theme='dark'] img[src*="/img/icons/"] {
+  filter: invert(1);
+}
+
 /* Ensure SVG icons use current text color */
 .markdown svg {
   color: var(--ifm-font-color-base);
@@ -793,10 +799,25 @@ html[data-theme='dark'] .generated-index .card:hover {
   display: inline-block;
 }
 
+/* Dark mode: Invert icons in generated index descriptions */
+[data-theme='dark'] .generated-index__description img[src*="/img/icons/"] {
+  filter: invert(1);
+}
+
 /* Category page headers with icons */
 .theme-doc-markdown h1 img[src*="/img/icons/"] {
   width: 32px;
   height: 32px;
   margin-right: 0.75rem;
   vertical-align: middle;
+}
+
+/* Dark mode: Invert icons in category page headers */
+[data-theme='dark'] .theme-doc-markdown h1 img[src*="/img/icons/"],
+[data-theme='dark'] .theme-doc-markdown h2 img[src*="/img/icons/"],
+[data-theme='dark'] .theme-doc-markdown h3 img[src*="/img/icons/"],
+[data-theme='dark'] .theme-doc-markdown h4 img[src*="/img/icons/"],
+[data-theme='dark'] .theme-doc-markdown h5 img[src*="/img/icons/"],
+[data-theme='dark'] .theme-doc-markdown h6 img[src*="/img/icons/"] {
+  filter: invert(1);
 }
