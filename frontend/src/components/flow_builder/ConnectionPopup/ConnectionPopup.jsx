@@ -170,17 +170,14 @@ const ConnectionPopup = ({
   };
 
   const validateMappings = () => {
-    const hasValidMappings = mappings.some(m => {
-      const validation = getValidationStatus(m, mappings.indexOf(m));
-      return validation.status === 'valid' && m.fromOutput && m.toInput;
-    });
-    
+    // Allow saving even with no mappings
     const hasErrors = mappings.some(m => {
       const validation = getValidationStatus(m, mappings.indexOf(m));
       return validation.status === 'error' && (m.fromOutput || m.toInput);
     });
     
-    setIsValid(hasValidMappings && !hasErrors);
+    // Connection is valid if there are no errors (including when all mappings are empty)
+    setIsValid(!hasErrors);
   };
 
   const handleOutputChange = (index, value) => {
@@ -204,7 +201,7 @@ const ConnectionPopup = ({
   };
 
   const handleSave = () => {
-    // Filter out empty mappings
+    // Filter out empty mappings - if all mappings are empty, pass an empty array
     const validMappings = mappings.filter(m => m.fromOutput && m.toInput);
     onSave(validMappings);
     onClose();
@@ -277,7 +274,7 @@ const ConnectionPopup = ({
           <HStack justify="space-between">
             <Text>Connection: {sourceNode.name} → {targetNode.name}</Text>
             <HStack>
-              {onDelete && existingMappings.length > 0 && (
+              {onDelete && (
                 <Button
                   size="sm"
                   variant="ghost"

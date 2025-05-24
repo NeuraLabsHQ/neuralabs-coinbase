@@ -203,6 +203,9 @@ const FlowCanvas = ({
     e.stopPropagation();
     onSelectNode(nodeId);
     
+    // Only start drag if Ctrl/Cmd is held
+    if (!e.ctrlKey && !e.metaKey) return;
+    
     const startNodeDrag = (e) => {
       setDragging(true);
       
@@ -227,8 +230,11 @@ const FlowCanvas = ({
       
       // Use a local variable to track the current position without causing rerenders
       let latestPosition = { ...currentPos };
+      let isDragging = true;
       
       const moveHandler = (e) => {
+        if (!isDragging) return;
+        
         // Calculate the new position with respect to the canvas transform
         const dx = (e.clientX - startPos.x) / scale;
         const dy = (e.clientY - startPos.y) / scale;
@@ -247,8 +253,11 @@ const FlowCanvas = ({
       };
       
       const upHandler = () => {
+        isDragging = false;
         document.removeEventListener('mousemove', moveHandler);
         document.removeEventListener('mouseup', upHandler);
+        document.removeEventListener('keyup', keyUpHandler);
+        window.removeEventListener('blur', blurHandler);
         setDragging(false);
         
         // Only update state once at the end of drag
@@ -257,8 +266,22 @@ const FlowCanvas = ({
         }
       };
       
+      // Handle key release to cancel drag if Ctrl is released
+      const keyUpHandler = (e) => {
+        if (!e.ctrlKey && !e.metaKey) {
+          upHandler();
+        }
+      };
+      
+      // Handle window blur (e.g., switching tabs)
+      const blurHandler = () => {
+        upHandler();
+      };
+      
       document.addEventListener('mousemove', moveHandler);
       document.addEventListener('mouseup', upHandler);
+      document.addEventListener('keyup', keyUpHandler);
+      window.addEventListener('blur', blurHandler);
     };
     
     startNodeDrag(e);
@@ -320,9 +343,7 @@ const handlePortMouseDown = (e, nodeId, portType, portIndex) => {
   if (e.button !== 0) return; // Only left mouse button
   
   e.stopPropagation();
-  
-  // Set this to explicitly prevent any centering
-  // No need to set it to false later since a new selection will happen on drop anyway
+  e.preventDefault(); // Prevent any default behavior
   
   // Add visual feedback - change the port color when clicked
   const clickedPort = e.target;
@@ -362,6 +383,7 @@ const handlePortMouseDown = (e, nodeId, portType, portIndex) => {
   tempPath.setAttribute('fill', 'none');
   tempPath.setAttribute('class', 'connecting-path');
   tempPath.setAttribute('d', `M ${startX} ${startY} L ${startX} ${startY}`); // Initialize with a point
+  tempPath.style.pointerEvents = 'none'; // Make sure the path doesn't interfere with mouse events
   
   // Add the path to the canvas
   if (canvasRef.current) {
@@ -371,9 +393,11 @@ const handlePortMouseDown = (e, nodeId, portType, portIndex) => {
     console.error("Canvas ref is null");
   }
   
+  let isConnecting = true;
+  
   // Update the path as the mouse moves
   const moveHandler = (e) => {
-    if (!tempPath) return;
+    if (!tempPath || !isConnecting) return;
     
     // Calculate the mouse position with respect to the canvas transform
     const mouseX = (e.clientX - svgRect.left - translate.x) / scale;
@@ -394,19 +418,32 @@ const handlePortMouseDown = (e, nodeId, portType, portIndex) => {
     tempPath.setAttribute('d', pathData);
   };
   
-  const upHandler = (e) => {
+  const cleanup = () => {
+    isConnecting = false;
     document.removeEventListener('mousemove', moveHandler);
     document.removeEventListener('mouseup', upHandler);
+    document.removeEventListener('keydown', keyHandler);
+    window.removeEventListener('blur', blurHandler);
     
     // Reset the port appearance
-    clickedPort.setAttribute('fill', originalFill);
-    clickedPort.setAttribute('stroke', originalStroke);
-    clickedPort.setAttribute('stroke-width', '2');
+    if (clickedPort) {
+      clickedPort.setAttribute('fill', originalFill);
+      clickedPort.setAttribute('stroke', originalStroke);
+      clickedPort.setAttribute('stroke-width', '2');
+    }
     
     // Remove the temporary path
     if (tempPath && tempPath.parentNode) {
       tempPath.parentNode.removeChild(tempPath);
     }
+    
+    setConnectingNode(null);
+    setConnectingPort(null);
+    setConnectingPath(null);
+  };
+  
+  const upHandler = (e) => {
+    if (!isConnecting) return;
     
     // Check if the mouse is over a compatible port - FIXED METHOD
     const elementsAtPoint = document.elementsFromPoint(e.clientX, e.clientY);
@@ -449,13 +486,25 @@ const handlePortMouseDown = (e, nodeId, portType, portIndex) => {
       }
     }
     
-    setConnectingNode(null);
-    setConnectingPort(null);
-    setConnectingPath(null);
+    cleanup();
+  };
+  
+  // Cancel connection if ESC is pressed
+  const keyHandler = (e) => {
+    if (e.key === 'Escape') {
+      cleanup();
+    }
+  };
+  
+  // Cancel connection if window loses focus
+  const blurHandler = () => {
+    cleanup();
   };
   
   document.addEventListener('mousemove', moveHandler);
   document.addEventListener('mouseup', upHandler);
+  document.addEventListener('keydown', keyHandler);
+  window.addEventListener('blur', blurHandler);
 };
   // Add helper function to get the icon component from string name or component
   const getIconComponent = (icon) => {
@@ -555,7 +604,16 @@ const renderNode = (node) => {
         e.stopPropagation();
         onSelectNode(node.id);
       }}
-      onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
+      onMouseDown={(e) => {
+        // Check if the click is on a port by looking at the event target
+        const isPort = e.target.classList?.contains('node-port') || 
+                      e.target.hasAttribute?.('data-port-type');
+        
+        // Only handle node drag if it's not a port and Ctrl is held
+        if (!isPort) {
+          handleNodeMouseDown(e, node.id);
+        }
+      }}
       data-node-id={node.id}
     >
       {/* Node shape - using dynamic width with transition for smooth resize */}
