@@ -183,16 +183,56 @@
   color: var(--ifm-color-primary);
 }
 
-/* Hero Section - Matching NeuraLabs gradient style */
+/* Hero Section - Using NeuraLabs theme colors */
 .hero {
-  background: linear-gradient(135deg, var(--neuralabs-blue-500) 0%, var(--neuralabs-purple-500) 100%);
-  color: white;
+  background-color: var(--neuralabs-bg-primary);
+  color: var(--ifm-heading-color);
   padding: 4rem 2rem;
   text-align: center;
+  border-bottom: 1px solid var(--ifm-toc-border-color);
 }
 
 .hero--primary {
-  background: linear-gradient(135deg, var(--neuralabs-blue-500) 0%, var(--neuralabs-purple-500) 100%);
+  background-color: var(--neuralabs-bg-primary);
+  color: var(--ifm-heading-color);
+}
+
+/* Hero theme-specific overrides */
+[data-theme='dark'] .hero {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+[data-theme='light'] .hero {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+[data-theme='dark'] .hero--primary {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+[data-theme='light'] .hero--primary {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Hero text elements */
+.hero__title {
+  color: inherit !important;
+}
+
+.hero__subtitle {
+  color: var(--neuralabs-text-secondary) !important;
+}
+
+[data-theme='dark'] .hero__subtitle {
+  color: #c4c4c4 !important;
+}
+
+[data-theme='light'] .hero__subtitle {
+  color: #555555 !important;
 }
 
 /* Homepage specific overrides */
@@ -235,14 +275,29 @@
 }
 
 .button--secondary {
-  background-color: white;
-  color: var(--neuralabs-blue-500);
-  border: 2px solid transparent;
+  background-color: var(--ifm-color-primary);
+  color: white;
+  border: 2px solid var(--ifm-color-primary);
 }
 
 .button--secondary:hover {
-  background-color: var(--neuralabs-gray-50);
-  color: var(--neuralabs-blue-700);
+  background-color: transparent;
+  color: var(--ifm-color-primary);
+  border: 2px solid var(--ifm-color-primary);
+}
+
+/* Hero button specific styling */
+.hero .button--secondary {
+  background-color: var(--ifm-color-primary);
+  color: white;
+  border: 2px solid var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+.hero .button--secondary:hover {
+  background-color: transparent;
+  color: var(--ifm-color-primary);
+  border: 2px solid var(--ifm-color-primary);
 }
 
 /* Cards */
