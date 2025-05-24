@@ -945,16 +945,42 @@ img {
 
 /* Ensure code content is left-aligned */
 .collapsible-code-block .theme-code-block {
-  text-align: left;
+  text-align: left !important;
 }
 
 .collapsible-code-block pre {
-  text-align: left;
+  text-align: left !important;
   margin: 0 !important;
+  direction: ltr !important;
 }
 
 .collapsible-code-block code {
-  text-align: left;
+  text-align: left !important;
+  direction: ltr !important;
+}
+
+.collapsible-code-block .prism-code {
+  text-align: left !important;
+  direction: ltr !important;
+}
+
+.collapsible-code-block .token-line {
+  text-align: left !important;
+  direction: ltr !important;
+}
+
+/* Force left alignment for all code elements */
+.collapsible-code-block * {
+  text-align: left !important;
+}
+
+/* Specific overrides for Prism elements */
+.collapsible-code-block .highlight {
+  text-align: left !important;
+}
+
+.collapsible-code-block .code-block-content {
+  text-align: left !important;
 }
 
 /* VS Code style code blocks */
@@ -1073,6 +1099,35 @@ pre, code {
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
   font-feature-settings: 'liga' 0;
   font-variant-ligatures: none;
+}
+
+/* Global left alignment for all code blocks */
+pre {
+  text-align: left !important;
+  direction: ltr !important;
+}
+
+.prism-code {
+  text-align: left !important;
+  direction: ltr !important;
+}
+
+.token-line {
+  text-align: left !important;
+  direction: ltr !important;
+}
+
+.highlight {
+  text-align: left !important;
+}
+
+.code-block-content {
+  text-align: left !important;
+}
+
+/* Override any theme-specific alignments */
+.theme-code-block {
+  text-align: left !important;
 }
 
 /* Card improvements */

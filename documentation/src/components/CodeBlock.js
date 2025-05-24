@@ -41,7 +41,8 @@ export function CollapsibleCodeBlock({
             marginBottom: description ? '6px' : '0',
             flexWrap: 'wrap',
             justifyContent: 'flex-start',
-            width: '100%'
+            width: '100%',
+            flexDirection: 'row-reverse' // Align icon to the right
           }}>
             <img 
               src="/img/icons/code.svg" 
