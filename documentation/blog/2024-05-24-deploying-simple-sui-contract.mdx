@@ -1,0 +1,321 @@
+---
+title: "Deploying a Simple Smart Contract on Sui: A Step-by-Step Technical Guide"
+description: "Learn how to deploy your first smart contract on Sui blockchain through NeuraLabs' test contract implementation, covering Move syntax, compilation, and deployment processes."
+slug: deploying-simple-sui-contract
+authors:
+  - name: NeuraLabs Team
+    title: Blockchain Engineering Team
+    url: https://neuralabs.ai
+    image_url: /img/logo-light.svg
+tags: [sui, smart-contracts, move, blockchain, deployment, tutorial]
+image: /img/icons/blockchain.svg
+hide_table_of_contents: false
+---
+
+import { CollapsibleCodeBlock } from '@site/src/components/CodeBlock';
+
+![Smart Contract Icon](/img/icons/blockchain.svg) **Deploying a Simple Smart Contract on Sui**
+
+In this comprehensive technical guide, we'll walk through the deployment of a simple smart contract on the Sui blockchain using NeuraLabs' test contract as our example. This tutorial covers everything from Move language basics to successful deployment on Sui testnet.
+
+<!--truncate-->
+
+## Introduction to Sui Smart Contracts
+
+Sui blockchain uses the **Move programming language**, originally developed by Facebook (Meta) for the Diem project. Move is a resource-oriented programming language designed for safe and flexible asset management. Unlike Ethereum's account-based model, Sui uses an **object-based data model** where everything is an object with a unique identifier.
+
+### Key Concepts in Sui Move
+
+- **Objects**: The fundamental unit of storage in Sui
+- **Ownership**: Objects can be owned by addresses, shared, or immutable
+- **Capabilities**: Special objects that grant permissions
+- **Transactions**: Operations that modify object state
+
+## Our Test Contract Architecture
+
+Let's examine the simple test contract we deployed at [`mov_contract/test_contract`](https://github.com/neuralabs/neuralabs-sui/tree/main/mov_contract/test_contract):
+
+<CollapsibleCodeBlock
+  title="test.move - Simple Test Contract"
+  description="A basic smart contract that creates and transfers test objects"
+  language="move"
+  defaultCollapsed={true}
+>
+{`module test_contract::test {
+    use sui::object::{Self, UID};
+    use sui::tx_context::{Self, TxContext};
+    use sui::transfer;
+
+    public struct TestObject has key {
+        id: UID,
+        value: u64
+    }
+
+    public entry fun create_test(ctx: &mut TxContext) {
+        let test = TestObject {
+            id: object::new(ctx),
+            value: 42
+        };
+        transfer::transfer(test, tx_context::sender(ctx));
+    }
+}`}
+</CollapsibleCodeBlock>
+
+### Contract Analysis
+
+**Struct Definition**:
+```move
+public struct TestObject has key {
+    id: UID,
+    value: u64
+}
+```
+- `TestObject` has the `key` ability, making it a Sui object that can be owned
+- `UID` provides a unique identifier for the object
+- `value` is a simple u64 field for demonstration
+
+**Entry Function**:
+```move
+public entry fun create_test(ctx: &mut TxContext)
+```
+- `entry` functions can be called directly from transactions
+- `TxContext` provides transaction metadata and capabilities
+- Creates a new `TestObject` and transfers it to the transaction sender
+
+## Project Configuration
+
+<CollapsibleCodeBlock
+  title="Move.toml - Package Configuration"
+  description="Package manifest defining dependencies and addresses"
+  language="toml"
+  defaultCollapsed={false}
+>
+{`[package]
+name = "TestContract"
+edition = "2024.beta"
+version = "0.0.1"
+
+[dependencies]
+
+[addresses]
+test_contract = "0x0"`}
+</CollapsibleCodeBlock>
+
+### Configuration Breakdown
+
+- **Package Name**: `TestContract` - identifier for our package
+- **Edition**: `2024.beta` - Move language edition for latest features
+- **Dependencies**: Empty for this simple contract
+- **Addresses**: `test_contract = "0x0"` - placeholder address, resolved during deployment
+
+## Deployment Process
+
+### Prerequisites
+
+Before deploying, ensure you have:
+
+1. **Sui CLI installed** - Follow the [official installation guide](https://docs.sui.io/build/install)
+2. **Active Sui account** with testnet funds
+3. **Move.toml configured** in your project directory
+
+For detailed setup instructions, refer to our [Smart Contract Deployment Guide](/docs/sui-integration/smart-contracts/deployment).
+
+### Step 1: Build the Contract
+
+<CollapsibleCodeBlock
+  title="Build Command"
+  description="Compile the Move contract to check for errors"
+  language="bash"
+  defaultCollapsed={false}
+>
+{`cd mov_contract/test_contract
+sui move build`}
+</CollapsibleCodeBlock>
+
+**Expected Output**:
+```
+BUILDING test_contract
+INCLUDING DEPENDENCY Sui
+INCLUDING DEPENDENCY MoveStdlib
+BUILDING test_contract
+```
+
+### Step 2: Deploy to Sui Testnet
+
+<CollapsibleCodeBlock
+  title="Deploy Command"
+  description="Publish the contract to Sui testnet with gas budget"
+  language="bash"
+  defaultCollapsed={false}
+>
+{`sui client publish --gas-budget 50000000`}
+</CollapsibleCodeBlock>
+
+### Step 3: Deployment Transaction Analysis
+
+Our deployment generated the following transaction:
+
+**Transaction Digest**: `Seeu3yQroHJ43VCXA1AAedaABZhAXXNVFLMSWVohj25`
+
+<CollapsibleCodeBlock
+  title="Deployment Transaction Details"
+  description="Complete transaction output showing gas costs and object creation"
+  language="bash"
+  defaultCollapsed={true}
+>
+{`Transaction Digest: Seeu3yQroHJ43VCXA1AAedaABZhAXXNVFLMSWVohj25
+╭──────────────────────────────────────────────────────────────────────╮
+│ Transaction Data                                                     │
+├──────────────────────────────────────────────────────────────────────┤
+│ Sender: 0x33036d17a0f59a8ddfc4f2d2188d91be167c6aa16be1af0a11a00c06a6e6e532 │
+│ Gas Budget: 50000000 MIST                                            │
+│ Gas Price: 1000 MIST                                                 │
+╰──────────────────────────────────────────────────────────────────────╯
+
+╭───────────────────────────────────────────────────────────────────────╮
+│ Transaction Effects                                                   │
+├───────────────────────────────────────────────────────────────────────┤
+│ Status: Success                                                       │
+│                                                                       │
+│ Created Objects:                                                      │
+│  ┌ ID: 0x38fdea8ed7d1ffe8db75d482ee5d2aaed0ef16f250624f94c38f3c10f32b3cfe │
+│  │ Owner: Immutable                                                   │
+│  │ ObjectType: Package                                                │
+│  └                                                                    │
+│                                                                       │
+│ Gas Cost Summary:                                                     │
+│    Storage Cost: 6999600 MIST                                        │
+│    Computation Cost: 1000000 MIST                                     │
+│    Storage Rebate: 978120 MIST                                        │
+│    Non-refundable Storage Fee: 9880 MIST                              │
+╰───────────────────────────────────────────────────────────────────────╯
+
+╭─────────────────────────────────────────────────────────────────────╮
+│ Published Objects:                                                  │
+├─────────────────────────────────────────────────────────────────────┤
+│ PackageID: 0x38fdea8ed7d1ffe8db75d482ee5d2aaed0ef16f250624f94c38f3c10f32b3cfe │
+│ Modules: test                                                       │
+╰─────────────────────────────────────────────────────────────────────╯`}
+</CollapsibleCodeBlock>
+
+### Key Deployment Metrics
+
+| Metric | Value | Explanation |
+|--------|-------|-------------|
+| **Package ID** | `0x38fdea8...32b3cfe` | Unique identifier for our deployed contract |
+| **Gas Used** | 7,021,480 MIST | Total gas consumed (≈ 0.007 SUI) |
+| **Storage Cost** | 6,999,600 MIST | Cost for storing contract bytecode |
+| **Status** | Success | Deployment completed successfully |
+
+## Testing the Deployed Contract
+
+### Calling the Contract Function
+
+<CollapsibleCodeBlock
+  title="Contract Interaction"
+  description="Call the create_test function to create a new test object"
+  language="bash"
+  defaultCollapsed={false}
+>
+{`sui client call \
+  --package 0x38fdea8ed7d1ffe8db75d482ee5d2aaed0ef16f250624f94c38f3c10f32b3cfe \
+  --module test \
+  --function create_test \
+  --gas-budget 10000000`}
+</CollapsibleCodeBlock>
+
+### Verifying Object Creation
+
+After calling the function, check your owned objects:
+
+```bash
+sui client objects
+```
+
+You should see a new `TestObject` with:
+- Unique object ID
+- Value field set to `42`
+- Owned by your address
+
+## Gas Cost Analysis
+
+Understanding gas costs is crucial for efficient contract deployment:
+
+### Cost Breakdown
+
+1. **Storage Cost** (6.9M MIST): Permanent storage of contract bytecode
+2. **Computation Cost** (1M MIST): CPU cycles for deployment processing
+3. **Storage Rebate** (978K MIST): Refund for deleted storage
+4. **Network Fee** (9.8K MIST): Non-refundable protocol fee
+
+### Optimization Tips
+
+- **Minimize Contract Size**: Remove unused imports and functions
+- **Batch Operations**: Combine multiple operations in single transactions
+- **Use Shared Objects**: Reduce individual object storage costs
+
+## Security Considerations
+
+Even simple contracts should follow security best practices:
+
+### Move Safety Features
+
+- **Resource Safety**: Objects cannot be duplicated or lost
+- **Type Safety**: Strong typing prevents many common errors
+- **Ownership Model**: Clear ownership semantics prevent unauthorized access
+
+### Best Practices Demonstrated
+
+1. **Proper Error Handling**: Using `assert!` statements
+2. **Access Control**: Functions respect caller permissions
+3. **Resource Management**: Proper object creation and transfer
+
+## Troubleshooting Common Issues
+
+### Build Failures
+
+**Error**: `Package dependency resolution failed`
+```bash
+# Solution: Update Sui framework dependency
+sui move build --skip-fetch-latest-git-deps false
+```
+
+### Insufficient Gas
+
+**Error**: `InsufficientGas`
+```bash
+# Solution: Increase gas budget
+sui client publish --gas-budget 100000000
+```
+
+### Module Name Conflicts
+
+**Error**: `Module name already exists`
+```bash
+# Solution: Use unique module names or namespaces
+```
+
+## Next Steps
+
+This simple contract demonstrates fundamental Sui concepts. To build more complex applications:
+
+1. **Study the [NeuraLabs NFT Contract](/blog/neuralabs-nft-contract-deployment)** - Advanced features like access control and storage integration
+2. **Explore [Sui Documentation](https://docs.sui.io)** - Comprehensive guides and references
+3. **Join [Sui Community](https://discord.gg/sui)** - Connect with other developers
+
+## Related Documentation
+
+- 📚 [Smart Contract Overview](/docs/sui-integration/smart-contracts/overview)
+- 🔧 [Deployment Guide](/docs/sui-integration/smart-contracts/deployment)
+- 🧪 [Testing Guide](/docs/sui-integration/smart-contracts/testing)
+- 🏗️ [Architecture Guide](/docs/theoretical/blockchain-architecture)
+
+## Resources and Links
+
+- **Contract Source**: [`mov_contract/test_contract`](https://github.com/neuralabs/neuralabs-sui/tree/main/mov_contract/test_contract)
+- **Transaction**: [View on Sui Explorer](https://suiexplorer.com/txblock/Seeu3yQroHJ43VCXA1AAedaABZhAXXNVFLMSWVohj25?network=testnet)
+- **Package**: [View on Sui Explorer](https://suiexplorer.com/object/0x38fdea8ed7d1ffe8db75d482ee5d2aaed0ef16f250624f94c38f3c10f32b3cfe?network=testnet)
+
+---
+
+*This blog post demonstrates the deployment of a simple smart contract on Sui blockchain. For production applications, consider implementing comprehensive testing, security audits, and monitoring solutions as shown in our advanced NeuraLabs NFT contract.*
