@@ -721,3 +721,45 @@ img {
   color: var(--ifm-color-primary);
   text-decoration: none;
 }
+
+/* Documentation Icons - Theme-aware styling */
+.markdown img[src*="/img/icons/"] {
+  filter: none;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+  width: 24px;
+  height: 24px;
+}
+
+/* Ensure SVG icons use current text color */
+.markdown svg {
+  color: var(--ifm-font-color-base);
+  vertical-align: middle;
+}
+
+/* Icon in headings */
+.markdown h1 img[src*="/img/icons/"],
+.markdown h2 img[src*="/img/icons/"],
+.markdown h3 img[src*="/img/icons/"],
+.markdown h4 img[src*="/img/icons/"],
+.markdown h5 img[src*="/img/icons/"],
+.markdown h6 img[src*="/img/icons/"] {
+  width: 1.2em;
+  height: 1.2em;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+/* Small inline icons */
+.markdown .icon-sm {
+  width: 16px !important;
+  height: 16px !important;
+  margin-right: 0.25rem;
+}
+
+/* Large feature icons */
+.markdown .icon-lg {
+  width: 48px !important;
+  height: 48px !important;
+  margin-right: 1rem;
+}

@@ -9,7 +9,7 @@ const darkCodeTheme = themes.dracula;
 const config = {
   title: 'NeuraLabs Documentation',
   tagline: 'Decentralized AI Workflow Platform on SUI',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/logo-light.svg',
 
   // Set the production url of your site here
   url: 'https://docs.neuralabs.ai',
