@@ -278,6 +278,32 @@
   background-color: #000000 !important;
 }
 
+/* Dark mode - ensure full page background is black */
+[data-theme='dark'] {
+  background-color: #000000 !important;
+}
+
+[data-theme='dark'] html {
+  background-color: #000000 !important;
+}
+
+[data-theme='dark'] body {
+  background-color: #000000 !important;
+}
+
+/* Dark mode - page container backgrounds */
+[data-theme='dark'] .docPage {
+  background-color: #000000 !important;
+}
+
+[data-theme='dark'] .docRoot_node_modules-\@docusaurus-theme-classic-lib-theme-DocRoot-Layout-styles-module {
+  background-color: #000000 !important;
+}
+
+[data-theme='dark'] .docsWrapper_node_modules-\@docusaurus-theme-classic-lib-theme-DocRoot-Layout-styles-module {
+  background-color: #000000 !important;
+}
+
 /* Light theme homepage overrides */
 [data-theme='light'] .main-wrapper {
   background-color: #ffffff !important;
@@ -561,6 +587,14 @@ code {
 .docPage {
   max-width: 1920px;
   margin: 0 auto;
+  background-color: var(--ifm-background-color);
+}
+
+/* Ensure consistent background for all layout containers */
+.main-wrapper,
+.docRoot_node_modules-\@docusaurus-theme-classic-lib-theme-DocRoot-Layout-styles-module,
+.docsWrapper_node_modules-\@docusaurus-theme-classic-lib-theme-DocRoot-Layout-styles-module {
+  background-color: var(--ifm-background-color) !important;
 }
 
 /* Pagination */
