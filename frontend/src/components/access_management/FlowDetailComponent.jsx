@@ -21,7 +21,9 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
   const mutedTextColor = useColorModeValue("gray.600", "gray.400");
   const bgColor = useColorModeValue("black", "black");
   const sectionTitleColor = useColorModeValue("black", "white");
-  const rowBgColor = useColorModeValue("gray.50", "#1e1e1e");
+  // const rowBgColor = useColorModeValue("gray.50", "#1e1e1e");
+  const rowBgColor = useColorModeValue("gray.50", "gray.950");
+
   const tagBgColor = useColorModeValue("gray.600", "gray.600");
 
   const defaultFlowData = {

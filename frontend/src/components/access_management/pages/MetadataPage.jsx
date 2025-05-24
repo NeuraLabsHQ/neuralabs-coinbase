@@ -19,7 +19,7 @@ import colors from '../../../color';
 import { agentAPI } from '../../../utils/agent-api';
 
 const MetadataPage = ({ agentData, onUpdate }) => {
-  const [markdown, setMarkdown] = useState(agentData.markdown_object.content || `# ${agentData.name || 'Agent Documentation'}
+    const [markdown, setMarkdown] = useState(agentData.markdown_object?.content || `# ${agentData.name || 'Agent Documentation'}
 
 ## Overview
 ${agentData.description || 'Add your agent description here...'}

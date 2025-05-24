@@ -33,7 +33,6 @@ import {
 import ThinkingUI from "./ThinkingUI/ThinkingUI";
 
 // Import colors
-import useUiColors from "../../utils/uiColors";
 import colors from "../../color";
 import { useColorModeValue } from "@chakra-ui/react";
 // Sample AI models/agents
@@ -56,7 +55,6 @@ const AI_MODELS = [
 
 const Message = ({ message }) => {
   const isUser = message.role === "user";
-//   const colors = useUiColors();
 
   const userMessageBg = useColorModeValue(colors.chat.userMessageBg.light, colors.chat.userMessageBg.dark);
   const assistantMessageBg = useColorModeValue(colors.chat.assistantMessageBg.light, colors.chat.assistantMessageBg.dark);
@@ -135,8 +133,7 @@ const ChatInterface = ({
   const [lastQueryText, setLastQueryText] = useState(""); // State to store the last query
 
 
-  // Get color variables
-//   const colors = useUiColors();
+
 
   const bgPrimary = useColorModeValue(colors.chat.bgPrimary.light, colors.chat.bgPrimary.dark);
   const bgSecondary = useColorModeValue(colors.chat.bgSecondary.light, colors.chat.bgSecondary.dark);
