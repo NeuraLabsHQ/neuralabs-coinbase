@@ -330,7 +330,7 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
         borderColor={borderColor} 
         bg={bgColor}
       >
-        <Button 
+        {/* <Button 
           leftIcon={<FiPlus />} 
           colorScheme="blue" 
           size="sm" 
@@ -339,7 +339,7 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
           bgColor={colors.gray[900]}
         >
           Create new project
-        </Button>
+        </Button> */}
       </Box>
     </Box>
   );

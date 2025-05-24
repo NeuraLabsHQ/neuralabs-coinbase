@@ -19,11 +19,12 @@ import { exportFlowAsPNG } from '../../utils/flowExport';
 import {exportFlowAsJSON} from '../../utils/flowExportJson';
 import {importFlowFromJSON} from '../../utils/flowImportJson';
 import { flowBuilderAPI } from '../../utils/flow-builder-api';
+import { agentAPI } from '../../utils/agent-api';
 
 
 import ICON_MAP from './Common/IconMap'
 
-const FlowBuilder = () => {
+const FlowBuilder = ({ agentId, agentData }) => {
   const { colorMode } = useColorMode();
   const toast = useToast();
   const [nodes, setNodes] = useState([]);
@@ -102,6 +103,65 @@ const FlowBuilder = () => {
     
     fetchNodeData();
   }, [toast]);
+
+  // Load workflow data when agentData is available
+  useEffect(() => {
+    if (agentData && agentData.workflow) {
+      try {
+        const workflow = agentData.workflow;
+        console.log('Loading workflow from agent data:', workflow);
+        
+        // Load nodes
+        if (workflow.nodes && Array.isArray(workflow.nodes)) {
+          const loadedNodes = workflow.nodes.map(node => ({
+            id: node.id,
+            type: node.type,
+            name: node.name || node.data?.label || node.type,
+            x: node.x || Math.random() * 500,
+            y: node.y || Math.random() * 300,
+            inputs: node.inputs || [],
+            outputs: node.outputs || [],
+            hyperparameters: node.hyperparameters || [],
+            description: node.description || '',
+            processing_message: node.processing_message || '',
+            layer: node.layer || 0,
+            tags: Array.isArray(node.tags) ? node.tags : [],
+            code: node.code || '',
+            metadata: node.metadata || {},
+            templateId: node.templateId || null
+          }));
+          setNodes(loadedNodes);
+        }
+        
+        // Load edges
+        if (workflow.edges && Array.isArray(workflow.edges)) {
+          const loadedEdges = workflow.edges.map(edge => ({
+            id: edge.id,
+            source: edge.source,
+            target: edge.target,
+            sourceName: edge.sourceName || '',
+            targetName: edge.targetName || '',
+            mappings: edge.mappings || [],
+            sourcePort: edge.sourcePort || 0,
+            targetPort: edge.targetPort || 0
+          }));
+          setEdges(loadedEdges);
+        }
+        
+        // Center the flow after loading
+        setTimeout(centerFlow, 100);
+      } catch (error) {
+        console.error('Error loading workflow:', error);
+        toast({
+          title: "Error loading workflow",
+          description: "Failed to load the workflow data. Starting with empty canvas.",
+          status: "warning",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+    }
+  }, [agentData]);
   
 
   // Handle adding nodes
@@ -847,6 +907,72 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
       });
   }
 
+  const handleSaveWorkflow = async () => {
+    if (!agentId) {
+      toast({
+        title: "No Agent Selected",
+        description: "Please select an agent to save the workflow.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      // Prepare workflow data in the same format as export
+      const workflowData = {
+        nodes: nodes.map(node => ({
+          id: node.id,
+          type: node.type,
+          name: node.name,
+          x: node.x,
+          y: node.y,
+          inputs: node.inputs || [],
+          outputs: node.outputs || [],
+          hyperparameters: node.hyperparameters || [],
+          description: node.description || '',
+          processing_message: node.processing_message || '',
+          layer: node.layer || 0,
+          tags: Array.isArray(node.tags) ? node.tags : [],
+          code: node.code || '',
+          metadata: node.metadata || {},
+          templateId: node.templateId || null
+        })),
+        edges: edges.map(edge => ({
+          id: edge.id,
+          source: edge.source,
+          target: edge.target,
+          sourceName: edge.sourceName || '',
+          targetName: edge.targetName || '',
+          mappings: edge.mappings || [],
+          sourcePort: edge.sourcePort || 0,
+          targetPort: edge.targetPort || 0
+        }))
+      };
+
+      // Save workflow using the API
+      await agentAPI.saveWorkflow(agentId, workflowData, false);
+      
+      toast({
+        title: "Workflow Saved",
+        description: "Your workflow has been saved successfully.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error saving workflow:', error);
+      toast({
+        title: "Save Failed",
+        description: error.message || "Failed to save workflow. Please try again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
   const importImportFlow = useCallback(() => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -889,6 +1015,7 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
           onNodeClick={handleLayerNodeClick}
           nodeTypes={nodeTypes} // Pass the nodeTypes as a prop
           nodeCategories={nodeCategories} // Pass the new categories prop
+          agentData={agentData}
         />
       )}
 
@@ -914,6 +1041,7 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
         onExportFlow={exportFlow}
         onExportFlowJSON={exportFlowJSON}
         onImportFlow={importImportFlow}
+        onSaveWorkflow={handleSaveWorkflow}
         toggleSidebar={toggleSidebar}
         sidebarOpen={sidebarOpen}
       />

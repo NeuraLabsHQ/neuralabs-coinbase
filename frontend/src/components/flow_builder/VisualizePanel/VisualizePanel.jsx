@@ -17,6 +17,7 @@ import {
   FiZoomOut,
   FiDownload,
   FiUpload,
+  FiSave,
 } from "react-icons/fi";
 import { FaAngleDoubleLeft, FaAngleDoubleRight } from "react-icons/fa";
 import ExportModal from "./ExportModal"; // Import the new modal
@@ -35,6 +36,7 @@ const VisualizePanel = ({
   onExportFlow,
   onExportFlowJSON,
   onImportFlow,
+  onSaveWorkflow,
   toggleSidebar,
   sidebarOpen,
 }) => {
@@ -135,6 +137,24 @@ const VisualizePanel = ({
                 aria-label={hideTextLabels ? "Show Labels" : "Hide Labels"}
               >
                 <FiType size={24} />
+              </Button>
+            </Tooltip>
+          </Box>
+
+          {/* Save Workflow Button */}
+          <Box w="100%">
+            <Tooltip
+              label="Save Workflow"
+              placement="right"
+              bg={useColorModeValue("gray.900", "gray.900")}
+              hasArrow
+            >
+              <Button
+                {...getButtonStyle()}
+                onClick={onSaveWorkflow}
+                aria-label="Save Workflow"
+              >
+                <FiSave size={24} />
               </Button>
             </Tooltip>
           </Box>

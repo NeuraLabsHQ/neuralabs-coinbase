@@ -28,6 +28,16 @@ import {
   Badge,
   useColorModeValue,
   Center,
+  Tooltip,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
+  VStack,
+  HStack,
 } from '@chakra-ui/react';
 
 import { 
@@ -58,7 +68,8 @@ import {
   FiLayout,
   FiCode,
   FiChevronRight,
-  FiChevronDown
+  FiChevronDown,
+  FiInfo
 } from 'react-icons/fi';
 
   
@@ -72,10 +83,12 @@ const BlocksPanel = ({
   beautifyMode = false,
   onNodeClick,
   nodeTypes = {},
-  nodeCategories = []
+  nodeCategories = [],
+  agentData
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedCategories, setExpandedCategories] = useState({});
+  const { isOpen: isInfoOpen, onOpen: onInfoOpen, onClose: onInfoClose } = useDisclosure();
   
   // Initialize all categories as expanded
   useEffect(() => {
@@ -231,7 +244,22 @@ const BlocksPanel = ({
       overflow="hidden"
     >
       <Box p={4} borderColor={borderColor}>
-        <Heading as="h1" size="md" color={headingColor}>Flow Designer</Heading>
+        <HStack justify="space-between" align="center">
+          <Heading as="h1" size="md" color={headingColor}>
+            {agentData?.name || 'Flow Designer'}
+          </Heading>
+          {agentData && (
+            <Tooltip label="Agent Info" placement="right">
+              <IconButton
+                icon={<FiInfo />}
+                size="sm"
+                variant="ghost"
+                onClick={onInfoOpen}
+                aria-label="Agent Info"
+              />
+            </Tooltip>
+          )}
+        </HStack>
       </Box>
 
       <Tabs isFitted flex="1" minH="0" display="flex" flexDirection="column">
@@ -577,6 +605,47 @@ const BlocksPanel = ({
           </TabPanel>
         </TabPanels>
       </Tabs>
+
+      {/* Agent Info Modal */}
+      <Modal isOpen={isInfoOpen} onClose={onInfoClose} size="md">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>{agentData?.name || 'Agent'} Information</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            <VStack align="stretch" spacing={4}>
+              <Box>
+                <Text fontWeight="bold" mb={1}>Name</Text>
+                <Text>{agentData?.name || 'N/A'}</Text>
+              </Box>
+              <Box>
+                <Text fontWeight="bold" mb={1}>Description</Text>
+                <Text>{agentData?.description || 'No description available'}</Text>
+              </Box>
+              <Box>
+                <Text fontWeight="bold" mb={1}>Owner</Text>
+                <Text>{agentData?.owner || 'Unknown'}</Text>
+              </Box>
+              <Box>
+                <Text fontWeight="bold" mb={1}>Created On</Text>
+                <Text>
+                  {agentData?.creation_date 
+                    ? new Date(agentData.creation_date).toLocaleDateString()
+                    : 'N/A'}
+                </Text>
+              </Box>
+              <Box>
+                <Text fontWeight="bold" mb={1}>Last Modified</Text>
+                <Text>
+                  {agentData?.last_edited_time
+                    ? new Date(agentData.last_edited_time).toLocaleDateString()
+                    : 'N/A'}
+                </Text>
+              </Box>
+            </VStack>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };

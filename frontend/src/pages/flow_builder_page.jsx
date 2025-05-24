@@ -1,6 +1,8 @@
-import React from 'react';
-import { Box } from '@chakra-ui/react';
+import React, { useState, useEffect } from 'react';
+import { Box, useToast } from '@chakra-ui/react';
+import { useParams } from 'react-router-dom';
 import FlowBuilder from '../components/flow_builder/flow_builder';
+import { agentAPI } from '../utils/agent-api';
 
 /**
  * Flow Builder Page
@@ -15,6 +17,36 @@ const FlowBuilderPage = ({
   toggleSidebar,
   toggleMarketplacePanel 
 }) => {
+  const { agentId } = useParams();
+  const [agentData, setAgentData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const toast = useToast();
+
+  useEffect(() => {
+    const fetchAgentData = async () => {
+      if (agentId) {
+        setIsLoading(true);
+        try {
+          const data = await agentAPI.getAgent(agentId);
+          setAgentData(data);
+        } catch (error) {
+          console.error('Error fetching agent data:', error);
+          toast({
+            title: 'Error loading agent',
+            description: 'Failed to load agent data. Please try again.',
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchAgentData();
+  }, [agentId, toast]);
+
   return (
     <Box w="100%" h="100%" overflow="hidden">
       <FlowBuilder 
@@ -22,6 +54,8 @@ const FlowBuilderPage = ({
         marketplacePanelOpen={marketplacePanelOpen}
         toggleSidebar={toggleSidebar}
         toggleMarketplacePanel={toggleMarketplacePanel}
+        agentId={agentId}
+        agentData={agentData}
       />
     </Box>
   );

@@ -48,7 +48,7 @@ class AgentAPI {
     try {
       const token = this.getAuthToken();
       
-      const response = await fetch(`${this.baseURL}/api/get-data/agent/${agentId}`, {
+      const response = await fetch(`${this.baseURL}/api/dashboard/flows/${agentId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -62,6 +62,11 @@ class AgentAPI {
       }
 
       const result = await response.json();
+      // The backend returns an array with a single RealDictRow object
+      // Extract the first element if it's an array
+      if (Array.isArray(result) && result.length > 0) {
+        return result[0];
+      }
       return result;
     } catch (error) {
       console.error('Error fetching agent:', error);
@@ -144,6 +149,36 @@ class AgentAPI {
       return result;
     } catch (error) {
       console.error('Error fetching all agents:', error);
+      throw error;
+    }
+  }
+
+  // Save workflow for an agent
+  async saveWorkflow(agentId, workflowData, isPublished = false) {
+    try {
+      const token = this.getAuthToken();
+      
+      const response = await fetch(`${this.baseURL}/api/set-data/agent/${agentId}/workflow`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          workflow: workflowData,
+          is_published: isPublished
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Error saving workflow:', error);
       throw error;
     }
   }

@@ -531,7 +531,7 @@ const DetailsPanel = ({
                     isDisabled={viewOnlyMode}
                   />
                   <Flex wrap="wrap" gap={2}>
-                    {(nodeData.tags || []).map((tag, index) => (
+                    {(Array.isArray(nodeData.tags) ? nodeData.tags : []).map((tag, index) => (
                       <Tag key={index} size="sm" borderRadius="md" variant="subtle" colorScheme="gray">
                         <TagLabel>{tag}</TagLabel>
                         {!viewOnlyMode && (
@@ -703,7 +703,7 @@ const DetailsPanel = ({
                     <Tag size="sm" borderRadius="md" variant="subtle" colorScheme={getNodeTypeColor(nodeData.type)}>
                       {nodeData.type}
                     </Tag>
-                    {nodeData.tags && nodeData.tags.map((tag, index) => (
+                    {nodeData.tags && Array.isArray(nodeData.tags) && nodeData.tags.map((tag, index) => (
                       <Tag key={index} size="sm" borderRadius="md" variant="subtle" colorScheme="gray">
                         {tag}
                       </Tag>

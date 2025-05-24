@@ -240,6 +240,7 @@ const AccessHomePage = ({ onSelectFlow }) => {
   const buttonBgColor = useColorModeValue("gray.100", "gray.800");
   const activeBgColor = useColorModeValue("blue.50", "gray.700");
   const listhoverBgColor =  useColorModeValue('#fdfdfd', '#1e1f21');
+  const searchbarcolor = useColorModeValue("white", "#1f1f1f");
 
 
 
@@ -429,7 +430,7 @@ const AccessHomePage = ({ onSelectFlow }) => {
           </InputLeftElement>
           <Input
             placeholder="Search Projects and Templates"
-            bg="#1f1f1f"
+            bg={searchbarcolor}
             color={textColor}
             borderColor="gray.700"
             value={searchQuery}
