@@ -35,7 +35,10 @@ const SettingsPage = ({ agentData, onUpdate }) => {
       twitter: agentData.socials?.twitter || '',
       github: agentData.socials?.github || '',
       linkedin: agentData.socials?.linkedin || '',
-      website: agentData.socials?.website || ''
+      website: agentData.socials?.website || '',
+      website: agentData.socials?.discord || '',
+      website: agentData.socials?.telegram || ''
+
     }
   });
   const [newTag, setNewTag] = useState('');

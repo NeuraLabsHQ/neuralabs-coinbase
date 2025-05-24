@@ -15,6 +15,8 @@ const SummaryPage = ({ agentData }) => {
     if (socials.github) parts.push(`GitHub: ${socials.github}`);
     if (socials.linkedin) parts.push(`LinkedIn: ${socials.linkedin}`);
     if (socials.website) parts.push(`Website: ${socials.website}`);
+    if (socials.discord) parts.push(`Discord: ${socials.discord}`);
+    if (socials.telegram) parts.push(`Telegram: ${socials.telegram}`);
     return parts.length > 0 ? parts.join(' | ') : 'Not specified';
   };
   

@@ -160,7 +160,13 @@ ${agentData.license || 'MIT'} License
                 fontFamily="monospace"
                 flex="1"
                 resize="none"
-                minH="100%"
+                sx={{
+                  '&::-webkit-scrollbar': {
+                    display: 'none',
+                  },
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none',
+                }}
               />
             </Box>
           )}
@@ -176,6 +182,13 @@ ${agentData.license || 'MIT'} License
               borderColor={borderColor}
               p={4}
               overflow="auto"
+              sx={{
+                '&::-webkit-scrollbar': {
+                  display: 'none',
+                },
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+              }}
             >
               <Text fontWeight="bold" mb={2} color={textColor}>Preview</Text>
               <Box className="markdown-preview">
