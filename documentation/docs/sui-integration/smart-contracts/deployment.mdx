@@ -10,7 +10,7 @@ import { CollapsibleCodeBlock, InlineCodeCard } from '@site/src/components/CodeB
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# <img src="/img/icons/terminal.svg" width="32" height="32" style={{ verticalAlign: 'middle', marginRight: '12px' }} />Smart Contracts Deployment
+# Smart Contracts Deployment
 
 Complete deployment guide for NeuraLabs SUI Move contracts on testnet with comprehensive environment setup, contract compilation, deployment, and initialization procedures.
 
@@ -22,8 +22,7 @@ Complete deployment guide for NeuraLabs SUI Move contracts on testnet with compr
   <Card>
     <CardHeader>
       <CardTitle>
-        <img src="/img/icons/terminal.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-        Linux/Ubuntu
+        <span style={{ display: 'flex', alignItems: 'center' }}><img src="/img/icons/terminal.svg" width="20" height="20" style={{ marginRight: '8px' }} />Linux/Ubuntu</span>
       </CardTitle>
       <CardDescription>
         Recommended for development with native performance
@@ -34,8 +33,7 @@ Complete deployment guide for NeuraLabs SUI Move contracts on testnet with compr
   <Card>
     <CardHeader>
       <CardTitle>
-        <img src="/img/icons/terminal.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-        macOS
+        <span style={{ display: 'flex', alignItems: 'center' }}><img src="/img/icons/terminal.svg" width="20" height="20" style={{ marginRight: '8px' }} />macOS</span>
       </CardTitle>
       <CardDescription>
         Full support with Homebrew package management
@@ -46,8 +44,7 @@ Complete deployment guide for NeuraLabs SUI Move contracts on testnet with compr
   <Card>
     <CardHeader>
       <CardTitle>
-        <img src="/img/icons/terminal.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-        Windows WSL2
+        <span style={{ display: 'flex', alignItems: 'center' }}><img src="/img/icons/terminal.svg" width="20" height="20" style={{ marginRight: '8px' }} />Windows WSL2</span>
       </CardTitle>
       <CardDescription>
         Use Windows Subsystem for Linux for optimal compatibility
@@ -257,7 +254,7 @@ echo "✨ SUI CLI installation completed!"
 </Tabs>
 
 <div className="card padding--md mt-4" style={{ borderLeft: '4px solid #ff9800' }}>
-  <h3><img src="/img/icons/warning.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />Important Security Note</h3>
+  <h3><span style={{ display: 'flex', alignItems: 'center' }}><img src="/img/icons/warning.svg" width="20" height="20" style={{ marginRight: '8px' }} />Important Security Note</span></h3>
   <p>
     <strong>Save your recovery phrase securely!</strong> This 12-word phrase is the only way to recover your wallet. 
     Store it in a secure location and never share it with anyone. For testnet, you can use a simple phrase, 
@@ -969,8 +966,7 @@ class Config:
   <Card>
     <CardHeader>
       <CardTitle>
-        <img src="/img/icons/error.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-        Insufficient Gas
+        <span style={{ display: 'flex', alignItems: 'center' }}><img src="/img/icons/error.svg" width="20" height="20" style={{ marginRight: '8px' }} />Insufficient Gas</span>
       </CardTitle>
       <CardDescription>
         <strong>Error:</strong> Transaction failed due to insufficient gas
@@ -983,8 +979,7 @@ class Config:
   <Card>
     <CardHeader>
       <CardTitle>
-        <img src="/img/icons/error.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-        Build Failures
+        <span style={{ display: 'flex', alignItems: 'center' }}><img src="/img/icons/error.svg" width="20" height="20" style={{ marginRight: '8px' }} />Build Failures</span>
       </CardTitle>
       <CardDescription>
         <strong>Error:</strong> Move compilation errors
@@ -997,8 +992,7 @@ class Config:
   <Card>
     <CardHeader>
       <CardTitle>
-        <img src="/img/icons/warning.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-        Network Issues
+        <span style={{ display: 'flex', alignItems: 'center' }}><img src="/img/icons/warning.svg" width="20" height="20" style={{ marginRight: '8px' }} />Network Issues</span>
       </CardTitle>
       <CardDescription>
         <strong>Error:</strong> Connection to testnet failed
@@ -1011,8 +1005,7 @@ class Config:
   <Card>
     <CardHeader>
       <CardTitle>
-        <img src="/img/icons/info.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-        Address Conflicts
+        <span style={{ display: 'flex', alignItems: 'center' }}><img src="/img/icons/info.svg" width="20" height="20" style={{ marginRight: '8px' }} />Address Conflicts</span>
       </CardTitle>
       <CardDescription>
         <strong>Error:</strong> Package address mismatch
@@ -1147,7 +1140,7 @@ After successful deployment, proceed with:
 5. **[Monitoring Setup](./monitoring)** - Implement health monitoring and alerts
 
 <div className="card padding--md mt-4" style={{ borderLeft: '4px solid #4caf50' }}>
-  <h3><img src="/img/icons/success.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />Deployment Complete!</h3>
+  <h3><span style={{ display: 'flex', alignItems: 'center' }}><img src="/img/icons/success.svg" width="20" height="20" style={{ marginRight: '8px' }} />Deployment Complete!</span></h3>
   <p>
     Your NeuraLabs smart contracts are now deployed and ready for integration. 
     The deployed package ID is: <code>0x926de4be791b165822a8a213540c0606bb0d52450e5f8b6531097d9cd2c4dc64</code>

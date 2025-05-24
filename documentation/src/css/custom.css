@@ -691,6 +691,55 @@ img {
   margin-top: 1.5rem;
 }
 
+/* Text justification for content */
+.markdown p {
+  text-align: justify;
+}
+
+.markdown li {
+  text-align: justify;
+}
+
+/* Center align images */
+.markdown img {
+  display: block;
+  margin: 0 auto;
+}
+
+/* Exception for inline icons - don't center them */
+.markdown span img,
+.markdown h1 img,
+.markdown h2 img,
+.markdown h3 img,
+.markdown h4 img,
+.markdown h5 img,
+.markdown h6 img {
+  display: inline;
+  margin: 0;
+}
+
+/* Code block improvements */
+.collapsible-code-block {
+  margin: 1rem 0;
+}
+
+.code-block-header {
+  transition: background-color 0.2s ease;
+}
+
+.code-block-header:hover {
+  background: var(--ifm-color-emphasis-300) !important;
+}
+
+/* Card improvements */
+.card {
+  text-align: left;
+}
+
+.card p {
+  text-align: justify;
+}
+
 /* Badge styles */
 .badge {
   display: inline-block;

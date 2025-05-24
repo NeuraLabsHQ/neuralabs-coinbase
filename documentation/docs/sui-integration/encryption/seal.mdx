@@ -722,6 +722,794 @@ npm run test:seal-performance
   </ul>
 </div>
 
+## Concrete Implementation Patterns
+
+### 1. Allowlist Pattern
+
+The allowlist pattern provides simple access control where a list of addresses can access encrypted data.
+
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <span style={{ display: 'flex', alignItems: 'center' }}>
+          <img src="/img/icons/security.svg" width="20" height="20" style={{ marginRight: '8px' }} />
+          Allowlist Smart Contract
+        </span>
+      </CardTitle>
+      <CardDescription>
+        Core allowlist contract implementation with admin capabilities
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <span style={{ display: 'flex', alignItems: 'center' }}>
+          <img src="/img/icons/frontend.svg" width="20" height="20" style={{ marginRight: '8px' }} />
+          React Frontend Integration
+        </span>
+      </CardTitle>
+      <CardDescription>
+        TypeScript components for allowlist management and access control
+      </CardDescription>
+    </CardHeader>
+  </Card>
+</div>
+
+```move
+// allowlist.move - Core allowlist contract
+module walrus::allowlist {
+    use std::string::String;
+    use sui::dynamic_field as df;
+    use walrus::utils::is_prefix;
+
+    const EInvalidCap: u64 = 0;
+    const ENoAccess: u64 = 1;
+    const EDuplicate: u64 = 2;
+    const MARKER: u64 = 3;
+
+    /// Main allowlist structure
+    public struct Allowlist has key {
+        id: UID,
+        name: String,
+        list: vector<address>,
+    }
+
+    /// Admin capability for managing the allowlist
+    public struct Cap has key {
+        id: UID,
+        allowlist_id: ID,
+    }
+
+    /// Create an allowlist with admin capability
+    public fun create_allowlist(name: String, ctx: &mut TxContext): Cap {
+        let allowlist = Allowlist {
+            id: object::new(ctx),
+            list: vector::empty(),
+            name: name,
+        };
+        let cap = Cap {
+            id: object::new(ctx),
+            allowlist_id: object::id(&allowlist),
+        };
+        transfer::share_object(allowlist);
+        cap
+    }
+
+    /// Add address to allowlist (admin only)
+    public fun add(allowlist: &mut Allowlist, cap: &Cap, account: address) {
+        assert!(cap.allowlist_id == object::id(allowlist), EInvalidCap);
+        assert!(!allowlist.list.contains(&account), EDuplicate);
+        allowlist.list.push_back(account);
+    }
+
+    /// Remove address from allowlist (admin only)
+    public fun remove(allowlist: &mut Allowlist, cap: &Cap, account: address) {
+        assert!(cap.allowlist_id == object::id(allowlist), EInvalidCap);
+        allowlist.list = allowlist.list.filter!(|x| x != account);
+    }
+
+    /// Seal approval function - validates access
+    entry fun seal_approve(id: vector<u8>, allowlist: &Allowlist, ctx: &TxContext) {
+        let caller = ctx.sender();
+        let namespace = allowlist.id.to_bytes();
+        
+        // Check if the id has the right prefix
+        assert!(is_prefix(namespace, id), ENoAccess);
+        
+        // Check if user is in the allowlist
+        assert!(allowlist.list.contains(&caller), ENoAccess);
+    }
+
+    /// Publish encrypted blob to allowlist
+    public fun publish(allowlist: &mut Allowlist, cap: &Cap, blob_id: String) {
+        assert!(cap.allowlist_id == object::id(allowlist), EInvalidCap);
+        df::add(&mut allowlist.id, blob_id, MARKER);
+    }
+}
+```
+
+```typescript
+// AllowlistManager.tsx - React component for managing allowlists
+import React, { useState, useEffect } from 'react';
+import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit';
+import { Transaction } from '@mysten/sui/transactions';
+import { isValidSuiAddress } from '@mysten/sui/utils';
+
+interface Allowlist {
+  id: string;
+  name: string;
+  list: string[];
+}
+
+interface AllowlistManagerProps {
+  packageId: string;
+  allowlistId: string;
+}
+
+export function AllowlistManager({ packageId, allowlistId }: AllowlistManagerProps) {
+  const suiClient = useSuiClient();
+  const currentAccount = useCurrentAccount();
+  const [allowlist, setAllowlist] = useState<Allowlist>();
+  const [capId, setCapId] = useState<string>();
+  const [newAddress, setNewAddress] = useState('');
+  
+  const { mutate: signAndExecute } = useSignAndExecuteTransaction();
+
+  useEffect(() => {
+    loadAllowlist();
+    const interval = setInterval(loadAllowlist, 3000);
+    return () => clearInterval(interval);
+  }, [allowlistId, currentAccount?.address]);
+
+  async function loadAllowlist() {
+    if (!currentAccount?.address) return;
+
+    try {
+      // Load admin capabilities
+      const caps = await suiClient.getOwnedObjects({
+        owner: currentAccount.address,
+        filter: { StructType: `${packageId}::allowlist::Cap` },
+        options: { showContent: true }
+      });
+
+      const relevantCap = caps.data.find(obj => {
+        const fields = (obj.data?.content as any)?.fields;
+        return fields?.allowlist_id === allowlistId;
+      });
+
+      if (relevantCap) {
+        setCapId((relevantCap.data?.content as any)?.fields?.id?.id);
+      }
+
+      // Load allowlist data
+      const allowlistObj = await suiClient.getObject({
+        id: allowlistId,
+        options: { showContent: true }
+      });
+
+      const fields = (allowlistObj.data?.content as any)?.fields;
+      if (fields) {
+        setAllowlist({
+          id: allowlistId,
+          name: fields.name,
+          list: fields.list || []
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load allowlist:', error);
+    }
+  }
+
+  const addToAllowlist = async () => {
+    if (!newAddress.trim() || !capId || !isValidSuiAddress(newAddress.trim())) {
+      alert('Invalid address');
+      return;
+    }
+
+    const tx = new Transaction();
+    tx.moveCall({
+      target: `${packageId}::allowlist::add`,
+      arguments: [
+        tx.object(allowlistId),
+        tx.object(capId),
+        tx.pure.address(newAddress.trim())
+      ]
+    });
+    tx.setGasBudget(10000000);
+
+    signAndExecute({
+      transaction: tx
+    }, {
+      onSuccess: () => {
+        setNewAddress('');
+        loadAllowlist();
+      }
+    });
+  };
+
+  const removeFromAllowlist = async (address: string) => {
+    if (!capId) return;
+
+    const tx = new Transaction();
+    tx.moveCall({
+      target: `${packageId}::allowlist::remove`,
+      arguments: [
+        tx.object(allowlistId),
+        tx.object(capId),
+        tx.pure.address(address)
+      ]
+    });
+    tx.setGasBudget(10000000);
+
+    signAndExecute({
+      transaction: tx
+    }, {
+      onSuccess: () => loadAllowlist()
+    });
+  };
+
+  return (
+    <div className="allowlist-manager">
+      <h2>Allowlist: {allowlist?.name}</h2>
+      
+      {capId && (
+        <div className="admin-section">
+          <h3>Add New Member</h3>
+          <div className="add-member">
+            <input
+              type="text"
+              placeholder="Enter SUI address"
+              value={newAddress}
+              onChange={(e) => setNewAddress(e.target.value)}
+            />
+            <button onClick={addToAllowlist}>Add</button>
+          </div>
+        </div>
+      )}
+
+      <div className="members-list">
+        <h3>Current Members ({allowlist?.list?.length || 0})</h3>
+        {allowlist?.list?.map((address, index) => (
+          <div key={index} className="member-item">
+            <span>{address}</span>
+            {capId && (
+              <button onClick={() => removeFromAllowlist(address)}>
+                Remove
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+### 2. Subscription Pattern
+
+The subscription pattern enables time-limited access with payment requirements.
+
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <span style={{ display: 'flex', alignItems: 'center' }}>
+          <img src="/img/icons/blockchain.svg" width="20" height="20" style={{ marginRight: '8px' }} />
+          Subscription Service Contract
+        </span>
+      </CardTitle>
+      <CardDescription>
+        Time-based subscription service with SUI payment integration
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <span style={{ display: 'flex', alignItems: 'center' }}>
+          <img src="/img/icons/hpc.svg" width="20" height="20" style={{ marginRight: '8px' }} />
+          Subscription Management UI
+        </span>
+      </CardTitle>
+      <CardDescription>
+        Frontend components for subscription creation and payment processing
+      </CardDescription>
+    </CardHeader>
+  </Card>
+</div>
+
+```move
+// subscription.move - Time-limited subscription service
+module walrus::subscription {
+    use std::string::String;
+    use sui::{clock::Clock, coin::Coin, dynamic_field as df, sui::SUI};
+    use walrus::utils::is_prefix;
+
+    const EInvalidCap: u64 = 0;
+    const EInvalidFee: u64 = 1;
+    const ENoAccess: u64 = 2;
+    const MARKER: u64 = 3;
+
+    /// Subscription service definition
+    public struct Service has key {
+        id: UID,
+        fee: u64,           // Cost in MIST
+        ttl: u64,           // Time-to-live in milliseconds
+        owner: address,     // Service owner (receives payments)
+        name: String,
+    }
+
+    /// Individual subscription instance
+    public struct Subscription has key {
+        id: UID,
+        service_id: ID,
+        created_at: u64,    // Timestamp when subscription was created
+    }
+
+    /// Admin capability for service management
+    public struct Cap has key {
+        id: UID,
+        service_id: ID,
+    }
+
+    /// Create a new subscription service
+    public fun create_service(fee: u64, ttl: u64, name: String, ctx: &mut TxContext): Cap {
+        let service = Service {
+            id: object::new(ctx),
+            fee,
+            ttl,
+            owner: ctx.sender(),
+            name,
+        };
+        let cap = Cap {
+            id: object::new(ctx),
+            service_id: object::id(&service),
+        };
+        transfer::share_object(service);
+        cap
+    }
+
+    /// Subscribe to a service (requires payment)
+    public fun subscribe(
+        fee: Coin<SUI>,
+        service: &Service,
+        c: &Clock,
+        ctx: &mut TxContext,
+    ): Subscription {
+        assert!(fee.value() == service.fee, EInvalidFee);
+        transfer::public_transfer(fee, service.owner);
+        
+        Subscription {
+            id: object::new(ctx),
+            service_id: object::id(service),
+            created_at: c.timestamp_ms(),
+        }
+    }
+
+    /// Seal approval function - validates subscription and time limits
+    entry fun seal_approve(
+        id: vector<u8>, 
+        sub: &Subscription, 
+        service: &Service, 
+        c: &Clock
+    ) {
+        // Verify subscription belongs to service
+        assert!(object::id(service) == sub.service_id, ENoAccess);
+        
+        // Check if subscription hasn't expired
+        assert!(c.timestamp_ms() <= sub.created_at + service.ttl, ENoAccess);
+        
+        // Check if the id has the right prefix
+        assert!(is_prefix(service.id.to_bytes(), id), ENoAccess);
+    }
+
+    /// Publish encrypted content to service (admin only)
+    public fun publish(service: &mut Service, cap: &Cap, blob_id: String) {
+        assert!(cap.service_id == object::id(service), EInvalidCap);
+        df::add(&mut service.id, blob_id, MARKER);
+    }
+
+    /// Transfer subscription to another user
+    public fun transfer(sub: Subscription, to: address) {
+        transfer::transfer(sub, to);
+    }
+}
+```
+
+```typescript
+// SubscriptionManager.tsx - React component for subscription services
+import React, { useState, useEffect } from 'react';
+import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit';
+import { Transaction } from '@mysten/sui/transactions';
+import { SUI_CLOCK_OBJECT_ID } from '@mysten/sui/utils';
+
+interface Service {
+  id: string;
+  fee: number;
+  ttl: number;
+  owner: string;
+  name: string;
+}
+
+interface Subscription {
+  id: string;
+  service_id: string;
+  created_at: number;
+  expires_at: number;
+  is_active: boolean;
+}
+
+interface SubscriptionManagerProps {
+  packageId: string;
+  serviceId: string;
+}
+
+export function SubscriptionManager({ packageId, serviceId }: SubscriptionManagerProps) {
+  const suiClient = useSuiClient();
+  const currentAccount = useCurrentAccount();
+  const [service, setService] = useState<Service>();
+  const [userSubscriptions, setUserSubscriptions] = useState<Subscription[]>([]);
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  
+  const { mutate: signAndExecute } = useSignAndExecuteTransaction();
+
+  useEffect(() => {
+    loadServiceData();
+    loadUserSubscriptions();
+    const interval = setInterval(() => {
+      loadServiceData();
+      loadUserSubscriptions();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [serviceId, currentAccount?.address]);
+
+  async function loadServiceData() {
+    try {
+      const serviceObj = await suiClient.getObject({
+        id: serviceId,
+        options: { showContent: true }
+      });
+
+      const fields = (serviceObj.data?.content as any)?.fields;
+      if (fields) {
+        setService({
+          id: serviceId,
+          fee: parseInt(fields.fee),
+          ttl: parseInt(fields.ttl),
+          owner: fields.owner,
+          name: fields.name
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load service:', error);
+    }
+  }
+
+  async function loadUserSubscriptions() {
+    if (!currentAccount?.address) return;
+
+    try {
+      const subs = await suiClient.getOwnedObjects({
+        owner: currentAccount.address,
+        filter: { StructType: `${packageId}::subscription::Subscription` },
+        options: { showContent: true }
+      });
+
+      const currentTime = Date.now();
+      const subscriptions: Subscription[] = subs.data
+        .map(obj => {
+          const fields = (obj.data?.content as any)?.fields;
+          if (!fields || fields.service_id !== serviceId) return null;
+          
+          const createdAt = parseInt(fields.created_at);
+          const expiresAt = createdAt + (service?.ttl || 0);
+          
+          return {
+            id: fields.id.id,
+            service_id: fields.service_id,
+            created_at: createdAt,
+            expires_at: expiresAt,
+            is_active: currentTime < expiresAt
+          };
+        })
+        .filter(Boolean) as Subscription[];
+
+      setUserSubscriptions(subscriptions);
+    } catch (error) {
+      console.error('Failed to load subscriptions:', error);
+    }
+  }
+
+  const subscribeToService = async () => {
+    if (!service || !currentAccount?.address) return;
+
+    setIsSubscribing(true);
+    try {
+      const tx = new Transaction();
+      
+      // Split coin for exact payment
+      const [coin] = tx.splitCoins(tx.gas, [service.fee]);
+      
+      // Subscribe to service
+      tx.moveCall({
+        target: `${packageId}::subscription::subscribe`,
+        arguments: [
+          coin,
+          tx.object(serviceId),
+          tx.object(SUI_CLOCK_OBJECT_ID)
+        ]
+      });
+      
+      tx.setGasBudget(20000000);
+
+      signAndExecute({
+        transaction: tx
+      }, {
+        onSuccess: () => {
+          loadUserSubscriptions();
+          setIsSubscribing(false);
+        },
+        onError: () => {
+          setIsSubscribing(false);
+        }
+      });
+    } catch (error) {
+      console.error('Subscription failed:', error);
+      setIsSubscribing(false);
+    }
+  };
+
+  const formatDuration = (ms: number) => {
+    const minutes = Math.floor(ms / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) return `${days} day(s)`;
+    if (hours > 0) return `${hours} hour(s)`;
+    return `${minutes} minute(s)`;
+  };
+
+  const formatTimeRemaining = (expiresAt: number) => {
+    const remaining = expiresAt - Date.now();
+    if (remaining <= 0) return 'Expired';
+    return formatDuration(remaining);
+  };
+
+  const activeSubscription = userSubscriptions.find(sub => sub.is_active);
+
+  return (
+    <div className="subscription-manager">
+      <div className="service-info">
+        <h2>{service?.name}</h2>
+        <div className="service-details">
+          <p><strong>Duration:</strong> {service ? formatDuration(service.ttl) : 'Loading...'}</p>
+          <p><strong>Fee:</strong> {service?.fee} MIST</p>
+          <p><strong>Owner:</strong> {service?.owner}</p>
+        </div>
+      </div>
+
+      {activeSubscription ? (
+        <div className="active-subscription">
+          <h3>✅ Active Subscription</h3>
+          <p><strong>Expires in:</strong> {formatTimeRemaining(activeSubscription.expires_at)}</p>
+          <p><strong>Subscription ID:</strong> {activeSubscription.id}</p>
+          <div className="access-status">
+            🔓 You have access to encrypted content
+          </div>
+        </div>
+      ) : (
+        <div className="subscribe-section">
+          <h3>Subscribe to Access Content</h3>
+          <button 
+            onClick={subscribeToService}
+            disabled={isSubscribing || !service}
+            className="subscribe-button"
+          >
+            {isSubscribing ? 'Subscribing...' : `Subscribe (${service?.fee} MIST)`}
+          </button>
+        </div>
+      )}
+
+      {userSubscriptions.length > 0 && (
+        <div className="subscription-history">
+          <h3>Subscription History</h3>
+          {userSubscriptions.map(sub => (
+            <div key={sub.id} className={`subscription-item ${sub.is_active ? 'active' : 'expired'}`}>
+              <p><strong>ID:</strong> {sub.id.slice(0, 8)}...</p>
+              <p><strong>Created:</strong> {new Date(sub.created_at).toLocaleString()}</p>
+              <p><strong>Status:</strong> {sub.is_active ? '🟢 Active' : '🔴 Expired'}</p>
+              {sub.is_active && (
+                <p><strong>Expires:</strong> {formatTimeRemaining(sub.expires_at)}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### 3. Integration with NeuraLabs Workflows
+
+```typescript
+// SealPatternIntegration.tsx - Integrating patterns with NeuraLabs
+import React, { useState } from 'react';
+import { useSealEncryption } from '../hooks/useSealEncryption';
+import { AllowlistManager } from './AllowlistManager';
+import { SubscriptionManager } from './SubscriptionManager';
+
+interface WorkflowAccessControlProps {
+  workflowId: string;
+  accessPattern: 'allowlist' | 'subscription' | 'nft';
+  patternConfig: {
+    allowlistId?: string;
+    serviceId?: string;
+    nftId?: string;
+  };
+}
+
+export function WorkflowAccessControl({ 
+  workflowId, 
+  accessPattern, 
+  patternConfig 
+}: WorkflowAccessControlProps) {
+  const { encryptData, decryptData, createSession } = useSealEncryption();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const encryptWorkflowWithPattern = async (workflowData: any) => {
+    setIsProcessing(true);
+    try {
+      // Create session for encryption
+      const sessionResult = await createSession();
+      if (!sessionResult.success) {
+        throw new Error('Failed to create session');
+      }
+
+      // Serialize workflow data
+      const data = new TextEncoder().encode(JSON.stringify(workflowData));
+      
+      // Encrypt with appropriate pattern-based ID
+      let encryptionId: string;
+      switch (accessPattern) {
+        case 'allowlist':
+          encryptionId = `${patternConfig.allowlistId}-${workflowId}`;
+          break;
+        case 'subscription':
+          encryptionId = `${patternConfig.serviceId}-${workflowId}`;
+          break;
+        case 'nft':
+          encryptionId = `${patternConfig.nftId}-${workflowId}`;
+          break;
+        default:
+          encryptionId = workflowId;
+      }
+
+      const result = await encryptData(encryptionId, data, 1);
+      return result;
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const decryptWorkflowWithPattern = async () => {
+    setIsProcessing(true);
+    try {
+      // Fetch encrypted data from storage
+      const encryptedData = await fetchWorkflowData(workflowId);
+      
+      // Construct pattern-based ID
+      let decryptionId: string;
+      switch (accessPattern) {
+        case 'allowlist':
+          decryptionId = `${patternConfig.allowlistId}-${workflowId}`;
+          break;
+        case 'subscription':
+          decryptionId = `${patternConfig.serviceId}-${workflowId}`;
+          break;
+        case 'nft':
+          decryptionId = `${patternConfig.nftId}-${workflowId}`;
+          break;
+        default:
+          decryptionId = workflowId;
+      }
+
+      const result = await decryptData(encryptedData, decryptionId);
+      
+      if (result.success) {
+        const workflowData = JSON.parse(
+          new TextDecoder().decode(result.decryptedData!)
+        );
+        return { success: true, workflowData };
+      }
+      
+      return result;
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const renderPatternManager = () => {
+    const packageId = process.env.REACT_APP_PACKAGE_ID!;
+    
+    switch (accessPattern) {
+      case 'allowlist':
+        return (
+          <AllowlistManager 
+            packageId={packageId}
+            allowlistId={patternConfig.allowlistId!}
+          />
+        );
+      case 'subscription':
+        return (
+          <SubscriptionManager 
+            packageId={packageId}
+            serviceId={patternConfig.serviceId!}
+          />
+        );
+      case 'nft':
+        return (
+          <div className="nft-access">
+            <h3>NFT-Based Access Control</h3>
+            <p>Access controlled by NFT: {patternConfig.nftId}</p>
+            <p>Requires VIEW_DOWNLOAD level (4) or higher</p>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="workflow-access-control">
+      <div className="pattern-header">
+        <h2>Access Control Pattern: {accessPattern.toUpperCase()}</h2>
+        <div className="workflow-info">
+          <p><strong>Workflow ID:</strong> {workflowId}</p>
+          <p><strong>Pattern:</strong> {accessPattern}</p>
+        </div>
+      </div>
+
+      <div className="pattern-manager">
+        {renderPatternManager()}
+      </div>
+
+      <div className="encryption-controls">
+        <h3>Encryption Controls</h3>
+        <div className="button-group">
+          <button 
+            onClick={() => encryptWorkflowWithPattern({ /* workflow data */ })}
+            disabled={isProcessing}
+          >
+            {isProcessing ? 'Encrypting...' : 'Encrypt Workflow'}
+          </button>
+          
+          <button 
+            onClick={decryptWorkflowWithPattern}
+            disabled={isProcessing}
+          >
+            {isProcessing ? 'Decrypting...' : 'Decrypt Workflow'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Helper function to fetch workflow data
+async function fetchWorkflowData(workflowId: string): Promise<Uint8Array> {
+  // Implementation would fetch from Walrus or other storage
+  // This is a placeholder
+  const response = await fetch(`/api/workflows/${workflowId}/encrypted`);
+  const arrayBuffer = await response.arrayBuffer();
+  return new Uint8Array(arrayBuffer);
+}
+```
+
 ## Next Steps
 
 1. **Complete [Walrus Integration](./walrus)** for decentralized storage
@@ -729,6 +1517,42 @@ npm run test:seal-performance
 3. **Configure production key servers** (if needed)
 4. **Implement comprehensive monitoring**
 5. **Plan disaster recovery procedures**
+6. **Deploy and test allowlist and subscription patterns**
+
+## Testing Seal Patterns
+
+### 1. Allowlist Pattern Tests
+
+```bash
+# Test allowlist creation and management
+npm run test:seal-allowlist
+
+# Test access control validation
+npm run test:allowlist-access
+```
+
+### 2. Subscription Pattern Tests
+
+```bash
+# Test subscription service creation
+npm run test:seal-subscription
+
+# Test payment and time-based access
+npm run test:subscription-payment
+
+# Test subscription expiry
+npm run test:subscription-expiry
+```
+
+### 3. Integration Tests
+
+```bash
+# Test end-to-end encryption/decryption with patterns
+npm run test:seal-integration
+
+# Test pattern switching
+npm run test:pattern-migration
+```
 
 ## References
 
@@ -737,3 +1561,5 @@ npm run test:seal-performance
 - [Seal Examples](https://github.com/MystenLabs/seal/tree/main/examples)
 - [Using Seal Guide](https://github.com/MystenLabs/seal/blob/main/UsingSeal.md)
 - [Seal Security Best Practices](https://github.com/MystenLabs/seal/blob/main/SecurityBestPractices.md)
+- [Allowlist Pattern Source](https://github.com/MystenLabs/seal/blob/main/examples/move/sources/allowlist.move)
+- [Subscription Pattern Source](https://github.com/MystenLabs/seal/blob/main/examples/move/sources/subscription.move)

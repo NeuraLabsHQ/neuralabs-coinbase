@@ -16,7 +16,7 @@ export function CollapsibleCodeBlock({
         className="code-block-header"
         onClick={() => setIsCollapsed(!isCollapsed)}
         style={{
-          background: 'var(--ifm-color-emphasis-200)',
+          background: 'var(--ifm-color-emphasis-100)',
           padding: '12px 16px',
           borderRadius: '8px 8px 0 0',
           cursor: 'pointer',
@@ -73,7 +73,7 @@ export function InlineCodeCard({ title, description, language, code, defaultExpa
         className="code-block-header"
         onClick={() => setIsExpanded(!isExpanded)}
         style={{
-          background: 'var(--ifm-color-emphasis-200)',
+          background: 'var(--ifm-color-emphasis-100)',
           padding: '12px 16px',
           borderRadius: '8px 8px 0 0',
           cursor: 'pointer',
