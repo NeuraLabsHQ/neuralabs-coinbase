@@ -1,0 +1,523 @@
+---
+id: blockchain-architecture
+title: Blockchain Architecture
+sidebar_label: Blockchain Architecture
+sidebar_position: 3
+---
+
+import { Card, CardHeader, CardTitle, CardDescription } from '@site/src/components/Card';
+import { CollapsibleCodeBlock, InlineCodeCard } from '@site/src/components/CodeBlock';
+
+# <img src="/img/icons/blockchain.svg" width="32" height="32" style={{ verticalAlign: 'middle', marginRight: '12px' }} />Blockchain Architecture
+
+Comprehensive overview of the NeuraLabs blockchain architecture built on SUI, featuring NFT-based access control, Seal threshold encryption, and Walrus decentralized storage.
+
+## System Architecture Overview
+
+The NeuraLabs platform leverages SUI's advanced blockchain technologies to create a secure, decentralized AI workflow platform with multiple integrated components working together seamlessly.
+
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        UI[React Frontend]
+        WC[Wallet Connect]
+        ZK[zkLogin Client]
+    end
+    
+    subgraph "Authentication Layer"
+        PS[Prover Service]
+        SS[Salt Server]
+        JWT[JWT Tokens]
+    end
+    
+    subgraph "SUI Blockchain"
+        NFT[NFT Contracts]
+        AC[Access Control]
+        SA[seal_approve Functions]
+    end
+    
+    subgraph "Encryption Layer"
+        SEAL[Seal Infrastructure]
+        KS1[Key Server 1]
+        KS2[Key Server 2]
+        TE[Threshold Encryption]
+    end
+    
+    subgraph "Storage Layer"
+        WAL[Walrus Network]
+        ED[Encrypted Data]
+        META[Metadata Storage]
+    end
+    
+    UI --> WC
+    UI --> ZK
+    ZK --> PS
+    ZK --> SS
+    ZK --> JWT
+    
+    UI --> NFT
+    NFT --> AC
+    AC --> SA
+    
+    UI --> SEAL
+    SEAL --> KS1
+    SEAL --> KS2
+    SEAL --> TE
+    
+    UI --> WAL
+    WAL --> ED
+    NFT --> META
+```
+
+## NFT-Based Access Control Architecture
+
+The system uses NFTs to represent AI workflows with 6 levels of hierarchical access control, where each level builds upon the previous one's capabilities.
+
+```mermaid
+graph LR
+    L1[Level 1<br/>USE_MODEL]
+    L2[Level 2<br/>RESALE]
+    L3[Level 3<br/>CREATE_REPLICA]
+    L4[Level 4<br/>VIEW_DOWNLOAD]
+    L5[Level 5<br/>EDIT_DATA]
+    L6[Level 6<br/>ABSOLUTE_OWNERSHIP]
+    
+    L1 --> L2
+    L2 --> L3
+    L3 --> L4
+    L4 --> L5
+    L5 --> L6
+    
+    style L4 fill:#1cb01c
+    style L5 fill:#1cb01c
+    style L6 fill:#1cb01c
+    
+    L4 -.->|Minimum for<br/>Decryption| SEAL[Seal Access]
+```
+
+<div className="card padding--md mt-4">
+  <h3><img src="/img/icons/info.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />Access Level Details</h3>
+  
+  - **Level 1-3**: Basic usage, resale, and replication rights
+  - **Level 4+**: File decryption capabilities (minimum for Seal)
+  - **Level 5**: Data modification rights  
+  - **Level 6**: Absolute ownership and admin controls
+</div>
+
+## Seal Threshold Encryption Flow
+
+### Data Encryption Process
+
+The encryption process involves multiple steps to ensure secure data storage with threshold-based access control.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant SealSDK
+    participant KeyServer1
+    participant KeyServer2
+    participant Walrus
+    participant NFTContract
+    
+    User->>Frontend: Upload AI Workflow
+    Frontend->>SealSDK: Request Encryption
+    
+    SealSDK->>KeyServer1: Get Public Key
+    SealSDK->>KeyServer2: Get Public Key
+    
+    SealSDK->>SealSDK: Generate Symmetric Key
+    SealSDK->>SealSDK: Encrypt Data with Symmetric Key
+    SealSDK->>SealSDK: Encrypt Symmetric Key with<br/>Threshold Encryption (1-of-2)
+    
+    Frontend->>Walrus: Store Encrypted Data
+    Walrus-->>Frontend: Return Blob ID
+    
+    Frontend->>NFTContract: Store Metadata<br/>(Blob ID, Encrypted Key ID)
+    NFTContract-->>Frontend: Confirm Storage
+    
+    Frontend-->>User: Workflow Secured
+```
+
+### Data Decryption Process
+
+The decryption process validates access rights before allowing data retrieval, ensuring only authorized users can access encrypted content.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant SealSDK
+    participant NFTContract
+    participant KeyServer1
+    participant KeyServer2
+    participant Walrus
+    
+    User->>Frontend: Request File Access
+    Frontend->>NFTContract: Check Access Level
+    NFTContract-->>Frontend: Access Level (≥4 required)
+    
+    alt Access Level < 4
+        Frontend-->>User: Access Denied
+    else Access Level ≥ 4
+        Frontend->>SealSDK: Create Session Key
+        User->>Frontend: Sign Session Request
+        
+        Frontend->>SealSDK: Request Decryption Keys
+        SealSDK->>NFTContract: Call seal_approve
+        NFTContract->>NFTContract: Verify Access Rights
+        
+        SealSDK->>KeyServer1: Request Partial Key
+        KeyServer1->>KeyServer1: Verify seal_approve
+        KeyServer1-->>SealSDK: Return Partial Key
+        
+        Note over SealSDK: Only 1 key needed<br/>for 1-of-2 threshold
+        
+        SealSDK->>SealSDK: Reconstruct Symmetric Key
+        
+        Frontend->>Walrus: Fetch Encrypted Data
+        Walrus-->>Frontend: Return Encrypted Data
+        
+        SealSDK->>SealSDK: Decrypt Data
+        Frontend-->>User: Decrypted Workflow
+    end
+```
+
+## Access Grant and Management Workflow
+
+The system provides flexible access management capabilities allowing NFT owners to grant and revoke permissions dynamically.
+
+```mermaid
+graph TB
+    subgraph "NFT Owner Actions"
+        O1[Create NFT<br/>Level 6 Access]
+        O2[Grant Access<br/>to User B]
+        O3[Set Access Level]
+    end
+    
+    subgraph "Access Verification"
+        V1{Check Caller<br/>Has Level 6?}
+        V2{Valid Access<br/>Level 1-6?}
+        V3[Update Access Table]
+        V4[Emit Event]
+    end
+    
+    subgraph "User B Capabilities"
+        U1[Level 1-3:<br/>Use/Resale/Replica]
+        U2[Level 4+:<br/>Decrypt Files]
+        U3[Level 5:<br/>Edit Data]
+        U4[Level 6:<br/>Grant Access]
+    end
+    
+    O1 --> O2
+    O2 --> V1
+    V1 -->|Yes| V2
+    V1 -->|No| E1[Error: Not Authorized]
+    V2 -->|Yes| O3
+    V2 -->|No| E2[Error: Invalid Level]
+    O3 --> V3
+    V3 --> V4
+    V4 --> U1
+    V4 --> U2
+    V4 --> U3
+    V4 --> U4
+```
+
+## Data Storage Architecture
+
+The platform uses a hybrid approach combining on-chain metadata with off-chain encrypted storage for optimal performance and security.
+
+```mermaid
+graph TB
+    subgraph "On-Chain (Sui)"
+        NFT1[NFT Object]
+        NFT2[Collection State]
+        NFT3[Access Rights Table]
+        NFT4[Encrypted Key References]
+    end
+    
+    subgraph "Off-Chain (Walrus)"
+        W1[Encrypted Workflow Data]
+        W2[Encrypted Model Files]
+        W3[Encrypted Configuration]
+    end
+    
+    subgraph "Seal Key Servers"
+        KS1[Master Key Pair 1]
+        KS2[Master Key Pair 2]
+        DK[Derived Keys<br/>Per Identity]
+    end
+    
+    NFT1 --> NFT4
+    NFT4 -.->|References| W1
+    NFT4 -.->|References| W2
+    NFT4 -.->|References| W3
+    
+    KS1 --> DK
+    KS2 --> DK
+    DK -.->|Decrypt| W1
+    DK -.->|Decrypt| W2
+    DK -.->|Decrypt| W3
+```
+
+## Security Model
+
+### Multi-Layer Security Architecture
+
+The platform implements multiple security layers to ensure comprehensive protection of user data and assets.
+
+```mermaid
+graph LR
+    subgraph "Layer 1: Blockchain"
+        B1[NFT Ownership]
+        B2[Access Control Lists]
+        B3[Immutable Audit Trail]
+    end
+    
+    subgraph "Layer 2: Encryption"
+        E1[Threshold Encryption]
+        E2[Symmetric Key Encryption]
+        E3[Key Derivation]
+    end
+    
+    subgraph "Layer 3: Storage"
+        S1[Decentralized Storage]
+        S2[Content Addressing]
+        S3[Data Integrity]
+    end
+    
+    B1 --> E1
+    B2 --> E1
+    E1 --> E2
+    E2 --> S1
+    E3 --> E2
+    S1 --> S2
+    S2 --> S3
+```
+
+### Trust Model and Assumptions
+
+The security model is built on well-defined trust assumptions and cryptographic guarantees.
+
+```mermaid
+graph TB
+    subgraph "Trust Assumptions"
+        T1[User trusts t-of-n<br/>key servers]
+        T2[Key servers trust<br/>Sui blockchain]
+        T3[Blockchain validates<br/>access rights]
+    end
+    
+    subgraph "Security Guarantees"
+        S1[No single point<br/>of failure]
+        S2[Cryptographic<br/>access control]
+        S3[Auditable<br/>access logs]
+    end
+    
+    T1 --> S1
+    T2 --> S2
+    T3 --> S3
+```
+
+## Smart Contract Architecture
+
+The NeuraLabs smart contracts are designed with modularity and extensibility in mind, consisting of four core modules.
+
+### Contract Module Structure
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/blockchain.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        NFT Module
+      </CardTitle>
+      <CardDescription>
+        Core NFT creation and management functionality with access control integration
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/security.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Access Module
+      </CardTitle>
+      <CardDescription>
+        6-level access control system with granular permission management
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/database.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Storage Module
+      </CardTitle>
+      <CardDescription>
+        Walrus integration for encrypted data storage and retrieval
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/settings.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Utils Module
+      </CardTitle>
+      <CardDescription>
+        Helper functions and utilities for contract operations
+      </CardDescription>
+    </CardHeader>
+  </Card>
+</div>
+
+## Integration Points
+
+### Frontend Integration Architecture
+
+The frontend integration involves multiple components working together to provide a seamless user experience.
+
+<InlineCodeCard
+  title="Frontend Integration Points"
+  description="Key integration points in React application"
+  language="javascript"
+  code={`// Key integration points in React app
+const integrationFlow = {
+  wallet: "Sui Wallet / zkLogin",
+  encryption: "@mysten/seal SDK",
+  storage: "Walrus SDK", 
+  blockchain: "@mysten/sui.js"
+};
+
+// Wallet Connection
+import { WalletProvider } from '@mysten/wallet-adapter-react';
+import { SuiWalletAdapter } from '@mysten/wallet-adapter-sui';
+
+// Seal Integration
+import { SealClient } from '@mysten/seal';
+
+// Sui Blockchain
+import { SuiClient, getFullnodeUrl } from '@mysten/sui.js/client';
+
+const client = new SuiClient({ 
+  url: getFullnodeUrl('testnet') 
+});`}
+/>
+
+### Backend Integration Architecture
+
+The backend services provide API endpoints and business logic for the platform.
+
+<InlineCodeCard
+  title="Backend Integration Points"
+  description="Key integration points in Python backend"
+  language="python"
+  code={`# Key integration points in Python backend
+integration_points = {
+    "blockchain": "sui-py SDK",
+    "database": "PostgreSQL + Redis",
+    "ai_execution": "Custom Workflow Engine",
+    "authentication": "JWT + zkLogin"
+}
+
+# Sui Python SDK Integration
+from sui_python_sdk import SuiClient
+from sui_python_sdk.types import TransactionBlock
+
+# Database Integration
+import asyncpg
+import redis.asyncio as redis
+
+# AI Workflow Engine
+from workflow_engine import WorkflowExecutor`}
+/>
+
+## Deployment Architecture
+
+The platform supports multiple deployment environments with different configurations for development, testing, and production.
+
+```mermaid
+graph TB
+    subgraph "Development"
+        D1[Local Sui Node]
+        D2[Test Key Servers]
+        D3[Local Walrus]
+    end
+    
+    subgraph "Testnet"
+        T1[Sui Testnet]
+        T2[Mysten Key Servers]
+        T3[Walrus Testnet]
+    end
+    
+    subgraph "Production"
+        P1[Sui Mainnet]
+        P2[Multiple Key Servers]
+        P3[Walrus Mainnet]
+    end
+    
+    D1 --> T1
+    D2 --> T2
+    D3 --> T3
+    T1 --> P1
+    T2 --> P2
+    T3 --> P3
+```
+
+## Performance and Scalability
+
+### Expected Performance Metrics
+
+The platform is designed to handle significant throughput while maintaining security and decentralization.
+
+| Operation | Expected Time | Throughput | Gas Usage |
+|-----------|---------------|------------|-----------|
+| NFT Creation | < 2 seconds | 10-20 TPS | ~0.01 SUI |
+| Access Grant/Revoke | < 1 second | 20-30 TPS | ~0.005 SUI |
+| File Encryption | Variable | 10+ MB/s | Client-side |
+| File Decryption | Variable | 15+ MB/s | Client-side |
+| Walrus Upload | Variable | 5+ MB/s | Storage fees |
+
+### Scalability Considerations
+
+<div className="card padding--md mt-4">
+  <h3><img src="/img/icons/network.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />Horizontal Scaling</h3>
+  <ul>
+    <li><strong>Key Servers:</strong> Support for multiple independent key servers</li>
+    <li><strong>Storage Nodes:</strong> Walrus network provides distributed storage</li>
+    <li><strong>API Endpoints:</strong> Load balancing across multiple backend instances</li>
+    <li><strong>Caching:</strong> Redis for session management and performance optimization</li>
+  </ul>
+</div>
+
+## Best Practices and Recommendations
+
+### Smart Contract Development
+
+1. **Modular Design**: Separate concerns into distinct modules
+2. **Access Control**: Implement comprehensive permission systems  
+3. **Gas Optimization**: Minimize transaction costs through efficient code
+4. **Upgradeability**: Design for future enhancements and fixes
+
+### Security Recommendations
+
+1. **Key Management**: Use 1-of-2 threshold for testing, 2-of-3+ for production
+2. **Access Control**: Start with minimal access and grant incrementally
+3. **Audit Trail**: Maintain comprehensive logs of all access changes
+4. **Regular Reviews**: Periodic security audits and penetration testing
+
+### Integration Guidelines
+
+1. **Error Handling**: Implement robust error handling and recovery
+2. **Rate Limiting**: Protect against abuse and spam
+3. **Monitoring**: Comprehensive logging and alerting systems
+4. **Documentation**: Maintain up-to-date API and integration docs
+
+## Conclusion
+
+The NeuraLabs blockchain architecture represents a sophisticated integration of SUI's capabilities with modern encryption and storage technologies. By leveraging NFT-based access control, Seal threshold encryption, and Walrus decentralized storage, the platform provides a secure, scalable foundation for decentralized AI workflow management.
+
+The modular design ensures flexibility and extensibility while maintaining security and performance. The multi-layer approach to data protection, combined with transparent on-chain governance, creates a robust platform for the future of decentralized AI applications.

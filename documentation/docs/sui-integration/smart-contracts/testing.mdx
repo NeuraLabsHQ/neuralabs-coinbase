@@ -6,32 +6,176 @@ sidebar_position: 3
 ---
 
 import { Card, CardHeader, CardTitle, CardDescription } from '@site/src/components/Card';
+import { CollapsibleCodeBlock, InlineCodeCard } from '@site/src/components/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # <img src="/img/icons/code.svg" width="32" height="32" style={{ verticalAlign: 'middle', marginRight: '12px' }} />Smart Contracts Testing
 
-Comprehensive testing strategies for NeuraLabs SUI Move contracts including unit tests, integration tests, and security validation.
+Comprehensive testing guide for NeuraLabs SUI Move contracts including unit tests, integration tests, security validation, performance testing, and end-to-end workflows.
 
 ## Testing Overview
 
-The NeuraLabs smart contract testing suite covers multiple layers:
+The NeuraLabs smart contract testing suite provides comprehensive coverage across multiple testing layers, ensuring robust validation of contract functionality, security, and performance.
 
-- **Unit Tests**: Test individual functions and modules
-- **Integration Tests**: Test contract interactions and workflows
-- **Security Tests**: Validate access control and security measures
-- **Performance Tests**: Measure gas usage and execution time
-- **End-to-End Tests**: Full workflow testing with frontend integration
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/code.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Unit Testing
+      </CardTitle>
+      <CardDescription>
+        Move unit tests for individual functions and modules with comprehensive coverage
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/network.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Integration Testing
+      </CardTitle>
+      <CardDescription>
+        Python-based integration tests for contract interactions and workflows
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/security.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Security Testing
+      </CardTitle>
+      <CardDescription>
+        Access control validation and security vulnerability assessment
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/hpc.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Performance Testing
+      </CardTitle>
+      <CardDescription>
+        Gas usage analysis, throughput measurement, and optimization validation
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/frontend.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        End-to-End Testing
+      </CardTitle>
+      <CardDescription>
+        Complete workflow testing with frontend integration and Seal encryption
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/terminal.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Continuous Integration
+      </CardTitle>
+      <CardDescription>
+        Automated testing pipeline with GitHub Actions and monitoring
+      </CardDescription>
+    </CardHeader>
+  </Card>
+</div>
+
+## Environment Setup
+
+### Prerequisites
+
+Before running the comprehensive test suite, ensure your testing environment is properly configured.
+
+<Tabs>
+  <TabItem value="conda" label="Conda Environment" default>
+    ```bash
+    # Create and activate conda environment
+    conda create -n neuralabs-exec python=3.12
+    conda activate neuralabs-exec
+    
+    # Install Python dependencies
+    cd scripts
+    pip install -r requirements.txt
+    ```
+  </TabItem>
+  <TabItem value="node" label="Node.js Dependencies">
+    ```bash
+    # Install Node.js dependencies for Seal tests
+    cd scripts
+    npm install
+    
+    # Install additional testing packages
+    npm install --save-dev @mysten/seal @mysten/sui.js
+    ```
+  </TabItem>
+</Tabs>
+
+### Test Configuration
+
+<InlineCodeCard
+  title="Test Configuration Setup"
+  description="Configure test environment with proper network and account settings"
+  language="bash"
+  code={`# Copy and update test configuration
+cp test-config.json test-config.local.json
+
+# Set environment variables
+export PACKAGE_ID=0x926de4be791b165822a8a213540c0606bb0d52450e5f8b6531097d9cd2c4dc64
+export COLLECTION_ID=0x... # Your collection ID
+
+# Example test-config.local.json
+{
+  "networks": {
+    "testnet": {
+      "rpc_url": "https://fullnode.testnet.sui.io:443",
+      "package_id": "$PACKAGE_ID",
+      "gas_budget": 10000000
+    }
+  },
+  "test_accounts": {
+    "owner": "test_seed_1",
+    "user1": "test_seed_2",
+    "user2": "test_seed_3"
+  },
+  "performance_limits": {
+    "max_gas_per_operation": 10000000,
+    "max_execution_time": 5.0
+  }
+}`}
+/>
 
 ## Unit Testing
 
 ### 1. Move Unit Tests
 
-```move
-// tests/nft_tests.move
+The Move unit tests validate individual contract functions and ensure proper behavior under various conditions.
+
+<CollapsibleCodeBlock
+  title="Complete Move Unit Test Suite"
+  description="Comprehensive unit tests for NFT creation, access control, and Seal integration"
+  language="move"
+  defaultCollapsed={true}
+>
+{`// tests/nft_tests.move
 #[test_only]
 module neuranft::nft_tests {
     use neuranft::nft;
+    use neuranft::access;
     use sui::test_scenario::{Self, Scenario};
     use sui::test_utils;
+    use sui::clock::{Self, Clock};
     
     #[test]
     fun test_nft_creation() {
@@ -40,13 +184,27 @@ module neuranft::nft_tests {
         
         test_scenario::next_tx(scenario, @0x1);
         {
+            // Create collection first
+            nft::create_collection(test_scenario::ctx(scenario));
+        };
+        
+        test_scenario::next_tx(scenario, @0x1);
+        {
+            let collection = test_scenario::take_from_sender<nft::Collection>(scenario);
+            let clock = clock::create_for_testing(test_scenario::ctx(scenario));
+            
             // Test NFT creation with valid parameters
             nft::create_nft(
-                b"Test Model",
-                b"A test AI model",
-                6,
+                &mut collection,
+                b"Test AI Model",
+                b"A comprehensive test AI model for validation",
+                6, // Maximum access level
+                &clock,
                 test_scenario::ctx(scenario)
             );
+            
+            test_scenario::return_to_sender(scenario, collection);
+            clock::destroy_for_testing(clock);
         };
         
         test_scenario::next_tx(scenario, @0x1);
@@ -54,6 +212,7 @@ module neuranft::nft_tests {
             // Verify NFT was created correctly
             let nft_obj = test_scenario::take_from_sender<nft::NFT>(scenario);
             assert!(nft::get_access_level(&nft_obj) == 6, 0);
+            assert!(nft::get_name(&nft_obj) == b"Test AI Model", 1);
             test_scenario::return_to_sender(scenario, nft_obj);
         };
         
@@ -61,39 +220,71 @@ module neuranft::nft_tests {
     }
     
     #[test]
-    fun test_access_control() {
+    fun test_access_control_hierarchy() {
         let scenario_val = test_scenario::begin(@0x1);
         let scenario = &mut scenario_val;
         
         // Create NFT with owner
         test_scenario::next_tx(scenario, @0x1);
         {
-            nft::create_nft(
-                b"Test Model",
-                b"Test description", 
-                6,
-                test_scenario::ctx(scenario)
-            );
+            nft::create_collection(test_scenario::ctx(scenario));
         };
         
-        // Grant access to another user
+        test_scenario::next_tx(scenario, @0x1);
+        {
+            let collection = test_scenario::take_from_sender<nft::Collection>(scenario);
+            let clock = clock::create_for_testing(test_scenario::ctx(scenario));
+            
+            nft::create_nft(
+                &mut collection,
+                b"Access Test Model",
+                b"Testing access control hierarchy",
+                6,
+                &clock,
+                test_scenario::ctx(scenario)
+            );
+            
+            test_scenario::return_to_sender(scenario, collection);
+            clock::destroy_for_testing(clock);
+        };
+        
+        // Test access level granting
         test_scenario::next_tx(scenario, @0x1);
         {
             let nft_obj = test_scenario::take_from_sender<nft::NFT>(scenario);
-            nft::grant_access(
+            let clock = clock::create_for_testing(test_scenario::ctx(scenario));
+            
+            // Grant level 4 access (minimum for Seal decryption)
+            access::grant_access(
                 &mut nft_obj,
                 @0x2,
                 4,
+                &clock,
                 test_scenario::ctx(scenario)
             );
+            
             test_scenario::return_to_sender(scenario, nft_obj);
+            clock::destroy_for_testing(clock);
         };
         
-        // Verify access was granted
+        // Verify access levels work correctly
         test_scenario::next_tx(scenario, @0x2);
         {
             let nft_obj = test_scenario::take_from_address<nft::NFT>(scenario, @0x1);
-            assert!(nft::check_access(&nft_obj, @0x2) >= 4, 0);
+            
+            // User should have level 4 access
+            assert!(access::check_access(&nft_obj, @0x2) == 4, 0);
+            
+            // User should be able to access levels 1-4
+            assert!(access::can_access_level(&nft_obj, @0x2, 1), 1);
+            assert!(access::can_access_level(&nft_obj, @0x2, 2), 2);
+            assert!(access::can_access_level(&nft_obj, @0x2, 3), 3);
+            assert!(access::can_access_level(&nft_obj, @0x2, 4), 4);
+            
+            // User should NOT be able to access levels 5-6
+            assert!(!access::can_access_level(&nft_obj, @0x2, 5), 5);
+            assert!(!access::can_access_level(&nft_obj, @0x2, 6), 6);
+            
             test_scenario::return_to_address(scenario, @0x1, nft_obj);
         };
         
@@ -101,48 +292,210 @@ module neuranft::nft_tests {
     }
     
     #[test]
-    #[expected_failure(abort_code = nft::EInsufficientAccess)]
-    fun test_unauthorized_access() {
+    fun test_seal_approve_function() {
+        let scenario_val = test_scenario::begin(@0x1);
+        let scenario = &mut scenario_val;
+        
+        // Setup NFT
+        test_scenario::next_tx(scenario, @0x1);
+        {
+            nft::create_collection(test_scenario::ctx(scenario));
+        };
+        
+        test_scenario::next_tx(scenario, @0x1);
+        {
+            let collection = test_scenario::take_from_sender<nft::Collection>(scenario);
+            let clock = clock::create_for_testing(test_scenario::ctx(scenario));
+            
+            nft::create_nft(
+                &mut collection,
+                b"Seal Test Model",
+                b"Testing Seal integration",
+                6,
+                &clock,
+                test_scenario::ctx(scenario)
+            );
+            
+            test_scenario::return_to_sender(scenario, collection);
+            clock::destroy_for_testing(clock);
+        };
+        
+        // Grant access to test user
+        test_scenario::next_tx(scenario, @0x1);
+        {
+            let nft_obj = test_scenario::take_from_sender<nft::NFT>(scenario);
+            let clock = clock::create_for_testing(test_scenario::ctx(scenario));
+            
+            access::grant_access(&mut nft_obj, @0x2, 4, &clock, test_scenario::ctx(scenario));
+            
+            test_scenario::return_to_sender(scenario, nft_obj);
+            clock::destroy_for_testing(clock);
+        };
+        
+        // Test seal_approve function with valid access
+        test_scenario::next_tx(scenario, @0x2);
+        {
+            let collection = test_scenario::take_from_address<nft::Collection>(scenario, @0x1);
+            
+            // This should succeed - user has level 4 access
+            nft::seal_approve(
+                vector[1, 2, 3, 4], // test identity bytes
+                &collection,
+                test_scenario::ctx(scenario)
+            );
+            
+            test_scenario::return_to_address(scenario, @0x1, collection);
+        };
+        
+        test_scenario::end(scenario_val);
+    }
+    
+    #[test]
+    #[expected_failure(abort_code = access::EInsufficientAccess)]
+    fun test_unauthorized_access_failure() {
         let scenario_val = test_scenario::begin(@0x1);
         let scenario = &mut scenario_val;
         
         // Create NFT
         test_scenario::next_tx(scenario, @0x1);
         {
-            nft::create_nft(b"Test", b"Test", 6, test_scenario::ctx(scenario));
+            nft::create_collection(test_scenario::ctx(scenario));
+        };
+        
+        test_scenario::next_tx(scenario, @0x1);
+        {
+            let collection = test_scenario::take_from_sender<nft::Collection>(scenario);
+            let clock = clock::create_for_testing(test_scenario::ctx(scenario));
+            
+            nft::create_nft(
+                &mut collection,
+                b"Unauthorized Test",
+                b"Testing unauthorized access prevention",
+                6,
+                &clock,
+                test_scenario::ctx(scenario)
+            );
+            
+            test_scenario::return_to_sender(scenario, collection);
+            clock::destroy_for_testing(clock);
         };
         
         // Try to grant access from unauthorized user (should fail)
         test_scenario::next_tx(scenario, @0x2);
         {
             let nft_obj = test_scenario::take_from_address<nft::NFT>(scenario, @0x1);
-            nft::grant_access(&mut nft_obj, @0x3, 5, test_scenario::ctx(scenario));
+            let clock = clock::create_for_testing(test_scenario::ctx(scenario));
+            
+            // This should fail - @0x2 doesn't own the NFT
+            access::grant_access(
+                &mut nft_obj,
+                @0x3,
+                5,
+                &clock,
+                test_scenario::ctx(scenario)
+            );
+            
             test_scenario::return_to_address(scenario, @0x1, nft_obj);
+            clock::destroy_for_testing(clock);
         };
         
         test_scenario::end(scenario_val);
     }
-}
-```
-
+    
+    #[test]
+    #[expected_failure(abort_code = nft::EInsufficientAccessForSeal)]
+    fun test_seal_access_requirement() {
+        let scenario_val = test_scenario::begin(@0x1);
+        let scenario = &mut scenario_val;
+        
+        // Setup NFT and grant insufficient access
+        test_scenario::next_tx(scenario, @0x1);
+        {
+            nft::create_collection(test_scenario::ctx(scenario));
+        };
+        
+        test_scenario::next_tx(scenario, @0x1);
+        {
+            let collection = test_scenario::take_from_sender<nft::Collection>(scenario);
+            let clock = clock::create_for_testing(test_scenario::ctx(scenario));
+            
+            nft::create_nft(
+                &mut collection,
+                b"Seal Access Test",
+                b"Testing Seal access requirements",
+                6,
+                &clock,
+                test_scenario::ctx(scenario)
+            );
+            
+            test_scenario::return_to_sender(scenario, collection);
+            clock::destroy_for_testing(clock);
+        };
+        
+        // Grant level 3 access (below Seal minimum)
+        test_scenario::next_tx(scenario, @0x1);
+        {
+            let nft_obj = test_scenario::take_from_sender<nft::NFT>(scenario);
+            let clock = clock::create_for_testing(test_scenario::ctx(scenario));
+            
+            access::grant_access(&mut nft_obj, @0x2, 3, &clock, test_scenario::ctx(scenario));
+            
+            test_scenario::return_to_sender(scenario, nft_obj);
+            clock::destroy_for_testing(clock);
+        };
+        
+        // Try to use seal_approve with insufficient access (should fail)
+        test_scenario::next_tx(scenario, @0x2);
+        {
+            let collection = test_scenario::take_from_address<nft::Collection>(scenario, @0x1);
+            
+            // This should fail - user only has level 3 access, needs level 4+
+            nft::seal_approve(
+                vector[1, 2, 3, 4],
+                &collection,
+                test_scenario::ctx(scenario)
+            );
+            
+            test_scenario::return_to_address(scenario, @0x1, collection);
+        };
+        
+        test_scenario::end(scenario_val);
+    }
+}`}
+</CollapsibleCodeBlock>
+        
 ### 2. Running Unit Tests
 
-```bash
-# Run all unit tests
-sui move test
+<Tabs>
+  <TabItem value="basic" label="Basic Testing" default>
+    ```bash
+    # Navigate to contract directory
+    cd mov_contract/neuranft_contract
+    
+    # Run all unit tests
+    sui move test
+    
+    # Run with verbose output
+    sui move test -v
+    ```
+  </TabItem>
+  <TabItem value="advanced" label="Advanced Options">
+    ```bash
+    # Run specific test module
+    sui move test --filter nft_tests
+    
+    # Run specific test function
+    sui move test --filter test_nft_creation
+    
+    # Run with coverage analysis
+    sui move test --coverage
+    
+    # Generate HTML coverage report
+    sui move test --coverage --coverage-format html
+    ```
+  </TabItem>
+</Tabs>
 
-# Run specific test module
-sui move test --filter nft_tests
-
-# Run with verbose output
-sui move test -v
-
-# Run with coverage
-sui move test --coverage
-
-# Run specific test function
-sui move test --filter test_nft_creation
-```
 
 ## Integration Testing
 

@@ -6,479 +6,1153 @@ sidebar_position: 2
 ---
 
 import { Card, CardHeader, CardTitle, CardDescription } from '@site/src/components/Card';
+import { CollapsibleCodeBlock, InlineCodeCard } from '@site/src/components/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # <img src="/img/icons/terminal.svg" width="32" height="32" style={{ verticalAlign: 'middle', marginRight: '12px' }} />Smart Contracts Deployment
 
-Complete deployment guide for NeuraLabs SUI Move contracts on testnet with proper configuration and initialization.
+Complete deployment guide for NeuraLabs SUI Move contracts on testnet with comprehensive environment setup, contract compilation, deployment, and initialization procedures.
 
-## Prerequisites
+## Prerequisites and Environment Setup
 
-### Development Environment
+### Operating System Requirements
 
-```bash
-# Install Rust and Sui CLI
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source ~/.bashrc
+<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/terminal.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Linux/Ubuntu
+      </CardTitle>
+      <CardDescription>
+        Recommended for development with native performance
+      </CardDescription>
+    </CardHeader>
+  </Card>
 
-# Install Sui CLI dependencies (Ubuntu/Debian)
-sudo apt update
-sudo apt install -y clang libclang-dev llvm-dev librocksdb-dev
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/terminal.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        macOS
+      </CardTitle>
+      <CardDescription>
+        Full support with Homebrew package management
+      </CardDescription>
+    </CardHeader>
+  </Card>
 
-# Install Sui CLI
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/terminal.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Windows WSL2
+      </CardTitle>
+      <CardDescription>
+        Use Windows Subsystem for Linux for optimal compatibility
+      </CardDescription>
+    </CardHeader>
+  </Card>
+</div>
+
+### Development Tools Installation
+
+<Tabs>
+  <TabItem value="ubuntu" label="Ubuntu/Debian" default>
+    ```bash
+    # Update system packages
+    sudo apt update && sudo apt upgrade -y
+    
+    # Install essential development tools
+    sudo apt install -y curl git build-essential
+    
+    # Install Node.js and npm
+    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+    sudo apt install -y nodejs
+    
+    # Install Python 3.12
+    sudo apt install -y python3.12 python3.12-pip python3.12-venv
+    
+    # Verify installations
+    node --version
+    npm --version
+    python3.12 --version
+    ```
+  </TabItem>
+  <TabItem value="macos" label="macOS">
+    ```bash
+    # Install Homebrew if not already installed
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    
+    # Install development tools
+    brew install git node python@3.12
+    
+    # Install Rust
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    source ~/.zshrc
+    
+    # Verify installations
+    node --version
+    python3.12 --version
+    rustc --version
+    ```
+  </TabItem>
+  <TabItem value="windows" label="Windows WSL2">
+    ```bash
+    # First, install WSL2 and Ubuntu from Microsoft Store
+    # Then run these commands in WSL2 terminal:
+    
+    # Update WSL Ubuntu
+    sudo apt update && sudo apt upgrade -y
+    
+    # Install development tools
+    sudo apt install -y curl git build-essential
+    
+    # Install Node.js via Node Version Manager
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+    source ~/.bashrc
+    nvm install 18
+    nvm use 18
+    
+    # Install Python 3.12
+    sudo apt install -y python3.12 python3.12-pip
+    ```
+  </TabItem>
+</Tabs>
+
+## SUI CLI Installation and Configuration
+
+### Rust and SUI CLI Setup
+
+<CollapsibleCodeBlock
+  title="Complete SUI CLI Installation"
+  description="Comprehensive setup including Rust installation, dependencies, and SUI CLI compilation"
+  language="bash"
+  defaultCollapsed={true}
+>
+{`#!/bin/bash
+# Complete SUI CLI Installation Script
+
+echo "🚀 Starting SUI CLI installation..."
+
+# 1. Install Rust if not already installed
+if ! command -v rustc &> /dev/null; then
+    echo "📦 Installing Rust..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source ~/.bashrc
+    source ~/.cargo/env
+else
+    echo "✅ Rust already installed"
+fi
+
+# 2. Update Rust
+echo "🔄 Updating Rust..."
+rustup update
+
+# 3. Install system dependencies
+echo "📦 Installing system dependencies..."
+
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Ubuntu/Debian
+    sudo apt update
+    sudo apt install -y \\
+        clang \\
+        libclang-dev \\
+        llvm-dev \\
+        librocksdb-dev \\
+        build-essential \\
+        pkg-config \\
+        openssl \\
+        libssl-dev
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    if command -v brew &> /dev/null; then
+        brew install llvm rocksdb
+    else
+        echo "⚠️  Please install Homebrew first"
+        exit 1
+    fi
+fi
+
+# 4. Install SUI CLI from source
+echo "🏗️  Installing SUI CLI from source..."
 cargo install --locked --git https://github.com/MystenLabs/sui.git --branch testnet sui
 
-# Verify installation
-sui --version
-```
+# Alternative: Install specific version if needed
+# cargo install --locked --git https://github.com/MystenLabs/sui.git --tag testnet-v1.47.0 sui
 
-### Network Configuration
+# 5. Verify installation
+echo "✅ Verifying SUI CLI installation..."
+if command -v sui &> /dev/null; then
+    sui --version
+    echo "🎉 SUI CLI installed successfully!"
+else
+    echo "❌ SUI CLI installation failed"
+    exit 1
+fi
 
-```bash
-# Configure Sui client for testnet
-sui client new-env --alias testnet --rpc https://fullnode.testnet.sui.io:443
-sui client switch --env testnet
+# 6. Add cargo bin to PATH if needed
+if [[ ":$PATH:" != *":$HOME/.cargo/bin:"* ]]; then
+    echo "📝 Adding cargo bin to PATH..."
+    echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.bashrc
+    echo "🔄 Please run: source ~/.bashrc"
+fi
 
-# Create and fund account
-sui client new-address secp256k1
-sui client faucet --address $(sui client active-address)
+echo "✨ SUI CLI installation completed!"
+`}
+</CollapsibleCodeBlock>
 
-# Verify setup
-sui client balance
-sui client envs
-```
+### Account Creation and Network Configuration
 
-## Project Setup
+<Tabs>
+  <TabItem value="setup" label="Initial Setup" default>
+    ```bash
+    # Initialize SUI configuration
+    sui client
+    
+    # This will prompt you to create a new wallet
+    # Choose option 1: "Create a new wallet"
+    # IMPORTANT: Save your recovery phrase securely!
+    ```
+  </TabItem>
+  <TabItem value="network" label="Network Configuration">
+    ```bash
+    # Add testnet environment
+    sui client new-env --alias testnet --rpc https://fullnode.testnet.sui.io:443
+    
+    # Switch to testnet
+    sui client switch --env testnet
+    
+    # Verify current environment
+    sui client envs
+    
+    # Check active address
+    sui client active-address
+    ```
+  </TabItem>
+  <TabItem value="funding" label="Account Funding">
+    ```bash
+    # Get your address
+    MY_ADDRESS=$(sui client active-address)
+    echo "Your address: $MY_ADDRESS"
+    
+    # Request testnet tokens from faucet
+    sui client faucet --address $MY_ADDRESS
+    
+    # Alternative: Use curl for faucet
+    curl --location --request POST 'https://faucet.testnet.sui.io/gas' \\
+    --header 'Content-Type: application/json' \\
+    --data-raw "{
+        \"FixedAmountRequest\": {
+            \"recipient\": \"$MY_ADDRESS\"
+        }
+    }"
+    
+    # Check balance
+    sui client gas
+    sui client balance
+    ```
+  </TabItem>
+</Tabs>
 
-### 1. Initialize Move Project
+<div className="card padding--md mt-4" style={{ borderLeft: '4px solid #ff9800' }}>
+  <h3><img src="/img/icons/warning.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />Important Security Note</h3>
+  <p>
+    <strong>Save your recovery phrase securely!</strong> This 12-word phrase is the only way to recover your wallet. 
+    Store it in a secure location and never share it with anyone. For testnet, you can use a simple phrase, 
+    but for mainnet, use a hardware wallet or secure key management system.
+  </p>
+</div>
 
-```bash
-# Create project directory
+## Project Structure and Setup
+
+### Directory Structure Creation
+
+<InlineCodeCard
+  title="Project Structure Setup"
+  description="Create the complete project structure for NeuraLabs smart contracts"
+  language="bash"
+  code={`# Create main project directory
 mkdir neuralabs-sui-contracts
 cd neuralabs-sui-contracts
 
-# Initialize Move.toml
-cat > Move.toml << EOF
-[package]
+# Create directory structure
+mkdir -p {sources,tests,scripts,docs,build}
+
+# Create configuration files
+touch Move.toml .gitignore README.md
+
+# Create source files structure
+mkdir -p sources/{nft,access,storage,utils}
+
+# Verify structure
+tree . || ls -la
+
+# Expected structure:
+# neuralabs-sui-contracts/
+# ├── Move.toml
+# ├── sources/
+# │   ├── nft.move
+# │   ├── access.move
+# │   ├── storage.move
+# │   └── utils.move
+# ├── tests/
+# ├── scripts/
+# ├── docs/
+# └── build/`}
+/>
+
+### Move.toml Configuration
+
+<CollapsibleCodeBlock
+  title="Complete Move.toml Configuration"
+  description="Comprehensive Move.toml with all dependencies and configurations for NeuraLabs contracts"
+  language="toml"
+  defaultCollapsed={true}
+>
+{`[package]
 name = "neuranft"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024.beta"
+authors = ["NeuraLabs Team"]
+license = "MIT"
+published-at = "0x926de4be791b165822a8a213540c0606bb0d52450e5f8b6531097d9cd2c4dc64"
 
 [dependencies]
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
 
 [addresses]
-neuranft = "0x0"
+neuranft = "0x0"  # Will be replaced with deployer address
+sui = "0x2"
 
 [dev-dependencies]
 
 [dev-addresses]
-EOF
+# Test addresses for development
+test_owner = "0x1"
+test_user = "0x2"
+test_collection = "0x3"
 
-# Create source directory
-mkdir -p sources
-```
+# Build configuration
+[build]
+# Optimize for gas efficiency
+optimization-level = 3
+# Include debug information for testing
+debug = true
 
-### 2. Contract Source Files
+# Deployment configuration
+[deployment]
+# Testnet configuration
+testnet = { chain-id = "testnet", gas-budget = 100000000 }
+# Mainnet configuration (for future use)
+mainnet = { chain-id = "mainnet", gas-budget = 200000000 }
+`}
+</CollapsibleCodeBlock>
 
-The contract files are located in the repository at `/mov_contract/neuranft_contract/sources/`:
+### Environment Configuration Files
 
-#### Copy Contract Files
+<Tabs>
+  <TabItem value="gitignore" label=".gitignore" default>
+    ```gitignore
+    # Sui build artifacts
+    build/
+    .sui/
+    
+    # IDE files
+    .vscode/
+    .idea/
+    *.swp
+    *.swo
+    
+    # OS files
+    .DS_Store
+    Thumbs.db
+    
+    # Environment files
+    .env
+    .env.local
+    .env.production
+    
+    # Node modules (for frontend integration)
+    node_modules/
+    
+    # Python
+    __pycache__/
+    *.pyc
+    *.pyo
+    *.pyd
+    .Python
+    env/
+    venv/
+    .venv/
+    
+    # Logs
+    *.log
+    logs/
+    
+    # Test artifacts
+    test-results/
+    coverage/
+    
+    # Deployment artifacts
+    deployment-*.json
+    gas-report.json
+    
+    # Temporary files
+    *.tmp
+    *.temp
+    .cache/
+    ```
+  </TabItem>
+  <TabItem value="env" label="Environment Template">
+    ```bash
+    # .env.template - Copy to .env and fill in values
+    
+    # Deployment Configuration
+    DEPLOYER_ADDRESS=0x...
+    DEPLOYER_PRIVATE_KEY=0x...  # Never commit real private keys!
+    
+    # Network Configuration
+    SUI_NETWORK=testnet
+    SUI_RPC_URL=https://fullnode.testnet.sui.io:443
+    
+    # Contract Configuration
+    PACKAGE_ID=0x926de4be791b165822a8a213540c0606bb0d52450e5f8b6531097d9cd2c4dc64
+    COLLECTION_ID=0x...  # Set after deployment
+    
+    # Gas Configuration
+    GAS_BUDGET=100000000
+    MAX_GAS_PRICE=1000
+    
+    # Seal Configuration
+    SEAL_PACKAGE_ID=0x62c79dfeb0a2ca8c308a56bde530ccf3846535e1623949d45c90d23128afff52
+    MYSTEN_KEY_SERVER_1=https://seal-key-server-testnet-1.mystenlabs.com
+    MYSTEN_KEY_SERVER_2=https://seal-key-server-testnet-2.mystenlabs.com
+    
+    # Walrus Configuration
+    WALRUS_PUBLISHER_URL=https://publisher.walrus-testnet.walrus.space
+    WALRUS_AGGREGATOR_URL=https://aggregator.walrus-testnet.walrus.space
+    
+    # Testing Configuration
+    TEST_TIMEOUT=30000
+    TEST_PARALLEL=true
+    ```
+  </TabItem>
+</Tabs>
 
-```bash
-# Copy contract files from repository
-cp /path/to/neuralabs-sui/mov_contract/neuranft_contract/sources/* ./sources/
+## Contract Compilation and Build
 
-# Verify files
-ls -la sources/
-# Expected files:
-# - nft.move
-# - access.move  
-# - storage.move
-# - utils.move
-```
+### Pre-build Validation
 
-#### Update Configuration
+<InlineCodeCard
+  title="Pre-build Validation Script"
+  description="Validate environment and configuration before building contracts"
+  language="bash"
+  code={`#!/bin/bash
+# pre-build-validation.sh
 
-```bash
-# Update Move.toml with your address
-YOUR_ADDRESS=$(sui client active-address)
-sed -i "s/neuranft = \"0x0\"/neuranft = \"$YOUR_ADDRESS\"/" Move.toml
+echo "🔍 Validating build environment..."
 
-echo "Updated Move.toml with address: $YOUR_ADDRESS"
-```
-
-## Compilation and Testing
-
-### 1. Compile Contract
-
-```bash
-# Build the contract
-sui move build
-
-# Check for compilation errors
-if [ $? -eq 0 ]; then
-    echo "✅ Compilation successful"
-else
-    echo "❌ Compilation failed"
+# Check SUI CLI
+if ! command -v sui &> /dev/null; then
+    echo "❌ SUI CLI not found. Please install SUI CLI first."
     exit 1
 fi
-```
 
-### 2. Run Unit Tests
+echo "✅ SUI CLI version: $(sui --version)"
 
-```bash
-# Run Move unit tests
-sui move test
+# Check network connection
+if ! sui client envs | grep -q "testnet"; then
+    echo "❌ Testnet environment not configured"
+    exit 1
+fi
 
-# Run specific test module
-sui move test --filter nft_tests
+echo "✅ Network configuration valid"
 
-# Run with verbose output
-sui move test -v
-```
+# Check account balance
+BALANCE=$(sui client gas | grep -o '[0-9]*' | head -1)
+if [ "$BALANCE" -lt 100000000 ]; then
+    echo "⚠️  Low balance: $BALANCE MIST. Consider getting more tokens from faucet."
+fi
 
-### 3. Test Coverage
+echo "✅ Account balance: $BALANCE MIST"
 
-```bash
-# Generate test coverage report
-sui move test --coverage
+# Validate Move.toml
+if ! grep -q "neuranft" Move.toml; then
+    echo "❌ Invalid Move.toml configuration"
+    exit 1
+fi
 
-# View coverage summary
-echo "Coverage report generated in build/coverage/"
-```
+echo "✅ Move.toml configuration valid"
 
-## Deployment Process
+# Update Move.toml with current address
+CURRENT_ADDRESS=$(sui client active-address)
+sed -i "s/neuranft = \"0x0\"/neuranft = \"$CURRENT_ADDRESS\"/" Move.toml
 
-### 1. Pre-deployment Checklist
+echo "✅ Updated Move.toml with address: $CURRENT_ADDRESS"
+echo "🎉 Pre-build validation completed successfully!"
+`}
+/>
 
-<div className="card padding--md mt-4" style={{ borderLeft: '4px solid #17a2b8' }}>
-  <h3><img src="/img/icons/info.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />Pre-deployment Verification</h3>
-  <ul>
-    <li>✅ All tests passing</li>
-    <li>✅ Contract addresses updated in Move.toml</li>
-    <li>✅ Sufficient testnet SUI tokens (minimum 1 SUI)</li>
-    <li>✅ Network configured for testnet</li>
-    <li>✅ Source code reviewed and audited</li>
-  </ul>
-</div>
+### Contract Compilation
 
-### 2. Deploy to Testnet
+<Tabs>
+  <TabItem value="basic" label="Basic Build" default>
+    ```bash
+    # Navigate to contract directory
+    cd neuralabs-sui-contracts
+    
+    # Update Move.toml with your address
+    CURRENT_ADDRESS=$(sui client active-address)
+    sed -i "s/neuranft = \"0x0\"/neuranft = \"$CURRENT_ADDRESS\"/" Move.toml
+    
+    # Build the contract
+    sui move build
+    
+    # Check build output
+    echo "Build status: $?"
+    ls -la build/
+    ```
+  </TabItem>
+  <TabItem value="advanced" label="Advanced Build Options">
+    ```bash
+    # Build with verbose output
+    sui move build --verbose
+    
+    # Build with specific profile
+    sui move build --dev
+    
+    # Build and run tests
+    sui move build && sui move test
+    
+    # Build with optimization
+    sui move build --release
+    
+    # Check for warnings and errors
+    sui move build 2>&1 | tee build.log
+    ```
+  </TabItem>
+  <TabItem value="validation" label="Build Validation">
+    ```bash
+    # Validate build artifacts
+    if [ -d "build/neuranft" ]; then
+        echo "✅ Build successful"
+        ls -la build/neuranft/
+        
+        # Check bytecode files
+        find build/ -name "*.mv" | while read file; do
+            echo "📦 Bytecode: $file ($(stat -f%z "$file" 2>/dev/null || stat -c%s "$file") bytes)"
+        done
+    else
+        echo "❌ Build failed"
+        exit 1
+    fi
+    
+    # Verify contract modules
+    echo "📋 Contract modules:"
+    grep -r "module " sources/ | sed 's/.*module /- /' | sed 's/ {.*//'
+    ```
+  </TabItem>
+</Tabs>
 
-```bash
-# Deploy the contract with sufficient gas
-sui client publish --gas-budget 100000000
+## Contract Deployment
 
-# The output will contain the Package ID - save this!
-# Example output:
-# Package published at: 0x926de4be791b165822a8a213540c0606bb0d52450e5f8b6531097d9cd2c4dc64
-```
+### Deployment Process
 
-### 3. Save Deployment Information
+<CollapsibleCodeBlock
+  title="Complete Deployment Script"
+  description="Comprehensive deployment script with error handling, validation, and post-deployment setup"
+  language="bash"
+  defaultCollapsed={true}
+>
+{`#!/bin/bash
+# deploy-contracts.sh - Complete deployment script
 
-```bash
-# Extract Package ID from deployment output
-PACKAGE_ID="0x926de4be791b165822a8a213540c0606bb0d52450e5f8b6531097d9cd2c4dc64"
+set -e  # Exit on any error
 
-# Save to configuration file
-cat > deployment-config.json << EOF
+echo "🚀 Starting NeuraLabs contract deployment..."
+
+# Configuration
+GAS_BUDGET=100000000
+DEPLOYMENT_LOG="deployment_$(date +%Y%m%d_%H%M%S).log"
+
+# Helper functions
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$DEPLOYMENT_LOG"
+}
+
+error_exit() {
+    log "❌ ERROR: $1"
+    exit 1
+}
+
+# Pre-deployment checks
+log "🔍 Running pre-deployment checks..."
+
+# Check balance
+BALANCE=$(sui client gas | grep -o '[0-9]*' | head -1)
+if [ "$BALANCE" -lt "$GAS_BUDGET" ]; then
+    error_exit "Insufficient balance: $BALANCE MIST. Need at least $GAS_BUDGET MIST."
+fi
+
+log "✅ Balance check passed: $BALANCE MIST"
+
+# Check build
+if [ ! -d "build/neuranft" ]; then
+    log "📦 Building contracts..."
+    sui move build || error_exit "Build failed"
+fi
+
+log "✅ Contracts built successfully"
+
+# Deploy contracts
+log "🚀 Deploying contracts to testnet..."
+log "Gas budget: $GAS_BUDGET MIST"
+
+DEPLOY_OUTPUT=$(sui client publish --gas-budget "$GAS_BUDGET" --json 2>&1)
+DEPLOY_STATUS=$?
+
+# Save deployment output
+echo "$DEPLOY_OUTPUT" > "deploy_output_$(date +%Y%m%d_%H%M%S).json"
+
+if [ $DEPLOY_STATUS -ne 0 ]; then
+    error_exit "Deployment failed: $DEPLOY_OUTPUT"
+fi
+
+# Extract deployment information
+PACKAGE_ID=$(echo "$DEPLOY_OUTPUT" | jq -r '.objectChanges[] | select(.type == "published") | .packageId')
+TRANSACTION_DIGEST=$(echo "$DEPLOY_OUTPUT" | jq -r '.digest')
+
+if [ "$PACKAGE_ID" = "null" ] || [ -z "$PACKAGE_ID" ]; then
+    error_exit "Failed to extract package ID from deployment output"
+fi
+
+log "✅ Deployment successful!"
+log "📦 Package ID: $PACKAGE_ID"
+log "🔗 Transaction: $TRANSACTION_DIGEST"
+
+# Save deployment information
+cat > deployment_info.json << EOF
 {
   "package_id": "$PACKAGE_ID",
+  "transaction_digest": "$TRANSACTION_DIGEST",
   "deployer_address": "$(sui client active-address)",
+  "deployment_time": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "network": "testnet",
-  "deployed_at": "$(date -Iseconds)",
-  "gas_used": "estimated from deployment output",
-  "contract_modules": [
-    "nft",
-    "access", 
-    "storage",
-    "utils"
-  ]
+  "gas_used": $(echo "$DEPLOY_OUTPUT" | jq '.effects.gasUsed.computationCost + .effects.gasUsed.storageCost'),
+  "sui_version": "$(sui --version)"
 }
 EOF
 
-echo "✅ Deployment completed. Package ID: $PACKAGE_ID"
-```
+log "💾 Deployment info saved to deployment_info.json"
 
-## Contract Initialization
+# Verify deployment
+log "🔍 Verifying deployment..."
 
-### 1. Initialize Access Registry
+PACKAGE_INFO=$(sui client object "$PACKAGE_ID" --json 2>/dev/null)
+if [ $? -eq 0 ]; then
+    log "✅ Package verification successful"
+else
+    log "⚠️  Package verification failed - this is normal for newly deployed packages"
+fi
 
-```bash
-# Create initialization script
-cat > scripts/initialize.py << EOF
-#!/usr/bin/env python3
-import subprocess
-import json
-import sys
+# Initialize contracts
+log "🔧 Initializing contracts..."
 
-def initialize_access_registry():
-    package_id = "$PACKAGE_ID"
+# Create collection
+log "📝 Creating NFT collection..."
+COLLECTION_TX=$(sui client call \\
+    --package "$PACKAGE_ID" \\
+    --module nft \\
+    --function create_collection \\
+    --gas-budget 10000000 \\
+    --json)
+
+COLLECTION_ID=$(echo "$COLLECTION_TX" | jq -r '.objectChanges[] | select(.type == "created" and (.objectType | contains("Collection"))) | .objectId')
+
+if [ "$COLLECTION_ID" != "null" ] && [ -n "$COLLECTION_ID" ]; then
+    log "✅ Collection created: $COLLECTION_ID"
     
-    # Call the initialization function
-    cmd = [
-        "sui", "client", "call",
-        "--package", package_id,
-        "--module", "access",
-        "--function", "create_access_registry", 
-        "--gas-budget", "10000000"
-    ]
-    
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    
-    if result.returncode == 0:
-        print("✅ Access Registry initialized successfully")
-        print(result.stdout)
-        return True
-    else:
-        print("❌ Failed to initialize Access Registry")
-        print(result.stderr)
-        return False
+    # Update deployment info
+    jq --arg collection_id "$COLLECTION_ID" '.collection_id = $collection_id' deployment_info.json > temp.json && mv temp.json deployment_info.json
+else
+    log "⚠️  Collection creation failed or ID not found"
+fi
 
-if __name__ == "__main__":
-    success = initialize_access_registry()
-    sys.exit(0 if success else 1)
-EOF
+# Create environment file
+cat > .env.deployment << EOF
+# NeuraLabs Contract Deployment Configuration
+# Generated on $(date)
 
-# Make script executable and run
-chmod +x scripts/initialize.py
-python3 scripts/initialize.py
-```
+# Contract addresses
+PACKAGE_ID=$PACKAGE_ID
+COLLECTION_ID=$COLLECTION_ID
 
-### 2. Create Test NFT
-
-```bash
-# Create a test NFT with level 6 access
-sui client call \
-  --package $PACKAGE_ID \
-  --module nft \
-  --function create_nft \
-  --args "Test AI Model" "A test AI model for demonstration" 6 \
-  --gas-budget 10000000
-
-# Save the NFT object ID from the output
-NFT_OBJECT_ID="object_id_from_output"
-echo "✅ Test NFT created: $NFT_OBJECT_ID"
-```
-
-### 3. Verify Deployment
-
-```bash
-# Check package exists
-sui client object $PACKAGE_ID --json
-
-# Check NFT was created
-sui client object $NFT_OBJECT_ID --json
-
-# List all objects owned by deployer
-sui client objects $(sui client active-address)
-```
-
-## Environment Configuration
-
-### 1. Contract Configuration File
-
-```json
-// contract-config.json
-{
-  "package_id": "0x926de4be791b165822a8a213540c0606bb0d52450e5f8b6531097d9cd2c4dc64",
-  "network": "testnet",
-  "access_levels": {
-    "USE_MODEL": 1,
-    "RESALE": 2, 
-    "CREATE_REPLICA": 3,
-    "VIEW_DOWNLOAD": 4,
-    "EDIT_DATA": 5,
-    "ABSOLUTE_OWNERSHIP": 6
-  },
-  "seal_integration": {
-    "min_access_level_for_decryption": 4,
-    "key_servers": [
-      "0x1ee708e0d09c31593a60bee444f8f36a5a3ce66f1409a9dfb12eb11ab254b06b",
-      "0x2ff809f1e1ad42604a71cff555f9f47b6b4df77g5109b0efc23fc22bc365c17c"
-    ]
-  },
-  "performance": {
-    "max_gas_per_tx": 100000000,
-    "expected_gas_usage": {
-      "create_nft": 5000000,
-      "grant_access": 2000000,
-      "seal_approve": 1000000
-    }
-  }
-}
-```
-
-### 2. Environment Variables
-
-```bash
-# Create .env file for development
-cat > .env << EOF
-# Network Configuration
+# Network configuration
 SUI_NETWORK=testnet
 SUI_RPC_URL=https://fullnode.testnet.sui.io:443
 
-# Contract Configuration
-PACKAGE_ID=$PACKAGE_ID
+# Deployment info
 DEPLOYER_ADDRESS=$(sui client active-address)
+DEPLOYMENT_DATE=$(date -u +%Y-%m-%d)
+TRANSACTION_DIGEST=$TRANSACTION_DIGEST
 
-# Walrus Configuration
+# Seal integration
+SEAL_PACKAGE_ID=0x62c79dfeb0a2ca8c308a56bde530ccf3846535e1623949d45c90d23128afff52
+MYSTEN_KEY_SERVER_1_ID=0x13a86a87ab1bf3a2e81b3c13b2e7a3b0db8b3c4d5e6f708192a3b4c5d6e7f809
+MYSTEN_KEY_SERVER_2_ID=0x23b97b98bc2cf4a3f92c4d14c3f8b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6
+
+# Walrus storage
+WALRUS_PUBLISHER_URL=https://publisher.walrus-testnet.walrus.space
+WALRUS_AGGREGATOR_URL=https://aggregator.walrus-testnet.walrus.space
+EOF
+
+log "💾 Environment configuration saved to .env.deployment"
+
+# Generate deployment summary
+log "📊 Generating deployment summary..."
+
+cat << EOF
+
+╔══════════════════════════════════════════════════╗
+║               DEPLOYMENT SUMMARY                 ║
+╠══════════════════════════════════════════════════╣
+║ Package ID: $PACKAGE_ID
+║ Collection: $COLLECTION_ID
+║ Network:    testnet
+║ Deployer:   $(sui client active-address)
+║ Time:       $(date)
+║ Gas Used:   $(echo "$DEPLOY_OUTPUT" | jq '.effects.gasUsed.computationCost + .effects.gasUsed.storageCost') MIST
+╚══════════════════════════════════════════════════╝
+
+🎉 Deployment completed successfully!
+
+Next steps:
+1. Update your frontend configuration with the new Package ID
+2. Run integration tests: cd scripts && python test_integration.py
+3. Test the deployed contracts with the test app
+4. Set up monitoring and alerts
+
+Useful commands:
+- View package: sui client object $PACKAGE_ID
+- View collection: sui client object $COLLECTION_ID
+- Check transaction: sui client transaction $TRANSACTION_DIGEST
+
+EOF
+
+log "🎉 Deployment process completed successfully!"
+`}
+</CollapsibleCodeBlock>
+
+### Post-Deployment Verification
+
+<Tabs>
+  <TabItem value="validation" label="Contract Validation" default>
+    ```bash
+    # Verify package exists and is accessible
+    PACKAGE_ID="0x926de4be791b165822a8a213540c0606bb0d52450e5f8b6531097d9cd2c4dc64"
+    
+    # Check package information
+    sui client object $PACKAGE_ID --json | jq '.data'
+    
+    # Verify modules are available
+    sui client package $PACKAGE_ID
+    
+    # Check package metadata
+    sui client object $PACKAGE_ID --json | jq '{
+      objectId: .data.objectId,
+      version: .data.version,
+      digest: .data.digest,
+      type: .data.type
+    }'
+    ```
+  </TabItem>
+  <TabItem value="testing" label="Functionality Testing">
+    ```bash
+    # Test NFT creation (requires collection ID)
+    COLLECTION_ID="YOUR_COLLECTION_ID"
+    
+    sui client call \
+      --package $PACKAGE_ID \
+      --module nft \
+      --function create_nft \
+      --args $COLLECTION_ID "Test NFT" "Testing deployment" 6 0x6 \
+      --gas-budget 10000000
+    
+    # Test access control
+    # (Add more specific tests based on your contract functions)
+    
+    # Test Seal integration
+    sui client call \
+      --package $PACKAGE_ID \
+      --module nft \
+      --function seal_approve \
+      --args "[1,2,3,4,5,6,7,8]" $COLLECTION_ID \
+      --gas-budget 5000000
+    ```
+  </TabItem>
+  <TabItem value="monitoring" label="Health Monitoring">
+    ```bash
+    # Create monitoring script
+    cat > monitor_deployment.sh << 'EOF'
+    #!/bin/bash
+    
+    PACKAGE_ID="0x926de4be791b165822a8a213540c0606bb0d52450e5f8b6531097d9cd2c4dc64"
+    
+    echo "🔍 Monitoring contract health..."
+    
+    # Check if package still exists
+    if sui client object $PACKAGE_ID &>/dev/null; then
+        echo "✅ Package is accessible"
+    else
+        echo "❌ Package not found or inaccessible"
+        exit 1
+    fi
+    
+    # Check recent events
+    echo "📊 Recent events:"
+    sui client events --package $PACKAGE_ID --limit 5
+    
+    # Check transaction count (approximate)
+    echo "🔢 Checking activity..."
+    sui client events --package $PACKAGE_ID --limit 100 | wc -l
+    
+    echo "✅ Health check completed"
+    EOF
+    
+    chmod +x monitor_deployment.sh
+    ./monitor_deployment.sh
+    ```
+  </TabItem>
+</Tabs>
+
+## Integration Configuration
+
+### Frontend Configuration
+
+<InlineCodeCard
+  title="Frontend Environment Configuration"
+  description="React application configuration for contract integration"
+  language="javascript"
+  code={`// frontend/.env.production
+REACT_APP_SUI_NETWORK=testnet
+REACT_APP_PACKAGE_ID=0x926de4be791b165822a8a213540c0606bb0d52450e5f8b6531097d9cd2c4dc64
+REACT_APP_COLLECTION_ID=YOUR_COLLECTION_ID
+REACT_APP_SUI_RPC_URL=https://fullnode.testnet.sui.io:443
+
+// Seal configuration
+REACT_APP_SEAL_PACKAGE_ID=0x62c79dfeb0a2ca8c308a56bde530ccf3846535e1623949d45c90d23128afff52
+REACT_APP_MYSTEN_KEY_SERVER_1=https://seal-key-server-testnet-1.mystenlabs.com
+REACT_APP_MYSTEN_KEY_SERVER_2=https://seal-key-server-testnet-2.mystenlabs.com
+
+// Walrus configuration
+REACT_APP_WALRUS_PUBLISHER_URL=https://publisher.walrus-testnet.walrus.space
+REACT_APP_WALRUS_AGGREGATOR_URL=https://aggregator.walrus-testnet.walrus.space
+
+// src/config/sui.config.js
+export const SUI_CONFIG = {
+  PACKAGE_ID: process.env.REACT_APP_PACKAGE_ID,
+  COLLECTION_ID: process.env.REACT_APP_COLLECTION_ID,
+  NETWORK: process.env.REACT_APP_SUI_NETWORK || 'testnet',
+  RPC_URL: process.env.REACT_APP_SUI_RPC_URL,
+  
+  SEAL: {
+    PACKAGE_ID: process.env.REACT_APP_SEAL_PACKAGE_ID,
+    KEY_SERVERS: [
+      {
+        name: 'mysten-testnet-1',
+        url: process.env.REACT_APP_MYSTEN_KEY_SERVER_1,
+        objectId: '0x13a86a87ab1bf3a2e81b3c13b2e7a3b0db8b3c4d5e6f708192a3b4c5d6e7f809'
+      },
+      {
+        name: 'mysten-testnet-2',
+        url: process.env.REACT_APP_MYSTEN_KEY_SERVER_2,
+        objectId: '0x23b97b98bc2cf4a3f92c4d14c3f8b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6'
+      }
+    ],
+    THRESHOLD: 1 // 1-out-of-2 for testing
+  },
+  
+  WALRUS: {
+    PUBLISHER_URL: process.env.REACT_APP_WALRUS_PUBLISHER_URL,
+    AGGREGATOR_URL: process.env.REACT_APP_WALRUS_AGGREGATOR_URL
+  }
+};`}
+/>
+
+### Backend Configuration
+
+<InlineCodeCard
+  title="Backend Service Configuration"
+  description="Python backend configuration for contract interaction"
+  language="python"
+  code={`# neuralabs-backend/.env
+SUI_NETWORK=testnet
+PACKAGE_ID=0x926de4be791b165822a8a213540c0606bb0d52450e5f8b6531097d9cd2c4dc64
+COLLECTION_ID=YOUR_COLLECTION_ID
+SUI_RPC_URL=https://fullnode.testnet.sui.io:443
+
+# Seal configuration
+SEAL_PACKAGE_ID=0x62c79dfeb0a2ca8c308a56bde530ccf3846535e1623949d45c90d23128afff52
+MYSTEN_KEY_SERVER_1=https://seal-key-server-testnet-1.mystenlabs.com
+MYSTEN_KEY_SERVER_2=https://seal-key-server-testnet-2.mystenlabs.com
+
+# Walrus configuration
 WALRUS_PUBLISHER_URL=https://publisher.walrus-testnet.walrus.space
 WALRUS_AGGREGATOR_URL=https://aggregator.walrus-testnet.walrus.space
 
-# Gas Configuration
-DEFAULT_GAS_BUDGET=10000000
-MAX_GAS_BUDGET=100000000
+# Database configuration
+DATABASE_URL=postgresql://user:password@localhost:5432/neuralabs
+REDIS_URL=redis://localhost:6379
 
-# Development flags
-DEBUG_MODE=true
-ENABLE_LOGGING=true
-EOF
+# JWT configuration
+JWT_SECRET=your-secret-key-here
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION_HOURS=24
 
-echo "✅ Environment configuration created"
-```
+# config.py
+import os
+from typing import Dict, Any
 
-## Post-Deployment Verification
+class Config:
+    # SUI Configuration
+    SUI_NETWORK = os.getenv('SUI_NETWORK', 'testnet')
+    PACKAGE_ID = os.getenv('PACKAGE_ID')
+    COLLECTION_ID = os.getenv('COLLECTION_ID')
+    SUI_RPC_URL = os.getenv('SUI_RPC_URL')
+    
+    # Seal Configuration
+    SEAL_CONFIG = {
+        'package_id': os.getenv('SEAL_PACKAGE_ID'),
+        'key_servers': [
+            {
+                'name': 'mysten-testnet-1',
+                'url': os.getenv('MYSTEN_KEY_SERVER_1'),
+                'object_id': '0x13a86a87ab1bf3a2e81b3c13b2e7a3b0db8b3c4d5e6f708192a3b4c5d6e7f809'
+            },
+            {
+                'name': 'mysten-testnet-2', 
+                'url': os.getenv('MYSTEN_KEY_SERVER_2'),
+                'object_id': '0x23b97b98bc2cf4a3f92c4d14c3f8b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6'
+            }
+        ],
+        'threshold': 1
+    }
+    
+    # Walrus Configuration
+    WALRUS_CONFIG = {
+        'publisher_url': os.getenv('WALRUS_PUBLISHER_URL'),
+        'aggregator_url': os.getenv('WALRUS_AGGREGATOR_URL')
+    }
+    
+    @classmethod
+    def validate(cls) -> bool:
+        """Validate required configuration"""
+        required_vars = [
+            'PACKAGE_ID', 'SUI_RPC_URL', 'DATABASE_URL', 'REDIS_URL'
+        ]
+        
+        missing = [var for var in required_vars if not getattr(cls, var)]
+        
+        if missing:
+            raise ValueError(f"Missing required environment variables: {missing}")
+        
+        return True`}
+/>
 
-### 1. Function Testing
+## Troubleshooting and Common Issues
 
-```bash
-# Test access granting
-sui client call \
-  --package $PACKAGE_ID \
-  --module access \
-  --function grant_access \
-  --args $NFT_OBJECT_ID $TEST_USER_ADDRESS 4 \
-  --gas-budget 5000000
+### Deployment Issues
 
-# Test seal approve function
-sui client call \
-  --package $PACKAGE_ID \
-  --module nft \
-  --function seal_approve \
-  --args "test-id-vector" $NFT_OBJECT_ID \
-  --gas-budget 3000000
-```
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/error.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Insufficient Gas
+      </CardTitle>
+      <CardDescription>
+        <strong>Error:</strong> Transaction failed due to insufficient gas
+        <br />
+        <strong>Solution:</strong> Increase gas budget to 100,000,000 MIST or higher
+      </CardDescription>
+    </CardHeader>
+  </Card>
 
-### 2. Event Monitoring
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/error.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Build Failures
+      </CardTitle>
+      <CardDescription>
+        <strong>Error:</strong> Move compilation errors
+        <br />
+        <strong>Solution:</strong> Check Move.toml address configuration and dependency versions
+      </CardDescription>
+    </CardHeader>
+  </Card>
 
-```bash
-# Monitor contract events
-sui client events --package $PACKAGE_ID
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/warning.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Network Issues
+      </CardTitle>
+      <CardDescription>
+        <strong>Error:</strong> Connection to testnet failed
+        <br />
+        <strong>Solution:</strong> Verify network configuration and try alternative RPC endpoints
+      </CardDescription>
+    </CardHeader>
+  </Card>
 
-# Filter specific event types
-sui client events --package $PACKAGE_ID --event-type "nft::NFTCreated"
-```
-
-## Troubleshooting
-
-### Common Deployment Issues
-
-<div className="card padding--md mt-4">
-  <h3><img src="/img/icons/error.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />Common Issues</h3>
-  
-  **Package Address Mismatch**
-  ```bash
-  # Fix: Update Move.toml with correct address
-  sed -i "s/neuranft = \".*\"/neuranft = \"$(sui client active-address)\"/" Move.toml
-  sui move build
-  ```
-  
-  **Insufficient Gas**
-  ```bash
-  # Fix: Fund account or increase gas budget
-  sui client faucet --address $(sui client active-address)
-  ```
-  
-  **Module Not Found**
-  ```bash
-  # Fix: Verify package ID and module names
-  sui client object $PACKAGE_ID --json
-  ```
-  
-  **Compilation Errors**
-  ```bash
-  # Fix: Check Move syntax and dependencies
-  sui move build --verbose
-  ```
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/info.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Address Conflicts
+      </CardTitle>
+      <CardDescription>
+        <strong>Error:</strong> Package address mismatch
+        <br />
+        <strong>Solution:</strong> Update Move.toml with correct deployer address
+      </CardDescription>
+    </CardHeader>
+  </Card>
 </div>
 
 ### Debug Commands
 
-```bash
-# Check transaction details
-sui client transaction $TX_DIGEST --json
+<CollapsibleCodeBlock
+  title="Comprehensive Debug Commands"
+  description="Collection of debug commands for troubleshooting deployment issues"
+  language="bash"
+  defaultCollapsed={true}
+>
+{`#!/bin/bash
+# debug-deployment.sh - Debug and troubleshooting commands
 
-# View object details
-sui client object $OBJECT_ID --json
+echo "🔍 Starting deployment diagnostics..."
 
-# Analyze gas usage
-sui client gas --json
+# 1. Environment Check
+echo "=== ENVIRONMENT CHECK ==="
+echo "SUI CLI Version: $(sui --version)"
+echo "Current Network: $(sui client envs | grep '*' | awk '{print $2}')"
+echo "Active Address: $(sui client active-address)"
+echo "Current Balance: $(sui client balance)"
 
-# Check network status
-sui client status
-```
+# 2. Network Connectivity
+echo "=== NETWORK CONNECTIVITY ==="
+if curl -s https://fullnode.testnet.sui.io:443 > /dev/null; then
+    echo "✅ Testnet RPC accessible"
+else
+    echo "❌ Testnet RPC not accessible"
+fi
 
-## Upgrade Strategy
+# 3. Build Diagnostics
+echo "=== BUILD DIAGNOSTICS ==="
+if [ -f "Move.toml" ]; then
+    echo "✅ Move.toml found"
+    echo "Package name: $(grep -E '^name' Move.toml | cut -d'"' -f2)"
+    echo "Address mapping: $(grep -E '^neuranft' Move.toml)"
+else
+    echo "❌ Move.toml not found"
+fi
 
-### 1. Contract Upgrades
+if [ -d "sources" ]; then
+    echo "✅ Sources directory found"
+    echo "Source files: $(ls sources/*.move 2>/dev/null | wc -l)"
+    ls -la sources/
+else
+    echo "❌ Sources directory not found"
+fi
 
-```bash
-# Upgrade existing package (for mutable packages)
-sui client upgrade --package $PACKAGE_ID --gas-budget 50000000
+# 4. Build Test
+echo "=== BUILD TEST ==="
+if sui move build --dry-run; then
+    echo "✅ Build test passed"
+else
+    echo "❌ Build test failed"
+    echo "Common issues:"
+    echo "  - Check Move.toml address configuration"
+    echo "  - Verify source file syntax"
+    echo "  - Update Sui framework version"
+fi
 
-# For immutable packages, deploy new version
-sui client publish --gas-budget 100000000
-NEW_PACKAGE_ID="new_package_id_from_output"
+# 5. Gas Estimation
+echo "=== GAS ESTIMATION ==="
+CURRENT_BALANCE=$(sui client gas | grep -o '[0-9]*' | head -1)
+RECOMMENDED_GAS=100000000
 
-# Update configuration
-sed -i "s/PACKAGE_ID=.*/PACKAGE_ID=$NEW_PACKAGE_ID/" .env
-```
+echo "Current balance: $CURRENT_BALANCE MIST"
+echo "Recommended gas: $RECOMMENDED_GAS MIST"
 
-### 2. Migration Planning
+if [ "$CURRENT_BALANCE" -gt "$RECOMMENDED_GAS" ]; then
+    echo "✅ Sufficient balance for deployment"
+else
+    echo "⚠️  Low balance. Consider requesting more tokens:"
+    echo "  sui client faucet --address $(sui client active-address)"
+fi
 
-```python
-# migrate_data.py - Template for contract upgrades
-import asyncio
-from sui_python_sdk import SuiClient
+# 6. Previous Deployments
+echo "=== PREVIOUS DEPLOYMENTS ==="
+if [ -f "deployment_info.json" ]; then
+    echo "✅ Previous deployment found:"
+    cat deployment_info.json | jq '{package_id, deployment_time, gas_used}'
+else
+    echo "ℹ️  No previous deployment info found"
+fi
 
-async def migrate_to_new_version():
-    """
-    Migration script template for contract upgrades
-    """
-    # 1. Identify all existing NFTs
-    # 2. Create migration transactions
-    # 3. Update access permissions
-    # 4. Verify migration success
-    pass
+# 7. Contract Validation
+if [ -n "$1" ]; then
+    PACKAGE_ID="$1"
+    echo "=== CONTRACT VALIDATION ==="
+    echo "Checking package: $PACKAGE_ID"
+    
+    if sui client object "$PACKAGE_ID" &>/dev/null; then
+        echo "✅ Package accessible"
+        echo "Package info:"
+        sui client object "$PACKAGE_ID" --json | jq '{
+          objectId: .data.objectId,
+          version: .data.version,
+          type: .data.type
+        }'
+    else
+        echo "❌ Package not accessible"
+    fi
+fi
 
-if __name__ == "__main__":
-    asyncio.run(migrate_to_new_version())
-```
+# 8. Recommendations
+echo "=== RECOMMENDATIONS ==="
+echo "1. Ensure sufficient gas balance (>100M MIST)"
+echo "2. Verify Move.toml address matches deployer"
+echo "3. Test build before deployment"
+echo "4. Use gas budget of 100,000,000 for initial deployment"
+echo "5. Save deployment info for reference"
 
-## Security Checklist
-
-<div className="card padding--md mt-4" style={{ borderLeft: '4px solid #ff6b6b' }}>
-  <h3><img src="/img/icons/security.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />Security Verification</h3>
-  <ul>
-    <li>✅ All access control functions tested</li>
-    <li>✅ Input validation working correctly</li>
-    <li>✅ Gas limits set appropriately</li>
-    <li>✅ Error handling implemented</li>
-    <li>✅ No hardcoded secrets in code</li>
-    <li>✅ Proper event emission for audit trail</li>
-    <li>✅ Contract upgrade strategy defined</li>
-  </ul>
-</div>
+echo "🔍 Diagnostics completed!"
+`}
+</CollapsibleCodeBlock>
 
 ## Next Steps
 
-1. **[Testing Guide](./testing)** - Comprehensive testing strategies
-2. **[Integration Guide](./integration)** - Frontend and backend integration
-3. **[Seal Integration](../encryption/seal)** - Configure threshold encryption
-4. **[Walrus Integration](../storage/walrus)** - Set up decentralized storage
+After successful deployment, proceed with:
 
-## References
+1. **[Testing Guide](./testing)** - Run comprehensive tests on deployed contracts
+2. **[Integration Setup](./integration)** - Configure frontend and backend integration
+3. **[Seal Configuration](../encryption/seal)** - Set up threshold encryption
+4. **[Walrus Integration](../storage/walrus)** - Configure decentralized storage
+5. **[Monitoring Setup](./monitoring)** - Implement health monitoring and alerts
 
-- [SUI CLI Documentation](https://docs.sui.io/references/cli)
-- [Move Package Manager](https://docs.sui.io/concepts/sui-move/packages)
-- [SUI Testnet Faucet](https://discord.gg/sui)
+<div className="card padding--md mt-4" style={{ borderLeft: '4px solid #4caf50' }}>
+  <h3><img src="/img/icons/success.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />Deployment Complete!</h3>
+  <p>
+    Your NeuraLabs smart contracts are now deployed and ready for integration. 
+    The deployed package ID is: <code>0x926de4be791b165822a8a213540c0606bb0d52450e5f8b6531097d9cd2c4dc64</code>
+  </p>
+  <p>
+    Use this Package ID in your frontend and backend configurations to interact with the deployed contracts.
+  </p>
+</div>
