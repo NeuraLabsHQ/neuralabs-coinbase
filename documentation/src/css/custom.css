@@ -41,11 +41,11 @@
   --neuralabs-gray-900: #141414;
   
   /* NeuraLabs Specific UI Colors - Light Mode */
-  --neuralabs-bg-primary: #f2f3f4;
-  --neuralabs-bg-secondary: #F9F9FA;
-  --neuralabs-bg-surface: #fdfdfd;
-  --neuralabs-bg-navbar: #F9F9FA;
-  --neuralabs-bg-footer: #F9F9FA;
+  --neuralabs-bg-primary: #ffffff;
+  --neuralabs-bg-secondary: #ffffff;
+  --neuralabs-bg-surface: #ffffff;
+  --neuralabs-bg-navbar: #ffffff;
+  --neuralabs-bg-footer: #ffffff;
   
   --neuralabs-text-primary: #333333;
   --neuralabs-text-secondary: #202020;
@@ -98,11 +98,11 @@
 /* Dark Mode - Matching Frontend Dark Theme */
 [data-theme='dark'] {
   /* NeuraLabs Specific UI Colors - Dark Mode */
-  --neuralabs-bg-primary: #0f0f11;
-  --neuralabs-bg-secondary: #18191b;
-  --neuralabs-bg-surface: #18191b;
-  --neuralabs-bg-navbar: #0F0F11;
-  --neuralabs-bg-footer: #0F0F11;
+  --neuralabs-bg-primary: #000000;
+  --neuralabs-bg-secondary: #000000;
+  --neuralabs-bg-surface: #000000;
+  --neuralabs-bg-navbar: #000000;
+  --neuralabs-bg-footer: #000000;
   --neuralabs-bg-input: #141516;
   --neuralabs-bg-hover: #242526;
   
@@ -167,7 +167,7 @@
 .navbar {
   border-bottom: 1px solid var(--ifm-toc-border-color);
   box-shadow: none;
-  padding: 0.75rem 0;
+  padding: 0.75rem 2rem;
 }
 
 .navbar__brand {
@@ -187,12 +187,35 @@
 .hero {
   background: linear-gradient(135deg, var(--neuralabs-blue-500) 0%, var(--neuralabs-purple-500) 100%);
   color: white;
-  padding: 4rem 0;
+  padding: 4rem 2rem;
   text-align: center;
 }
 
 .hero--primary {
   background: linear-gradient(135deg, var(--neuralabs-blue-500) 0%, var(--neuralabs-purple-500) 100%);
+}
+
+/* Homepage specific overrides */
+.main-wrapper {
+  background-color: var(--ifm-background-color) !important;
+}
+
+/* Dark theme homepage overrides */
+[data-theme='dark'] .main-wrapper {
+  background-color: #000000 !important;
+}
+
+[data-theme='dark'] .features {
+  background-color: #000000 !important;
+}
+
+/* Light theme homepage overrides */
+[data-theme='light'] .main-wrapper {
+  background-color: #ffffff !important;
+}
+
+[data-theme='light'] .features {
+  background-color: #ffffff !important;
 }
 
 /* Buttons - Matching NeuraLabs style */
@@ -266,13 +289,13 @@
 
 /* Footer - Enhanced to match NeuraLabs design */
 .footer {
-  background-color: var(--ifm-footer-background-color);
+  background-color: var(--neuralabs-bg-footer) !important;
   border-top: 1px solid var(--ifm-toc-border-color);
   padding: 3rem 0 2rem;
 }
 
 .footer__title {
-  color: var(--ifm-heading-color);
+  color: var(--ifm-heading-color) !important;
   font-weight: 600;
   font-size: 1.125rem;
   margin-bottom: 1rem;
@@ -283,18 +306,18 @@
 }
 
 .footer__link-item {
-  color: var(--neuralabs-text-muted);
+  color: var(--neuralabs-text-muted) !important;
   font-weight: 500;
   transition: color 0.2s ease;
 }
 
 .footer__link-item:hover {
-  color: var(--ifm-color-primary);
+  color: var(--ifm-color-primary) !important;
   text-decoration: none;
 }
 
 .footer__copyright {
-  color: var(--neuralabs-text-muted);
+  color: var(--neuralabs-text-muted) !important;
   font-size: 0.875rem;
   margin-top: 2rem;
   padding-top: 2rem;
@@ -309,6 +332,40 @@
 
 .footer__col {
   margin-bottom: 2rem;
+}
+
+/* Footer dark mode specific overrides */
+[data-theme='dark'] .footer {
+  background-color: #000000 !important;
+}
+
+[data-theme='dark'] .footer__title {
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .footer__link-item {
+  color: #c4c4c4 !important;
+}
+
+[data-theme='dark'] .footer__copyright {
+  color: #c4c4c4 !important;
+}
+
+/* Footer light mode specific overrides */
+[data-theme='light'] .footer {
+  background-color: #ffffff !important;
+}
+
+[data-theme='light'] .footer__title {
+  color: #000000 !important;
+}
+
+[data-theme='light'] .footer__link-item {
+  color: #555555 !important;
+}
+
+[data-theme='light'] .footer__copyright {
+  color: #555555 !important;
 }
 
 /* Code blocks - Matching NeuraLabs style */
@@ -424,6 +481,18 @@ code {
 
 /* Responsive adjustments */
 @media (max-width: 996px) {
+  .navbar {
+    padding: 0.75rem 1rem;
+  }
+  
+  .hero {
+    padding: 3rem 1rem;
+  }
+  
+  .features {
+    padding: 2rem 1rem;
+  }
+  
   .navbar__toggle {
     color: var(--ifm-navbar-link-color);
   }
@@ -435,6 +504,20 @@ code {
   .navbar-sidebar__brand {
     background-color: var(--ifm-navbar-background-color);
     border-bottom: 1px solid var(--ifm-toc-border-color);
+  }
+}
+
+@media (max-width: 576px) {
+  .navbar {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .hero {
+    padding: 2rem 0.5rem;
+  }
+  
+  .features {
+    padding: 1.5rem 0.5rem;
   }
 }
 
