@@ -61,9 +61,10 @@ const ConnectionsListPopup = ({
       preserveScrollBarGap={true}
       returnFocusOnClose={false}
       isCentered
+    
     >
       <ModalOverlay bg="rgba(0, 0, 0, 0.8)" />
-      <ModalContent bg={bgColor}>
+      <ModalContent bg={bgColor} maxW="50%">
         <ModalHeader borderBottom="1px solid" borderColor={borderColor} color={textColor}>
           <Text>Incoming Connections to {node.name}</Text>
         </ModalHeader>
