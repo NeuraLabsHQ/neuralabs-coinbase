@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { useCurrentAccount, useSuiClient, useSignAndExecuteTransactionBlock } from '@mysten/dapp-kit'
-import { TransactionBlock } from '@mysten/sui.js/transactions'
+import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
+import { Transaction } from '@mysten/sui/transactions'
 import toast from 'react-hot-toast'
 
 /**
@@ -10,7 +10,7 @@ import toast from 'react-hot-toast'
 function AccessControl({ config }) {
   const account = useCurrentAccount()
   const client = useSuiClient()
-  const { mutate: signAndExecuteTransactionBlock } = useSignAndExecuteTransactionBlock()
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction()
   
   const [selectedNFT, setSelectedNFT] = useState('')
   const [selectedAccessCap, setSelectedAccessCap] = useState('')
@@ -113,7 +113,7 @@ function AccessControl({ config }) {
     const toastId = toast.loading('Granting access...')
 
     try {
-      const tx = new TransactionBlock()
+      const tx = new Transaction()
       
       // Need to have an AccessCap for the NFT to grant access
       if (!selectedAccessCap) {
@@ -127,15 +127,15 @@ function AccessControl({ config }) {
         arguments: [
           tx.object(config.REGISTRY_ID), // Access Registry
           tx.object(selectedAccessCap), // Access Cap for the NFT
-          tx.pure(selectedNFT), // NFT ID
-          tx.pure(userAddress), // User address
-          tx.pure(parseInt(accessLevel)) // Access level
+          tx.pure.id(selectedNFT), // NFT ID (as ID type, not string)
+          tx.pure.address(userAddress), // User address
+          tx.pure.u8(parseInt(accessLevel)) // Access level
         ],
       })
 
-      signAndExecuteTransactionBlock(
+      signAndExecuteTransaction(
         {
-          transactionBlock: tx,
+          transaction: tx,
           options: {
             showEffects: true,
           },
@@ -176,7 +176,7 @@ function AccessControl({ config }) {
     const toastId = toast.loading('Creating Access Capability...')
     
     try {
-      const tx = new TransactionBlock()
+      const tx = new Transaction()
       
       tx.moveCall({
         target: `${config.PACKAGE_ID}::access::create_access_cap_entry`,
@@ -185,9 +185,9 @@ function AccessControl({ config }) {
         ],
       })
 
-      signAndExecuteTransactionBlock(
+      signAndExecuteTransaction(
         {
-          transactionBlock: tx,
+          transaction: tx,
           options: {
             showEffects: true,
             showObjectChanges: true,
@@ -219,7 +219,7 @@ function AccessControl({ config }) {
     const toastId = toast.loading('Revoking access...')
 
     try {
-      const tx = new TransactionBlock()
+      const tx = new Transaction()
       
       // Need AccessCap to revoke access
       const accessCap = myAccessCaps.find(cap => cap.nft_id === tokenId);
@@ -234,14 +234,14 @@ function AccessControl({ config }) {
         arguments: [
           tx.object(config.REGISTRY_ID), // Access Registry
           tx.object(accessCap.id), // Access Cap
-          tx.pure(tokenId), // NFT ID
-          tx.pure(user) // User address
+          tx.pure.id(tokenId), // NFT ID (as ID type, not string)
+          tx.pure.address(user) // User address
         ],
       })
 
-      signAndExecuteTransactionBlock(
+      signAndExecuteTransaction(
         {
-          transactionBlock: tx,
+          transaction: tx,
           options: {
             showEffects: true,
           },

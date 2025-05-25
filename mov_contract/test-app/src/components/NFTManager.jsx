@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { useCurrentAccount, useSuiClient, useSignAndExecuteTransactionBlock } from '@mysten/dapp-kit'
-import { TransactionBlock } from '@mysten/sui.js/transactions'
+import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
+import { Transaction } from '@mysten/sui/transactions'
 import toast from 'react-hot-toast'
 
 /**
@@ -10,7 +10,7 @@ import toast from 'react-hot-toast'
 function NFTManager({ config }) {
   const account = useCurrentAccount()
   const client = useSuiClient()
-  const { mutate: signAndExecuteTransactionBlock } = useSignAndExecuteTransactionBlock()
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction()
   
   const [isCreating, setIsCreating] = useState(false)
   const [formData, setFormData] = useState({
@@ -34,22 +34,22 @@ function NFTManager({ config }) {
     const toastId = toast.loading('Creating NFT...')
 
     try {
-      const tx = new TransactionBlock()
+      const tx = new Transaction()
       
       // Call mint_to_sender function
       tx.moveCall({
         target: `${config.PACKAGE_ID}::nft::mint_to_sender`,
         arguments: [
-          tx.pure(formData.name),
-          tx.pure(formData.description),
+          tx.pure.string(formData.name),
+          tx.pure.string(formData.description),
           tx.object('0x6') // Clock object
         ],
       })
 
       // Execute transaction
-      signAndExecuteTransactionBlock(
+      signAndExecuteTransaction(
         {
-          transactionBlock: tx,
+          transaction: tx,
           options: {
             showEffects: true,
             showObjectChanges: true,

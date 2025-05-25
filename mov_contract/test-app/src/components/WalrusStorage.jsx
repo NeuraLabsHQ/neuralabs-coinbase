@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { useCurrentAccount, useSuiClient } from '@mysten/dapp-kit'
-import { TransactionBlock } from '@mysten/sui.js/transactions'
+import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
+import { Transaction } from '@mysten/sui/transactions'
 import { WalrusClient } from '@mysten/walrus'
-import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519'
+// Removed Ed25519Keypair import - we'll use the connected wallet instead
 import toast from 'react-hot-toast'
 
 /**
@@ -12,6 +12,7 @@ import toast from 'react-hot-toast'
 function WalrusStorage({ config }) {
   const account = useCurrentAccount()
   const suiClient = useSuiClient()
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction()
   const [walrusClient, setWalrusClient] = useState(null)
   
   const [uploadForm, setUploadForm] = useState({
@@ -32,13 +33,18 @@ function WalrusStorage({ config }) {
   // Initialize Walrus client
   useEffect(() => {
     const initWalrusClient = async () => {
+      if (!account) {
+        console.log('No account connected, skipping Walrus client initialization')
+        return
+      }
+      
       try {
         const client = new WalrusClient({
           network: 'testnet',
           suiClient: suiClient,
         })
         setWalrusClient(client)
-        console.log('Walrus client initialized')
+        console.log('Walrus client initialized for account:', account.address)
       } catch (error) {
         console.error('Failed to initialize Walrus client:', error)
         toast.error('Failed to initialize Walrus client')
@@ -46,9 +52,9 @@ function WalrusStorage({ config }) {
     }
     
     initWalrusClient()
-  }, [suiClient])
+  }, [suiClient, account])
 
-  // Upload file to Walrus using SDK
+  // Upload file to Walrus using transaction-based approach with wallet
   const uploadToWalrusSDK = async (fileData, fileName, epochs) => {
     if (!walrusClient) {
       throw new Error('Walrus client not initialized')
@@ -58,35 +64,43 @@ function WalrusStorage({ config }) {
       throw new Error('No wallet connected')
     }
 
-    try {
-      console.log(`Uploading ${fileName} for ${epochs} epochs...`)
-      
-      // For demonstration, we'll use a temporary keypair
-      // In production, this should be handled differently
-      const tempKeypair = Ed25519Keypair.generate()
-      
-      const result = await walrusClient.writeBlob({
-        blob: fileData,
-        deletable: false,
-        epochs: parseInt(epochs),
-        signer: tempKeypair // In production, use wallet signer
-      })
-      
-      console.log('Upload successful:', {
-        blobId: result.blobId,
-        storageCost: result.cost?.storageCost,
-        writeFee: result.cost?.writeFee
-      })
-      
-      return {
-        blobId: result.blobId,
-        cost: result.cost,
-        url: `https://aggregator.walrus-testnet.walrus.space/v1/${result.blobId}`
+    return new Promise((resolve, reject) => {
+      try {
+        console.log(`Uploading ${fileName} for ${epochs} epochs...`)
+        
+        // Use the wallet client's transaction execution
+        walrusClient.writeBlob({
+          blob: fileData,
+          deletable: false,
+          epochs: parseInt(epochs),
+        }).then((result) => {
+          console.log('Upload successful:', {
+            blobId: result.blobId,
+            storageCost: result.cost?.storageCost,
+            writeFee: result.cost?.writeFee
+          })
+          
+          resolve({
+            blobId: result.blobId,
+            cost: result.cost,
+            url: `https://aggregator.walrus-testnet.walrus.space/v1/${result.blobId}`
+          })
+        }).catch((error) => {
+          console.error('Walrus upload error:', error)
+          
+          // If the error is about WAL tokens, provide helpful message
+          if (error.message.includes('Not enough coins of type') && error.message.includes('WAL')) {
+            reject(new Error('Insufficient WAL tokens. Please get WAL tokens from the Walrus testnet faucet.'))
+          } else {
+            reject(new Error(`Failed to upload to Walrus: ${error.message}`))
+          }
+        })
+        
+      } catch (error) {
+        console.error('Walrus upload error:', error)
+        reject(new Error(`Failed to upload to Walrus: ${error.message}`))
       }
-    } catch (error) {
-      console.error('Walrus upload error:', error)
-      throw new Error(`Failed to upload to Walrus: ${error.message}`)
-    }
+    })
   }
 
   // Download file from Walrus using SDK
@@ -243,7 +257,7 @@ function WalrusStorage({ config }) {
     setIsStoring(true)
     
     try {
-      const tx = new TransactionBlock()
+      const tx = new Transaction()
       
       // Convert encrypted key ID to vector<u8>
       const keyIdBytes = data.encryptedKeyId.split(' ').map(n => parseInt(n))
@@ -253,24 +267,24 @@ function WalrusStorage({ config }) {
         arguments: [
           tx.object(data.nftObjectId),
           tx.object(config.REGISTRY_ID),
-          tx.pure(data.walrusBlobId),
+          tx.pure.string(data.walrusBlobId),
           tx.pure.vector('u8', keyIdBytes),
-          tx.pure(JSON.stringify({
+          tx.pure.string(JSON.stringify({
             threshold: parseInt(uploadForm.threshold),
             keyServers: parseInt(uploadForm.keyServerCount)
           })),
-          tx.pure(data.fileHash),
-          tx.pure(data.fileSize),
-          tx.pure(data.contentType),
-          tx.pure(parseInt(uploadForm.threshold)),
-          tx.pure(parseInt(uploadForm.keyServerCount)),
+          tx.pure.string(data.fileHash),
+          tx.pure.u64(data.fileSize),
+          tx.pure.string(data.contentType),
+          tx.pure.u8(parseInt(uploadForm.threshold)),
+          tx.pure.u8(parseInt(uploadForm.keyServerCount)),
           tx.object('0x6') // Clock
         ],
       })
 
-      const result = await suiClient.signAndExecuteTransactionBlock({
+      const result = await suiClient.signAndExecuteTransaction({
         signer: account,
-        transactionBlock: tx,
+        transaction: tx,
         options: {
           showEffects: true,
         },
