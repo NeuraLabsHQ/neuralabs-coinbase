@@ -40,6 +40,65 @@ cp .env.example .env
 # Edit .env with your contract addresses
 ```
 
+### Understanding the Registry ID
+
+The **Registry ID** is a critical component of the NeuraLabs contract system:
+
+- **What it is**: A shared object on Sui blockchain that acts as a global permission database
+- **Purpose**: Stores all NFT access permissions in a centralized registry
+- **Type**: `AccessRegistry` - a shared object that anyone can read but only NFT owners can modify
+- **Structure**: Maps NFT IDs to user permissions (NFT ID → User Address → Access Level)
+
+```
+AccessRegistry (Shared Object)
+├── ID: 0xb01b33f8...  <-- This is your REGISTRY_ID
+└── permissions: Table
+    ├── NFT_ID_1 → Table
+    │   ├── User_A → Level 6 (owner)
+    │   ├── User_B → Level 4 (can download)
+    │   └── User_C → Level 1 (can use)
+    └── NFT_ID_2 → Table
+        ├── User_D → Level 6 (owner)
+        └── User_E → Level 2 (can resell)
+```
+
+#### How to get your Registry ID:
+
+1. **After deploying the contract**, you must initialize the registry:
+```bash
+sui client call \
+  --package $PACKAGE_ID \
+  --module access \
+  --function init_registry \
+  --gas-budget 10000000
+```
+
+2. **Look for the created object** in the transaction output:
+```
+Created Objects:
+  ┌──
+  │ ObjectID: 0xb01b33f8038a78532a946b3d9093616cf050f23f...  <-- This is your Registry ID
+  │ Owner: Shared
+  │ ObjectType: 0x31717ba3482c33f3bfe0bab05b3f509053a206b0::access::AccessRegistry
+  └──
+```
+
+3. **The Registry ID is**:
+   - A shared object (owned by no one, accessible by everyone)
+   - Required for ALL access control operations
+   - The same for all NFTs in your deployment
+   - Must be passed to functions that check or modify permissions
+
+### What values to change in .env:
+
+| Variable | Must Change? | Description |
+|----------|--------------|-------------|
+| `REACT_APP_PACKAGE_ID` | ✅ YES | Your deployed contract address |
+| `REACT_APP_REGISTRY_ID` | ✅ YES | Your AccessRegistry object ID |
+| All Walrus URLs | ❌ NO | Official testnet endpoints |
+| Walrus System Objects | ❌ NO | Official testnet objects |
+| Other settings | ❌ NO | Good defaults |
+
 3. Run the app:
 ```bash
 npm run dev
