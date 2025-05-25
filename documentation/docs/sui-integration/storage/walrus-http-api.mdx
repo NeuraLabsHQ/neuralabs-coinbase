@@ -1,0 +1,1905 @@
+---
+id: walrus-http-api
+title: Walrus HTTP/JSON API
+sidebar_label: HTTP/JSON API
+sidebar_position: 3
+---
+
+import { Card, CardHeader, CardTitle, CardDescription } from '@site/src/components/Card';
+import {CollapsibleCodeBlock} from '@site/src/components/CodeBlock';
+
+# <img src="/img/icons/network.svg" width="32" height="32" style={{ verticalAlign: 'middle', marginRight: '12px' }} />Walrus HTTP/JSON API
+
+Direct REST API integration with Walrus storage for language-agnostic access and custom implementations.
+
+## Overview
+
+The Walrus HTTP API provides a RESTful interface for storing and retrieving data without requiring SDK integration. This approach is ideal for backend services, custom implementations, or environments where the SDK is not available.
+
+<div className="card padding--md mt-4">
+  <h3><img src="/img/icons/info.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />HTTP API Benefits</h3>
+  <ul>
+    <li><strong>Language Agnostic:</strong> Works with any programming language</li>
+    <li><strong>Simple Integration:</strong> Standard REST API patterns</li>
+    <li><strong>Direct Control:</strong> Fine-grained control over requests</li>
+    <li><strong>Lightweight:</strong> No SDK dependencies required</li>
+    <li><strong>Debugging:</strong> Easy to test with curl or Postman</li>
+  </ul>
+</div>
+
+## API Endpoints
+
+### Testnet Endpoints
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/network.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Publisher API
+      </CardTitle>
+      <CardDescription>
+        <strong>Primary:</strong><br/>
+        https://publisher.walrus-testnet.walrus.space<br/><br/>
+        <strong>Alternative:</strong><br/>
+        https://wal-publisher-testnet.staketab.org
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/network.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Aggregator API
+      </CardTitle>
+      <CardDescription>
+        <strong>Primary:</strong><br/>
+        https://aggregator.walrus-testnet.walrus.space<br/><br/>
+        <strong>Alternative:</strong><br/>
+        https://wal-aggregator-testnet.staketab.org
+      </CardDescription>
+    </CardHeader>
+  </Card>
+</div>
+
+### Health Check Endpoints
+
+<CollapsibleCodeBlock
+  title="API Health Monitoring"
+  description="Check the status of Walrus nodes before operations"
+  language="bash"
+  defaultCollapsed={false}
+>
+{`# Check Publisher Health
+curl -X GET https://publisher.walrus-testnet.walrus.space/v1/health
+
+# Response
+{
+  "status": "healthy",
+  "version": "0.2.0",
+  "network": "testnet",
+  "uptime": 3600
+}
+
+# Check Aggregator Health
+curl -X GET https://aggregator.walrus-testnet.walrus.space/v1/health
+
+# Response
+{
+  "status": "healthy",
+  "version": "0.2.0",
+  "active_nodes": 15,
+  "cache_hit_rate": 0.85
+}`}
+</CollapsibleCodeBlock>
+
+## Core API Operations
+
+### Store Data (Upload)
+
+<CollapsibleCodeBlock
+  title="POST /v1/store - Upload Data to Walrus"
+  description="Store a blob with optional parameters for epochs and metadata"
+  language="bash"
+  defaultCollapsed={false}
+>
+{`# Basic upload
+curl -X POST https://publisher.walrus-testnet.walrus.space/v1/store \
+  -F "file=@myfile.pdf"
+
+# Upload with custom epochs
+curl -X POST https://publisher.walrus-testnet.walrus.space/v1/store \
+  -F "file=@myfile.pdf" \
+  -F "epochs=30"
+
+# Upload with metadata
+curl -X POST https://publisher.walrus-testnet.walrus.space/v1/store \
+  -F "file=@workflow.json" \
+  -F "epochs=50" \
+  -F 'metadata={"type":"ai-workflow","version":"1.0"}'
+
+# Response
+{
+  "blob_id": "2g4h5j6k8l9m0n2p3q4r5s6t7u8v9w0x1y2z3a4b5c6d",
+  "status": "stored",
+  "cost": {
+    "storage_cost": "1000000",
+    "write_fee": "100000",
+    "total_sui": "0.0011"
+  },
+  "expiry_epoch": 550,
+  "created_at": "2025-01-25T10:30:00Z"
+}`}
+</CollapsibleCodeBlock>
+
+### Retrieve Data (Download)
+
+<CollapsibleCodeBlock
+  title="GET /v1/{blob_id} - Download Data from Walrus"
+  description="Retrieve stored blobs by their ID"
+  language="bash"
+  defaultCollapsed={false}
+>
+{`# Basic retrieval
+curl -X GET https://aggregator.walrus-testnet.walrus.space/v1/{blob_id} \
+  -o downloaded_file
+
+# Get with headers for metadata
+curl -X GET https://aggregator.walrus-testnet.walrus.space/v1/{blob_id} \
+  -H "Accept: application/octet-stream" \
+  -D headers.txt \
+  -o downloaded_file
+
+# Check response headers
+cat headers.txt
+# HTTP/1.1 200 OK
+# Content-Type: application/octet-stream
+# Content-Length: 1048576
+# X-Walrus-Blob-Id: 2g4h5j6k8l9m0n2p3q4r5s6t7u8v9w0x1y2z3a4b5c6d
+# X-Walrus-Created-At: 2025-01-25T10:30:00Z
+# X-Walrus-Expires-At: 2025-02-25T10:30:00Z
+# X-Walrus-Metadata: {"type":"ai-workflow","version":"1.0"}
+
+# Stream large files
+curl -X GET https://aggregator.walrus-testnet.walrus.space/v1/{blob_id} \
+  --output large_file.bin \
+  --progress-bar`}
+</CollapsibleCodeBlock>
+
+### Check Blob Status
+
+<CollapsibleCodeBlock
+  title="HEAD /v1/{blob_id} - Check Blob Availability"
+  description="Verify if a blob exists without downloading it"
+  language="bash"
+  defaultCollapsed={true}
+>
+{`# Check if blob exists
+curl -I https://aggregator.walrus-testnet.walrus.space/v1/{blob_id}
+
+# Response headers for existing blob
+# HTTP/1.1 200 OK
+# Content-Type: application/octet-stream
+# Content-Length: 1048576
+# X-Walrus-Status: available
+# X-Walrus-Replica-Count: 7
+
+# Response for non-existent blob
+# HTTP/1.1 404 Not Found`}
+</CollapsibleCodeBlock>
+
+## Advanced HTTP Client Implementation
+
+### TypeScript/JavaScript
+
+<CollapsibleCodeBlock
+  title="TypeScript HTTP Client for Walrus"
+  description="Complete HTTP client with error handling, retries, and progress tracking"
+  language="typescript"
+  defaultCollapsed={false}
+>
+{`// walrus-http-client.ts
+import axios, { AxiosInstance, AxiosProgressEvent } from 'axios';
+import FormData from 'form-data';
+import { createReadStream } from 'fs';
+
+export interface WalrusHttpConfig {
+  publisherUrl: string;
+  aggregatorUrl: string;
+  timeout?: number;
+  maxRetries?: number;
+  headers?: Record<string, string>;
+}
+
+export interface UploadOptions {
+  epochs?: number;
+  metadata?: Record<string, any>;
+  onProgress?: (progress: number) => void;
+}
+
+export interface UploadResult {
+  success: boolean;
+  blobId?: string;
+  cost?: {
+    storageCost: string;
+    writeFee: string;
+    totalSui: string;
+  };
+  error?: string;
+}
+
+export class WalrusHttpClient {
+  private publisher: AxiosInstance;
+  private aggregator: AxiosInstance;
+  private maxRetries: number;
+  
+  constructor(config: WalrusHttpConfig) {
+    this.maxRetries = config.maxRetries || 3;
+    
+    // Configure axios instances
+    this.publisher = axios.create({
+      baseURL: config.publisherUrl,
+      timeout: config.timeout || 60000,
+      headers: {
+        ...config.headers,
+      },
+    });
+    
+    this.aggregator = axios.create({
+      baseURL: config.aggregatorUrl,
+      timeout: config.timeout || 60000,
+      headers: {
+        ...config.headers,
+      },
+    });
+    
+    // Add retry interceptor
+    this.setupRetryInterceptor(this.publisher);
+    this.setupRetryInterceptor(this.aggregator);
+  }
+  
+  async upload(
+    data: Buffer | Uint8Array | string,
+    filename: string,
+    options: UploadOptions = {}
+  ): Promise<UploadResult> {
+    const formData = new FormData();
+    
+    // Add file data
+    formData.append('file', data, {
+      filename,
+      contentType: 'application/octet-stream',
+    });
+    
+    // Add optional parameters
+    if (options.epochs) {
+      formData.append('epochs', options.epochs.toString());
+    }
+    
+    if (options.metadata) {
+      formData.append('metadata', JSON.stringify(options.metadata));
+    }
+    
+    try {
+      const response = await this.publisher.post('/v1/store', formData, {
+        headers: formData.getHeaders(),
+        onUploadProgress: (progressEvent: AxiosProgressEvent) => {
+          if (progressEvent.total && options.onProgress) {
+            const progress = progressEvent.loaded / progressEvent.total;
+            options.onProgress(progress);
+          }
+        },
+      });
+      
+      return {
+        success: true,
+        blobId: response.data.blob_id || response.data.blobId,
+        cost: {
+          storageCost: response.data.cost?.storage_cost || '0',
+          writeFee: response.data.cost?.write_fee || '0',
+          totalSui: response.data.cost?.total_sui || '0',
+        },
+      };
+    } catch (error) {
+      console.error('Upload failed:', error);
+      return {
+        success: false,
+        error: this.getErrorMessage(error),
+      };
+    }
+  }
+  
+  async uploadFile(
+    filePath: string,
+    options: UploadOptions = {}
+  ): Promise<UploadResult> {
+    const formData = new FormData();
+    
+    // Stream file for memory efficiency
+    formData.append('file', createReadStream(filePath));
+    
+    if (options.epochs) {
+      formData.append('epochs', options.epochs.toString());
+    }
+    
+    if (options.metadata) {
+      formData.append('metadata', JSON.stringify(options.metadata));
+    }
+    
+    try {
+      const response = await this.publisher.post('/v1/store', formData, {
+        headers: formData.getHeaders(),
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+        onUploadProgress: (progressEvent: AxiosProgressEvent) => {
+          if (progressEvent.total && options.onProgress) {
+            const progress = progressEvent.loaded / progressEvent.total;
+            options.onProgress(progress);
+          }
+        },
+      });
+      
+      return {
+        success: true,
+        blobId: response.data.blob_id || response.data.blobId,
+        cost: response.data.cost,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: this.getErrorMessage(error),
+      };
+    }
+  }
+  
+  async download(
+    blobId: string,
+    options: {
+      onProgress?: (progress: number) => void;
+    } = {}
+  ): Promise<{
+    success: boolean;
+    data?: Buffer;
+    metadata?: Record<string, any>;
+    error?: string;
+  }> {
+    try {
+      const response = await this.aggregator.get(\`/v1/\${blobId}\`, {
+        responseType: 'arraybuffer',
+        onDownloadProgress: (progressEvent: AxiosProgressEvent) => {
+          if (progressEvent.total && options.onProgress) {
+            const progress = progressEvent.loaded / progressEvent.total;
+            options.onProgress(progress);
+          }
+        },
+      });
+      
+      // Parse metadata from headers
+      const metadataHeader = response.headers['x-walrus-metadata'];
+      const metadata = metadataHeader ? JSON.parse(metadataHeader) : undefined;
+      
+      return {
+        success: true,
+        data: Buffer.from(response.data),
+        metadata,
+      };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        return {
+          success: false,
+          error: 'Blob not found',
+        };
+      }
+      
+      return {
+        success: false,
+        error: this.getErrorMessage(error),
+      };
+    }
+  }
+  
+  async downloadToFile(
+    blobId: string,
+    outputPath: string,
+    options: {
+      onProgress?: (progress: number) => void;
+    } = {}
+  ): Promise<{ success: boolean; error?: string }> {
+    const writer = createWriteStream(outputPath);
+    
+    try {
+      const response = await this.aggregator.get(\`/v1/\${blobId}\`, {
+        responseType: 'stream',
+        onDownloadProgress: (progressEvent: AxiosProgressEvent) => {
+          if (progressEvent.total && options.onProgress) {
+            const progress = progressEvent.loaded / progressEvent.total;
+            options.onProgress(progress);
+          }
+        },
+      });
+      
+      response.data.pipe(writer);
+      
+      return new Promise((resolve, reject) => {
+        writer.on('finish', () => resolve({ success: true }));
+        writer.on('error', (error) => reject(error));
+      });
+    } catch (error) {
+      return {
+        success: false,
+        error: this.getErrorMessage(error),
+      };
+    }
+  }
+  
+  async checkAvailability(blobId: string): Promise<boolean> {
+    try {
+      const response = await this.aggregator.head(\`/v1/\${blobId}\`);
+      return response.status === 200;
+    } catch {
+      return false;
+    }
+  }
+  
+  async getBlobInfo(blobId: string): Promise<{
+    available: boolean;
+    size?: number;
+    contentType?: string;
+    createdAt?: string;
+    expiresAt?: string;
+    metadata?: Record<string, any>;
+  }> {
+    try {
+      const response = await this.aggregator.head(\`/v1/\${blobId}\`);
+      
+      return {
+        available: true,
+        size: parseInt(response.headers['content-length'] || '0'),
+        contentType: response.headers['content-type'],
+        createdAt: response.headers['x-walrus-created-at'],
+        expiresAt: response.headers['x-walrus-expires-at'],
+        metadata: response.headers['x-walrus-metadata'] 
+          ? JSON.parse(response.headers['x-walrus-metadata'])
+          : undefined,
+      };
+    } catch {
+      return { available: false };
+    }
+  }
+  
+  private setupRetryInterceptor(instance: AxiosInstance) {
+    instance.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const config = error.config;
+        
+        if (!config || !this.shouldRetry(error) || config.__retryCount >= this.maxRetries) {
+          return Promise.reject(error);
+        }
+        
+        config.__retryCount = config.__retryCount || 0;
+        config.__retryCount++;
+        
+        const delay = Math.min(1000 * Math.pow(2, config.__retryCount - 1), 10000);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        return instance(config);
+      }
+    );
+  }
+  
+  private shouldRetry(error: any): boolean {
+    if (!axios.isAxiosError(error)) return false;
+    
+    // Retry on network errors
+    if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+      return true;
+    }
+    
+    // Retry on 5xx errors
+    if (error.response && error.response.status >= 500) {
+      return true;
+    }
+    
+    // Retry on rate limit (with longer delay)
+    if (error.response?.status === 429) {
+      return true;
+    }
+    
+    return false;
+  }
+  
+  private getErrorMessage(error: any): string {
+    if (axios.isAxiosError(error)) {
+      if (error.response) {
+        return \`HTTP \${error.response.status}: \${error.response.data?.error || error.message}\`;
+      }
+      if (error.code === 'ECONNABORTED') {
+        return 'Request timeout';
+      }
+      return error.message;
+    }
+    return error?.message || 'Unknown error';
+  }
+}
+
+// Usage example
+const client = new WalrusHttpClient({
+  publisherUrl: 'https://publisher.walrus-testnet.walrus.space',
+  aggregatorUrl: 'https://aggregator.walrus-testnet.walrus.space',
+  timeout: 60000,
+  maxRetries: 3,
+});
+
+// Upload data
+const uploadResult = await client.upload(
+  Buffer.from('Hello Walrus!'),
+  'hello.txt',
+  {
+    epochs: 30,
+    metadata: { type: 'greeting' },
+    onProgress: (progress) => {
+      console.log(\`Upload progress: \${(progress * 100).toFixed(2)}%\`);
+    },
+  }
+);
+
+// Download data
+if (uploadResult.success) {
+  const downloadResult = await client.download(uploadResult.blobId!, {
+    onProgress: (progress) => {
+      console.log(\`Download progress: \${(progress * 100).toFixed(2)}%\`);
+    },
+  });
+  
+  if (downloadResult.success) {
+    console.log('Downloaded:', downloadResult.data.toString());
+    console.log('Metadata:', downloadResult.metadata);
+  }
+}`}
+</CollapsibleCodeBlock>
+
+### Python Implementation
+
+<CollapsibleCodeBlock
+  title="Python HTTP Client for Walrus"
+  description="Async Python client using aiohttp with streaming support"
+  language="python"
+  defaultCollapsed={false}
+>
+{`# walrus_http_client.py
+import aiohttp
+import asyncio
+import json
+from typing import Optional, Dict, Any, Tuple, Callable
+from pathlib import Path
+import aiofiles
+from dataclasses import dataclass
+
+@dataclass
+class WalrusUploadResult:
+    success: bool
+    blob_id: Optional[str] = None
+    cost: Optional[Dict[str, str]] = None
+    error: Optional[str] = None
+
+class WalrusHttpClient:
+    def __init__(
+        self,
+        publisher_url: str,
+        aggregator_url: str,
+        timeout: int = 60,
+        max_retries: int = 3
+    ):
+        self.publisher_url = publisher_url.rstrip('/')
+        self.aggregator_url = aggregator_url.rstrip('/')
+        self.timeout = aiohttp.ClientTimeout(total=timeout)
+        self.max_retries = max_retries
+        self.session: Optional[aiohttp.ClientSession] = None
+    
+    async def __aenter__(self):
+        self.session = aiohttp.ClientSession(timeout=self.timeout)
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if self.session:
+            await self.session.close()
+    
+    async def upload(
+        self,
+        data: bytes,
+        filename: str,
+        epochs: Optional[int] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        progress_callback: Optional[Callable[[int, int], None]] = None
+    ) -> WalrusUploadResult:
+        """Upload data to Walrus."""
+        
+        form_data = aiohttp.FormData()
+        form_data.add_field(
+            'file',
+            data,
+            filename=filename,
+            content_type='application/octet-stream'
+        )
+        
+        if epochs:
+            form_data.add_field('epochs', str(epochs))
+        
+        if metadata:
+            form_data.add_field('metadata', json.dumps(metadata))
+        
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                if not self.session:
+                    self.session = aiohttp.ClientSession(timeout=self.timeout)
+                
+                async with self.session.post(
+                    f'{self.publisher_url}/v1/store',
+                    data=form_data
+                ) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        return WalrusUploadResult(
+                            success=True,
+                            blob_id=result.get('blob_id') or result.get('blobId'),
+                            cost={
+                                'storage_cost': result.get('cost', {}).get('storage_cost', '0'),
+                                'write_fee': result.get('cost', {}).get('write_fee', '0'),
+                                'total_sui': result.get('cost', {}).get('total_sui', '0')
+                            }
+                        )
+                    else:
+                        error_text = await response.text()
+                        if attempt == self.max_retries:
+                            return WalrusUploadResult(
+                                success=False,
+                                error=f'HTTP {response.status}: {error_text}'
+                            )
+                        
+                        # Exponential backoff
+                        await asyncio.sleep(min(2 ** (attempt - 1), 10))
+            
+            except asyncio.TimeoutError:
+                if attempt == self.max_retries:
+                    return WalrusUploadResult(success=False, error='Upload timeout')
+            except Exception as e:
+                if attempt == self.max_retries:
+                    return WalrusUploadResult(success=False, error=str(e))
+        
+        return WalrusUploadResult(success=False, error='Max retries exceeded')
+    
+    async def upload_file(
+        self,
+        file_path: Path,
+        epochs: Optional[int] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        chunk_size: int = 1024 * 1024  # 1MB chunks
+    ) -> WalrusUploadResult:
+        """Upload a file to Walrus with streaming."""
+        
+        file_size = file_path.stat().st_size
+        
+        async def file_sender():
+            async with aiofiles.open(file_path, 'rb') as f:
+                chunk = await f.read(chunk_size)
+                while chunk:
+                    yield chunk
+                    chunk = await f.read(chunk_size)
+        
+        form_data = aiohttp.FormData()
+        form_data.add_field(
+            'file',
+            file_sender(),
+            filename=file_path.name,
+            content_type='application/octet-stream'
+        )
+        
+        if epochs:
+            form_data.add_field('epochs', str(epochs))
+        
+        if metadata:
+            form_data.add_field('metadata', json.dumps(metadata))
+        
+        try:
+            if not self.session:
+                self.session = aiohttp.ClientSession(timeout=self.timeout)
+            
+            async with self.session.post(
+                f'{self.publisher_url}/v1/store',
+                data=form_data
+            ) as response:
+                if response.status == 200:
+                    result = await response.json()
+                    return WalrusUploadResult(
+                        success=True,
+                        blob_id=result.get('blob_id') or result.get('blobId'),
+                        cost=result.get('cost')
+                    )
+                else:
+                    error_text = await response.text()
+                    return WalrusUploadResult(
+                        success=False,
+                        error=f'HTTP {response.status}: {error_text}'
+                    )
+        
+        except Exception as e:
+            return WalrusUploadResult(success=False, error=str(e))
+    
+    async def download(
+        self,
+        blob_id: str,
+        progress_callback: Optional[Callable[[int, int], None]] = None
+    ) -> Tuple[bool, Optional[bytes], Optional[Dict[str, Any]], Optional[str]]:
+        """Download data from Walrus."""
+        
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                if not self.session:
+                    self.session = aiohttp.ClientSession(timeout=self.timeout)
+                
+                async with self.session.get(
+                    f'{self.aggregator_url}/v1/{blob_id}'
+                ) as response:
+                    if response.status == 200:
+                        # Parse metadata from headers
+                        metadata_header = response.headers.get('x-walrus-metadata')
+                        metadata = json.loads(metadata_header) if metadata_header else None
+                        
+                        # Read data with progress
+                        data = bytearray()
+                        total_size = int(response.headers.get('content-length', 0))
+                        downloaded = 0
+                        
+                        async for chunk in response.content.iter_chunked(8192):
+                            data.extend(chunk)
+                            downloaded += len(chunk)
+                            if progress_callback and total_size:
+                                progress_callback(downloaded, total_size)
+                        
+                        return True, bytes(data), metadata, None
+                    
+                    elif response.status == 404:
+                        return False, None, None, 'Blob not found'
+                    
+                    else:
+                        if attempt == self.max_retries:
+                            error_text = await response.text()
+                            return False, None, None, f'HTTP {response.status}: {error_text}'
+                        
+                        await asyncio.sleep(min(2 ** (attempt - 1), 10))
+            
+            except Exception as e:
+                if attempt == self.max_retries:
+                    return False, None, None, str(e)
+        
+        return False, None, None, 'Max retries exceeded'
+    
+    async def download_to_file(
+        self,
+        blob_id: str,
+        output_path: Path,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
+        chunk_size: int = 1024 * 1024  # 1MB chunks
+    ) -> Tuple[bool, Optional[str]]:
+        """Download data directly to a file."""
+        
+        try:
+            if not self.session:
+                self.session = aiohttp.ClientSession(timeout=self.timeout)
+            
+            async with self.session.get(
+                f'{self.aggregator_url}/v1/{blob_id}'
+            ) as response:
+                if response.status == 200:
+                    total_size = int(response.headers.get('content-length', 0))
+                    downloaded = 0
+                    
+                    async with aiofiles.open(output_path, 'wb') as f:
+                        async for chunk in response.content.iter_chunked(chunk_size):
+                            await f.write(chunk)
+                            downloaded += len(chunk)
+                            if progress_callback and total_size:
+                                progress_callback(downloaded, total_size)
+                    
+                    return True, None
+                
+                elif response.status == 404:
+                    return False, 'Blob not found'
+                
+                else:
+                    error_text = await response.text()
+                    return False, f'HTTP {response.status}: {error_text}'
+        
+        except Exception as e:
+            return False, str(e)
+    
+    async def check_availability(self, blob_id: str) -> bool:
+        """Check if a blob is available."""
+        try:
+            if not self.session:
+                self.session = aiohttp.ClientSession(timeout=self.timeout)
+            
+            async with self.session.head(
+                f'{self.aggregator_url}/v1/{blob_id}'
+            ) as response:
+                return response.status == 200
+        except:
+            return False
+    
+    async def get_blob_info(self, blob_id: str) -> Dict[str, Any]:
+        """Get blob metadata without downloading."""
+        try:
+            if not self.session:
+                self.session = aiohttp.ClientSession(timeout=self.timeout)
+            
+            async with self.session.head(
+                f'{self.aggregator_url}/v1/{blob_id}'
+            ) as response:
+                if response.status == 200:
+                    return {
+                        'available': True,
+                        'size': int(response.headers.get('content-length', 0)),
+                        'content_type': response.headers.get('content-type'),
+                        'created_at': response.headers.get('x-walrus-created-at'),
+                        'expires_at': response.headers.get('x-walrus-expires-at'),
+                        'metadata': json.loads(response.headers.get('x-walrus-metadata', '{}'))
+                    }
+                return {'available': False}
+        except Exception as e:
+            return {'available': False, 'error': str(e)}
+
+# Usage example
+async def main():
+    async with WalrusHttpClient(
+        publisher_url='https://publisher.walrus-testnet.walrus.space',
+        aggregator_url='https://aggregator.walrus-testnet.walrus.space'
+    ) as client:
+        # Upload data
+        data = b'Hello from Python HTTP client!'
+        result = await client.upload(
+            data,
+            'hello.txt',
+            epochs=30,
+            metadata={'language': 'python', 'version': '1.0'}
+        )
+        
+        if result.success:
+            print(f'Uploaded successfully: {result.blob_id}')
+            print(f'Cost: {result.cost}')
+            
+            # Download data
+            success, downloaded_data, metadata, error = await client.download(
+                result.blob_id
+            )
+            
+            if success:
+                print(f'Downloaded: {downloaded_data.decode()}')
+                print(f'Metadata: {metadata}')
+            else:
+                print(f'Download failed: {error}')
+        else:
+            print(f'Upload failed: {result.error}')
+
+# Run the example
+if __name__ == '__main__':
+    asyncio.run(main())`}
+</CollapsibleCodeBlock>
+
+### cURL Scripts
+
+<CollapsibleCodeBlock
+  title="Bash Scripts for Walrus Operations"
+  description="Production-ready shell scripts for Walrus integration"
+  language="bash"
+  defaultCollapsed={true}>
+{`#!/bin/bash
+
+# walrus-cli.sh - Walrus HTTP API wrapper
+
+# Configuration
+
+PUBLISHER_URL="\${WALRUS_PUBLISHER_URL:-https://publisher.walrus-testnet.walrus.space}"
+AGGREGATOR_URL="\${WALRUS_AGGREGATOR_URL:-https://aggregator.walrus-testnet.walrus.space}"
+DEFAULT_EPOCHS=30
+
+# Colors for output
+RED='\\033[0;31m'
+GREEN='\\033[0;32m'
+YELLOW='\\033[1;33m'
+NC='\\033[0m' # No Color
+
+# Function to upload a file
+walrus_upload() {
+    local file="$1"
+    local epochs="\${2:-$DEFAULT_EPOCHS}"
+    local metadata="$3"
+    
+    if [ ! -f "$file" ]; then
+        echo -e "\${RED}Error: File not found: $file\${NC}"
+        return 1
+    fi
+    
+    echo -e "\${YELLOW}Uploading $file for $epochs epochs...\${NC}"
+    
+    # Build curl command
+    local curl_cmd="curl -s -X POST $PUBLISHER_URL/v1/store"
+    curl_cmd="$curl_cmd -F \"file=@$file\""
+    curl_cmd="$curl_cmd -F \"epochs=$epochs\""
+    
+    if [ -n "$metadata" ]; then
+        curl_cmd="$curl_cmd -F \"metadata=$metadata\""
+    fi
+    
+    # Execute and parse response
+    local response=$(eval $curl_cmd)
+    local blob_id=$(echo "$response" | jq -r '.blob_id // .blobId // empty')
+    
+    if [ -n "$blob_id" ]; then
+        echo -e "\${GREEN}Success! Blob ID: $blob_id\${NC}"
+        echo "$response" | jq '.'
+        echo "$blob_id" > ".walrus_last_blob_id"
+        return 0
+    else
+        echo -e "\${RED}Upload failed!\${NC}"
+        echo "$response" | jq '.'
+        return 1
+    fi
+}
+
+# Function to download a blob
+walrus_download() {
+    local blob_id="$1"
+    local output="$2"
+    
+    # Use last blob ID if not provided
+    if [ -z "$blob_id" ] && [ -f ".walrus_last_blob_id" ]; then
+        blob_id=$(cat .walrus_last_blob_id)
+        echo -e "\${YELLOW}Using last blob ID: $blob_id\${NC}"
+    fi
+    
+    if [ -z "$blob_id" ]; then
+        echo -e "\${RED}Error: No blob ID provided\${NC}"
+        return 1
+    fi
+    
+    # Default output filename
+    if [ -z "$output" ]; then
+        output="walrus_\${blob_id:0:8}.dat"
+    fi
+    
+    echo -e "\${YELLOW}Downloading $blob_id to $output...\${NC}"
+    
+    # Download with progress bar
+    if curl -f -# -o "$output" -H "Accept: application/octet-stream" \
+         -D ".walrus_headers_$blob_id.txt" \
+         "$AGGREGATOR_URL/v1/$blob_id"; then
+        
+        echo -e "\${GREEN}Download successful!\${NC}"
+        
+        # Extract and display metadata
+        local metadata=$(grep -i "x-walrus-metadata:" ".walrus_headers_$blob_id.txt" | cut -d' ' -f2-)
+        if [ -n "$metadata" ]; then
+            echo "Metadata: $metadata"
+        fi
+        
+        rm -f ".walrus_headers_$blob_id.txt"
+        return 0
+    else
+        echo -e "\${RED}Download failed!\${NC}"
+        rm -f ".walrus_headers_$blob_id.txt"
+        return 1
+    fi
+}
+
+# Function to check blob status
+walrus_status() {
+    local blob_id="$1"
+    
+    if [ -z "$blob_id" ] && [ -f ".walrus_last_blob_id" ]; then
+        blob_id=$(cat .walrus_last_blob_id)
+    fi
+    
+    if [ -z "$blob_id" ]; then
+        echo -e "\${RED}Error: No blob ID provided\${NC}"
+        return 1
+    fi
+    
+    echo -e "\${YELLOW}Checking status of $blob_id...\${NC}"
+    
+    if curl -s -I "$AGGREGATOR_URL/v1/$blob_id" | grep -q "200 OK"; then
+        echo -e "\${GREEN}Blob is available\${NC}"
+        
+        # Get detailed info
+        local headers=$(curl -s -I "$AGGREGATOR_URL/v1/$blob_id")
+        echo "$headers" | grep -E "(Content-Length|x-walrus-)" | while read line; do
+            echo "  $line"
+        done
+        
+        return 0
+    else
+        echo -e "\${RED}Blob not found or unavailable\${NC}"
+        return 1
+    fi
+}
+
+# Function to perform health check
+walrus_health() {
+    echo -e "\${YELLOW}Checking Walrus service health...\${NC}"
+    
+    # Check publisher
+    echo -n "Publisher: "
+    if curl -s "$PUBLISHER_URL/v1/health" | jq -e '.status == "healthy"' > /dev/null; then
+        echo -e "\${GREEN}Healthy\${NC}"
+    else
+        echo -e "\${RED}Unhealthy\${NC}"
+    fi
+    
+    # Check aggregator
+    echo -n "Aggregator: "
+    if curl -s "$AGGREGATOR_URL/v1/health" | jq -e '.status == "healthy"' > /dev/null; then
+        echo -e "\${GREEN}Healthy\${NC}"
+    else
+        echo -e "\${RED}Unhealthy\${NC}"
+    fi
+}
+
+# Batch upload function
+walrus_batch_upload() {
+    local directory="$1"
+    local epochs="\${2:-$DEFAULT_EPOCHS}"
+    local pattern="\${3:-*}"
+    
+    if [ ! -d "$directory" ]; then
+        echo -e "\${RED}Error: Directory not found: $directory\${NC}"
+        return 1
+    fi
+    
+    echo -e "\${YELLOW}Batch uploading files from $directory...\${NC}"
+    
+    local success=0
+    local failed=0
+    local blob_ids=()
+    
+    for file in "$directory"/$pattern; do
+        if [ -f "$file" ]; then
+            if walrus_upload "$file" "$epochs" > /tmp/walrus_upload_$$.log 2>&1; then
+                local blob_id=$(grep "Blob ID:" /tmp/walrus_upload_$$.log | awk '{print $NF}')
+                blob_ids+=("$blob_id")
+                echo -e "\${GREEN}✓ $(basename "$file") → $blob_id\${NC}"
+                ((success++))
+            else
+                echo -e "\${RED}✗ $(basename "$file")\${NC}"
+                ((failed++))
+            fi
+        fi
+    done
+    
+    rm -f /tmp/walrus_upload_$$.log
+    
+    # Save manifest
+    if [ \${#blob_ids[@]} -gt 0 ]; then
+        local manifest_file="walrus_manifest_$(date +%s).json"
+        jq -n --argjson ids "$(printf '%s\n' "\${blob_ids[@]}" | jq -R . | jq -s .)" \
+            '{
+                "upload_time": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'",
+                "directory": "'$directory'",
+                "pattern": "'$pattern'",
+                "epochs": '$epochs',
+                "blob_ids": $ids,
+                "summary": {
+                    "success": '$success',
+                    "failed": '$failed'
+                }
+            }' > "$manifest_file"
+        
+        echo -e "\${GREEN}Manifest saved to: $manifest_file\${NC}"
+    fi
+    
+    echo -e "\nSummary: \${GREEN}$success succeeded\${NC}, \${RED}$failed failed\${NC}"
+}
+
+# Main command dispatcher
+case "$1" in
+    upload)
+        walrus_upload "$2" "$3" "$4"
+        ;;
+    download)
+        walrus_download "$2" "$3"
+        ;;
+    status)
+        walrus_status "$2"
+        ;;
+    health)
+        walrus_health
+        ;;
+    batch-upload)
+        walrus_batch_upload "$2" "$3" "$4"
+        ;;
+    *)
+        echo "Walrus HTTP API CLI"
+        echo ""
+        echo "Usage: $0 <command> [arguments]"
+        echo ""
+        echo "Commands:"
+        echo "  upload <file> [epochs] [metadata]    Upload a file"
+        echo "  download <blob_id> [output_file]     Download a blob"
+        echo "  status <blob_id>                     Check blob status"
+        echo "  health                               Check service health"
+        echo "  batch-upload <dir> [epochs] [pattern] Batch upload files"
+        echo ""
+        echo "Environment variables:"
+        echo "  WALRUS_PUBLISHER_URL    Publisher endpoint (default: testnet)"
+        echo "  WALRUS_AGGREGATOR_URL   Aggregator endpoint (default: testnet)"
+        exit 1
+        ;;
+esac
+
+`}
+</CollapsibleCodeBlock>
+
+## Integration Patterns
+
+### Microservice Architecture
+
+<CollapsibleCodeBlock
+  title="Walrus HTTP API Microservice"
+  description="Production microservice with caching, monitoring, and queue processing"
+  language="typescript"
+  defaultCollapsed={false}
+>
+{`// walrus-service.ts
+import express from 'express';
+import multer from 'multer';
+import { Queue } from 'bull';
+import Redis from 'ioredis';
+import { WalrusHttpClient } from './walrus-http-client';
+import { prometheus } from './metrics';
+
+// Initialize services
+const app = express();
+const redis = new Redis(process.env.REDIS_URL);
+const uploadQueue = new Queue('walrus-uploads', process.env.REDIS_URL);
+const walrusClient = new WalrusHttpClient({
+  publisherUrl: process.env.WALRUS_PUBLISHER_URL!,
+  aggregatorUrl: process.env.WALRUS_AGGREGATOR_URL!,
+});
+
+// Multer configuration for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100MB limit
+  },
+});
+
+// Metrics
+const uploadCounter = new prometheus.Counter({
+  name: 'walrus_uploads_total',
+  help: 'Total number of upload requests',
+  labelNames: ['status'],
+});
+
+const uploadDuration = new prometheus.Histogram({
+  name: 'walrus_upload_duration_seconds',
+  help: 'Upload duration in seconds',
+  buckets: [0.1, 0.5, 1, 2, 5, 10, 30, 60],
+});
+
+const cacheHits = new prometheus.Counter({
+  name: 'walrus_cache_hits_total',
+  help: 'Total number of cache hits',
+});
+
+// Upload endpoint with queuing
+app.post('/api/upload', upload.single('file'), async (req, res) => {
+  const timer = uploadDuration.startTimer();
+  
+  try {
+    if (!req.file) {
+      uploadCounter.inc({ status: 'error' });
+      return res.status(400).json({ error: 'No file provided' });
+    }
+    
+    const { epochs = '30', priority = 'normal' } = req.body;
+    const metadata = req.body.metadata ? JSON.parse(req.body.metadata) : {};
+    
+    // Add to queue for async processing
+    const job = await uploadQueue.add(
+      'upload',
+      {
+        filename: req.file.originalname,
+        buffer: req.file.buffer,
+        epochs: parseInt(epochs),
+        metadata: {
+          ...metadata,
+          uploadedAt: new Date().toISOString(),
+          contentType: req.file.mimetype,
+          size: req.file.size,
+        },
+      },
+      {
+        priority: priority === 'high' ? 1 : 10,
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 2000,
+        },
+      }
+    );
+    
+    uploadCounter.inc({ status: 'queued' });
+    timer();
+    
+    res.json({
+      jobId: job.id,
+      status: 'queued',
+      message: 'File queued for upload',
+    });
+    
+  } catch (error) {
+    uploadCounter.inc({ status: 'error' });
+    timer();
+    res.status(500).json({ error: 'Upload failed' });
+  }
+});
+
+// Process upload queue
+uploadQueue.process('upload', async (job) => {
+  const { filename, buffer, epochs, metadata } = job.data;
+  
+  try {
+    // Check if already uploaded (deduplication)
+    const hash = await calculateHash(buffer);
+    const cachedBlobId = await redis.get(\`walrus:hash:\${hash}\`);
+    
+    if (cachedBlobId) {
+      return {
+        blobId: cachedBlobId,
+        cached: true,
+      };
+    }
+    
+    // Upload to Walrus
+    const result = await walrusClient.upload(
+      buffer,
+      filename,
+      {
+        epochs,
+        metadata: { ...metadata, hash },
+        onProgress: (progress) => {
+          job.progress(progress * 100);
+        },
+      }
+    );
+    
+    if (result.success) {
+      // Cache the mapping
+      await redis.setex(
+        \`walrus:hash:\${hash}\`,
+        86400, // 24 hours
+        result.blobId
+      );
+      
+      // Store metadata
+      await redis.setex(
+        \`walrus:blob:\${result.blobId}\`,
+        86400,
+        JSON.stringify({
+          filename,
+          size: buffer.length,
+          contentType: metadata.contentType,
+          uploadedAt: metadata.uploadedAt,
+          cost: result.cost,
+        })
+      );
+      
+      uploadCounter.inc({ status: 'success' });
+      
+      return {
+        blobId: result.blobId,
+        cost: result.cost,
+      };
+    } else {
+      throw new Error(result.error);
+    }
+    
+  } catch (error) {
+    uploadCounter.inc({ status: 'failed' });
+    throw error;
+  }
+});
+
+// Get upload status
+app.get('/api/upload/:jobId', async (req, res) => {
+  const job = await uploadQueue.getJob(req.params.jobId);
+  
+  if (!job) {
+    return res.status(404).json({ error: 'Job not found' });
+  }
+  
+  const state = await job.getState();
+  const progress = job.progress();
+  
+  res.json({
+    jobId: job.id,
+    state,
+    progress,
+    result: state === 'completed' ? job.returnvalue : null,
+    error: state === 'failed' ? job.failedReason : null,
+  });
+});
+
+// Download endpoint with caching
+app.get('/api/download/:blobId', async (req, res) => {
+  const { blobId } = req.params;
+  
+  try {
+    // Check cache first
+    const cachedMetadata = await redis.get(\`walrus:blob:\${blobId}\`);
+    
+    if (cachedMetadata) {
+      cacheHits.inc();
+      const metadata = JSON.parse(cachedMetadata);
+      res.set('X-Cache', 'HIT');
+      res.set('X-Walrus-Metadata', JSON.stringify(metadata));
+    } else {
+      res.set('X-Cache', 'MISS');
+    }
+    
+    // Stream from Walrus
+    const response = await walrusClient.downloadStream(blobId);
+    
+    if (!response.success) {
+      return res.status(404).json({ error: 'Blob not found' });
+    }
+    
+    // Set headers
+    res.set('Content-Type', response.contentType || 'application/octet-stream');
+    res.set('Content-Length', response.size.toString());
+    
+    // Stream to client
+    response.stream.pipe(res);
+    
+  } catch (error) {
+    res.status(500).json({ error: 'Download failed' });
+  }
+});
+
+// Batch operations endpoint
+app.post('/api/batch/upload', upload.array('files', 10), async (req, res) => {
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ error: 'No files provided' });
+  }
+  
+  const jobs = await Promise.all(
+    (req.files as Express.Multer.File[]).map(file =>
+      uploadQueue.add('upload', {
+        filename: file.originalname,
+        buffer: file.buffer,
+        epochs: parseInt(req.body.epochs || '30'),
+        metadata: {
+          batch: true,
+          batchId: req.body.batchId || Date.now().toString(),
+        },
+      })
+    )
+  );
+  
+  res.json({
+    batchId: req.body.batchId || Date.now().toString(),
+    jobs: jobs.map(job => ({
+      jobId: job.id,
+      filename: job.data.filename,
+    })),
+  });
+});
+
+// Health check with dependency checks
+app.get('/health', async (req, res) => {
+  const checks = {
+    service: 'healthy',
+    redis: 'unknown',
+    walrus_publisher: 'unknown',
+    walrus_aggregator: 'unknown',
+  };
+  
+  // Check Redis
+  try {
+    await redis.ping();
+    checks.redis = 'healthy';
+  } catch {
+    checks.redis = 'unhealthy';
+  }
+  
+  // Check Walrus endpoints
+  try {
+    const publisherHealth = await walrusClient.checkHealth('publisher');
+    checks.walrus_publisher = publisherHealth ? 'healthy' : 'unhealthy';
+  } catch {
+    checks.walrus_publisher = 'unhealthy';
+  }
+  
+  try {
+    const aggregatorHealth = await walrusClient.checkHealth('aggregator');
+    checks.walrus_aggregator = aggregatorHealth ? 'healthy' : 'unhealthy';
+  } catch {
+    checks.walrus_aggregator = 'unhealthy';
+  }
+  
+  const allHealthy = Object.values(checks).every(status => status === 'healthy');
+  res.status(allHealthy ? 200 : 503).json(checks);
+});
+
+// Metrics endpoint
+app.get('/metrics', (req, res) => {
+  res.set('Content-Type', prometheus.register.contentType);
+  res.end(prometheus.register.metrics());
+});
+
+// Helper function
+async function calculateHash(buffer: Buffer): Promise<string> {
+  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(\`Walrus service listening on port \${PORT}\`);
+});`}
+</CollapsibleCodeBlock>
+
+## Security Considerations
+
+### API Security Best Practices
+
+<div className="card padding--md mt-4">
+  <h3><img src="/img/icons/security.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />HTTP API Security</h3>
+  
+  **Authentication & Authorization:**
+  - Implement API key authentication for your service
+  - Use rate limiting to prevent abuse
+  - Validate all input parameters
+  - Sanitize file uploads
+  
+  **Data Protection:**
+  - Always encrypt data before uploading
+  - Use HTTPS for all communications
+  - Implement request signing for integrity
+  - Store sensitive metadata separately
+  
+  **Error Handling:**
+  - Don't expose internal errors to clients
+  - Log security events for monitoring
+  - Implement proper timeout handling
+  - Use circuit breakers for resilience
+</div>
+
+### Secure Implementation Example
+
+<CollapsibleCodeBlock
+  title="Secure Walrus HTTP Client"
+  description="Implementation with authentication, encryption, and audit logging"
+  language="typescript"
+  defaultCollapsed={true}
+>
+{`// secure-walrus-client.ts
+import crypto from 'crypto';
+import { WalrusHttpClient } from './walrus-http-client';
+
+export class SecureWalrusClient {
+  private walrusClient: WalrusHttpClient;
+  private encryptionKey: Buffer;
+  private apiKey: string;
+  private auditLogger: AuditLogger;
+  
+  constructor(config: {
+    publisherUrl: string;
+    aggregatorUrl: string;
+    encryptionKey: string;
+    apiKey: string;
+  }) {
+    this.walrusClient = new WalrusHttpClient({
+      publisherUrl: config.publisherUrl,
+      aggregatorUrl: config.aggregatorUrl,
+      headers: {
+        'X-API-Key': config.apiKey,
+      },
+    });
+    
+    this.encryptionKey = Buffer.from(config.encryptionKey, 'hex');
+    this.apiKey = config.apiKey;
+    this.auditLogger = new AuditLogger();
+  }
+  
+  async secureUpload(
+    data: Buffer,
+    filename: string,
+    options: {
+      epochs?: number;
+      metadata?: Record<string, any>;
+      userId?: string;
+    } = {}
+  ): Promise<{
+    success: boolean;
+    blobId?: string;
+    encryptionInfo?: EncryptionInfo;
+    error?: string;
+  }> {
+    try {
+      // Audit log
+      await this.auditLogger.log({
+        action: 'upload_initiated',
+        userId: options.userId,
+        filename,
+        size: data.length,
+      });
+      
+      // Encrypt data
+      const encryptionInfo = await this.encryptData(data);
+      
+      // Sign the request
+      const signature = this.signData(encryptionInfo.encrypted);
+      
+      // Upload with encryption metadata
+      const result = await this.walrusClient.upload(
+        encryptionInfo.encrypted,
+        filename,
+        {
+          epochs: options.epochs,
+          metadata: {
+            ...options.metadata,
+            encrypted: true,
+            algorithm: 'AES-256-GCM',
+            signature,
+            keyId: this.getKeyId(),
+          },
+        }
+      );
+      
+      if (result.success) {
+        await this.auditLogger.log({
+          action: 'upload_success',
+          userId: options.userId,
+          filename,
+          blobId: result.blobId,
+          cost: result.cost,
+        });
+        
+        return {
+          success: true,
+          blobId: result.blobId,
+          encryptionInfo: {
+            iv: encryptionInfo.iv,
+            authTag: encryptionInfo.authTag,
+          },
+        };
+      } else {
+        await this.auditLogger.log({
+          action: 'upload_failed',
+          userId: options.userId,
+          filename,
+          error: result.error,
+        });
+        
+        return { success: false, error: result.error };
+      }
+      
+    } catch (error) {
+      await this.auditLogger.log({
+        action: 'upload_error',
+        userId: options.userId,
+        filename,
+        error: error.message,
+      });
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+  
+  async secureDownload(
+    blobId: string,
+    encryptionInfo: EncryptionInfo,
+    options: {
+      userId?: string;
+    } = {}
+  ): Promise<{
+    success: boolean;
+    data?: Buffer;
+    metadata?: Record<string, any>;
+    error?: string;
+  }> {
+    try {
+      // Audit log
+      await this.auditLogger.log({
+        action: 'download_initiated',
+        userId: options.userId,
+        blobId,
+      });
+      
+      // Download encrypted data
+      const result = await this.walrusClient.download(blobId);
+      
+      if (!result.success) {
+        await this.auditLogger.log({
+          action: 'download_failed',
+          userId: options.userId,
+          blobId,
+          error: result.error,
+        });
+        
+        return { success: false, error: result.error };
+      }
+      
+      // Verify signature
+      const expectedSignature = this.signData(result.data!);
+      const providedSignature = result.metadata?.signature;
+      
+      if (providedSignature !== expectedSignature) {
+        await this.auditLogger.log({
+          action: 'signature_verification_failed',
+          userId: options.userId,
+          blobId,
+        });
+        
+        return { success: false, error: 'Signature verification failed' };
+      }
+      
+      // Decrypt data
+      const decrypted = await this.decryptData(
+        result.data!,
+        encryptionInfo
+      );
+      
+      await this.auditLogger.log({
+        action: 'download_success',
+        userId: options.userId,
+        blobId,
+        size: decrypted.length,
+      });
+      
+      return {
+        success: true,
+        data: decrypted,
+        metadata: result.metadata,
+      };
+      
+    } catch (error) {
+      await this.auditLogger.log({
+        action: 'download_error',
+        userId: options.userId,
+        blobId,
+        error: error.message,
+      });
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+  
+  private async encryptData(data: Buffer): Promise<{
+    encrypted: Buffer;
+    iv: string;
+    authTag: string;
+  }> {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv(
+      'aes-256-gcm',
+      this.encryptionKey,
+      iv
+    );
+    
+    const encrypted = Buffer.concat([
+      cipher.update(data),
+      cipher.final(),
+    ]);
+    
+    const authTag = cipher.getAuthTag();
+    
+    // Combine IV + authTag + encrypted data
+    const combined = Buffer.concat([iv, authTag, encrypted]);
+    
+    return {
+      encrypted: combined,
+      iv: iv.toString('hex'),
+      authTag: authTag.toString('hex'),
+    };
+  }
+  
+  private async decryptData(
+    combined: Buffer,
+    encryptionInfo: EncryptionInfo
+  ): Promise<Buffer> {
+    // Extract components
+    const iv = combined.slice(0, 16);
+    const authTag = combined.slice(16, 32);
+    const encrypted = combined.slice(32);
+    
+    const decipher = crypto.createDecipheriv(
+      'aes-256-gcm',
+      this.encryptionKey,
+      iv
+    );
+    
+    decipher.setAuthTag(authTag);
+    
+    const decrypted = Buffer.concat([
+      decipher.update(encrypted),
+      decipher.final(),
+    ]);
+    
+    return decrypted;
+  }
+  
+  private signData(data: Buffer): string {
+    const hmac = crypto.createHmac('sha256', this.apiKey);
+    hmac.update(data);
+    return hmac.digest('hex');
+  }
+  
+  private getKeyId(): string {
+    // Derive a key ID from the encryption key
+    const hash = crypto.createHash('sha256');
+    hash.update(this.encryptionKey);
+    return hash.digest('hex').substring(0, 8);
+  }
+}
+
+interface EncryptionInfo {
+  iv: string;
+  authTag: string;
+}
+
+class AuditLogger {
+  async log(event: Record<string, any>): Promise<void> {
+    // Implement your audit logging
+    console.log('[AUDIT]', {
+      timestamp: new Date().toISOString(),
+      ...event,
+    });
+  }
+}`}
+</CollapsibleCodeBlock>
+
+## Performance Optimization
+
+### HTTP-Specific Optimizations
+
+<div className="card padding--md mt-4">
+  <h3><img src="/img/icons/terminal.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />Performance Tips</h3>
+  
+  **Connection Management:**
+  - Use HTTP/2 for multiplexing
+  - Enable keep-alive connections
+  - Implement connection pooling
+  - Use regional endpoints when available
+  
+  **Request Optimization:**
+  - Compress data before upload (gzip/brotli)
+  - Use streaming for large files
+  - Implement request batching
+  - Add caching layers
+  
+  **Error Recovery:**
+  - Implement exponential backoff
+  - Use circuit breakers
+  - Add request timeouts
+  - Monitor endpoint health
+</div>
+
+## Monitoring and Debugging
+
+### Request Debugging
+
+<CollapsibleCodeBlock
+  title="HTTP Request Debugging Tools"
+  description="Debug and monitor Walrus HTTP API requests"
+  language="bash"
+  defaultCollapsed={true}
+>
+{`# Verbose curl for debugging
+curl -v -X POST https://publisher.walrus-testnet.walrus.space/v1/store \
+  -F "file=@test.txt" \
+  -F "epochs=10" \
+  -o response.json \
+  -w "@curl-format.txt"
+
+# curl-format.txt content:
+time_namelookup:  %{time_namelookup}s\n
+time_connect:  %{time_connect}s\n
+time_appconnect:  %{time_appconnect}s\n
+time_pretransfer:  %{time_pretransfer}s\n
+time_redirect:  %{time_redirect}s\n
+time_starttransfer:  %{time_starttransfer}s\n
+time_total:  %{time_total}s\n
+size_download: %{size_download} bytes\n
+size_upload: %{size_upload} bytes\n
+speed_download: %{speed_download} bytes/sec\n
+speed_upload: %{speed_upload} bytes/sec\n
+
+# Using httpie for better formatting
+http --form POST https://publisher.walrus-testnet.walrus.space/v1/store \
+  file@test.txt \
+  epochs=30
+
+# Using HTTPStat for detailed timing
+httpstat https://aggregator.walrus-testnet.walrus.space/v1/health
+
+# Network trace with tcpdump
+sudo tcpdump -i any -w walrus.pcap host publisher.walrus-testnet.walrus.space
+
+# Analyze with Wireshark or tshark
+tshark -r walrus.pcap -Y "http" -T fields -e http.request.method -e http.request.uri`}
+</CollapsibleCodeBlock>
+
+## Rate Limiting and Quotas
+
+<div className="card padding--md mt-4">
+  <h3><img src="/img/icons/warning.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />API Limits</h3>
+  
+  **Current Testnet Limits:**
+  - Requests per minute: 60
+  - Concurrent uploads: 5
+  - Maximum file size: 100MB
+  - Maximum epochs: 200
+  
+  **Rate Limit Headers:**
+  ```
+  X-RateLimit-Limit: 60
+  X-RateLimit-Remaining: 45
+  X-RateLimit-Reset: 1706180400
+  ```
+  
+  **Handling Rate Limits:**
+  - Implement exponential backoff
+  - Use request queuing
+  - Monitor limit headers
+  - Distribute load across time
+</div>
+
+## Comparison: SDK vs HTTP API
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+  <Card>
+    <CardHeader>
+      <CardTitle>When to Use SDK</CardTitle>
+      <CardDescription>
+        ✓ TypeScript/JavaScript projects<br/>
+        ✓ Need wallet integration<br/>
+        ✓ Complex error handling<br/>
+        ✓ Automatic retries required<br/>
+        ✓ Type safety important<br/>
+        ✓ Building user-facing apps
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>When to Use HTTP API</CardTitle>
+      <CardDescription>
+        ✓ Non-JavaScript environments<br/>
+        ✓ Backend microservices<br/>
+        ✓ Simple integrations<br/>
+        ✓ Custom retry logic needed<br/>
+        ✓ Direct control required<br/>
+        ✓ Building API gateways
+      </CardDescription>
+    </CardHeader>
+  </Card>
+</div>
+
+## Next Steps
+
+- Explore the [CLI Usage Guide](/docs/sui-integration/storage/walrus-cli) for command-line operations
+- See [Example Use Cases](/docs/sui-integration/storage/walrus-examples) for real-world implementations
+- Review the [Architecture Overview](/docs/sui-integration/storage/walrus-architecture) for system design insights
+- Compare with [SDK Integration](/docs/sui-integration/storage/walrus-sdk) for TypeScript projects

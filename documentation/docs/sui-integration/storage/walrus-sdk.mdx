@@ -1,0 +1,1858 @@
+---
+id: walrus-sdk
+title: Walrus TypeScript SDK
+sidebar_label: TypeScript SDK
+sidebar_position: 2
+---
+
+import { Card, CardHeader, CardTitle, CardDescription } from '@site/src/components/Card';
+import {CollapsibleCodeBlock} from '@site/src/components/CodeBlock';
+
+# <img src="/img/icons/code.svg" width="32" height="32" style={{ verticalAlign: 'middle', marginRight: '12px' }} />Walrus TypeScript SDK
+
+Complete guide to integrating Walrus storage using the official TypeScript SDK for optimal performance and developer experience.
+
+## Overview
+
+The Walrus TypeScript SDK (`@mysten/walrus`) provides a high-level interface for interacting with the Walrus storage network. It handles the complexity of erasure coding, shard distribution, and network communication while providing a simple API for developers.
+
+<div className="card padding--md mt-4">
+  <h3><img src="/img/icons/info.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />SDK Features</h3>
+  <ul>
+    <li><strong>Type Safety:</strong> Full TypeScript support with comprehensive types</li>
+    <li><strong>Automatic Retries:</strong> Built-in retry logic with exponential backoff</li>
+    <li><strong>Progress Tracking:</strong> Real-time upload/download progress events</li>
+    <li><strong>Error Recovery:</strong> Graceful handling of network failures</li>
+    <li><strong>Optimized Performance:</strong> Parallel shard operations for speed</li>
+  </ul>
+</div>
+
+## Installation
+
+<CollapsibleCodeBlock
+  title="Installing Walrus SDK"
+  description="Setup the Walrus SDK with SUI TypeScript SDK"
+  language="bash"
+  defaultCollapsed={false}
+>
+{`# Install required packages
+npm install --save @mysten/walrus @mysten/sui
+
+# For specific version
+npm install --save @mysten/walrus@latest
+
+# Peer dependencies
+npm install --save @noble/hashes @scure/bip32 @scure/bip39`}
+</CollapsibleCodeBlock>
+
+## Basic Setup
+
+### Client Configuration
+
+<CollapsibleCodeBlock
+  title="Initialize Walrus Client"
+  description="Basic setup with SUI client and network configuration"
+  language="typescript"
+  defaultCollapsed={false}
+>
+{`import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
+import { WalrusClient } from '@mysten/walrus';
+
+// Initialize SUI client
+const suiClient = new SuiClient({
+    url: getFullnodeUrl('testnet'),
+});
+
+// Initialize Walrus client with testnet configuration
+const walrusClient = new WalrusClient({
+    network: 'testnet',
+    suiClient,
+});
+
+// Custom configuration for specific deployment
+const customWalrusClient = new WalrusClient({
+    suiClient,
+    packageConfig: {
+        systemObjectId: '0x98ebc47370603fe81d9e15491b2f1443d619d1dab720d586e429ed233e1255c1',
+        stakingPoolId: '0x20266a17b4f1a216727f3eef5772f8d486a9e3b5e319af80a5b75809c035561d',
+    },
+    // Custom fetch options
+    storageNodeClientOptions: {
+        timeout: 60_000, // 60 seconds
+        onError: (error) => console.error('Storage node error:', error),
+    },
+});`}
+</CollapsibleCodeBlock>
+
+### Environment-Specific Configuration
+
+<CollapsibleCodeBlock
+  title="Environment Configuration"
+  description="Setup for different environments with custom fetch and timeout"
+  language="typescript"
+  defaultCollapsed={true}
+>
+{`// config/walrus.ts
+import { WalrusClient } from '@mysten/walrus';
+import { SuiClient } from '@mysten/sui/client';
+
+export interface WalrusConfig {
+    network: 'testnet' | 'mainnet';
+    suiRpcUrl: string;
+    customFetch?: typeof fetch;
+    timeout?: number;
+}
+
+export function createWalrusClient(config: WalrusConfig): WalrusClient {
+    const suiClient = new SuiClient({ url: config.suiRpcUrl });
+    
+    return new WalrusClient({
+        network: config.network,
+        suiClient,
+        storageNodeClientOptions: {
+            fetch: config.customFetch || fetch,
+            timeout: config.timeout || 60_000,
+            onError: (error) => {
+                console.error('[Walrus Error]', error);
+                // Send to monitoring service
+                if (process.env.NODE_ENV === 'production') {
+                    sendToMonitoring('walrus_error', { error: error.message });
+                }
+            },
+        },
+    });
+}
+
+// Usage in different environments
+const walrusClient = createWalrusClient({
+    network: process.env.WALRUS_NETWORK as 'testnet' | 'mainnet',
+    suiRpcUrl: process.env.SUI_RPC_URL!,
+    timeout: parseInt(process.env.WALRUS_TIMEOUT || '60000'),
+});`}
+</CollapsibleCodeBlock>
+
+## Core Operations
+
+### Writing Blobs
+
+<CollapsibleCodeBlock
+  title="Complete Blob Upload Implementation"
+  description="Upload data with progress tracking, compression, and error handling"
+  language="typescript"
+  defaultCollapsed={false}
+>
+{`import { WalrusClient } from '@mysten/walrus';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+
+// Initialize keypair for signing transactions
+const keypair = Ed25519Keypair.fromSecretKey(
+    Buffer.from(process.env.PRIVATE_KEY!, 'hex')
+);
+
+async function uploadToWalrus(
+    data: Uint8Array,
+    options: {
+        epochs?: number;
+        deletable?: boolean;
+        onProgress?: (progress: number) => void;
+    } = {}
+): Promise<{
+    success: boolean;
+    blobId?: string;
+    cost?: any;
+    error?: string;
+}> {
+    try {
+        // Track upload progress
+        let uploadedChunks = 0;
+        const totalChunks = Math.ceil(data.length / (5 * 1024 * 1024)); // 5MB chunks
+        
+        const { blobId, cost } = await walrusClient.writeBlob({
+            blob: data,
+            deletable: options.deletable ?? false,
+            epochs: options.epochs ?? 5,
+            signer: keypair,
+            // Progress callback (if SDK supports it in future versions)
+            onProgress: (progress) => {
+                options.onProgress?.(progress);
+            }
+        });
+        
+        console.log('Upload successful:', {
+            blobId,
+            size: data.length,
+            cost: {
+                storageCost: cost.storageCost.toString(),
+                writeFee: cost.writeFee.toString(),
+            }
+        });
+        
+        return {
+            success: true,
+            blobId,
+            cost: {
+                storageCost: cost.storageCost.toString(),
+                writeFee: cost.writeFee.toString(),
+                totalCost: (BigInt(cost.storageCost) + BigInt(cost.writeFee)).toString()
+            }
+        };
+    } catch (error) {
+        console.error('Upload failed:', error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        };
+    }
+}
+
+// Advanced upload with compression and encryption
+async function secureUpload(
+    data: Uint8Array,
+    metadata: Record<string, any>
+): Promise<{ blobId: string; encryptionKey: string }> {
+    // 1. Compress data
+    const compressed = await compressData(data);
+    console.log(\`Compression: \${data.length} → \${compressed.length} bytes\`);
+    
+    // 2. Encrypt data
+    const { encrypted, key } = await encryptData(compressed);
+    
+    // 3. Create metadata blob
+    const metadataBlob = new TextEncoder().encode(JSON.stringify({
+        ...metadata,
+        originalSize: data.length,
+        compressedSize: compressed.length,
+        encrypted: true,
+        timestamp: new Date().toISOString()
+    }));
+    
+    // 4. Upload both data and metadata
+    const [dataResult, metaResult] = await Promise.all([
+        walrusClient.writeBlob({
+            blob: encrypted,
+            deletable: false,
+            epochs: 30,
+            signer: keypair
+        }),
+        walrusClient.writeBlob({
+            blob: metadataBlob,
+            deletable: false,
+            epochs: 30,
+            signer: keypair
+        })
+    ]);
+    
+    return {
+        blobId: dataResult.blobId,
+        metadataBlobId: metaResult.blobId,
+        encryptionKey: key
+    };
+}
+
+// Helper: Compression
+async function compressData(data: Uint8Array): Promise<Uint8Array> {
+    const compressionStream = new CompressionStream('gzip');
+    const writer = compressionStream.writable.getWriter();
+    writer.write(data);
+    writer.close();
+    
+    const chunks: Uint8Array[] = [];
+    const reader = compressionStream.readable.getReader();
+    
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+    }
+    
+    const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    const compressed = new Uint8Array(totalLength);
+    let offset = 0;
+    
+    for (const chunk of chunks) {
+        compressed.set(chunk, offset);
+        offset += chunk.length;
+    }
+    
+    return compressed;
+}
+
+// Helper: Encryption (simplified - use proper crypto library)
+async function encryptData(data: Uint8Array): Promise<{
+    encrypted: Uint8Array;
+    key: string;
+}> {
+    const key = crypto.getRandomValues(new Uint8Array(32));
+    const iv = crypto.getRandomValues(new Uint8Array(16));
+    
+    const cryptoKey = await crypto.subtle.importKey(
+        'raw',
+        key,
+        { name: 'AES-GCM' },
+        false,
+        ['encrypt']
+    );
+    
+    const encrypted = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        cryptoKey,
+        data
+    );
+    
+    // Combine IV and encrypted data
+    const result = new Uint8Array(iv.length + encrypted.byteLength);
+    result.set(iv, 0);
+    result.set(new Uint8Array(encrypted), iv.length);
+    
+    return {
+        encrypted: result,
+        key: Buffer.from(key).toString('hex')
+    };
+}`}
+</CollapsibleCodeBlock>
+
+### Reading Blobs
+
+<CollapsibleCodeBlock
+  title="Blob Retrieval with Error Handling"
+  description="Download and process blobs with automatic decompression and decryption"
+  language="typescript"
+  defaultCollapsed={false}
+>
+{`// Advanced blob retrieval with caching and retry
+class WalrusReader {
+    private cache = new Map<string, { data: Uint8Array; timestamp: number }>();
+    private cacheTTL = 3600000; // 1 hour
+    
+    constructor(private walrusClient: WalrusClient) {}
+    
+    async readBlob(
+        blobId: string,
+        options: {
+            decrypt?: { key: string };
+            decompress?: boolean;
+            useCache?: boolean;
+        } = {}
+    ): Promise<{
+        success: boolean;
+        data?: Uint8Array;
+        metadata?: any;
+        error?: string;
+    }> {
+        try {
+            // Check cache first
+            if (options.useCache) {
+                const cached = this.getFromCache(blobId);
+                if (cached) {
+                    console.log('Cache hit for blob:', blobId);
+                    return { success: true, data: cached };
+                }
+            }
+            
+            // Read from Walrus
+            console.log('Reading blob from Walrus:', blobId);
+            const blob = await this.walrusClient.readBlob({ blobId });
+            
+            let processedData = blob;
+            
+            // Decrypt if needed
+            if (options.decrypt) {
+                processedData = await this.decryptData(processedData, options.decrypt.key);
+            }
+            
+            // Decompress if needed
+            if (options.decompress && this.isCompressed(processedData)) {
+                processedData = await this.decompressData(processedData);
+            }
+            
+            // Update cache
+            if (options.useCache) {
+                this.addToCache(blobId, processedData);
+            }
+            
+            return {
+                success: true,
+                data: processedData
+            };
+            
+        } catch (error) {
+            console.error('Failed to read blob:', error);
+            
+            // Handle specific error types
+            if (error.message?.includes('not found')) {
+                return { success: false, error: 'Blob not found' };
+            }
+            
+            if (error.message?.includes('timeout')) {
+                // Retry with extended timeout
+                console.log('Retrying with extended timeout...');
+                return this.readBlobWithRetry(blobId, options);
+            }
+            
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    }
+    
+    private async readBlobWithRetry(
+        blobId: string,
+        options: any,
+        maxRetries: number = 3
+    ): Promise<any> {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                
+                const blob = await this.walrusClient.readBlob({ blobId });
+                return { success: true, data: blob };
+            } catch (error) {
+                if (attempt === maxRetries) {
+                    throw error;
+                }
+            }
+        }
+    }
+    
+    private getFromCache(blobId: string): Uint8Array | null {
+        const cached = this.cache.get(blobId);
+        if (cached && Date.now() - cached.timestamp < this.cacheTTL) {
+            return cached.data;
+        }
+        this.cache.delete(blobId);
+        return null;
+    }
+    
+    private addToCache(blobId: string, data: Uint8Array): void {
+        this.cache.set(blobId, {
+            data,
+            timestamp: Date.now()
+        });
+        
+        // Limit cache size
+        if (this.cache.size > 100) {
+            const oldestKey = Array.from(this.cache.entries())
+                .sort(([, a], [, b]) => a.timestamp - b.timestamp)[0][0];
+            this.cache.delete(oldestKey);
+        }
+    }
+    
+    private isCompressed(data: Uint8Array): boolean {
+        return data.length > 2 && data[0] === 0x1f && data[1] === 0x8b;
+    }
+    
+    private async decompressData(data: Uint8Array): Promise<Uint8Array> {
+        const decompressionStream = new DecompressionStream('gzip');
+        const writer = decompressionStream.writable.getWriter();
+        writer.write(data);
+        writer.close();
+        
+        const chunks: Uint8Array[] = [];
+        const reader = decompressionStream.readable.getReader();
+        
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+        }
+        
+        const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+        const decompressed = new Uint8Array(totalLength);
+        let offset = 0;
+        
+        for (const chunk of chunks) {
+            decompressed.set(chunk, offset);
+            offset += chunk.length;
+        }
+        
+        return decompressed;
+    }
+    
+    private async decryptData(data: Uint8Array, keyHex: string): Promise<Uint8Array> {
+        const key = Buffer.from(keyHex, 'hex');
+        const iv = data.slice(0, 16);
+        const encrypted = data.slice(16);
+        
+        const cryptoKey = await crypto.subtle.importKey(
+            'raw',
+            key,
+            { name: 'AES-GCM' },
+            false,
+            ['decrypt']
+        );
+        
+        const decrypted = await crypto.subtle.decrypt(
+            { name: 'AES-GCM', iv },
+            cryptoKey,
+            encrypted
+        );
+        
+        return new Uint8Array(decrypted);
+    }
+    
+    clearCache(): void {
+        this.cache.clear();
+    }
+}
+
+// Usage example
+const reader = new WalrusReader(walrusClient);
+
+// Read with all processing options
+const result = await reader.readBlob('blob_id_here', {
+    decrypt: { key: 'encryption_key_hex' },
+    decompress: true,
+    useCache: true
+});
+
+if (result.success) {
+    console.log('Data retrieved:', result.data.length, 'bytes');
+}`}
+</CollapsibleCodeBlock>
+
+## Advanced Features
+
+### Batch Operations
+
+<CollapsibleCodeBlock
+  title="Batch Upload and Download"
+  description="Efficiently handle multiple files with parallel processing"
+  language="typescript"
+  defaultCollapsed={false}
+>
+{`// Batch upload manager with concurrency control
+class BatchUploadManager {
+    private concurrencyLimit = 3;
+    private uploadQueue: Array<{
+        id: string;
+        data: Uint8Array;
+        metadata: any;
+    }> = [];
+    
+    constructor(
+        private walrusClient: WalrusClient,
+        private signer: Ed25519Keypair
+    ) {}
+    
+    async uploadBatch(
+        files: Array<{ name: string; data: Uint8Array; metadata?: any }>,
+        options: {
+            epochs?: number;
+            onProgress?: (completed: number, total: number) => void;
+            onFileComplete?: (fileName: string, blobId: string) => void;
+        } = {}
+    ): Promise<Array<{ name: string; blobId?: string; error?: string }>> {
+        const results: Array<{ name: string; blobId?: string; error?: string }> = [];
+        let completed = 0;
+        
+        // Process files in batches
+        for (let i = 0; i < files.length; i += this.concurrencyLimit) {
+            const batch = files.slice(i, i + this.concurrencyLimit);
+            
+            const batchPromises = batch.map(async (file) => {
+                try {
+                    const { blobId } = await this.walrusClient.writeBlob({
+                        blob: file.data,
+                        deletable: false,
+                        epochs: options.epochs || 10,
+                        signer: this.signer
+                    });
+                    
+                    // Store metadata separately if provided
+                    let metadataBlobId;
+                    if (file.metadata) {
+                        const metadataBlob = new TextEncoder().encode(
+                            JSON.stringify({
+                                ...file.metadata,
+                                fileName: file.name,
+                                dataBlobId: blobId,
+                                uploadTimestamp: new Date().toISOString()
+                            })
+                        );
+                        
+                        const metaResult = await this.walrusClient.writeBlob({
+                            blob: metadataBlob,
+                            deletable: false,
+                            epochs: options.epochs || 10,
+                            signer: this.signer
+                        });
+                        
+                        metadataBlobId = metaResult.blobId;
+                    }
+                    
+                    completed++;
+                    options.onProgress?.(completed, files.length);
+                    options.onFileComplete?.(file.name, blobId);
+                    
+                    return {
+                        name: file.name,
+                        blobId,
+                        metadataBlobId
+                    };
+                } catch (error) {
+                    completed++;
+                    options.onProgress?.(completed, files.length);
+                    
+                    return {
+                        name: file.name,
+                        error: error instanceof Error ? error.message : 'Upload failed'
+                    };
+                }
+            });
+            
+            const batchResults = await Promise.all(batchPromises);
+            results.push(...batchResults);
+        }
+        
+        return results;
+    }
+    
+    async downloadBatch(
+        blobIds: string[],
+        options: {
+            onProgress?: (completed: number, total: number) => void;
+            onFileComplete?: (blobId: string, data: Uint8Array) => void;
+        } = {}
+    ): Promise<Array<{ blobId: string; data?: Uint8Array; error?: string }>> {
+        const results: Array<{ blobId: string; data?: Uint8Array; error?: string }> = [];
+        let completed = 0;
+        
+        // Download in parallel with concurrency limit
+        for (let i = 0; i < blobIds.length; i += this.concurrencyLimit) {
+            const batch = blobIds.slice(i, i + this.concurrencyLimit);
+            
+            const batchPromises = batch.map(async (blobId) => {
+                try {
+                    const data = await this.walrusClient.readBlob({ blobId });
+                    
+                    completed++;
+                    options.onProgress?.(completed, blobIds.length);
+                    options.onFileComplete?.(blobId, data);
+                    
+                    return { blobId, data };
+                } catch (error) {
+                    completed++;
+                    options.onProgress?.(completed, blobIds.length);
+                    
+                    return {
+                        blobId,
+                        error: error instanceof Error ? error.message : 'Download failed'
+                    };
+                }
+            });
+            
+            const batchResults = await Promise.all(batchPromises);
+            results.push(...batchResults);
+        }
+        
+        return results;
+    }
+}
+
+// Usage example
+const batchManager = new BatchUploadManager(walrusClient, keypair);
+
+// Upload multiple files
+const files = [
+    { name: 'model.json', data: modelData },
+    { name: 'weights.bin', data: weightsData },
+    { name: 'config.yaml', data: configData }
+];
+
+const uploadResults = await batchManager.uploadBatch(files, {
+    epochs: 30,
+    onProgress: (completed, total) => {
+        console.log(\`Upload progress: \${completed}/\${total}\`);
+    },
+    onFileComplete: (fileName, blobId) => {
+        console.log(\`Uploaded \${fileName}: \${blobId}\`);
+    }
+});
+
+// Download multiple blobs
+const blobIds = uploadResults.map(r => r.blobId).filter(Boolean);
+const downloadResults = await batchManager.downloadBatch(blobIds, {
+    onProgress: (completed, total) => {
+        console.log(\`Download progress: \${completed}/\${total}\`);
+    }
+});`}
+</CollapsibleCodeBlock>
+
+### Large File Handling
+
+<CollapsibleCodeBlock
+  title="Chunked Upload for Large Files"
+  description="Handle files larger than memory limits with streaming and chunking"
+  language="typescript"
+  defaultCollapsed={true}
+>
+{`// Large file handler with chunking
+class LargeFileHandler {
+    private chunkSize = 5 * 1024 * 1024; // 5MB chunks
+    
+    constructor(
+        private walrusClient: WalrusClient,
+        private signer: Ed25519Keypair
+    ) {}
+    
+    async uploadLargeFile(
+        file: File | Blob,
+        options: {
+            epochs?: number;
+            onProgress?: (progress: number) => void;
+            onChunkComplete?: (chunkIndex: number, blobId: string) => void;
+        } = {}
+    ): Promise<{
+        manifestBlobId: string;
+        chunkBlobIds: string[];
+        totalSize: number;
+    }> {
+        const chunks = await this.splitFileIntoChunks(file);
+        const chunkBlobIds: string[] = [];
+        
+        // Upload chunks
+        for (let i = 0; i < chunks.length; i++) {
+            const chunk = chunks[i];
+            
+            try {
+                const { blobId } = await this.walrusClient.writeBlob({
+                    blob: chunk,
+                    deletable: false,
+                    epochs: options.epochs || 30,
+                    signer: this.signer
+                });
+                
+                chunkBlobIds.push(blobId);
+                options.onChunkComplete?.(i, blobId);
+                options.onProgress?.((i + 1) / chunks.length);
+                
+            } catch (error) {
+                console.error(\`Failed to upload chunk \${i}:\`, error);
+                throw new Error(\`Chunk \${i} upload failed: \${error.message}\`);
+            }
+        }
+        
+        // Create and upload manifest
+        const manifest = {
+            fileName: file.name || 'unnamed',
+            fileSize: file.size,
+            mimeType: file.type || 'application/octet-stream',
+            chunkSize: this.chunkSize,
+            totalChunks: chunks.length,
+            chunkBlobIds,
+            uploadedAt: new Date().toISOString(),
+            checksum: await this.calculateFileHash(file)
+        };
+        
+        const manifestBlob = new TextEncoder().encode(JSON.stringify(manifest, null, 2));
+        const { blobId: manifestBlobId } = await this.walrusClient.writeBlob({
+            blob: manifestBlob,
+            deletable: false,
+            epochs: options.epochs || 30,
+            signer: this.signer
+        });
+        
+        return {
+            manifestBlobId,
+            chunkBlobIds,
+            totalSize: file.size
+        };
+    }
+    
+    async downloadLargeFile(
+        manifestBlobId: string,
+        options: {
+            onProgress?: (progress: number) => void;
+            onChunkComplete?: (chunkIndex: number) => void;
+        } = {}
+    ): Promise<Blob> {
+        // Download manifest
+        const manifestData = await this.walrusClient.readBlob({ blobId: manifestBlobId });
+        const manifest = JSON.parse(new TextDecoder().decode(manifestData));
+        
+        // Download chunks in parallel (with concurrency limit)
+        const chunks: Uint8Array[] = new Array(manifest.totalChunks);
+        const concurrencyLimit = 3;
+        
+        for (let i = 0; i < manifest.chunkBlobIds.length; i += concurrencyLimit) {
+            const batch = manifest.chunkBlobIds.slice(i, i + concurrencyLimit);
+            
+            const batchPromises = batch.map(async (blobId: string, batchIndex: number) => {
+                const chunkIndex = i + batchIndex;
+                const data = await this.walrusClient.readBlob({ blobId });
+                chunks[chunkIndex] = data;
+                
+                options.onChunkComplete?.(chunkIndex);
+                options.onProgress?.((chunkIndex + 1) / manifest.totalChunks);
+                
+                return data;
+            });
+            
+            await Promise.all(batchPromises);
+        }
+        
+        // Reconstruct file
+        return new Blob(chunks, { type: manifest.mimeType });
+    }
+    
+    private async splitFileIntoChunks(file: File | Blob): Promise<Uint8Array[]> {
+        const chunks: Uint8Array[] = [];
+        let offset = 0;
+        
+        while (offset < file.size) {
+            const chunk = file.slice(offset, offset + this.chunkSize);
+            const arrayBuffer = await chunk.arrayBuffer();
+            chunks.push(new Uint8Array(arrayBuffer));
+            offset += this.chunkSize;
+        }
+        
+        return chunks;
+    }
+    
+    private async calculateFileHash(file: File | Blob): Promise<string> {
+        const chunkSize = 1024 * 1024; // 1MB chunks for hashing
+        const hasher = await crypto.subtle.digest('SHA-256', new ArrayBuffer(0));
+        let offset = 0;
+        
+        while (offset < file.size) {
+            const chunk = file.slice(offset, offset + chunkSize);
+            const buffer = await chunk.arrayBuffer();
+            // In real implementation, update hash incrementally
+            offset += chunkSize;
+        }
+        
+        // Return hex string
+        return Array.from(new Uint8Array(hasher))
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('');
+    }
+}
+
+// Usage example
+const largeFileHandler = new LargeFileHandler(walrusClient, keypair);
+
+// Upload large file
+const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+const file = fileInput.files![0];
+
+const uploadResult = await largeFileHandler.uploadLargeFile(file, {
+    epochs: 50,
+    onProgress: (progress) => {
+        console.log(\`Upload progress: \${(progress * 100).toFixed(2)}%\`);
+    },
+    onChunkComplete: (index, blobId) => {
+        console.log(\`Chunk \${index} uploaded: \${blobId}\`);
+    }
+});
+
+// Download large file
+const reconstructedBlob = await largeFileHandler.downloadLargeFile(
+    uploadResult.manifestBlobId,
+    {
+        onProgress: (progress) => {
+            console.log(\`Download progress: \${(progress * 100).toFixed(2)}%\`);
+        }
+    }
+);
+
+// Save to disk
+const url = URL.createObjectURL(reconstructedBlob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'downloaded-file';
+a.click();
+URL.revokeObjectURL(url);`}
+</CollapsibleCodeBlock>
+
+## Error Handling
+
+### Comprehensive Error Management
+
+<CollapsibleCodeBlock
+  title="Error Handling and Recovery"
+  description="Handle all types of errors with retry logic and fallbacks"
+  language="typescript"
+  defaultCollapsed={false}
+>
+{`import { WalrusClient, RetryableWalrusClientError } from '@mysten/walrus';
+
+class RobustWalrusClient {
+    private retryDelays = [1000, 2000, 4000, 8000]; // Exponential backoff
+    
+    constructor(
+        private walrusClient: WalrusClient,
+        private maxRetries: number = 3
+    ) {}
+    
+    async safeWriteBlob(
+        params: Parameters<typeof this.walrusClient.writeBlob>[0]
+    ): Promise<{
+        success: boolean;
+        blobId?: string;
+        error?: string;
+        attempts: number;
+    }> {
+        let lastError: Error | undefined;
+        
+        for (let attempt = 1; attempt <= this.maxRetries + 1; attempt++) {
+            try {
+                const result = await this.walrusClient.writeBlob(params);
+                
+                return {
+                    success: true,
+                    blobId: result.blobId,
+                    attempts: attempt
+                };
+                
+            } catch (error) {
+                lastError = error instanceof Error ? error : new Error(String(error));
+                
+                // Check if error is retryable
+                if (error instanceof RetryableWalrusClientError) {
+                    console.log(\`Retryable error on attempt \${attempt}, resetting client...\`);
+                    this.walrusClient.reset();
+                    
+                    if (attempt <= this.maxRetries) {
+                        const delay = this.retryDelays[attempt - 1] || 10000;
+                        console.log(\`Waiting \${delay}ms before retry...\`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue;
+                    }
+                }
+                
+                // Check for specific error types
+                if (this.isNetworkError(error)) {
+                    console.log(\`Network error on attempt \${attempt}\`);
+                    
+                    if (attempt <= this.maxRetries) {
+                        const delay = this.retryDelays[attempt - 1] || 10000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue;
+                    }
+                }
+                
+                // Check for insufficient funds
+                if (this.isInsufficientFundsError(error)) {
+                    return {
+                        success: false,
+                        error: 'Insufficient WAL tokens for storage',
+                        attempts: attempt
+                    };
+                }
+                
+                // Check for rate limiting
+                if (this.isRateLimitError(error)) {
+                    console.log('Rate limit hit, waiting 60 seconds...');
+                    await new Promise(resolve => setTimeout(resolve, 60000));
+                    continue;
+                }
+                
+                // Non-retryable error
+                console.error(\`Non-retryable error on attempt \${attempt}:\`, error);
+                break;
+            }
+        }
+        
+        return {
+            success: false,
+            error: lastError?.message || 'Unknown error',
+            attempts: this.maxRetries + 1
+        };
+    }
+    
+    async safeReadBlob(
+        params: Parameters<typeof this.walrusClient.readBlob>[0]
+    ): Promise<{
+        success: boolean;
+        data?: Uint8Array;
+        error?: string;
+        attempts: number;
+    }> {
+        let lastError: Error | undefined;
+        
+        for (let attempt = 1; attempt <= this.maxRetries + 1; attempt++) {
+            try {
+                const data = await this.walrusClient.readBlob(params);
+                
+                return {
+                    success: true,
+                    data,
+                    attempts: attempt
+                };
+                
+            } catch (error) {
+                lastError = error instanceof Error ? error : new Error(String(error));
+                
+                // Handle blob not found
+                if (this.isBlobNotFoundError(error)) {
+                    return {
+                        success: false,
+                        error: 'Blob not found',
+                        attempts: attempt
+                    };
+                }
+                
+                // Retry on network errors
+                if (this.isNetworkError(error) && attempt <= this.maxRetries) {
+                    const delay = this.retryDelays[attempt - 1] || 10000;
+                    console.log(\`Network error, retrying in \${delay}ms...\`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    continue;
+                }
+                
+                // Handle retryable errors
+                if (error instanceof RetryableWalrusClientError && attempt <= this.maxRetries) {
+                    console.log('Retryable error, resetting client...');
+                    this.walrusClient.reset();
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    continue;
+                }
+            }
+        }
+        
+        return {
+            success: false,
+            error: lastError?.message || 'Unknown error',
+            attempts: this.maxRetries + 1
+        };
+    }
+    
+    private isNetworkError(error: any): boolean {
+        const message = error?.message?.toLowerCase() || '';
+        return (
+            message.includes('network') ||
+            message.includes('timeout') ||
+            message.includes('fetch') ||
+            message.includes('connection')
+        );
+    }
+    
+    private isInsufficientFundsError(error: any): boolean {
+        const message = error?.message?.toLowerCase() || '';
+        return (
+            message.includes('insufficient') ||
+            message.includes('balance') ||
+            message.includes('funds')
+        );
+    }
+    
+    private isRateLimitError(error: any): boolean {
+        const message = error?.message?.toLowerCase() || '';
+        return (
+            message.includes('rate limit') ||
+            message.includes('too many requests') ||
+            error?.status === 429
+        );
+    }
+    
+    private isBlobNotFoundError(error: any): boolean {
+        const message = error?.message?.toLowerCase() || '';
+        return (
+            message.includes('not found') ||
+            message.includes('404') ||
+            error?.status === 404
+        );
+    }
+}
+
+// Usage with comprehensive error handling
+const robustClient = new RobustWalrusClient(walrusClient);
+
+// Upload with full error handling
+const uploadResult = await robustClient.safeWriteBlob({
+    blob: data,
+    deletable: false,
+    epochs: 30,
+    signer: keypair
+});
+
+if (!uploadResult.success) {
+    switch (uploadResult.error) {
+        case 'Insufficient WAL tokens for storage':
+            console.error('Please acquire more WAL tokens');
+            // Show user how to get tokens
+            break;
+            
+        case 'Blob not found':
+            console.error('The requested blob does not exist');
+            break;
+            
+        default:
+            console.error(\`Upload failed after \${uploadResult.attempts} attempts: \${uploadResult.error}\`);
+    }
+} else {
+    console.log(\`Upload successful after \${uploadResult.attempts} attempts\`);
+    console.log('Blob ID:', uploadResult.blobId);
+}`}
+</CollapsibleCodeBlock>
+
+## Integration with NeuraLabs
+
+### Complete Integration Example
+
+<CollapsibleCodeBlock
+  title="NeuraLabs Walrus Integration"
+  description="Full integration with AI workflow storage using Walrus SDK"
+  language="typescript"
+  defaultCollapsed={false}
+>
+{`// neuralabs-walrus-integration.ts
+import { WalrusClient } from '@mysten/walrus';
+import { SuiClient } from '@mysten/sui/client';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+import { NeuraLabsSealClient } from './seal-client';
+
+export class NeuraLabsStorageService {
+    private walrusClient: WalrusClient;
+    private sealClient: NeuraLabsSealClient;
+    private robustClient: RobustWalrusClient;
+    
+    constructor(
+        private suiClient: SuiClient,
+        private signer: Ed25519Keypair
+    ) {
+        this.walrusClient = new WalrusClient({
+            network: 'testnet',
+            suiClient: this.suiClient
+        });
+        
+        this.sealClient = new NeuraLabsSealClient(suiClient);
+        this.robustClient = new RobustWalrusClient(this.walrusClient);
+    }
+    
+    async storeAIWorkflow(
+        workflow: {
+            id: string;
+            name: string;
+            description: string;
+            model: {
+                architecture: string;
+                parameters: any;
+                weights?: Uint8Array;
+            };
+            config: any;
+        },
+        options: {
+            threshold?: number;
+            epochs?: number;
+            compress?: boolean;
+        } = {}
+    ): Promise<{
+        success: boolean;
+        workflowId?: string;
+        dataBlobId?: string;
+        metadataBlobId?: string;
+        error?: string;
+    }> {
+        try {
+            console.log(\`Storing AI workflow: \${workflow.name}\`);
+            
+            // 1. Prepare workflow data
+            const workflowData = {
+                ...workflow,
+                model: {
+                    ...workflow.model,
+                    weights: undefined // Store weights separately
+                },
+                createdAt: new Date().toISOString(),
+                version: '1.0.0'
+            };
+            
+            // 2. Serialize and compress workflow metadata
+            let metadataBlob = new TextEncoder().encode(JSON.stringify(workflowData));
+            
+            if (options.compress) {
+                metadataBlob = await this.compressData(metadataBlob);
+            }
+            
+            // 3. Encrypt metadata with Seal
+            const encryptedMetadata = await this.sealClient.encrypt(
+                metadataBlob,
+                workflow.id,
+                options.threshold || 1
+            );
+            
+            // 4. Store encrypted metadata
+            const metadataResult = await this.robustClient.safeWriteBlob({
+                blob: encryptedMetadata.data,
+                deletable: false,
+                epochs: options.epochs || 30,
+                signer: this.signer
+            });
+            
+            if (!metadataResult.success) {
+                throw new Error(\`Metadata storage failed: \${metadataResult.error}\`);
+            }
+            
+            // 5. Store model weights if present
+            let weightsBlobId: string | undefined;
+            if (workflow.model.weights) {
+                console.log('Storing model weights...');
+                
+                // Encrypt weights
+                const encryptedWeights = await this.sealClient.encrypt(
+                    workflow.model.weights,
+                    \`\${workflow.id}-weights\`,
+                    options.threshold || 1
+                );
+                
+                // Use large file handler for weights
+                if (encryptedWeights.data.length > 10 * 1024 * 1024) {
+                    const largeFileHandler = new LargeFileHandler(
+                        this.walrusClient,
+                        this.signer
+                    );
+                    
+                    const weightsResult = await largeFileHandler.uploadLargeFile(
+                        new Blob([encryptedWeights.data]),
+                        {
+                            epochs: options.epochs || 30,
+                            onProgress: (progress) => {
+                                console.log(\`Weights upload: \${(progress * 100).toFixed(2)}%\`);
+                            }
+                        }
+                    );
+                    
+                    weightsBlobId = weightsResult.manifestBlobId;
+                } else {
+                    const weightsResult = await this.robustClient.safeWriteBlob({
+                        blob: encryptedWeights.data,
+                        deletable: false,
+                        epochs: options.epochs || 30,
+                        signer: this.signer
+                    });
+                    
+                    if (!weightsResult.success) {
+                        throw new Error(\`Weights storage failed: \${weightsResult.error}\`);
+                    }
+                    
+                    weightsBlobId = weightsResult.blobId;
+                }
+            }
+            
+            // 6. Create composite manifest
+            const manifest = {
+                workflowId: workflow.id,
+                name: workflow.name,
+                metadataBlobId: metadataResult.blobId,
+                weightsBlobId,
+                encrypted: true,
+                compressed: options.compress || false,
+                threshold: options.threshold || 1,
+                createdAt: new Date().toISOString(),
+                expiresAt: this.calculateExpiryDate(options.epochs || 30)
+            };
+            
+            const manifestBlob = new TextEncoder().encode(JSON.stringify(manifest));
+            const manifestResult = await this.robustClient.safeWriteBlob({
+                blob: manifestBlob,
+                deletable: false,
+                epochs: options.epochs || 30,
+                signer: this.signer
+            });
+            
+            if (!manifestResult.success) {
+                throw new Error(\`Manifest storage failed: \${manifestResult.error}\`);
+            }
+            
+            // 7. Store reference on blockchain
+            await this.storeOnChainReference({
+                workflowId: workflow.id,
+                manifestBlobId: manifestResult.blobId!,
+                owner: this.signer.toSuiAddress()
+            });
+            
+            console.log('AI workflow stored successfully');
+            
+            return {
+                success: true,
+                workflowId: workflow.id,
+                dataBlobId: manifestResult.blobId,
+                metadataBlobId: metadataResult.blobId
+            };
+            
+        } catch (error) {
+            console.error('Failed to store AI workflow:', error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    }
+    
+    async retrieveAIWorkflow(
+        workflowId: string,
+        options: {
+            includeWeights?: boolean;
+        } = {}
+    ): Promise<{
+        success: boolean;
+        workflow?: any;
+        error?: string;
+    }> {
+        try {
+            console.log(\`Retrieving AI workflow: \${workflowId}\`);
+            
+            // 1. Get manifest blob ID from blockchain
+            const manifestBlobId = await this.getOnChainReference(workflowId);
+            if (!manifestBlobId) {
+                throw new Error('Workflow not found on blockchain');
+            }
+            
+            // 2. Retrieve manifest
+            const manifestResult = await this.robustClient.safeReadBlob({
+                blobId: manifestBlobId
+            });
+            
+            if (!manifestResult.success) {
+                throw new Error(\`Manifest retrieval failed: \${manifestResult.error}\`);
+            }
+            
+            const manifest = JSON.parse(new TextDecoder().decode(manifestResult.data!));
+            
+            // 3. Retrieve and decrypt metadata
+            const metadataResult = await this.robustClient.safeReadBlob({
+                blobId: manifest.metadataBlobId
+            });
+            
+            if (!metadataResult.success) {
+                throw new Error(\`Metadata retrieval failed: \${metadataResult.error}\`);
+            }
+            
+            const decryptedMetadata = await this.sealClient.decrypt(
+                metadataResult.data!,
+                workflowId
+            );
+            
+            let workflowData = decryptedMetadata.data;
+            
+            // 4. Decompress if needed
+            if (manifest.compressed) {
+                workflowData = await this.decompressData(workflowData);
+            }
+            
+            const workflow = JSON.parse(new TextDecoder().decode(workflowData));
+            
+            // 5. Retrieve weights if requested
+            if (options.includeWeights && manifest.weightsBlobId) {
+                console.log('Retrieving model weights...');
+                
+                // Check if it's a large file manifest
+                const weightsResult = await this.robustClient.safeReadBlob({
+                    blobId: manifest.weightsBlobId
+                });
+                
+                if (weightsResult.success) {
+                    // Try to parse as manifest
+                    try {
+                        const weightsManifest = JSON.parse(
+                            new TextDecoder().decode(weightsResult.data!)
+                        );
+                        
+                        if (weightsManifest.chunkBlobIds) {
+                            // It's a large file, download chunks
+                            const largeFileHandler = new LargeFileHandler(
+                                this.walrusClient,
+                                this.signer
+                            );
+                            
+                            const weightsBlob = await largeFileHandler.downloadLargeFile(
+                                manifest.weightsBlobId,
+                                {
+                                    onProgress: (progress) => {
+                                        console.log(\`Weights download: \${(progress * 100).toFixed(2)}%\`);
+                                    }
+                                }
+                            );
+                            
+                            const weightsData = new Uint8Array(await weightsBlob.arrayBuffer());
+                            const decryptedWeights = await this.sealClient.decrypt(
+                                weightsData,
+                                \`\${workflowId}-weights\`
+                            );
+                            
+                            workflow.model.weights = decryptedWeights.data;
+                        }
+                    } catch {
+                        // It's a regular blob, decrypt directly
+                        const decryptedWeights = await this.sealClient.decrypt(
+                            weightsResult.data!,
+                            \`\${workflowId}-weights\`
+                        );
+                        
+                        workflow.model.weights = decryptedWeights.data;
+                    }
+                }
+            }
+            
+            console.log('AI workflow retrieved successfully');
+            
+            return {
+                success: true,
+                workflow
+            };
+            
+        } catch (error) {
+            console.error('Failed to retrieve AI workflow:', error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    }
+    
+    private async compressData(data: Uint8Array): Promise<Uint8Array> {
+        const compressionStream = new CompressionStream('gzip');
+        const writer = compressionStream.writable.getWriter();
+        writer.write(data);
+        writer.close();
+        
+        const chunks: Uint8Array[] = [];
+        const reader = compressionStream.readable.getReader();
+        
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+        }
+        
+        const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+        const compressed = new Uint8Array(totalLength);
+        let offset = 0;
+        
+        for (const chunk of chunks) {
+            compressed.set(chunk, offset);
+            offset += chunk.length;
+        }
+        
+        return compressed;
+    }
+    
+    private async decompressData(data: Uint8Array): Promise<Uint8Array> {
+        const decompressionStream = new DecompressionStream('gzip');
+        const writer = decompressionStream.writable.getWriter();
+        writer.write(data);
+        writer.close();
+        
+        const chunks: Uint8Array[] = [];
+        const reader = decompressionStream.readable.getReader();
+        
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+        }
+        
+        const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+        const decompressed = new Uint8Array(totalLength);
+        let offset = 0;
+        
+        for (const chunk of chunks) {
+            decompressed.set(chunk, offset);
+            offset += chunk.length;
+        }
+        
+        return decompressed;
+    }
+    
+    private calculateExpiryDate(epochs: number): string {
+        // Assuming ~24 hours per epoch
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + epochs);
+        return expiryDate.toISOString();
+    }
+    
+    private async storeOnChainReference(params: {
+        workflowId: string;
+        manifestBlobId: string;
+        owner: string;
+    }): Promise<void> {
+        // Implementation depends on your smart contract
+        console.log('Storing on-chain reference:', params);
+    }
+    
+    private async getOnChainReference(workflowId: string): Promise<string | null> {
+        // Implementation depends on your smart contract
+        console.log('Getting on-chain reference for:', workflowId);
+        return 'mock-manifest-blob-id';
+    }
+}`}
+</CollapsibleCodeBlock>
+
+## Performance Optimization
+
+### SDK Performance Tips
+
+<div className="card padding--md mt-4">
+  <h3><img src="/img/icons/terminal.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />Performance Best Practices</h3>
+  
+  **Connection Optimization:**
+  ```typescript
+  // Use connection pooling for Node.js
+  import { Agent } from 'undici';
+  
+  const walrusClient = new WalrusClient({
+      network: 'testnet',
+      suiClient,
+      storageNodeClientOptions: {
+          fetch: (url, init) => {
+              return fetch(url, {
+                  ...init,
+                  dispatcher: new Agent({
+                      connections: 50,
+                      pipelining: 10,
+                      keepAliveTimeout: 60_000,
+                  })
+              });
+          }
+      }
+  });
+  ```
+  
+  **Compression Strategy:**
+  - Text/JSON: Always compress (60-90% savings)
+  - Images: Usually pre-compressed, skip
+  - Binary data: Test compression ratio first
+  
+  **Caching Strategy:**
+  - Cache blob IDs indefinitely (content-addressed)
+  - Cache data with TTL based on access patterns
+  - Use service workers for browser caching
+</div>
+
+## Platform-Specific Considerations
+
+### Next.js Integration
+
+<CollapsibleCodeBlock
+  title="Next.js Configuration"
+  description="Special configuration for Next.js apps"
+  language="typescript"
+  defaultCollapsed={true}
+>
+{`// next.config.js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+    // Exclude Walrus from server bundling
+    serverExternalPackages: ['@mysten/walrus', '@mysten/walrus-wasm'],
+    
+    // Webpack configuration for WASM
+    webpack: (config, { isServer }) => {
+        if (!isServer) {
+            config.experiments = {
+                ...config.experiments,
+                asyncWebAssembly: true,
+            };
+            
+            config.module.rules.push({
+                test: /\.wasm$/,
+                type: 'asset/resource',
+            });
+        }
+        
+        return config;
+    },
+};
+
+export default nextConfig;
+
+// app/lib/walrus.ts (App Router)
+import { WalrusClient } from '@mysten/walrus';
+import { SuiClient } from '@mysten/sui/client';
+
+let walrusClient: WalrusClient | null = null;
+
+export function getWalrusClient(): WalrusClient {
+    if (!walrusClient) {
+        const suiClient = new SuiClient({
+            url: process.env.NEXT_PUBLIC_SUI_RPC_URL!
+        });
+        
+        walrusClient = new WalrusClient({
+            network: process.env.NEXT_PUBLIC_WALRUS_NETWORK as 'testnet' | 'mainnet',
+            suiClient,
+        });
+    }
+    
+    return walrusClient;
+}
+
+// app/api/upload/route.ts (API Route)
+import { NextRequest, NextResponse } from 'next/server';
+import { getWalrusClient } from '@/lib/walrus';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+
+export async function POST(request: NextRequest) {
+    try {
+        const formData = await request.formData();
+        const file = formData.get('file') as File;
+        
+        if (!file) {
+            return NextResponse.json(
+                { error: 'No file provided' },
+                { status: 400 }
+            );
+        }
+        
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const walrusClient = getWalrusClient();
+        
+        // Server-side signer
+        const signer = Ed25519Keypair.fromSecretKey(
+            Buffer.from(process.env.SIGNER_PRIVATE_KEY!, 'hex')
+        );
+        
+        const result = await walrusClient.writeBlob({
+            blob: bytes,
+            deletable: false,
+            epochs: 30,
+            signer,
+        });
+        
+        return NextResponse.json({
+            success: true,
+            blobId: result.blobId,
+            cost: result.cost,
+        });
+        
+    } catch (error) {
+        console.error('Upload error:', error);
+        return NextResponse.json(
+            { error: 'Upload failed' },
+            { status: 500 }
+        );
+    }
+}`}
+</CollapsibleCodeBlock>
+
+### Vite Integration
+
+<CollapsibleCodeBlock
+  title="Vite Configuration"
+  description="WASM loading for Vite projects"
+  language="typescript"
+  defaultCollapsed={true}
+>
+{`// vite.config.ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+    plugins: [react()],
+    optimizeDeps: {
+        exclude: ['@mysten/walrus-wasm'],
+    },
+});
+
+// src/lib/walrus.ts
+import { WalrusClient } from '@mysten/walrus';
+import { SuiClient } from '@mysten/sui/client';
+import walrusWasmUrl from '@mysten/walrus-wasm/web/walrus_wasm_bg.wasm?url';
+
+export function createWalrusClient(): WalrusClient {
+    const suiClient = new SuiClient({
+        url: import.meta.env.VITE_SUI_RPC_URL
+    });
+    
+    return new WalrusClient({
+        network: import.meta.env.VITE_WALRUS_NETWORK as 'testnet' | 'mainnet',
+        suiClient,
+        wasmUrl: walrusWasmUrl, // Important for Vite
+    });
+}`}
+</CollapsibleCodeBlock>
+
+## Testing
+
+### Unit Testing with SDK
+
+<CollapsibleCodeBlock
+  title="Testing Walrus Integration"
+  description="Unit tests for Walrus SDK integration"
+  language="typescript"
+  defaultCollapsed={true}
+>
+{`// __tests__/walrus.test.ts
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { WalrusClient } from '@mysten/walrus';
+import { SuiClient } from '@mysten/sui/client';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+
+// Mock the SDK
+vi.mock('@mysten/walrus', () => ({
+    WalrusClient: vi.fn().mockImplementation(() => ({
+        writeBlob: vi.fn(),
+        readBlob: vi.fn(),
+        reset: vi.fn(),
+    })),
+}));
+
+describe('Walrus SDK Integration', () => {
+    let walrusClient: WalrusClient;
+    let mockWriteBlob: any;
+    let mockReadBlob: any;
+    
+    beforeEach(() => {
+        const suiClient = new SuiClient({ url: 'https://test.sui.io' });
+        walrusClient = new WalrusClient({ network: 'testnet', suiClient });
+        
+        mockWriteBlob = vi.mocked(walrusClient.writeBlob);
+        mockReadBlob = vi.mocked(walrusClient.readBlob);
+    });
+    
+    describe('writeBlob', () => {
+        it('should upload data successfully', async () => {
+            const testData = new TextEncoder().encode('test data');
+            const mockBlobId = 'test_blob_123';
+            const mockCost = {
+                storageCost: '1000000',
+                writeFee: '100000'
+            };
+            
+            mockWriteBlob.mockResolvedValueOnce({
+                blobId: mockBlobId,
+                cost: mockCost
+            });
+            
+            const signer = Ed25519Keypair.generate();
+            const result = await walrusClient.writeBlob({
+                blob: testData,
+                deletable: false,
+                epochs: 10,
+                signer
+            });
+            
+            expect(result.blobId).toBe(mockBlobId);
+            expect(result.cost).toEqual(mockCost);
+            expect(mockWriteBlob).toHaveBeenCalledWith({
+                blob: testData,
+                deletable: false,
+                epochs: 10,
+                signer
+            });
+        });
+        
+        it('should handle upload errors', async () => {
+            mockWriteBlob.mockRejectedValueOnce(new Error('Network error'));
+            
+            const signer = Ed25519Keypair.generate();
+            await expect(
+                walrusClient.writeBlob({
+                    blob: new Uint8Array([1, 2, 3]),
+                    deletable: false,
+                    epochs: 5,
+                    signer
+                })
+            ).rejects.toThrow('Network error');
+        });
+    });
+    
+    describe('readBlob', () => {
+        it('should retrieve data successfully', async () => {
+            const mockData = new TextEncoder().encode('retrieved data');
+            const blobId = 'test_blob_123';
+            
+            mockReadBlob.mockResolvedValueOnce(mockData);
+            
+            const result = await walrusClient.readBlob({ blobId });
+            
+            expect(result).toEqual(mockData);
+            expect(mockReadBlob).toHaveBeenCalledWith({ blobId });
+        });
+        
+        it('should handle retrieval errors', async () => {
+            const blobId = 'non_existent';
+            
+            mockReadBlob.mockRejectedValueOnce(new Error('Blob not found'));
+            
+            await expect(
+                walrusClient.readBlob({ blobId })
+            ).rejects.toThrow('Blob not found');
+        });
+    });
+});
+
+// Integration test with real testnet
+describe.skipIf(!process.env.TEST_WALRUS_LIVE)(
+    'Walrus SDK Live Integration',
+    () => {
+        let walrusClient: WalrusClient;
+        let signer: Ed25519Keypair;
+        
+        beforeEach(() => {
+            const suiClient = new SuiClient({
+                url: 'https://fullnode.testnet.sui.io:443'
+            });
+            
+            walrusClient = new WalrusClient({
+                network: 'testnet',
+                suiClient
+            });
+            
+            // Use test wallet
+            signer = Ed25519Keypair.fromSecretKey(
+                Buffer.from(process.env.TEST_PRIVATE_KEY!, 'hex')
+            );
+        });
+        
+        it('should perform end-to-end upload and download', async () => {
+            const testData = new TextEncoder().encode(
+                \`Test data \${Date.now()}\`
+            );
+            
+            // Upload
+            const uploadResult = await walrusClient.writeBlob({
+                blob: testData,
+                deletable: false,
+                epochs: 1,
+                signer
+            });
+            
+            expect(uploadResult.blobId).toBeTruthy();
+            console.log('Uploaded blob:', uploadResult.blobId);
+            
+            // Download
+            const downloadedData = await walrusClient.readBlob({
+                blobId: uploadResult.blobId
+            });
+            
+            expect(downloadedData).toEqual(testData);
+        }, 30000); // 30 second timeout
+    }
+);`}
+</CollapsibleCodeBlock>
+
+## Migration Guide
+
+### Migrating from HTTP API to SDK
+
+<div className="card padding--md mt-4">
+  <h3><img src="/img/icons/arrow-right.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />Migration Steps</h3>
+  
+  1. **Install SDK packages** and set up SUI client
+  2. **Replace HTTP calls** with SDK methods
+  3. **Update error handling** to use SDK error types
+  4. **Implement proper signing** with keypairs
+  5. **Add retry logic** using SDK's built-in support
+  6. **Update tests** to mock SDK instead of HTTP
+</div>
+
+## Resources
+
+### Official Documentation
+- [Walrus SDK API Reference](https://sdk.mystenlabs.com/typedoc/classes/_mysten_walrus.WalrusClient.html)
+- [TypeScript SDK Examples](https://github.com/MystenLabs/ts-sdks/tree/main/packages/walrus/examples)
+- [SUI TypeScript SDK](https://sdk.mystenlabs.com/typescript)
+
+### Example Projects
+- [Simple Aggregator](https://github.com/MystenLabs/ts-sdks/tree/main/packages/walrus/examples/aggregator)
+- [Publisher Service](https://github.com/MystenLabs/ts-sdks/tree/main/packages/walrus/examples/publisher)
+- [React Integration](https://github.com/MystenLabs/ts-sdks/tree/main/packages/walrus/examples/react-app)
+
+## Next Steps
+
+- Explore the [HTTP API Guide](/docs/sui-integration/storage/walrus-http-api) for direct API access
+- Learn about [CLI Usage](/docs/sui-integration/storage/walrus-cli) for command-line operations
+- See [Example Use Cases](/docs/sui-integration/storage/walrus-examples) for real-world implementations
