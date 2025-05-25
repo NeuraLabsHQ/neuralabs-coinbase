@@ -1,26 +1,11 @@
 version: '1.0'
 
+
+# run multip services with docker compose : docker compose up -d postgres redis sui-backend sui-frontend sui-prover-backend sui-prover-frontend
+
 services:
-  
 
-  # neuralabs_aptos:
-  #   build: 
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "2030:80"
-  #   volumes:
-  #     - ./frontend/.logs:/var/log/nginx
-  #   logging:
-  #     driver: "json-file"
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "3"
-  #   command: ["nginx", "-g", "daemon off;"]
-
-  #   networks:
-  #     - neuralabs_aptos_network
-  #     - traefik-proxy
+## Prover Service
 
   sui-prover-backend:
     image: mysten/zklogin:prover-stable
@@ -73,6 +58,36 @@ services:
     networks:
       - neuralabs_sui_network
       - traefik-proxy
+
+
+
+## Database Services
+  postgres:
+    image: postgres:15
+    container_name: neuralabs-postgres_db
+    env_file:
+      - ./database/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/data/postgres_data:/var/lib/postgresql/data
+    networks:
+      - neuralabs_sui_network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    container_name: neuralabs-redis_cache
+    env_file:
+      - ./database/.env
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./database/data/redis_data:/data
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes"]
+    networks:
+      - neuralabs_sui_network
+    restart: unless-stopped
 
 networks:
   neuralabs_sui_network:
