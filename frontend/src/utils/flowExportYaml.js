@@ -85,20 +85,20 @@ export const exportFlowAsYAML = (nodes, edges, metadata = {}) => {
               });
             }
           });
+        } else if (edge.sourceName && edge.targetName) {
+          // If no mappings array but has sourceName/targetName, use those
+          connections.push({
+            from_id: edge.source,
+            to_id: edge.target,
+            from_output: edge.sourceName,
+            to_input: edge.targetName
+          });
         } else {
-          // If no mappings, create a basic connection
-          const connection = {
+          // If no mappings at all, create a basic connection without ports
+          connections.push({
             from_id: edge.source,
             to_id: edge.target
-          };
-          
-          // Add fallback mapping if available
-          if (edge.sourceName && edge.targetName) {
-            connection.from_output = edge.sourceName;
-            connection.to_input = edge.targetName;
-          }
-          
-          connections.push(connection);
+          });
         }
       });
 
@@ -191,7 +191,7 @@ export const importFlowFromYAML = (yamlContent) => {
       // Group connections by source-target pair to handle multiple mappings
       const edgeMap = new Map();
       
-      connections.forEach(conn => {
+      connections.forEach((conn, index) => {
         const edgeKey = `${conn.from_id}-${conn.to_id}`;
         
         if (!edgeMap.has(edgeKey)) {
@@ -199,20 +199,28 @@ export const importFlowFromYAML = (yamlContent) => {
             id: `edge_${edgeMap.size}`,
             source: conn.from_id,
             target: conn.to_id,
-            sourceName: conn.from_output || '',
-            targetName: conn.to_input || '',
+            sourceName: '', // Will be set from first mapping or left empty
+            targetName: '', // Will be set from first mapping or left empty
             mappings: [],
             sourcePort: 0,
             targetPort: 0
           });
         }
         
+        const edge = edgeMap.get(edgeKey);
+        
         // Add mapping if both output and input are specified
         if (conn.from_output && conn.to_input) {
-          edgeMap.get(edgeKey).mappings.push({
+          edge.mappings.push({
             fromOutput: conn.from_output,
             toInput: conn.to_input
           });
+          
+          // Set sourceName/targetName from first mapping (for legacy compatibility)
+          if (!edge.sourceName && !edge.targetName) {
+            edge.sourceName = conn.from_output;
+            edge.targetName = conn.to_input;
+          }
         }
       });
       

@@ -370,7 +370,7 @@ const AccessHomePage = ({ onSelectFlow }) => {
     />,
     <TemplateCard
       key={1}
-      title="Read Aptos Balance"
+      title="Read SUI Balance"
       imageUrl={templateImage1}
       onClick={() => console.log("Selected template 1")}
     />,

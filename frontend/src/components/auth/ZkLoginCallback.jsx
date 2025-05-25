@@ -44,7 +44,7 @@ const ZkLoginCallback = () => {
         
         // Redirect to dashboard after a short delay
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate('/access-management');
         }, 1500);
       } catch (err) {
         console.error('Error processing zkLogin callback:', err);
