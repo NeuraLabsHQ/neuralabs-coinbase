@@ -70,6 +70,7 @@ const FlowCanvas = ({
   const [connectingPath, setConnectingPath] = useState(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [highlightedConnections, setHighlightedConnections] = useState([]);
+  const [dragStarted, setDragStarted] = useState(false);
   
   const { colorMode } = useColorMode();
   const bgColor = useColorModeValue('canvas.body.light', 'canvas.body.dark');
@@ -201,10 +202,12 @@ const FlowCanvas = ({
     if (e.button !== 0) return; // Only left mouse button
     
     e.stopPropagation();
-    onSelectNode(nodeId);
     
     // Only start drag if Ctrl/Cmd is held
     if (!e.ctrlKey && !e.metaKey) return;
+    
+    // Don't select node when starting to drag
+    setDragStarted(false);
     
     const startNodeDrag = (e) => {
       setDragging(true);
@@ -231,6 +234,7 @@ const FlowCanvas = ({
       // Use a local variable to track the current position without causing rerenders
       let latestPosition = { ...currentPos };
       let isDragging = true;
+      let hasMoved = false;
       
       const moveHandler = (e) => {
         if (!isDragging) return;
@@ -238,6 +242,12 @@ const FlowCanvas = ({
         // Calculate the new position with respect to the canvas transform
         const dx = (e.clientX - startPos.x) / scale;
         const dy = (e.clientY - startPos.y) / scale;
+        
+        // If mouse has moved more than a few pixels, consider it a drag
+        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+          hasMoved = true;
+          setDragStarted(true);
+        }
         
         // Update the node position
         latestPosition = {
@@ -260,8 +270,11 @@ const FlowCanvas = ({
         window.removeEventListener('blur', blurHandler);
         setDragging(false);
         
+        // Reset drag started flag after a short delay
+        setTimeout(() => setDragStarted(false), 100);
+        
         // Only update state once at the end of drag
-        if (onUpdateNodePosition) {
+        if (onUpdateNodePosition && hasMoved) {
           onUpdateNodePosition(nodeId, latestPosition);
         }
       };
@@ -602,7 +615,11 @@ const renderNode = (node) => {
       transform={`translate(${node.x}, ${node.y})`}
       onClick={(e) => {
         e.stopPropagation();
-        onSelectNode(node.id);
+        // Don't handle click if we just finished dragging
+        if (dragStarted) return;
+        
+        // Pass whether Ctrl is held to skip details panel
+        onSelectNode(node.id, e.ctrlKey || e.metaKey);
       }}
       onMouseDown={(e) => {
         // Check if the click is on a port by looking at the event target

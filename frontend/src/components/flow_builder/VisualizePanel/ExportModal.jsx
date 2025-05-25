@@ -13,9 +13,9 @@ import {
   Box,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { FiImage, FiFileText } from "react-icons/fi";
+import { FiImage, FiFileText, FiCode } from "react-icons/fi";
 
-const ExportModal = ({ isOpen, onClose, onExportFlow, onExportFlowJSON }) => {
+const ExportModal = ({ isOpen, onClose, onExportFlow, onExportFlowJSON, onExportFlowYAML }) => {
   const bgColor = useColorModeValue("white", "#18191b");
   const textColor = useColorModeValue("gray.800", "white");
   const mutedTextColor = useColorModeValue("gray.600", "gray.400");
@@ -91,9 +91,23 @@ const ExportModal = ({ isOpen, onClose, onExportFlow, onExportFlowJSON }) => {
                     onExportFlowJSON();
                     onClose();
                   }}
-                  mb={4}
                 >
                   Export as JSON
+                </Button>
+                <Button
+                  leftIcon={<FiCode />}
+                  width="100%"
+                  size="sm"
+                  bg={buttonBgColor}
+                  borderColor={buttonBgColor}
+                  _hover={{ bg: buttonHoverBgColor }}
+                  onClick={() => {
+                    onExportFlowYAML();
+                    onClose();
+                  }}
+                  mb={4}
+                >
+                  Export as YAML
                 </Button>
               </VStack>
             </Box>

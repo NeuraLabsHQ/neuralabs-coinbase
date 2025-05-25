@@ -18,6 +18,7 @@ import * as d3 from 'd3';
 import { exportFlowAsPNG } from '../../utils/flowExport';
 import {exportFlowAsJSON} from '../../utils/flowExportJson';
 import {importFlowFromJSON} from '../../utils/flowImportJson';
+import { exportFlowAsYAML, importFlowFromYAML } from '../../utils/flowExportYaml';
 import { flowBuilderAPI } from '../../utils/flow-builder-api';
 import { agentAPI } from '../../utils/agent-api';
 
@@ -360,7 +361,7 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
   };
 
   // Handle node selection - modified to support view-only mode and custom script nodes
-  const handleNodeSelect = (nodeId) => {
+  const handleNodeSelect = (nodeId, skipDetailsPanel = false) => {
     if (nodeId === null) {
       setSelectedNode(null);
       setDetailsOpen(false);
@@ -371,6 +372,11 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
     
     const node = nodes.find(n => n.id === nodeId);
     setSelectedNode(node);
+    
+    // Skip opening details panel if requested (e.g., when Ctrl is held)
+    if (skipDetailsPanel) {
+      return;
+    }
     
     // Special handling for custom script nodes
     if (node.type === 'custom-script') {
@@ -907,6 +913,45 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
       });
   }
 
+  const exportFlowYAML = () => {
+    // Create metadata from agentData if available
+    const metadata = agentData ? {
+      flow_id: agentData.agent_id || `flow_${Date.now()}`,
+      name: agentData.name || 'Exported Flow',
+      description: agentData.description || 'Flow exported from Neuralabs',
+      version: agentData.version || '1.0.0',
+      author: agentData.owner,
+      tags: agentData.tags || [],
+      license: agentData.license || 'MIT'
+    } : {};
+
+    exportFlowAsYAML(nodes, edges, metadata)
+      .then(({ url, filename }) => {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        toast({
+          title: "Export Successful",
+          description: "Flow exported as YAML format compatible with execution engine.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      })
+      .catch(error => {
+        toast({
+          title: "Export Failed",
+          description: error.message,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      });
+  }
+
   const handleSaveWorkflow = async () => {
     if (!agentId) {
       toast({
@@ -976,24 +1021,58 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
   const importImportFlow = useCallback(() => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.json';
+    input.accept = '.json,.yaml,.yml';
 
     input.onchange = async (e) => {
       const file = e.target.files[0];
       if (file) {
         try {
           const text = await file.text();
-          const jsonData = JSON.parse(text);
-          await importFlowFromJSON(jsonData, setNodes, setEdges);
+          const fileName = file.name.toLowerCase();
+          
+          if (fileName.endsWith('.yaml') || fileName.endsWith('.yml')) {
+            // Import YAML file
+            const { nodes: importedNodes, edges: importedEdges } = await importFlowFromYAML(text);
+            setNodes(importedNodes);
+            setEdges(importedEdges);
+            
+            toast({
+              title: "Import Successful",
+              description: "YAML flow has been imported successfully.",
+              status: "success",
+              duration: 3000,
+              isClosable: true,
+            });
+          } else if (fileName.endsWith('.json')) {
+            // Import JSON file (existing functionality)
+            const jsonData = JSON.parse(text);
+            await importFlowFromJSON(jsonData, setNodes, setEdges);
+            
+            toast({
+              title: "Import Successful",
+              description: "JSON flow has been imported successfully.",
+              status: "success",
+              duration: 3000,
+              isClosable: true,
+            });
+          } else {
+            throw new Error("Unsupported file format. Please select a .json, .yaml, or .yml file.");
+          }
         } catch (error) {
           console.error("Import failed:", error);
-          alert("Failed to import flow: " + error.message);
+          toast({
+            title: "Import Failed",
+            description: error.message || "Failed to import flow. Please check the file format.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
         }
       }
     };
 
     input.click();
-  }, []);
+  }, [toast]);
 
   
 
@@ -1040,6 +1119,7 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
         onScreenshot={() => {}}
         onExportFlow={exportFlow}
         onExportFlowJSON={exportFlowJSON}
+        onExportFlowYAML={exportFlowYAML}
         onImportFlow={importImportFlow}
         onSaveWorkflow={handleSaveWorkflow}
         toggleSidebar={toggleSidebar}

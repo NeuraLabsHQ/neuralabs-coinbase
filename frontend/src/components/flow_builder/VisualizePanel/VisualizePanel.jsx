@@ -35,6 +35,7 @@ const VisualizePanel = ({
   onScreenshot,
   onExportFlow,
   onExportFlowJSON,
+  onExportFlowYAML,
   onImportFlow,
   onSaveWorkflow,
   toggleSidebar,
@@ -255,6 +256,7 @@ const VisualizePanel = ({
         onClose={() => setIsExportModalOpen(false)}
         onExportFlow={onExportFlow}
         onExportFlowJSON={onExportFlowJSON}
+        onExportFlowYAML={onExportFlowYAML}
       />
     </Box>
   );

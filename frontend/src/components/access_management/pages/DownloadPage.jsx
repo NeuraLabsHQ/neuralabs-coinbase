@@ -14,9 +14,10 @@ import {
   CardBody,
   useColorMode
 } from '@chakra-ui/react';
-import { FiDownload, FiImage, FiFileText } from 'react-icons/fi';
+import { FiDownload, FiImage, FiFileText, FiCode } from 'react-icons/fi';
 import colors from '../../../color';
 import { exportFlowAsPNG } from '../../../utils/flowExport';
+import { exportFlowAsYAML } from '../../../utils/flowExportYaml';
 import { agentAPI } from '../../../utils/agent-api';
 
 const DownloadPage = ({ agentData }) => {
@@ -127,6 +128,68 @@ const DownloadPage = ({ agentData }) => {
     }
   };
 
+  const handleExportYAML = async () => {
+    setIsExporting(true);
+    try {
+      // Fetch the agent data to get the workflow
+      const agent = await agentAPI.getAgent(agentData.agent_id);
+      
+      if (!agent || !agent.workflow) {
+        throw new Error('No workflow data found');
+      }
+
+      // Parse the workflow data to get nodes and edges
+      const workflowData = typeof agent.workflow === 'string' 
+        ? JSON.parse(agent.workflow) 
+        : agent.workflow;
+
+      const nodes = workflowData.nodes || [];
+      const edges = workflowData.edges || [];
+
+      // Create metadata for YAML export
+      const metadata = {
+        flow_id: agentData.agent_id,
+        name: agentData.name || 'Exported Flow',
+        description: agentData.description || 'Flow exported from Neuralabs',
+        version: agentData.version || '1.0.0',
+        author: agentData.owner,
+        tags: agentData.tags || [],
+        license: agentData.license || 'MIT'
+      };
+
+      // Export the flow as YAML
+      const { url, filename } = await exportFlowAsYAML(nodes, edges, metadata);
+      
+      // Create download link
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = url;
+      link.click();
+      
+      // Clean up
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: 'Export Successful',
+        description: 'Flow exported as YAML format compatible with execution engine.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('YAML Export error:', error);
+      toast({
+        title: 'Export Failed',
+        description: error.message || 'Failed to export flow as YAML',
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <Box p={6} bg={bgColor} h="100%" overflow="auto">
       <VStack align="stretch" spacing={6}>
@@ -154,7 +217,7 @@ const DownloadPage = ({ agentData }) => {
               <HStack spacing={4}>
                 <Box 
                   p={3} 
-                  bg={useColorModeValue(colors.blue[100], colors.blue[900])}
+                  bg={useColorModeValue(colors.blue[300], colors.blue[700])}
                   borderRadius="md"
                 >
                   <Icon as={FiImage} boxSize={6} color={colors.blue[500]} />
@@ -195,7 +258,7 @@ const DownloadPage = ({ agentData }) => {
               <HStack spacing={4}>
                 <Box 
                   p={3} 
-                  bg={useColorModeValue(colors.green[100], colors.green[900])}
+                  bg={useColorModeValue(colors.green[300], colors.green[700])}
                   borderRadius="md"
                 >
                   <Icon as={FiFileText} boxSize={6} color={colors.green[500]} />
@@ -221,6 +284,47 @@ const DownloadPage = ({ agentData }) => {
               </HStack>
             </CardBody>
           </Card>
+
+          {/* YAML Export */}
+          <Card 
+            bg={cardBg} 
+            border="1px" 
+            borderColor={borderColor}
+            cursor="pointer"
+            _hover={{ transform: 'translateY(-2px)', shadow: 'md' }}
+            transition="all 0.2s"
+            onClick={handleExportYAML}
+          >
+            <CardBody>
+              <HStack spacing={4}>
+                <Box 
+                  p={3} 
+                  bg={useColorModeValue(colors.yellow[300], colors.yellow[700])}
+                  borderRadius="md"
+                >
+                  <Icon as={FiCode} boxSize={6} color={colors.yellow[500]} />
+                </Box>
+                <VStack align="start" flex={1} spacing={1}>
+                  <Text fontWeight="bold" color={textColor}>Export as YAML Flow</Text>
+                  <Text fontSize="sm" color={mutedColor}>
+                    Download execution-ready YAML format compatible with backend execution engine
+                  </Text>
+                </VStack>
+                <Button
+                  leftIcon={<FiDownload />}
+                  colorScheme="yellow"
+                  size="sm"
+                  isLoading={isExporting}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleExportYAML();
+                  }}
+                >
+                  Export YAML
+                </Button>
+              </HStack>
+            </CardBody>
+          </Card>
         </VStack>
         
         {/* Additional Information */}
@@ -234,7 +338,10 @@ const DownloadPage = ({ agentData }) => {
               • JSON exports include all workflow data and metadata
             </Text>
             <Text fontSize="sm" color={mutedColor}>
-              • Exported files can be used for backup or sharing purposes
+              • YAML exports are execution-ready and compatible with the backend engine
+            </Text>
+            <Text fontSize="sm" color={mutedColor}>
+              • Exported files can be used for backup, sharing, or execution purposes
             </Text>
           </VStack>
         </Box>
