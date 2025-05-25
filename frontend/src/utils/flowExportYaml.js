@@ -31,7 +31,12 @@ export const exportFlowAsYAML = (nodes, edges, metadata = {}) => {
           name: node.name || `${node.type} element`,
           description: node.description || `${node.type} element`,
           input_schema: convertInputsToSchema(node.inputs || []),
-          output_schema: convertOutputsToSchema(node.outputs || [])
+          output_schema: convertOutputsToSchema(node.outputs || []),
+          // Add position data for layout preservation
+          position: {
+            x: node.x || 0,
+            y: node.y || 0
+          }
         };
 
         // Add hyperparameters directly to the element (not nested)
@@ -65,29 +70,36 @@ export const exportFlowAsYAML = (nodes, edges, metadata = {}) => {
       });
 
       // Transform edges to connections format
-      const connections = edges.map(edge => {
-        const connection = {
-          from_id: edge.source,
-          to_id: edge.target
-        };
-
-        // Add mapping information if available
+      const connections = [];
+      
+      edges.forEach(edge => {
         if (edge.mappings && edge.mappings.length > 0) {
-          // Handle multiple mappings if needed, but typically edges have one mapping
-          const mapping = edge.mappings[0];
-          if (mapping.fromOutput) {
-            connection.from_output = mapping.fromOutput;
+          // Create a separate connection for each mapping in the edge
+          edge.mappings.forEach(mapping => {
+            if (mapping.fromOutput && mapping.toInput) {
+              connections.push({
+                from_id: edge.source,
+                to_id: edge.target,
+                from_output: mapping.fromOutput,
+                to_input: mapping.toInput
+              });
+            }
+          });
+        } else {
+          // If no mappings, create a basic connection
+          const connection = {
+            from_id: edge.source,
+            to_id: edge.target
+          };
+          
+          // Add fallback mapping if available
+          if (edge.sourceName && edge.targetName) {
+            connection.from_output = edge.sourceName;
+            connection.to_input = edge.targetName;
           }
-          if (mapping.toInput) {
-            connection.to_input = mapping.toInput;
-          }
-        } else if (edge.sourceName && edge.targetName) {
-          // Fallback to sourceName/targetName if available
-          connection.from_output = edge.sourceName;
-          connection.to_input = edge.targetName;
+          
+          connections.push(connection);
         }
-
-        return connection;
       });
 
       // Create the complete flow definition
@@ -159,8 +171,8 @@ export const importFlowFromYAML = (yamlContent) => {
           type: mapElementTypeToNodeType(element.type),
           name: element.name || elementId,
           description: element.description || '',
-          x: Math.random() * 400 + 100, // Random positioning, user can rearrange
-          y: Math.random() * 400 + 100,
+          x: element.position?.x || Math.random() * 400 + 100, // Use saved position or random
+          y: element.position?.y || Math.random() * 400 + 100,
           inputs: convertSchemaToInputs(element.input_schema || {}),
           outputs: convertSchemaToOutputs(element.output_schema || {}),
           hyperparameters: extractHyperparameters(element),
@@ -176,21 +188,36 @@ export const importFlowFromYAML = (yamlContent) => {
       });
 
       // Convert connections to frontend edges
-      const edges = connections.map((conn, index) => {
-        return {
-          id: `edge_${index}`,
-          source: conn.from_id,
-          target: conn.to_id,
-          sourceName: conn.from_output || '',
-          targetName: conn.to_input || '',
-          mappings: conn.from_output && conn.to_input ? [{
+      // Group connections by source-target pair to handle multiple mappings
+      const edgeMap = new Map();
+      
+      connections.forEach(conn => {
+        const edgeKey = `${conn.from_id}-${conn.to_id}`;
+        
+        if (!edgeMap.has(edgeKey)) {
+          edgeMap.set(edgeKey, {
+            id: `edge_${edgeMap.size}`,
+            source: conn.from_id,
+            target: conn.to_id,
+            sourceName: conn.from_output || '',
+            targetName: conn.to_input || '',
+            mappings: [],
+            sourcePort: 0,
+            targetPort: 0
+          });
+        }
+        
+        // Add mapping if both output and input are specified
+        if (conn.from_output && conn.to_input) {
+          edgeMap.get(edgeKey).mappings.push({
             fromOutput: conn.from_output,
             toInput: conn.to_input
-          }] : [],
-          sourcePort: 0,
-          targetPort: 0
-        };
+          });
+        }
       });
+      
+      // Convert map to array
+      const edges = Array.from(edgeMap.values());
 
       resolve({
         nodes,
