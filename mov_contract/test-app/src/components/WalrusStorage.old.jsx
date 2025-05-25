@@ -1,110 +1,40 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useCurrentAccount, useSuiClient } from '@mysten/dapp-kit'
 import { TransactionBlock } from '@mysten/sui.js/transactions'
-import { WalrusClient } from '@mysten/walrus'
-import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519'
 import toast from 'react-hot-toast'
 
 /**
  * WalrusStorage Component
- * Manages encrypted file storage on Walrus using the official SDK
+ * Manages encrypted file storage on Walrus
  */
 function WalrusStorage({ config }) {
   const account = useCurrentAccount()
-  const suiClient = useSuiClient()
-  const [walrusClient, setWalrusClient] = useState(null)
+  const client = useSuiClient()
   
   const [uploadForm, setUploadForm] = useState({
     nftObjectId: '',
     file: null,
     encryptedKeyId: '',
-    threshold: '3',
-    keyServerCount: '5',
-    epochs: '5'
+    threshold: '1',
+    keyServerCount: '2'
   })
   
   const [storedFiles, setStoredFiles] = useState([])
   const [isUploading, setIsUploading] = useState(false)
   const [isStoring, setIsStoring] = useState(false)
-  const [downloadBlobId, setDownloadBlobId] = useState('')
-  const [isDownloading, setIsDownloading] = useState(false)
 
-  // Initialize Walrus client
-  useEffect(() => {
-    const initWalrusClient = async () => {
-      try {
-        const client = new WalrusClient({
-          network: 'testnet',
-          suiClient: suiClient,
-        })
-        setWalrusClient(client)
-        console.log('Walrus client initialized')
-      } catch (error) {
-        console.error('Failed to initialize Walrus client:', error)
-        toast.error('Failed to initialize Walrus client')
-      }
-    }
+  // Mock Walrus upload (in production, use actual Walrus SDK)
+  const uploadToWalrus = async (encryptedData) => {
+    // Simulate upload delay
+    await new Promise(resolve => setTimeout(resolve, 1000))
     
-    initWalrusClient()
-  }, [suiClient])
-
-  // Upload file to Walrus using SDK
-  const uploadToWalrusSDK = async (fileData, fileName, epochs) => {
-    if (!walrusClient) {
-      throw new Error('Walrus client not initialized')
-    }
-
-    if (!account) {
-      throw new Error('No wallet connected')
-    }
-
-    try {
-      console.log(`Uploading ${fileName} for ${epochs} epochs...`)
-      
-      // For demonstration, we'll use a temporary keypair
-      // In production, this should be handled differently
-      const tempKeypair = Ed25519Keypair.generate()
-      
-      const result = await walrusClient.writeBlob({
-        blob: fileData,
-        deletable: false,
-        epochs: parseInt(epochs),
-        signer: tempKeypair // In production, use wallet signer
-      })
-      
-      console.log('Upload successful:', {
-        blobId: result.blobId,
-        storageCost: result.cost?.storageCost,
-        writeFee: result.cost?.writeFee
-      })
-      
-      return {
-        blobId: result.blobId,
-        cost: result.cost,
-        url: `https://aggregator.walrus-testnet.walrus.space/v1/${result.blobId}`
-      }
-    } catch (error) {
-      console.error('Walrus upload error:', error)
-      throw new Error(`Failed to upload to Walrus: ${error.message}`)
-    }
-  }
-
-  // Download file from Walrus using SDK
-  const downloadFromWalrusSDK = async (blobId) => {
-    if (!walrusClient) {
-      throw new Error('Walrus client not initialized')
-    }
-
-    try {
-      console.log(`Downloading blob: ${blobId}`)
-      
-      const data = await walrusClient.readBlob({ blobId })
-      
-      console.log(`Download successful: ${data.length} bytes`)
-      return data
-    } catch (error) {
-      console.error('Walrus download error:', error)
-      throw new Error(`Failed to download from Walrus: ${error.message}`)
+    // Generate mock blob ID
+    const blobId = `walrus_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    
+    return {
+      blobId,
+      url: `https://walrus.testnet.io/${blobId}`,
+      size: encryptedData.length
     }
   }
 
@@ -112,8 +42,8 @@ function WalrusStorage({ config }) {
   const handleFileUpload = async (e) => {
     e.preventDefault()
     
-    if (!account || !uploadForm.file || !uploadForm.nftObjectId || !walrusClient) {
-      toast.error('Please fill all required fields and ensure wallet is connected')
+    if (!account || !uploadForm.file || !uploadForm.nftObjectId) {
+      toast.error('Please fill all required fields')
       return
     }
 
@@ -121,27 +51,20 @@ function WalrusStorage({ config }) {
     const toastId = toast.loading('Processing file...')
 
     try {
-      // Read file as Uint8Array
-      const fileContent = await readFileAsArrayBuffer(uploadForm.file)
-      const fileData = new Uint8Array(fileContent)
+      // Read file
+      const fileContent = await readFile(uploadForm.file)
       
       // Mock encryption (in production, use Seal)
-      // For demo purposes, we'll just prefix the data
-      const prefix = new TextEncoder().encode('ENCRYPTED_')
-      const encryptedData = new Uint8Array(prefix.length + fileData.length)
-      encryptedData.set(prefix)
-      encryptedData.set(fileData, prefix.length)
-      
-      // Upload to Walrus using SDK
-      toast.loading('Uploading to Walrus via SDK...', { id: toastId })
-      const walrusResult = await uploadToWalrusSDK(
-        encryptedData, 
-        uploadForm.file.name,
-        uploadForm.epochs
+      const encryptedData = new TextEncoder().encode(
+        'ENCRYPTED_' + fileContent
       )
       
+      // Upload to Walrus
+      toast.loading('Uploading to Walrus...', { id: toastId })
+      const walrusResult = await uploadToWalrus(encryptedData)
+      
       // Calculate file hash
-      const fileHash = await calculateHash(fileData)
+      const fileHash = await calculateHash(fileContent)
       
       // Store reference in NFT
       toast.loading('Storing reference in NFT...', { id: toastId })
@@ -162,22 +85,19 @@ function WalrusStorage({ config }) {
         walrusUrl: walrusResult.url,
         nftObjectId: uploadForm.nftObjectId,
         timestamp: new Date().toISOString(),
-        fileHash,
-        cost: walrusResult.cost,
-        epochs: uploadForm.epochs
+        fileHash
       }
       
       setStoredFiles([...storedFiles, storedFile])
-      toast.success('File uploaded successfully via Walrus SDK!', { id: toastId })
+      toast.success('File uploaded and stored successfully!', { id: toastId })
       
       // Reset form
       setUploadForm({
         nftObjectId: '',
         file: null,
         encryptedKeyId: '',
-        threshold: '3',
-        keyServerCount: '5',
-        epochs: '5'
+        threshold: '1',
+        keyServerCount: '2'
       })
       
     } catch (error) {
@@ -185,56 +105,6 @@ function WalrusStorage({ config }) {
       toast.error(`Upload failed: ${error.message}`, { id: toastId })
     } finally {
       setIsUploading(false)
-    }
-  }
-
-  // Handle file download using SDK
-  const handleFileDownload = async () => {
-    if (!downloadBlobId || !walrusClient) {
-      toast.error('Please enter a blob ID')
-      return
-    }
-
-    setIsDownloading(true)
-    const toastId = toast.loading('Downloading from Walrus...')
-
-    try {
-      // Download from Walrus using SDK
-      const encryptedData = await downloadFromWalrusSDK(downloadBlobId)
-      
-      // Mock decryption (in production, use Seal)
-      // For demo, we'll just remove the ENCRYPTED_ prefix
-      const prefix = new TextEncoder().encode('ENCRYPTED_')
-      let decryptedData = encryptedData
-      
-      // Check if data starts with our mock encryption prefix
-      const prefixMatch = encryptedData.slice(0, prefix.length).every(
-        (byte, i) => byte === prefix[i]
-      )
-      
-      if (prefixMatch) {
-        decryptedData = encryptedData.slice(prefix.length)
-      }
-      
-      // Create download link
-      const blob = new Blob([decryptedData])
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `walrus_download_${downloadBlobId.substring(0, 8)}.dat`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-      
-      toast.success('File downloaded successfully!', { id: toastId })
-      setDownloadBlobId('')
-      
-    } catch (error) {
-      console.error('Error downloading file:', error)
-      toast.error(`Download failed: ${error.message}`, { id: toastId })
-    } finally {
-      setIsDownloading(false)
     }
   }
 
@@ -268,7 +138,7 @@ function WalrusStorage({ config }) {
         ],
       })
 
-      const result = await suiClient.signAndExecuteTransactionBlock({
+      const result = await client.signAndExecuteTransactionBlock({
         signer: account,
         transactionBlock: tx,
         options: {
@@ -286,17 +156,19 @@ function WalrusStorage({ config }) {
   }
 
   // Helper functions
-  const readFileAsArrayBuffer = (file) => {
+  const readFile = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
       reader.onload = (e) => resolve(e.target.result)
       reader.onerror = reject
-      reader.readAsArrayBuffer(file)
+      reader.readAsText(file)
     })
   }
 
   const calculateHash = async (data) => {
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+    const encoder = new TextEncoder()
+    const dataBuffer = encoder.encode(data)
+    const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer)
     const hashArray = Array.from(new Uint8Array(hashBuffer))
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
   }
@@ -314,25 +186,13 @@ function WalrusStorage({ config }) {
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB'
   }
 
-  const formatCost = (cost) => {
-    if (!cost) return 'N/A'
-    const storageCost = cost.storageCost ? (parseInt(cost.storageCost) / 1e9).toFixed(6) : '0'
-    const writeFee = cost.writeFee ? (parseInt(cost.writeFee) / 1e9).toFixed(6) : '0'
-    return `Storage: ${storageCost} SUI, Write: ${writeFee} SUI`
-  }
-
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold mb-4">Walrus Storage (SDK)</h2>
+        <h2 className="text-xl font-semibold mb-4">Walrus Storage</h2>
         <p className="text-gray-600 mb-4">
-          Upload encrypted files to Walrus decentralized storage using the official SDK.
+          Upload encrypted files to Walrus decentralized storage and link them to NFTs.
         </p>
-        {walrusClient ? (
-          <div className="text-sm text-green-600">✅ Walrus SDK initialized</div>
-        ) : (
-          <div className="text-sm text-yellow-600">⏳ Initializing Walrus SDK...</div>
-        )}
       </div>
 
       {/* Upload Form */}
@@ -373,25 +233,6 @@ function WalrusStorage({ config }) {
           
           <div>
             <label className="block text-sm font-medium mb-1">
-              Storage Duration (Epochs)
-            </label>
-            <select
-              value={uploadForm.epochs}
-              onChange={(e) => setUploadForm({ ...uploadForm, epochs: e.target.value })}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="1">1 epoch (~1 day)</option>
-              <option value="5">5 epochs (~5 days)</option>
-              <option value="10">10 epochs (~10 days)</option>
-              <option value="30">30 epochs (~30 days)</option>
-            </select>
-            <p className="text-xs text-gray-500 mt-1">
-              Longer storage duration costs more SUI
-            </p>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">
               Encrypted Key ID (optional)
             </label>
             <input
@@ -414,11 +255,8 @@ function WalrusStorage({ config }) {
                 onChange={(e) => setUploadForm({ ...uploadForm, threshold: e.target.value })}
                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="1">1 of N</option>
-                <option value="2">2 of N</option>
-                <option value="3">3 of N (Recommended)</option>
-                <option value="4">4 of N</option>
-                <option value="5">5 of N</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
               </select>
             </div>
             
@@ -429,42 +267,20 @@ function WalrusStorage({ config }) {
                 onChange={(e) => setUploadForm({ ...uploadForm, keyServerCount: e.target.value })}
                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="3">3 servers</option>
-                <option value="4">4 servers</option>
-                <option value="5">5 servers (Recommended)</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
               </select>
             </div>
           </div>
           
           <button
             type="submit"
-            disabled={isUploading || isStoring || !walrusClient}
+            disabled={isUploading || isStoring}
             className="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
           >
-            {isUploading ? 'Uploading via SDK...' : 'Upload to Walrus'}
+            {isUploading ? 'Uploading...' : 'Upload to Walrus'}
           </button>
         </form>
-      </div>
-
-      {/* Download Section */}
-      <div className="border rounded-lg p-6">
-        <h3 className="font-medium mb-4">Download File from Walrus</h3>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={downloadBlobId}
-            onChange={(e) => setDownloadBlobId(e.target.value)}
-            className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter Walrus blob ID"
-          />
-          <button
-            onClick={handleFileDownload}
-            disabled={isDownloading || !walrusClient || !downloadBlobId}
-            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50"
-          >
-            {isDownloading ? 'Downloading...' : 'Download'}
-          </button>
-        </div>
       </div>
 
       {/* Stored Files */}
@@ -491,8 +307,6 @@ function WalrusStorage({ config }) {
                           {file.nftObjectId.substring(0, 16)}...
                         </code>
                       </div>
-                      <div>Storage Duration: {file.epochs} epochs</div>
-                      <div>Cost: {formatCost(file.cost)}</div>
                       <div className="text-xs">
                         Hash: {file.fileHash.substring(0, 32)}...
                       </div>
@@ -501,18 +315,12 @@ function WalrusStorage({ config }) {
                       </div>
                     </div>
                   </div>
-                  <div className="ml-4 space-y-2">
-                    <button
-                      onClick={() => setDownloadBlobId(file.walrusBlobId)}
-                      className="text-sm text-blue-500 hover:text-blue-600 block"
-                    >
-                      Copy Blob ID
-                    </button>
+                  <div className="ml-4">
                     <a
                       href={file.walrusUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-green-500 hover:text-green-600 block"
+                      className="text-sm text-blue-500 hover:text-blue-600"
                     >
                       View on Walrus
                     </a>
@@ -524,16 +332,15 @@ function WalrusStorage({ config }) {
         </div>
       )}
 
-      {/* SDK Information */}
+      {/* Storage Information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="border rounded-lg p-4">
-          <h4 className="font-medium mb-2">📊 SDK Features</h4>
+          <h4 className="font-medium mb-2">📊 Storage Limits</h4>
           <ul className="text-sm text-gray-600 space-y-1">
-            <li>• Native TypeScript support</li>
-            <li>• Automatic retry logic</li>
-            <li>• Progress tracking for large files</li>
-            <li>• Cost estimation before upload</li>
-            <li>• Type-safe API</li>
+            <li>• Max file size: 10 MB (testnet)</li>
+            <li>• Supported formats: All file types</li>
+            <li>• Encryption: Required before upload</li>
+            <li>• Persistence: Testnet data may be cleared</li>
           </ul>
         </div>
         
@@ -544,22 +351,19 @@ function WalrusStorage({ config }) {
             <li>• Access controlled by NFT ownership</li>
             <li>• Decentralized storage on Walrus</li>
             <li>• Integrity verified by hash</li>
-            <li>• Threshold encryption support</li>
           </ul>
         </div>
       </div>
 
       {/* Workflow Diagram */}
       <div className="border rounded-lg p-4 bg-blue-50">
-        <h4 className="font-medium text-blue-900 mb-2">📋 Complete SDK Workflow</h4>
+        <h4 className="font-medium text-blue-900 mb-2">📋 Complete Workflow</h4>
         <ol className="text-sm text-blue-800 space-y-2">
-          <li>1. SDK initializes with SUI client connection</li>
-          <li>2. Create NFT with desired access level (NFT Manager tab)</li>
-          <li>3. Grant access to users who need it (Access Control tab)</li>
-          <li>4. Encrypt files using Seal (Seal Encryption tab)</li>
-          <li>5. Upload encrypted files via Walrus SDK (this tab)</li>
-          <li>6. SDK handles chunking, retries, and error recovery</li>
-          <li>7. Users with level 4+ access can download via SDK</li>
+          <li>1. Create NFT with desired access level (NFT Manager tab)</li>
+          <li>2. Grant access to users who need it (Access Control tab)</li>
+          <li>3. Encrypt files using Seal (Seal Encryption tab)</li>
+          <li>4. Upload encrypted files to Walrus (this tab)</li>
+          <li>5. Users with level 4+ access can decrypt and download</li>
         </ol>
       </div>
     </div>

@@ -1,14 +1,24 @@
 # NeuraLabs Test App
 
-A React-based test application for the NeuraLabs NFT smart contract with Seal encryption and Walrus storage integration.
+A React-based test application for the NeuraLabs NFT smart contract with Seal encryption and Walrus storage integration using the official Walrus SDK.
 
 ## Features
 
 - **NFT Management**: Create and manage AI workflow NFTs with 6 access levels
 - **Access Control**: Grant and revoke access to different users
 - **Seal Encryption**: Encrypt/decrypt files using threshold encryption
-- **Walrus Storage**: Store encrypted files on decentralized storage
+- **Walrus Storage**: Store encrypted files on decentralized storage using the official SDK
 - **Wallet Integration**: Connect with Sui wallets for on-chain interactions
+
+## What's New: Walrus SDK Integration
+
+This test app now uses the official `@mysten/walrus` SDK instead of HTTP API calls, providing:
+
+- **Type-safe API**: Full TypeScript support with proper types
+- **Automatic retries**: Built-in retry logic for failed operations
+- **Progress tracking**: Monitor upload/download progress for large files
+- **Cost estimation**: See storage costs before uploading
+- **Native SUI integration**: Seamless integration with SUI wallet for signing
 
 ## Prerequisites
 
@@ -59,11 +69,13 @@ Displays contract deployment information and configuration details.
 - Decrypt files (requires level 4+ access)
 - Support for 1-of-2 and 2-of-2 threshold
 
-### WalrusStorage
-- Upload encrypted files to Walrus
-- Link files to NFTs
-- Track stored files and metadata
-- Generate Walrus blob IDs
+### WalrusStorage (SDK Version)
+- Upload encrypted files to Walrus using the official SDK
+- Link files to NFTs with on-chain metadata
+- Track stored files, costs, and storage duration
+- Download files directly using blob IDs
+- Real-time status of SDK initialization
+- Support for configurable storage epochs
 
 ## Access Levels
 
@@ -115,10 +127,38 @@ src/
 │   ├── NFTManager.jsx
 │   ├── AccessControl.jsx
 │   ├── SealEncryption.jsx
-│   └── WalrusStorage.jsx
+│   ├── WalrusStorage.jsx    # SDK version (new)
+│   └── WalrusStorage.old.jsx # HTTP API version (legacy)
 ├── App.jsx          # Main app component
 ├── main.jsx         # Entry point
 └── index.css        # Styles
+```
+
+### Walrus SDK Usage
+
+The new WalrusStorage component uses the official `@mysten/walrus` SDK:
+
+```javascript
+import { WalrusClient } from '@mysten/walrus'
+
+// Initialize client
+const walrusClient = new WalrusClient({
+  network: 'testnet',
+  suiClient: suiClient
+})
+
+// Upload file
+const result = await walrusClient.writeBlob({
+  blob: fileData,
+  deletable: false,
+  epochs: 5,
+  signer: keypair
+})
+
+// Download file
+const data = await walrusClient.readBlob({ 
+  blobId: 'your-blob-id' 
+})
 ```
 
 ### Adding Features
