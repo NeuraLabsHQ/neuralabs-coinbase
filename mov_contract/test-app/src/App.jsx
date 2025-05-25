@@ -9,6 +9,8 @@ import NFTManager from './components/NFTManager'
 import AccessControl from './components/AccessControl'
 import SealEncryption from './components/SealEncryption'
 import WalrusStorage from './components/WalrusStorage'
+import NFTDetailsPage from './components/NFTDetailsPage'
+import SUIToWALConverter from './components/SUIToWALConverter'
 
 // Configuration
 const CONFIG = {
@@ -37,7 +39,9 @@ function App() {
     { id: 'nft', label: 'NFT Manager', icon: '🎨' },
     { id: 'access', label: 'Access Control', icon: '🔐' },
     { id: 'seal', label: 'Seal Encryption', icon: '🔒' },
-    { id: 'walrus', label: 'Walrus Storage', icon: '🐋' }
+    { id: 'walrus', label: 'Walrus Storage', icon: '🐋' },
+    { id: 'details', label: 'NFT Details', icon: '🔍' },
+    { id: 'converter', label: 'SUI ↔ WAL', icon: '💱' }
   ]
 
   return (
@@ -100,6 +104,8 @@ function App() {
               {activeTab === 'access' && <AccessControl config={CONFIG} />}
               {activeTab === 'seal' && <SealEncryption config={CONFIG} />}
               {activeTab === 'walrus' && <WalrusStorage config={CONFIG} />}
+              {activeTab === 'details' && <NFTDetailsPage config={CONFIG} />}
+              {activeTab === 'converter' && <SUIToWALConverter config={CONFIG} />}
             </div>
           </>
         )}
