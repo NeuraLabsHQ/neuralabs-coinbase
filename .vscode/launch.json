@@ -34,7 +34,15 @@
         {
       "type": "msedge",
       "request": "launch",
-      "name": "Launch Microsoft Edge and open the Edge DevTools",
+      "name": "3000 test localhost",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}"
+    },
+
+            {
+      "type": "msedge",
+      "request": "launch",
+      "name": "3001 test localhost",
       "url": "http://localhost:3000",
       "webRoot": "${workspaceFolder}"
     }

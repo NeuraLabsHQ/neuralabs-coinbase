@@ -1,0 +1,222 @@
+---
+id: getting-started
+title: Getting Started
+sidebar_label: Getting Started
+sidebar_position: 1
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+# Getting Started with NeuraLabs
+
+Welcome to NeuraLabs! This guide will help you get up and running with the platform quickly.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+<Tabs>
+  <TabItem value="required" label="Required" default>
+    ```bash
+    # Node.js and npm
+    node --version  # Should be 18.0 or higher
+    npm --version   # Should be 8.0 or higher
+
+    # Python with conda
+    python --version  # Should be 3.12
+    conda --version   # Latest version
+
+    # Docker
+    docker --version
+    docker-compose --version
+
+    # SUI CLI
+    sui --version
+    ```
+  </TabItem>
+  <TabItem value="optional" label="Optional">
+    ```bash
+    # Rust (for contract development)
+    rustc --version
+    cargo --version
+
+    # Git
+    git --version
+    ```
+  </TabItem>
+</Tabs>
+
+## Quick Installation
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/neuralabs/neuralabs-sui.git
+cd neuralabs-sui
+```
+
+### 2. Set Up Environment
+
+<Tabs>
+  <TabItem value="auto" label="Automated Setup" default>
+    ```bash
+    # Run the setup script
+    ./scripts/setup.sh
+    ```
+  </TabItem>
+  <TabItem value="manual" label="Manual Setup">
+    ```bash
+    # Create conda environment
+    conda create -n neuralabs-exec python=3.12
+    conda activate neuralabs-exec
+
+    # Install Python dependencies
+    cd neuralabs-backend
+    pip install -r requirements.txt
+    cd ..
+
+    cd hpc-execution-node-backend/code_executor
+    pip install -r requirements.txt
+    cd ../..
+
+    # Install frontend dependencies
+    cd frontend
+    npm install
+    cd ..
+    ```
+  </TabItem>
+</Tabs>
+
+### 3. Configure Environment Variables
+
+Create `.env` files in the respective directories:
+
+<CodeBlock language="bash" title="frontend/.env">
+{`REACT_APP_API_URL=http://localhost:8000
+REACT_APP_EXECUTION_API_URL=http://localhost:8001
+REACT_APP_SUI_NETWORK=testnet
+REACT_APP_WALRUS_AGGREGATOR=https://aggregator.walrus-testnet.walrus.space
+REACT_APP_WALRUS_PUBLISHER=https://publisher.walrus-testnet.walrus.space`}
+</CodeBlock>
+
+<CodeBlock language="bash" title="neuralabs-backend/.env">
+{`DATABASE_URL=postgresql://user:password@localhost:5432/neuralabs
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=your-secret-key
+SUI_NETWORK=testnet`}
+</CodeBlock>
+
+### 4. Start the Services
+
+<Tabs>
+  <TabItem value="docker" label="Using Docker" default>
+    ```bash
+    # Start all services
+    docker-compose up -d
+
+    # Check service status
+    docker-compose ps
+    ```
+  </TabItem>
+  <TabItem value="local" label="Local Development">
+    ```bash
+    # Terminal 1: Start backend
+    cd neuralabs-backend
+    python run.py
+
+    # Terminal 2: Start execution node
+    cd hpc-execution-node-backend/code_executor
+    python app.py
+
+    # Terminal 3: Start frontend
+    cd frontend
+    npm start
+    ```
+  </TabItem>
+</Tabs>
+
+## Verify Installation
+
+Once all services are running, verify your installation:
+
+1. **Frontend**: Open http://localhost:3000
+2. **Backend API**: Check http://localhost:8000/docs
+3. **Execution API**: Check http://localhost:8001/health
+
+## Next Steps
+
+Now that you have NeuraLabs running, explore these resources:
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+  <a href="./overview" className="card padding--lg">
+    <h3>Platform Overview</h3>
+    <p>Understand the core concepts and features</p>
+  </a>
+  
+  <a href="./architecture" className="card padding--lg">
+    <h3>Architecture</h3>
+    <p>Learn about the system design and components</p>
+  </a>
+  
+  <a href="../implementation/02-frontend/setup" className="card padding--lg">
+    <h3>Build Your First Flow</h3>
+    <p>Create an AI workflow using the visual builder</p>
+  </a>
+  
+  <a href="../implementation/05-smart-contracts/deployment" className="card padding--lg">
+    <h3>Deploy Contracts</h3>
+    <p>Deploy the smart contracts to SUI testnet</p>
+  </a>
+</div>
+
+## Troubleshooting
+
+### Common Issues
+
+<details>
+  <summary>Port already in use</summary>
+  
+  If you get a "port already in use" error:
+  ```bash
+  # Find the process using the port
+  lsof -i :3000  # or :8000, :8001
+  
+  # Kill the process
+  kill -9 <PID>
+  ```
+</details>
+
+<details>
+  <summary>Docker compose fails</summary>
+  
+  Try these steps:
+  ```bash
+  # Clean up containers
+  docker-compose down -v
+  
+  # Rebuild images
+  docker-compose build --no-cache
+  
+  # Start again
+  docker-compose up -d
+  ```
+</details>
+
+<details>
+  <summary>Python module not found</summary>
+  
+  Ensure you're in the correct conda environment:
+  ```bash
+  conda activate neuralabs-exec
+  pip install -r requirements.txt
+  ```
+</details>
+
+## Getting Help
+
+- 📖 Check the [documentation](../intro)
+- 💬 Join our [Discord community](https://discord.gg/neuralabs)
+- 🐛 Report issues on [GitHub](https://github.com/neuralabs/neuralabs-sui/issues)
+- 📧 Email support at support@neuralabs.ai

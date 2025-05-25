@@ -1,0 +1,105 @@
+╰─ sui client call --package $PACKAGE_ID --module access --function init_registry --gas-budget 10000000
+Transaction Digest: 2JtgSnNDi9vbKrjMTmLsB9RbFD9s8gkdsNHCZ3ZjRr5L
+╭─────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Transaction Data                                                                            │
+├─────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Sender: 0x33036d17a0f59a8ddfc4f2d2188d91be167c6aa16be1af0a11a00c06a6e6e532                  │
+│ Gas Owner: 0x33036d17a0f59a8ddfc4f2d2188d91be167c6aa16be1af0a11a00c06a6e6e532               │
+│ Gas Budget: 10000000 MIST                                                                   │
+│ Gas Price: 1000 MIST                                                                        │
+│ Gas Payment:                                                                                │
+│  ┌──                                                                                        │
+│  │ ID: 0x131f6556b9ec0c27daaec71a56143436d0a813564feba8426b9e79b481d36574                   │
+│  │ Version: 435197389                                                                       │
+│  │ Digest: DMaW1YJCRgcAs8HU9Fnk9gqhNLgLx8NU16cxh7xmJSFW                                     │
+│  └──                                                                                        │
+│                                                                                             │
+│ Transaction Kind: Programmable                                                              │
+│   No input objects for this transaction                                                     │
+│ ╭──────────────────────────────────────────────────────────────────────────────────╮        │
+│ │ Commands                                                                         │        │
+│ ├──────────────────────────────────────────────────────────────────────────────────┤        │
+│ │ 0  MoveCall:                                                                     │        │
+│ │  ┌                                                                               │        │
+│ │  │ Function:  init_registry                                                      │        │
+│ │  │ Module:    access                                                             │        │
+│ │  │ Package:   0x6f9119f63ada174f85c8d585e0f9a0329e14f443626fffbe99919ca3687d81ff │        │
+│ │  └                                                                               │        │
+│ ╰──────────────────────────────────────────────────────────────────────────────────╯        │
+│                                                                                             │
+│ Signatures:                                                                                 │
+│    noB+czoXOmH2E540PfiZgWrkYpC/Z0KmvYJTVTIiWuMwGlRlBcaQXN6hoz6yoBtH8wGRqk6PMLDICa5oliX5KQ== │
+│                                                                                             │
+╰─────────────────────────────────────────────────────────────────────────────────────────────╯
+╭───────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Transaction Effects                                                                               │
+├───────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Digest: 2JtgSnNDi9vbKrjMTmLsB9RbFD9s8gkdsNHCZ3ZjRr5L                                              │
+│ Status: Success                                                                                   │
+│ Executed Epoch: 745                                                                               │
+│                                                                                                   │
+│ Created Objects:                                                                                  │
+│  ┌──                                                                                              │
+│  │ ID: 0xd7092aa8c1614c522f42b42cc3410b1276083eea23e66ef83051c9716f8b9970                         │
+│  │ Owner: Shared( 435197390 )                                                                     │
+│  │ Version: 435197390                                                                             │
+│  │ Digest: AfxERxoPFnTXkT4oiyGHdkhozpzn3DhBfihWc2S8FUUz                                           │
+│  └──                                                                                              │
+│ Mutated Objects:                                                                                  │
+│  ┌──                                                                                              │
+│  │ ID: 0x131f6556b9ec0c27daaec71a56143436d0a813564feba8426b9e79b481d36574                         │
+│  │ Owner: Account Address ( 0x33036d17a0f59a8ddfc4f2d2188d91be167c6aa16be1af0a11a00c06a6e6e532 )  │
+│  │ Version: 435197390                                                                             │
+│  │ Digest: 7k88XpNAr5bjkkG18tMyqe84YihsDA5kGjq9DKdQiPQB                                           │
+│  └──                                                                                              │
+│ Gas Object:                                                                                       │
+│  ┌──                                                                                              │
+│  │ ID: 0x131f6556b9ec0c27daaec71a56143436d0a813564feba8426b9e79b481d36574                         │
+│  │ Owner: Account Address ( 0x33036d17a0f59a8ddfc4f2d2188d91be167c6aa16be1af0a11a00c06a6e6e532 )  │
+│  │ Version: 435197390                                                                             │
+│  │ Digest: 7k88XpNAr5bjkkG18tMyqe84YihsDA5kGjq9DKdQiPQB                                           │
+│  └──                                                                                              │
+│ Gas Cost Summary:                                                                                 │
+│    Storage Cost: 2637200 MIST                                                                     │
+│    Computation Cost: 1000000 MIST                                                                 │
+│    Storage Rebate: 978120 MIST                                                                    │
+│    Non-refundable Storage Fee: 9880 MIST                                                          │
+│                                                                                                   │
+│ Transaction Dependencies:                                                                         │
+│    e8EpW8poDZ41D1XCn51yEtihxskeCHtEK1Xgp4B81Ry                                                    │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─────────────────────────────╮
+│ No transaction block events │
+╰─────────────────────────────╯
+
+╭────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Object Changes                                                                                             │
+├────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Created Objects:                                                                                           │
+│  ┌──                                                                                                       │
+│  │ ObjectID: 0xd7092aa8c1614c522f42b42cc3410b1276083eea23e66ef83051c9716f8b9970                            │
+│  │ Sender: 0x33036d17a0f59a8ddfc4f2d2188d91be167c6aa16be1af0a11a00c06a6e6e532                              │
+│  │ Owner: Shared( 435197390 )                                                                              │
+│  │ ObjectType: 0x6f9119f63ada174f85c8d585e0f9a0329e14f443626fffbe99919ca3687d81ff::access::AccessRegistry  │
+│  │ Version: 435197390                                                                                      │
+│  │ Digest: AfxERxoPFnTXkT4oiyGHdkhozpzn3DhBfihWc2S8FUUz                                                    │
+│  └──                                                                                                       │
+│ Mutated Objects:                                                                                           │
+│  ┌──                                                                                                       │
+│  │ ObjectID: 0x131f6556b9ec0c27daaec71a56143436d0a813564feba8426b9e79b481d36574                            │
+│  │ Sender: 0x33036d17a0f59a8ddfc4f2d2188d91be167c6aa16be1af0a11a00c06a6e6e532                              │
+│  │ Owner: Account Address ( 0x33036d17a0f59a8ddfc4f2d2188d91be167c6aa16be1af0a11a00c06a6e6e532 )           │
+│  │ ObjectType: 0x2::coin::Coin<0x2::sui::SUI>                                                              │
+│  │ Version: 435197390                                                                                      │
+│  │ Digest: 7k88XpNAr5bjkkG18tMyqe84YihsDA5kGjq9DKdQiPQB                                                    │
+│  └──                                                                                                       │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭───────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Balance Changes                                                                                   │
+├───────────────────────────────────────────────────────────────────────────────────────────────────┤
+│  ┌──                                                                                              │
+│  │ Owner: Account Address ( 0x33036d17a0f59a8ddfc4f2d2188d91be167c6aa16be1af0a11a00c06a6e6e532 )  │
+│  │ CoinType: 0x2::sui::SUI                                                                        │
+│  │ Amount: -2659080                                                                               │
+│  └──                                                                                              │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────╯

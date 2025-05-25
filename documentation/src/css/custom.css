@@ -1,0 +1,1366 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* NeuraLabs Color Variables */
+:root {
+  /* NeuraLabs Brand Colors */
+  --neuralabs-blue-300: #63B3ED;
+  --neuralabs-blue-500: #3182CE;
+  --neuralabs-blue-700: #2C5282;
+  --neuralabs-blue-900: #1A365D;
+  
+  --neuralabs-green-300: #68D391;
+  --neuralabs-green-500: #38A169;
+  --neuralabs-green-700: #276749;
+  
+  --neuralabs-purple-300: #B794F4;
+  --neuralabs-purple-500: #805AD5;
+  --neuralabs-purple-700: #553C9A;
+  
+  --neuralabs-yellow-300: #F6E05E;
+  --neuralabs-yellow-500: #D69E2E;
+  --neuralabs-yellow-700: #975A16;
+  
+  --neuralabs-red-300: #FC8181;
+  --neuralabs-red-500: #E53E3E;
+  --neuralabs-red-700: #9B2C2C;
+  
+  /* NeuraLabs Gray Scale */
+  --neuralabs-gray-50: #f9f9f9;
+  --neuralabs-gray-100: #ebebeb;
+  --neuralabs-gray-200: #d9d9d9;
+  --neuralabs-gray-300: #c4c4c4;
+  --neuralabs-gray-400: #9d9d9d;
+  --neuralabs-gray-500: #7b7b7b;
+  --neuralabs-gray-600: #555555;
+  --neuralabs-gray-700: #333333;
+  --neuralabs-gray-800: #1f1f1f;
+  --neuralabs-gray-900: #141414;
+  
+  /* NeuraLabs Specific UI Colors - Light Mode */
+  --neuralabs-bg-primary: #ffffff;
+  --neuralabs-bg-secondary: #ffffff;
+  --neuralabs-bg-surface: #ffffff;
+  --neuralabs-bg-navbar: #ffffff;
+  --neuralabs-bg-footer: #ffffff;
+  
+  --neuralabs-text-primary: #333333;
+  --neuralabs-text-secondary: #202020;
+  --neuralabs-text-navbar: #202020;
+  --neuralabs-text-muted: #555555;
+  
+  --neuralabs-border-primary: #e0e2e4;
+  --neuralabs-border-hover: var(--neuralabs-blue-500);
+  
+  /* Primary Colors - Using NeuraLabs blue */
+  --ifm-color-primary: var(--neuralabs-blue-500);
+  --ifm-color-primary-dark: var(--neuralabs-blue-700);
+  --ifm-color-primary-darker: #2A4E7C;
+  --ifm-color-primary-darkest: var(--neuralabs-blue-900);
+  --ifm-color-primary-light: #4299E1;
+  --ifm-color-primary-lighter: var(--neuralabs-blue-300);
+  --ifm-color-primary-lightest: #90CDF4;
+  
+  /* Background Colors - Light Mode */
+  --ifm-background-color: var(--neuralabs-bg-primary);
+  --ifm-background-surface-color: var(--neuralabs-bg-secondary);
+  --ifm-navbar-background-color: var(--neuralabs-bg-navbar);
+  --ifm-footer-background-color: var(--neuralabs-bg-footer);
+  
+  /* Text Colors - Light Mode */
+  --ifm-font-color-base: var(--neuralabs-text-primary);
+  --ifm-heading-color: var(--neuralabs-text-secondary);
+  --ifm-navbar-link-color: var(--neuralabs-text-navbar);
+  
+  /* Borders - Light Mode */
+  --ifm-toc-border-color: var(--neuralabs-border-primary);
+  --ifm-hr-border-color: var(--neuralabs-border-primary);
+  --ifm-table-border-color: var(--neuralabs-border-primary);
+  
+  /* Code */
+  --ifm-code-font-size: 95%;
+  --ifm-code-background: var(--neuralabs-bg-surface);
+  --ifm-pre-background: var(--neuralabs-bg-surface);
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.05);
+  
+  /* Cards and Containers */
+  --ifm-card-background-color: var(--neuralabs-bg-surface);
+  --ifm-card-border-radius: 12px;
+  
+  /* Sidebar */
+  --ifm-menu-color-background-active: #E9F2FF;
+  --ifm-menu-color-active: #1E63EA;
+}
+
+/* Dark Mode - Matching Frontend Dark Theme */
+[data-theme='dark'] {
+  /* NeuraLabs Specific UI Colors - Dark Mode */
+  --neuralabs-bg-primary: #000000;
+  --neuralabs-bg-secondary: #000000;
+  --neuralabs-bg-surface: #000000;
+  --neuralabs-bg-navbar: #000000;
+  --neuralabs-bg-footer: #000000;
+  --neuralabs-bg-input: #141516;
+  --neuralabs-bg-hover: #242526;
+  
+  --neuralabs-text-primary: #ffffff;
+  --neuralabs-text-secondary: #c4c4c4;
+  --neuralabs-text-navbar: #ffffff;
+  --neuralabs-text-muted: var(--neuralabs-gray-400);
+  
+  --neuralabs-border-primary: #3e4045;
+  --neuralabs-border-hover: var(--neuralabs-blue-300);
+  
+  /* Primary Colors remain blue in dark mode */
+  --ifm-color-primary: var(--neuralabs-blue-300);
+  --ifm-color-primary-dark: #4299E1;
+  --ifm-color-primary-darker: var(--neuralabs-blue-500);
+  --ifm-color-primary-darkest: var(--neuralabs-blue-700);
+  --ifm-color-primary-light: #90CDF4;
+  --ifm-color-primary-lighter: #BEE3F8;
+  --ifm-color-primary-lightest: #E6FFFA;
+  
+  /* Background Colors - Dark Mode */
+  --ifm-background-color: var(--neuralabs-bg-primary);
+  --ifm-background-surface-color: var(--neuralabs-bg-secondary);
+  --ifm-navbar-background-color: var(--neuralabs-bg-navbar);
+  --ifm-footer-background-color: var(--neuralabs-bg-footer);
+  --ifm-dropdown-background-color: var(--neuralabs-bg-secondary);
+  --ifm-dropdown-hover-background-color: var(--neuralabs-bg-hover);
+  
+  /* Text Colors - Dark Mode */
+  --ifm-font-color-base: var(--neuralabs-text-primary);
+  --ifm-font-color-secondary: var(--neuralabs-text-secondary);
+  --ifm-heading-color: var(--neuralabs-text-primary);
+  --ifm-navbar-link-color: var(--neuralabs-text-navbar);
+  --ifm-menu-color: var(--neuralabs-text-secondary);
+  
+  /* Borders - Dark Mode */
+  --ifm-toc-border-color: var(--neuralabs-border-primary);
+  --ifm-hr-border-color: var(--neuralabs-border-primary);
+  --ifm-table-border-color: var(--neuralabs-border-primary);
+  
+  /* Code */
+  --ifm-code-background: var(--neuralabs-bg-input);
+  --ifm-pre-background: var(--neuralabs-bg-input);
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.1);
+  
+  /* Cards and Containers */
+  --ifm-card-background-color: var(--neuralabs-bg-surface);
+  --ifm-hero-background-color: var(--neuralabs-bg-input);
+  
+  /* Sidebar */
+  --ifm-menu-color-background-active: #1F3458;
+  --ifm-menu-color-active: #5290FF;
+  --ifm-menu-color-background-hover: var(--neuralabs-bg-hover);
+  
+  /* Scrollbar */
+  --ifm-scrollbar-track-background-color: var(--neuralabs-bg-secondary);
+  --ifm-scrollbar-thumb-background-color: var(--neuralabs-border-primary);
+  --ifm-scrollbar-thumb-hover-background-color: var(--neuralabs-gray-600);
+}
+
+/* Azure-inspired Navbar */
+.navbar {
+  border-bottom: 1px solid var(--ifm-toc-border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 0.75rem 0;
+  background-color: var(--ifm-navbar-background-color);
+  backdrop-filter: blur(20px);
+}
+
+/* Azure-style navbar container */
+.navbar__inner {
+  max-width: 1920px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar__brand {
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+/* Azure-style navbar items */
+.navbar__item {
+  font-weight: 500;
+  font-size: 0.925rem;
+}
+
+.navbar__link {
+  color: var(--ifm-navbar-link-color);
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.navbar__link:hover {
+  color: var(--ifm-color-primary);
+  background-color: var(--ifm-menu-color-background-hover);
+  text-decoration: none;
+}
+
+.navbar__link--active {
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+/* Hero Section - Using NeuraLabs theme colors */
+.hero {
+  background-color: var(--neuralabs-bg-primary);
+  color: var(--ifm-heading-color);
+  padding: 4rem 2rem;
+  text-align: center;
+  border-bottom: 1px solid var(--ifm-toc-border-color);
+}
+
+.hero--primary {
+  background-color: var(--neuralabs-bg-primary);
+  color: var(--ifm-heading-color);
+}
+
+/* Hero theme-specific overrides */
+[data-theme='dark'] .hero {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+[data-theme='light'] .hero {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+[data-theme='dark'] .hero--primary {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+[data-theme='light'] .hero--primary {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Hero text elements */
+.hero__title {
+  color: inherit !important;
+}
+
+.hero__subtitle {
+  color: var(--neuralabs-text-secondary) !important;
+}
+
+[data-theme='dark'] .hero__subtitle {
+  color: #c4c4c4 !important;
+}
+
+[data-theme='light'] .hero__subtitle {
+  color: #555555 !important;
+}
+
+/* Homepage specific overrides */
+.main-wrapper {
+  background-color: var(--ifm-background-color) !important;
+}
+
+/* Dark theme homepage overrides */
+[data-theme='dark'] .main-wrapper {
+  background-color: #000000 !important;
+}
+
+[data-theme='dark'] .features {
+  background-color: #000000 !important;
+}
+
+/* Dark mode - ensure full page background is black */
+[data-theme='dark'] {
+  background-color: #000000 !important;
+}
+
+[data-theme='dark'] html {
+  background-color: #000000 !important;
+}
+
+[data-theme='dark'] body {
+  background-color: #000000 !important;
+}
+
+/* Dark mode - page container backgrounds */
+[data-theme='dark'] .docPage {
+  background-color: #000000 !important;
+}
+
+[data-theme='dark'] .docRoot_node_modules-\@docusaurus-theme-classic-lib-theme-DocRoot-Layout-styles-module {
+  background-color: #000000 !important;
+}
+
+[data-theme='dark'] .docsWrapper_node_modules-\@docusaurus-theme-classic-lib-theme-DocRoot-Layout-styles-module {
+  background-color: #000000 !important;
+}
+
+/* Light theme homepage overrides */
+[data-theme='light'] .main-wrapper {
+  background-color: #ffffff !important;
+}
+
+[data-theme='light'] .features {
+  background-color: #ffffff !important;
+}
+
+/* Buttons - Matching NeuraLabs style */
+.button {
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  text-transform: none;
+  box-shadow: none;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-decoration: none;
+}
+
+.button--secondary {
+  background-color: var(--ifm-color-primary);
+  color: white;
+  border: 2px solid var(--ifm-color-primary);
+}
+
+.button--secondary:hover {
+  background-color: transparent;
+  color: var(--ifm-color-primary);
+  border: 2px solid var(--ifm-color-primary);
+}
+
+/* Hero button specific styling */
+.hero .button--secondary {
+  background-color: var(--ifm-color-primary);
+  color: white;
+  border: 2px solid var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+.hero .button--secondary:hover {
+  background-color: transparent;
+  color: var(--ifm-color-primary);
+  border: 2px solid var(--ifm-color-primary);
+}
+
+/* Cards */
+.card {
+  background: var(--ifm-card-background-color);
+  border-radius: var(--ifm-card-border-radius);
+  border: 1px solid var(--ifm-toc-border-color);
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-color: var(--neuralabs-border-hover);
+}
+
+/* Sidebar */
+.menu__list-item-collapsible {
+  border-radius: 0.375rem;
+  transition: background-color 0.2s ease;
+}
+
+.menu__list-item-collapsible:hover {
+  background-color: var(--ifm-menu-color-background-hover);
+}
+
+.menu__link {
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+.menu__link:hover {
+  background-color: var(--ifm-menu-color-background-hover);
+  color: var(--ifm-font-color-base);
+}
+
+.menu__link--active {
+  background-color: var(--ifm-menu-color-background-active);
+  color: var(--ifm-menu-color-active);
+  font-weight: 600;
+}
+
+/* Footer - Enhanced to match NeuraLabs design */
+.footer {
+  background-color: var(--neuralabs-bg-footer) !important;
+  border-top: 1px solid var(--ifm-toc-border-color);
+  padding: 3rem 0 2rem;
+}
+
+.footer__title {
+  color: var(--ifm-heading-color) !important;
+  font-weight: 600;
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+}
+
+.footer__item {
+  margin-bottom: 0.5rem;
+}
+
+.footer__link-item {
+  color: var(--neuralabs-text-muted) !important;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.footer__link-item:hover {
+  color: var(--ifm-color-primary) !important;
+  text-decoration: none;
+}
+
+.footer__copyright {
+  color: var(--neuralabs-text-muted) !important;
+  font-size: 0.875rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--ifm-toc-border-color);
+  text-align: center;
+}
+
+.footer__logo {
+  margin-bottom: 1rem;
+  max-width: 150px;
+}
+
+.footer__col {
+  margin-bottom: 2rem;
+}
+
+/* Footer dark mode specific overrides */
+[data-theme='dark'] .footer {
+  background-color: #000000 !important;
+}
+
+[data-theme='dark'] .footer__title {
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .footer__link-item {
+  color: #c4c4c4 !important;
+}
+
+[data-theme='dark'] .footer__copyright {
+  color: #c4c4c4 !important;
+}
+
+/* Footer light mode specific overrides */
+[data-theme='light'] .footer {
+  background-color: #ffffff !important;
+}
+
+[data-theme='light'] .footer__title {
+  color: #000000 !important;
+}
+
+[data-theme='light'] .footer__link-item {
+  color: #555555 !important;
+}
+
+[data-theme='light'] .footer__copyright {
+  color: #555555 !important;
+}
+
+/* Code blocks - Matching NeuraLabs style */
+pre {
+  border: 1px solid var(--ifm-toc-border-color);
+  border-radius: 0.5rem;
+}
+
+code {
+  border: 1px solid var(--ifm-toc-border-color);
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.875em;
+}
+
+/* Table of Contents */
+.table-of-contents {
+  border-left: 2px solid var(--ifm-toc-border-color);
+}
+
+.table-of-contents__link:hover {
+  color: var(--ifm-color-primary);
+}
+
+.table-of-contents__link--active {
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+/* Admonitions / Callouts */
+.admonition {
+  border-radius: 0.5rem;
+  border: 1px solid;
+  box-shadow: none;
+}
+
+.admonition-note {
+  border-color: var(--ifm-color-primary);
+  background-color: rgba(49, 130, 206, 0.1);
+}
+
+.admonition-tip {
+  border-color: var(--neuralabs-green-500);
+  background-color: rgba(56, 161, 105, 0.1);
+}
+
+.admonition-info {
+  border-color: var(--ifm-color-primary);
+  background-color: rgba(49, 130, 206, 0.1);
+}
+
+.admonition-caution {
+  border-color: var(--neuralabs-yellow-500);
+  background-color: rgba(214, 158, 46, 0.1);
+}
+
+.admonition-danger {
+  border-color: var(--neuralabs-red-500);
+  background-color: rgba(229, 62, 62, 0.1);
+}
+
+/* DocSidebar */
+.docSidebarContainer_node_modules-\@docusaurus-theme-classic-lib-theme-DocPage-Layout-Sidebar-styles-module {
+  border-right: 1px solid var(--ifm-toc-border-color);
+}
+
+/* Azure-inspired Documentation Layout Structure */
+
+/* Main container - constrained width like Azure docs */
+.main-wrapper {
+  max-width: 1920px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Main content area with Azure-style max-width and centering */
+.docMainContainer_node_modules-\@docusaurus-theme-classic-lib-theme-DocPage-Layout-Main-styles-module {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 2rem 3rem;
+}
+
+/* Content wrapper - Azure's readable line length */
+.theme-doc-markdown.markdown {
+  max-width: 1024px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* Azure-style sidebar container */
+.docSidebarContainer_node_modules-\@docusaurus-theme-classic-lib-theme-DocPage-Layout-Sidebar-styles-module {
+  width: 280px;
+  min-width: 280px;
+  max-width: 280px;
+}
+
+/* TOC positioning similar to Azure */
+.tocCollapsible_node_modules-\@docusaurus-theme-classic-lib-theme-TOC-styles-module {
+  width: 240px;
+  min-width: 240px;
+  max-width: 240px;
+  position: sticky;
+  top: calc(var(--ifm-navbar-height) + 1rem);
+  max-height: calc(100vh - var(--ifm-navbar-height) - 2rem);
+  overflow-y: auto;
+}
+
+/* Azure-style page structure */
+.docPage {
+  max-width: 1920px;
+  margin: 0 auto;
+  background-color: var(--ifm-background-color);
+}
+
+/* Ensure consistent background for all layout containers */
+.main-wrapper,
+.docRoot_node_modules-\@docusaurus-theme-classic-lib-theme-DocRoot-Layout-styles-module,
+.docsWrapper_node_modules-\@docusaurus-theme-classic-lib-theme-DocRoot-Layout-styles-module {
+  background-color: var(--ifm-background-color) !important;
+}
+
+/* Pagination */
+.pagination-nav__link {
+  border: 1px solid var(--ifm-toc-border-color);
+  border-radius: 0.5rem;
+}
+
+.pagination-nav__link:hover {
+  border-color: var(--neuralabs-border-hover);
+  text-decoration: none;
+}
+
+/* Search */
+.DocSearch-Button {
+  border-radius: 0.5rem;
+  background-color: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-toc-border-color);
+}
+
+.DocSearch-Button:hover {
+  background-color: var(--ifm-dropdown-hover-background-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom scrollbar - Matching NeuraLabs */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ifm-scrollbar-track-background-color, var(--ifm-background-color));
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ifm-scrollbar-thumb-background-color, var(--neuralabs-gray-600));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ifm-scrollbar-thumb-hover-background-color, var(--neuralabs-gray-500));
+}
+
+/* Azure-style Typography and Spacing Structure */
+
+/* Azure-inspired heading hierarchy */
+.theme-doc-markdown h1 {
+  font-size: 2.25rem;
+  margin-bottom: 1.5rem;
+  margin-top: 0;
+  line-height: 1.2;
+}
+
+.theme-doc-markdown h2 {
+  font-size: 1.75rem;
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--ifm-toc-border-color);
+}
+
+.theme-doc-markdown h3 {
+  font-size: 1.375rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.theme-doc-markdown h4 {
+  font-size: 1.125rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Azure-style content spacing */
+.theme-doc-markdown p {
+  margin-bottom: 1.25rem;
+  line-height: 1.7;
+}
+
+.theme-doc-markdown ul,
+.theme-doc-markdown ol {
+  margin-bottom: 1.25rem;
+  padding-left: 1.5rem;
+}
+
+.theme-doc-markdown li {
+  margin-bottom: 0.5rem;
+  line-height: 1.7;
+}
+
+/* Responsive adjustments for Azure-style layout */
+@media (max-width: 1400px) {
+  .main-wrapper {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+  
+  .docMainContainer_node_modules-\@docusaurus-theme-classic-lib-theme-DocPage-Layout-Main-styles-module {
+    max-width: 100%;
+    padding: 2rem;
+  }
+  
+  .theme-doc-markdown.markdown {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 1200px) {
+  .navbar {
+    padding: 0.75rem 1rem;
+  }
+  
+  .hero {
+    padding: 3rem 1rem;
+  }
+  
+  .features {
+    padding: 2rem 1rem;
+  }
+  
+  .navbar__toggle {
+    color: var(--ifm-navbar-link-color);
+  }
+  
+  .navbar-sidebar {
+    background-color: var(--ifm-navbar-background-color);
+  }
+  
+  .navbar-sidebar__brand {
+    background-color: var(--ifm-navbar-background-color);
+    border-bottom: 1px solid var(--ifm-toc-border-color);
+  }
+  
+  .docMainContainer_node_modules-\@docusaurus-theme-classic-lib-theme-DocPage-Layout-Main-styles-module {
+    padding: 1.5rem;
+  }
+  
+  .theme-doc-markdown h1 {
+    font-size: 2rem;
+  }
+  
+  .theme-doc-markdown h2 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 750px) {
+  .navbar {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .hero {
+    padding: 2rem 0.5rem;
+  }
+  
+  .features {
+    padding: 1.5rem 0.5rem;
+  }
+}
+
+/* Grid and Flexbox utilities */
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  
+  .md\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.flex {
+  display: flex;
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.mt-6 {
+  margin-top: 1.5rem;
+}
+
+.mt-8 {
+  margin-top: 2rem;
+}
+
+/* Feature card matching NeuraLabs style */
+.feature-card {
+  text-align: center;
+  padding: 2rem;
+  background: var(--ifm-card-background-color);
+  border: 1px solid var(--ifm-toc-border-color);
+  border-radius: var(--ifm-card-border-radius);
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-color: var(--neuralabs-border-hover);
+}
+
+.feature-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: var(--ifm-color-primary);
+}
+
+/* Tabs customization */
+.tabs {
+  border-bottom: 1px solid var(--ifm-toc-border-color);
+}
+
+.tabs__item {
+  border-radius: 0.375rem 0.375rem 0 0;
+  font-weight: 500;
+  padding: 0.75rem 1.25rem;
+  margin-right: 0.5rem;
+}
+
+.tabs__item--active {
+  background-color: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-toc-border-color);
+  border-bottom: 1px solid var(--ifm-background-surface-color);
+  color: var(--ifm-color-primary);
+}
+
+/* Mermaid diagram container */
+.mermaid-container {
+  text-align: center;
+  margin: 2rem 0;
+  padding: 1rem;
+  background-color: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-toc-border-color);
+  border-radius: 0.5rem;
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
+
+/* Markdown content */
+.markdown {
+  line-height: 1.75;
+}
+
+.markdown h1:first-child {
+  margin-top: 0;
+}
+
+.markdown > h2 {
+  margin-top: 2rem;
+}
+
+.markdown > h3 {
+  margin-top: 1.5rem;
+}
+
+/* Text justification for content */
+.markdown p {
+  text-align: justify;
+}
+
+.markdown li {
+  text-align: justify;
+}
+
+/* Center align images */
+.markdown img {
+  display: block;
+  margin: 0 auto;
+}
+
+/* Exception for inline icons - don't center them */
+.markdown span img,
+.markdown h1 img,
+.markdown h2 img,
+.markdown h3 img,
+.markdown h4 img,
+.markdown h5 img,
+.markdown h6 img {
+  display: inline;
+  margin: 0;
+}
+
+/* Minimalistic Code Block Improvements */
+.collapsible-code-block {
+  margin: 1.5rem 0;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--ifm-toc-border-color);
+  background: var(--ifm-background-surface-color);
+  transition: all 0.2s ease-in-out;
+}
+
+.collapsible-code-block:hover {
+  border-color: var(--ifm-color-primary-light);
+}
+
+[data-theme='dark'] .collapsible-code-block {
+  background: #0d1117;
+  border-color: #30363d;
+}
+
+[data-theme='dark'] .collapsible-code-block:hover {
+  border-color: var(--ifm-color-primary);
+}
+
+.code-block-header {
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.code-block-header:hover {
+  background: var(--ifm-color-emphasis-200) !important;
+}
+
+[data-theme='dark'] .code-block-header {
+  background: #161b22 !important;
+}
+
+[data-theme='dark'] .code-block-header:hover {
+  background: #21262d !important;
+}
+
+/* Dark mode code background */
+[data-theme='dark'] .collapsible-code-block pre {
+  background: #0d1117 !important;
+}
+
+/* Ensure code content is left-aligned */
+.collapsible-code-block .theme-code-block {
+  text-align: left !important;
+}
+
+.collapsible-code-block pre {
+  text-align: left !important;
+  margin: 0 !important;
+  direction: ltr !important;
+}
+
+.collapsible-code-block code {
+  text-align: left !important;
+  direction: ltr !important;
+}
+
+.collapsible-code-block .prism-code {
+  text-align: left !important;
+  direction: ltr !important;
+}
+
+.collapsible-code-block .token-line {
+  text-align: left !important;
+  direction: ltr !important;
+}
+
+/* Force left alignment for all code elements */
+.collapsible-code-block * {
+  text-align: left !important;
+}
+
+/* Specific overrides for Prism elements */
+.collapsible-code-block .highlight {
+  text-align: left !important;
+}
+
+.collapsible-code-block .code-block-content {
+  text-align: left !important;
+}
+
+/* VS Code style code blocks */
+.theme-doc-markdown pre {
+  margin: 1.5rem 0;
+  border-radius: 6px;
+  border: 1px solid var(--ifm-toc-border-color);
+  background: #f8f8f8 !important;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+[data-theme='dark'] .theme-doc-markdown pre {
+  background: #1e1e1e !important;
+  border-color: #333;
+}
+
+/* VS Code style inline code */
+.theme-doc-markdown code:not(pre code) {
+  background-color: #f3f3f3;
+  border: 1px solid #e1e4e8;
+  border-radius: 4px;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.875em;
+  font-weight: 500;
+  color: #e74c3c;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+[data-theme='dark'] .theme-doc-markdown code:not(pre code) {
+  background-color: #2d2d30;
+  border-color: #444;
+  color: #9cdcfe;
+}
+
+/* VS Code syntax highlighting customizations */
+[data-theme='light'] .token.comment,
+[data-theme='light'] .token.prolog,
+[data-theme='light'] .token.doctype,
+[data-theme='light'] .token.cdata {
+  color: #008000 !important;
+  font-style: italic;
+}
+
+[data-theme='light'] .token.keyword {
+  color: #0000ff !important;
+  font-weight: bold;
+}
+
+[data-theme='light'] .token.string {
+  color: #a31515 !important;
+}
+
+[data-theme='light'] .token.number {
+  color: #098658 !important;
+}
+
+[data-theme='light'] .token.function {
+  color: #795e26 !important;
+}
+
+[data-theme='light'] .token.class-name {
+  color: #267f99 !important;
+}
+
+/* VS Code dark theme syntax highlighting */
+[data-theme='dark'] .token.comment,
+[data-theme='dark'] .token.prolog,
+[data-theme='dark'] .token.doctype,
+[data-theme='dark'] .token.cdata {
+  color: #6a9955 !important;
+  font-style: italic;
+}
+
+[data-theme='dark'] .token.keyword {
+  color: #569cd6 !important;
+  font-weight: bold;
+}
+
+[data-theme='dark'] .token.string {
+  color: #ce9178 !important;
+}
+
+[data-theme='dark'] .token.number {
+  color: #b5cea8 !important;
+}
+
+[data-theme='dark'] .token.function {
+  color: #dcdcaa !important;
+}
+
+[data-theme='dark'] .token.class-name {
+  color: #4ec9b0 !important;
+}
+
+[data-theme='dark'] .token.operator {
+  color: #d4d4d4 !important;
+}
+
+[data-theme='dark'] .token.punctuation {
+  color: #d4d4d4 !important;
+}
+
+/* VS Code style code block backgrounds for collapsible blocks */
+[data-theme='dark'] .collapsible-code-block pre {
+  background: #1e1e1e !important;
+}
+
+[data-theme='light'] .collapsible-code-block pre {
+  background: #f8f8f8 !important;
+}
+
+/* Ensure proper font rendering */
+pre, code {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+  font-feature-settings: 'liga' 0;
+  font-variant-ligatures: none;
+}
+
+/* Global left alignment for all code blocks */
+pre {
+  text-align: left !important;
+  direction: ltr !important;
+}
+
+.prism-code {
+  text-align: left !important;
+  direction: ltr !important;
+}
+
+.token-line {
+  text-align: left !important;
+  direction: ltr !important;
+}
+
+.highlight {
+  text-align: left !important;
+}
+
+.code-block-content {
+  text-align: left !important;
+}
+
+/* Override any theme-specific alignments */
+.theme-code-block {
+  text-align: left !important;
+}
+
+/* Card improvements */
+.card {
+  text-align: left;
+}
+
+.card p {
+  text-align: justify;
+}
+
+/* Badge styles */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  background-color: var(--ifm-color-primary);
+  color: white;
+}
+
+.badge--secondary {
+  background-color: var(--ifm-background-surface-color);
+  color: var(--ifm-font-color-base);
+  border: 1px solid var(--ifm-toc-border-color);
+}
+
+/* Azure-style Breadcrumbs - Fixed overlapping symbols */
+.breadcrumbs {
+  margin-bottom: 2rem;
+  padding: 0.75rem 0;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--ifm-toc-border-color);
+  background-color: transparent;
+}
+
+.breadcrumbs__item {
+  color: var(--ifm-color-primary);
+  font-weight: 500;
+  position: relative;
+}
+
+/* Fix overlapping breadcrumb separators */
+.breadcrumbs__item:not(:last-child)::after {
+  /* content: '›'; */
+  margin: 0 0.5rem;
+  color: var(--ifm-font-color-secondary);
+  font-weight: normal;
+  font-size: 1rem;
+}
+
+.breadcrumbs__link {
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.breadcrumbs__link:hover {
+  color: var(--ifm-color-primary-dark);
+  text-decoration: underline;
+}
+
+/* Ensure no pseudo-element conflicts */
+.breadcrumbs__item::before {
+  display: none !important;
+}
+
+/* Fix any potential navbar symbol conflicts */
+.navbar__item::after,
+.navbar__item::before {
+  display: none !important;
+}
+
+.navbar__link::after,
+.navbar__link::before {
+  display: none !important;
+}
+
+/* Azure-style sidebar navigation */
+.menu {
+  padding: 1rem 0;
+}
+
+.menu__list {
+  margin: 0;
+  padding: 0;
+}
+
+.menu__list-item {
+  margin: 0.25rem 0;
+}
+
+.menu__link {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ifm-font-color-base);
+  transition: all 0.2s ease;
+}
+
+.menu__link:hover {
+  background-color: var(--ifm-menu-color-background-hover);
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+}
+
+.menu__link--active {
+  background-color: var(--ifm-menu-color-background-active);
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+  border-left: 3px solid var(--ifm-color-primary);
+  margin-left: -3px;
+}
+
+/* Azure-style category headers */
+.menu__list-item-collapsible {
+  border-radius: 4px;
+  margin: 0.5rem 0;
+}
+
+.menu__caret {
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  color: var(--ifm-heading-color);
+  background-color: transparent;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.menu__caret:hover {
+  background-color: var(--ifm-menu-color-background-hover);
+}
+
+/* Documentation Icons - Theme-aware styling */
+.markdown img[src*="/img/icons/"] {
+  filter: none;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+  width: 24px;
+  height: 24px;
+}
+
+/* Dark mode: Invert black SVG icons to white */
+[data-theme='dark'] .markdown img[src*="/img/icons/"],
+[data-theme='dark'] img[src*="/img/icons/"] {
+  filter: invert(1);
+}
+
+/* Ensure SVG icons use current text color */
+.markdown svg {
+  color: var(--ifm-font-color-base);
+  vertical-align: middle;
+}
+
+/* Icon in headings */
+.markdown h1 img[src*="/img/icons/"],
+.markdown h2 img[src*="/img/icons/"],
+.markdown h3 img[src*="/img/icons/"],
+.markdown h4 img[src*="/img/icons/"],
+.markdown h5 img[src*="/img/icons/"],
+.markdown h6 img[src*="/img/icons/"] {
+  width: 1.2em;
+  height: 1.2em;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+/* Small inline icons */
+.markdown .icon-sm {
+  width: 16px !important;
+  height: 16px !important;
+  margin-right: 0.25rem;
+}
+
+/* Large feature icons */
+.markdown .icon-lg {
+  width: 48px !important;
+  height: 48px !important;
+  margin-right: 1rem;
+}
+
+/* Generated Index Page Styles */
+.generated-index-page .pagination-nav {
+  display: none;
+}
+
+/* Category cards on generated index */
+.generated-index .card {
+  height: 100%;
+  transition: all 0.2s ease;
+}
+
+.generated-index .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme='dark'] .generated-index .card:hover {
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+
+/* Icon support in generated index descriptions */
+.generated-index__description img[src*="/img/icons/"] {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+  display: inline-block;
+}
+
+/* Dark mode: Invert icons in generated index descriptions */
+[data-theme='dark'] .generated-index__description img[src*="/img/icons/"] {
+  filter: invert(1);
+}
+
+/* Category page headers with icons */
+.theme-doc-markdown h1 img[src*="/img/icons/"] {
+  width: 32px;
+  height: 32px;
+  margin-right: 0.75rem;
+  vertical-align: middle;
+}
+
+/* Dark mode: Invert icons in category page headers */
+[data-theme='dark'] .theme-doc-markdown h1 img[src*="/img/icons/"],
+[data-theme='dark'] .theme-doc-markdown h2 img[src*="/img/icons/"],
+[data-theme='dark'] .theme-doc-markdown h3 img[src*="/img/icons/"],
+[data-theme='dark'] .theme-doc-markdown h4 img[src*="/img/icons/"],
+[data-theme='dark'] .theme-doc-markdown h5 img[src*="/img/icons/"],
+[data-theme='dark'] .theme-doc-markdown h6 img[src*="/img/icons/"] {
+  filter: invert(1);
+}

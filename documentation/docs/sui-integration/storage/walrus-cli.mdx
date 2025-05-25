@@ -1,0 +1,834 @@
+---
+id: walrus-cli
+title: Walrus CLI Usage
+sidebar_label: CLI Usage
+sidebar_position: 4
+---
+
+import { Card, CardHeader, CardTitle, CardDescription } from '@site/src/components/Card';
+import {CollapsibleCodeBlock} from '@site/src/components/CodeBlock';
+
+# <img src="/img/icons/terminal.svg" width="32" height="32" style={{ verticalAlign: 'middle', marginRight: '12px' }} />Walrus CLI Usage
+
+Command-line interface for direct interaction with Walrus storage, ideal for development, testing, and automation.
+
+## Overview
+
+The Walrus CLI provides a powerful command-line interface for storing and retrieving data from the Walrus network. It's perfect for developers who prefer terminal-based workflows, need to automate storage operations, or want to quickly test Walrus functionality.
+
+<div className="card padding--md mt-4">
+  <h3><img src="/img/icons/info.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />CLI Features</h3>
+  <ul>
+    <li><strong>Direct Storage Operations:</strong> Upload and download files without writing code</li>
+    <li><strong>Wallet Integration:</strong> Built-in SUI wallet support for paying storage fees</li>
+    <li><strong>Batch Operations:</strong> Process multiple files efficiently</li>
+    <li><strong>Configuration Management:</strong> Save and reuse network settings</li>
+    <li><strong>Progress Tracking:</strong> Real-time upload/download progress</li>
+  </ul>
+</div>
+
+## Installation
+
+### Binary Installation
+
+<CollapsibleCodeBlock
+  title="Install Walrus CLI Binary"
+  description="Download and install the latest Walrus CLI for your platform"
+  language="bash"
+  defaultCollapsed={false}
+>
+{`# Linux (x86_64)
+wget https://github.com/MystenLabs/walrus-sites/releases/latest/download/walrus-x86_64-unknown-linux-gnu
+chmod +x walrus-x86_64-unknown-linux-gnu
+sudo mv walrus-x86_64-unknown-linux-gnu /usr/local/bin/walrus
+
+# macOS (Intel)
+wget https://github.com/MystenLabs/walrus-sites/releases/latest/download/walrus-x86_64-apple-darwin
+chmod +x walrus-x86_64-apple-darwin
+sudo mv walrus-x86_64-apple-darwin /usr/local/bin/walrus
+
+# macOS (Apple Silicon)
+wget https://github.com/MystenLabs/walrus-sites/releases/latest/download/walrus-aarch64-apple-darwin
+chmod +x walrus-aarch64-apple-darwin
+sudo mv walrus-aarch64-apple-darwin /usr/local/bin/walrus
+
+# Windows (WSL2 recommended)
+wget https://github.com/MystenLabs/walrus-sites/releases/latest/download/walrus-x86_64-pc-windows-msvc.exe
+chmod +x walrus-x86_64-pc-windows-msvc.exe
+mv walrus-x86_64-pc-windows-msvc.exe /usr/local/bin/walrus.exe
+
+# Verify installation
+walrus --version
+# Output: walrus 0.2.0 (or latest version)`}
+</CollapsibleCodeBlock>
+
+### Build from Source
+
+<CollapsibleCodeBlock
+  title="Build Walrus CLI from Source"
+  description="Compile the CLI from source code for development or customization"
+  language="bash"
+  defaultCollapsed={true}
+>
+{`# Prerequisites: Rust toolchain
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source $HOME/.cargo/env
+
+# Clone and build
+git clone https://github.com/MystenLabs/walrus.git
+cd walrus
+cargo build --release
+
+# Install
+sudo cp target/release/walrus /usr/local/bin/
+
+# Or use cargo install
+cargo install --path cli
+
+# Verify
+walrus --version`}
+</CollapsibleCodeBlock>
+
+## Configuration
+
+### Initial Setup
+
+<CollapsibleCodeBlock
+  title="Initialize Walrus Configuration"
+  description="Set up Walrus CLI with network settings and wallet"
+  language="bash"
+  defaultCollapsed={false}
+>
+{`# Initialize configuration
+walrus config init
+
+# This creates ~/.walrus/config.yaml with default settings
+# You'll be prompted for:
+# - Network selection (testnet/mainnet)
+# - SUI RPC endpoint
+# - Wallet configuration
+
+# View current configuration
+walrus config show
+
+# Example output:
+network: testnet
+sui_config:
+  rpc_url: https://fullnode.testnet.sui.io:443
+  wallet_path: ~/.sui/sui_config/client.yaml
+walrus_config:
+  publisher_url: https://publisher.walrus-testnet.walrus.space
+  aggregator_url: https://aggregator.walrus-testnet.walrus.space
+  default_epochs: 5
+  cache_dir: ~/.walrus/cache
+
+# Edit configuration manually
+nano ~/.walrus/config.yaml`}
+</CollapsibleCodeBlock>
+
+### Wallet Setup
+
+<CollapsibleCodeBlock
+  title="Configure SUI Wallet for Walrus"
+  description="Set up wallet to pay for storage operations"
+  language="bash"
+  defaultCollapsed={false}
+>
+{`# Create new wallet (if needed)
+sui client new-address ed25519
+# Save the recovery phrase securely!
+
+# Check wallet address
+sui client active-address
+
+# Get testnet SUI tokens
+curl -X POST https://faucet.testnet.sui.io/gas \
+  -H "Content-Type: application/json" \
+  -d '{"FixedAmountRequest": {"recipient": "YOUR_ADDRESS_HERE"}}'
+
+# Get testnet WAL tokens for storage
+walrus get-wal --testnet
+# Or specify amount
+walrus get-wal --testnet --amount 1000
+
+# Check balances
+sui client gas
+walrus wallet balance
+
+# Switch active address
+sui client switch --address 0x...
+
+# Import existing wallet
+sui keytool import "YOUR_RECOVERY_PHRASE" ed25519`}
+</CollapsibleCodeBlock>
+
+## Basic Operations
+
+### Storing Files
+
+<CollapsibleCodeBlock
+  title="Upload Files to Walrus"
+  description="Store single or multiple files with various options"
+  language="bash"
+  defaultCollapsed={false}
+>
+{`# Store a single file (default 5 epochs)
+walrus store myfile.pdf
+
+# Store with custom epochs
+walrus store myfile.pdf --epochs 30
+
+# Store with progress bar
+walrus store large-file.zip --progress
+
+# Store multiple files
+walrus store file1.txt file2.json file3.pdf --epochs 10
+
+# Store entire directory
+walrus store ./my-directory --recursive
+
+# Store with custom metadata
+walrus store data.json --metadata '{"type":"config","version":"1.0"}'
+
+# Store and make deletable
+walrus store temp-file.txt --deletable --epochs 1
+
+# Dry run (estimate cost without storing)
+walrus store large-file.bin --dry-run
+
+# Example output:
+Storing file: myfile.pdf (1.2 MB)
+Epochs: 30
+Estimated cost: 0.5 WAL
+
+Uploading... 100% [==============================] 1.2MB/1.2MB
+
+Success! Stored with blob ID: 2g4h5j6k8l9m0n2p3q4r5s6t7u8v9w0x1y2z3a4b5c6d
+Storage cost: 0.48 WAL
+Transaction: https://suiscan.xyz/testnet/tx/0x...`}
+</CollapsibleCodeBlock>
+
+### Retrieving Files
+
+<CollapsibleCodeBlock
+  title="Download Files from Walrus"
+  description="Retrieve stored blobs by their ID"
+  language="bash"
+  defaultCollapsed={false}
+>
+{`# Basic retrieval
+walrus read <blob-id>
+
+# Save with specific filename
+walrus read <blob-id> -o restored-file.pdf
+
+# Read with progress bar
+walrus read <blob-id> --progress -o large-file.zip
+
+# Read to stdout (for piping)
+walrus read <blob-id> --stdout | grep "search-term"
+
+# Verify integrity
+walrus read <blob-id> --verify
+
+# Read metadata only
+walrus read <blob-id> --metadata-only
+
+# Example output:
+Reading blob: 2g4h5j6k8l9m0n2p3q4r5s6t7u8v9w0x1y2z3a4b5c6d
+Downloading... 100% [==============================] 1.2MB/1.2MB
+
+Success! Saved to: restored-file.pdf
+Metadata: {"type":"config","version":"1.0"}
+Verified: ✓ Integrity check passed`}
+</CollapsibleCodeBlock>
+
+### Blob Management
+
+<CollapsibleCodeBlock
+  title="Manage Stored Blobs"
+  description="List, check status, and manage your stored data"
+  language="bash"
+  defaultCollapsed={false}
+>
+{`# List all your stored blobs
+walrus list
+
+# List with details
+walrus list --detailed
+
+# Filter by metadata
+walrus list --filter 'type=config'
+
+# Check blob status
+walrus blob-status <blob-id>
+
+# Check multiple blobs
+walrus blob-status <blob-id-1> <blob-id-2> <blob-id-3>
+
+# Extend storage duration
+walrus extend <blob-id> --epochs 20
+
+# Delete a blob (if deletable)
+walrus delete <blob-id>
+
+# Example list output:
+Your stored blobs:
+
+BLOB ID                                          SIZE      EPOCHS  EXPIRES    STATUS
+2g4h5j6k8l9m0n2p3q4r5s6t7u8v9w0x1y2z3a4b5c6d   1.2 MB    30      2025-02-25 Available
+3h5i6j7k8l9m0n2p3q4r5s6t7u8v9w0x1y2z3a4b5c6d   540 KB    10      2025-01-30 Available
+4i6j7k8l9m0n2p3q4r5s6t7u8v9w0x1y2z3a4b5c6d     2.3 MB    5       2025-01-28 Expiring
+
+Total: 3 blobs, 4.04 MB`}
+</CollapsibleCodeBlock>
+
+## Advanced Usage
+
+### Batch Operations
+
+<CollapsibleCodeBlock
+  title="Batch File Operations"
+  description="Process multiple files efficiently with batch commands"
+  language="bash"
+  defaultCollapsed={false}
+>
+{`# Store all files matching pattern
+walrus store *.json --epochs 30
+
+# Store with manifest generation
+walrus store ./dataset/* --generate-manifest manifest.json
+
+# Batch download from manifest
+walrus read-manifest manifest.json --output-dir ./restored
+
+# Example manifest format:
+{
+  "version": "1.0",
+  "created": "2025-01-25T10:30:00Z",
+  "files": [
+    {
+      "name": "file1.json",
+      "blob_id": "2g4h5j6k8l9m0n2p3q4r5s6t7u8v9w0x1y2z3a4b5c6d",
+      "size": 1024,
+      "hash": "sha256:..."
+    },
+    {
+      "name": "file2.json",
+      "blob_id": "3h5i6j7k8l9m0n2p3q4r5s6t7u8v9w0x1y2z3a4b5c6d",
+      "size": 2048,
+      "hash": "sha256:..."
+    }
+  ]
+}
+
+# Process files in parallel
+walrus store ./data/*.csv --parallel 4 --epochs 50
+
+# Batch operations with confirmation
+walrus store ./important/* --epochs 100 --confirm
+
+# Create and execute batch script
+cat > batch-upload.txt << EOF
+store file1.txt --epochs 10
+store file2.pdf --epochs 30
+store file3.zip --epochs 50
+EOF
+
+walrus batch < batch-upload.txt`}
+</CollapsibleCodeBlock>
+
+### Scripting and Automation
+
+<CollapsibleCodeBlock
+  title="Automation Scripts"
+  description="Integrate Walrus CLI into your automation workflows"
+  language="bash"
+  defaultCollapsed={false}
+>
+{`#!/bin/bash
+# backup-to-walrus.sh - Automated backup script
+
+set -e
+
+# Configuration
+BACKUP_DIR="/var/backups"
+EPOCHS=90
+MANIFEST_FILE="$HOME/.walrus/backup-manifest.json"
+LOG_FILE="/var/log/walrus-backup.log"
+
+# Function to log messages
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+}
+
+# Create backup archive
+log "Creating backup archive..."
+BACKUP_FILE="backup-$(date +%Y%m%d-%H%M%S).tar.gz"
+tar -czf "/tmp/$BACKUP_FILE" -C "$BACKUP_DIR" .
+
+# Calculate hash for verification
+HASH=$(sha256sum "/tmp/$BACKUP_FILE" | cut -d' ' -f1)
+
+# Upload to Walrus
+log "Uploading to Walrus..."
+BLOB_ID=$(walrus store "/tmp/$BACKUP_FILE" \
+    --epochs $EPOCHS \
+    --metadata "{\"type\":\"backup\",\"date\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"hash\":\"$HASH\"}" \
+    --json | jq -r '.blob_id')
+
+if [ -z "$BLOB_ID" ]; then
+    log "ERROR: Upload failed"
+    exit 1
+fi
+
+log "Successfully uploaded: $BLOB_ID"
+
+# Update manifest
+jq ". + [{
+    \"date\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+    \"blob_id\": \"$BLOB_ID\",
+    \"size\": $(stat -c%s "/tmp/$BACKUP_FILE"),
+    \"hash\": \"$HASH\",
+    \"expires\": \"$(date -u -d "+$EPOCHS days" +%Y-%m-%dT%H:%M:%SZ)\"
+}]" "$MANIFEST_FILE" > "$MANIFEST_FILE.tmp" && mv "$MANIFEST_FILE.tmp" "$MANIFEST_FILE"
+
+# Cleanup
+rm -f "/tmp/$BACKUP_FILE"
+
+# Prune old backups (keep last 10)
+BACKUP_COUNT=$(jq '. | length' "$MANIFEST_FILE")
+if [ "$BACKUP_COUNT" -gt 10 ]; then
+    jq '.[1:]' "$MANIFEST_FILE" > "$MANIFEST_FILE.tmp" && mv "$MANIFEST_FILE.tmp" "$MANIFEST_FILE"
+fi
+
+log "Backup complete"
+
+# Send notification (optional)
+# curl -X POST https://api.pushover.net/1/messages.json \
+#     -d "token=YOUR_APP_TOKEN" \
+#     -d "user=YOUR_USER_KEY" \
+#     -d "message=Walrus backup completed: $BLOB_ID"`}
+</CollapsibleCodeBlock>
+
+### Integration Examples
+
+<CollapsibleCodeBlock
+  title="CI/CD Integration"
+  description="Use Walrus CLI in continuous integration pipelines"
+  language="yaml"
+  defaultCollapsed={true}
+>
+{`# GitHub Actions example
+name: Deploy to Walrus
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Walrus CLI
+      run: |
+        wget https://github.com/MystenLabs/walrus-sites/releases/latest/download/walrus-x86_64-unknown-linux-gnu
+        chmod +x walrus-x86_64-unknown-linux-gnu
+        sudo mv walrus-x86_64-unknown-linux-gnu /usr/local/bin/walrus
+        walrus --version
+    
+    - name: Configure Walrus
+      env:
+        WALRUS_PRIVATE_KEY: \${{ secrets.WALRUS_PRIVATE_KEY }}
+      run: |
+        mkdir -p ~/.walrus
+        echo "\${{ secrets.WALRUS_CONFIG }}" > ~/.walrus/config.yaml
+        echo "$WALRUS_PRIVATE_KEY" > ~/.walrus/wallet.key
+        chmod 600 ~/.walrus/wallet.key
+    
+    - name: Build artifacts
+      run: |
+        npm ci
+        npm run build
+        tar -czf dist.tar.gz dist/
+    
+    - name: Upload to Walrus
+      id: upload
+      run: |
+        BLOB_ID=$(walrus store dist.tar.gz \
+          --epochs 90 \
+          --metadata '{"version":"\${{ github.sha }}","branch":"\${{ github.ref_name }}"}' \
+          --json | jq -r '.blob_id')
+        
+        echo "blob_id=$BLOB_ID" >> $GITHUB_OUTPUT
+        echo "Uploaded to Walrus: $BLOB_ID"
+    
+    - name: Update deployment record
+      run: |
+        echo "{
+          \"version\": \"\${{ github.sha }}\",
+          \"blob_id\": \"\${{ steps.upload.outputs.blob_id }}\",
+          \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+          \"download_url\": \"https://aggregator.walrus-testnet.walrus.space/v1/\${{ steps.upload.outputs.blob_id }}\"
+        }" > deployment.json
+        
+    - name: Create release asset
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: \${{ github.event.release.upload_url }}
+        asset_path: deployment.json
+        asset_name: walrus-deployment.json
+        asset_content_type: application/json`}
+</CollapsibleCodeBlock>
+
+## Configuration Reference
+
+### Config File Structure
+
+<CollapsibleCodeBlock
+  title="Complete Configuration Reference"
+  description="All available configuration options for Walrus CLI"
+  language="yaml"
+  defaultCollapsed={true}
+>
+{`# ~/.walrus/config.yaml
+
+# Network configuration
+network: testnet  # or mainnet
+
+# SUI blockchain settings
+sui_config:
+  rpc_url: https://fullnode.testnet.sui.io:443
+  wallet_path: ~/.sui/sui_config/client.yaml
+  gas_budget: 100000000  # Default gas budget
+  
+# Walrus network settings
+walrus_config:
+  publisher_url: https://publisher.walrus-testnet.walrus.space
+  aggregator_url: https://aggregator.walrus-testnet.walrus.space
+  system_object_id: "0x98ebc47370603fe81d9e15491b2f1443d619d1dab720d586e429ed233e1255c1"
+  staking_pool_id: "0x20266a17b4f1a216727f3eef5772f8d486a9e3b5e319af80a5b75809c035561d"
+
+# Storage defaults
+storage:
+  default_epochs: 5
+  max_file_size: 104857600  # 100MB
+  compression_enabled: true
+  compression_threshold: 1024  # Compress files larger than 1KB
+  
+# CLI behavior
+cli:
+  confirm_expensive_ops: true  # Confirm operations costing > 10 WAL
+  show_progress: true
+  output_format: text  # text, json, or yaml
+  color_output: true
+  
+# Cache settings
+cache:
+  enabled: true
+  directory: ~/.walrus/cache
+  max_size: 1073741824  # 1GB
+  ttl: 86400  # 24 hours
+  
+# Advanced settings
+advanced:
+  parallel_uploads: 4
+  retry_attempts: 3
+  retry_delay: 1000  # milliseconds
+  connection_timeout: 30000  # milliseconds
+  chunk_size: 5242880  # 5MB
+  
+# Logging
+logging:
+  level: info  # debug, info, warn, error
+  file: ~/.walrus/walrus.log
+  max_size: 10485760  # 10MB
+  max_files: 5`}
+</CollapsibleCodeBlock>
+
+### Environment Variables
+
+<CollapsibleCodeBlock
+  title="Environment Variable Configuration"
+  description="Override configuration using environment variables"
+  language="bash"
+  defaultCollapsed={true}
+>
+{`# Network selection
+export WALRUS_NETWORK=testnet
+
+# API endpoints
+export WALRUS_PUBLISHER_URL=https://publisher.walrus-testnet.walrus.space
+export WALRUS_AGGREGATOR_URL=https://aggregator.walrus-testnet.walrus.space
+
+# SUI configuration
+export SUI_RPC_URL=https://fullnode.testnet.sui.io:443
+export SUI_WALLET_PATH=~/.sui/sui_config/client.yaml
+
+# Storage defaults
+export WALRUS_DEFAULT_EPOCHS=30
+export WALRUS_COMPRESSION_ENABLED=true
+
+# CLI behavior
+export WALRUS_OUTPUT_FORMAT=json
+export WALRUS_NO_COLOR=false
+export WALRUS_QUIET=false
+
+# Debug settings
+export WALRUS_DEBUG=true
+export WALRUS_LOG_LEVEL=debug
+
+# Performance tuning
+export WALRUS_PARALLEL_UPLOADS=8
+export WALRUS_CHUNK_SIZE=10485760  # 10MB
+
+# Use in scripts
+WALRUS_QUIET=true walrus store data.json --epochs 10
+
+# Override config file
+WALRUS_CONFIG=~/custom-walrus.yaml walrus list`}
+</CollapsibleCodeBlock>
+
+## Advanced CLI Features
+
+### JSON Output Mode
+
+<CollapsibleCodeBlock
+  title="JSON Output for Scripting"
+  description="Parse CLI output programmatically"
+  language="bash"
+  defaultCollapsed={false}
+>
+{`# Store with JSON output
+walrus store file.txt --json | jq '.'
+{
+  "status": "success",
+  "blob_id": "2g4h5j6k8l9m0n2p3q4r5s6t7u8v9w0x1y2z3a4b5c6d",
+  "size": 1024,
+  "epochs": 5,
+  "cost": {
+    "storage_cost": "1000000",
+    "write_fee": "100000",
+    "total_wal": "0.11"
+  },
+  "transaction": "0xabc123...",
+  "timestamp": "2025-01-25T10:30:00Z"
+}
+
+# Extract specific fields
+BLOB_ID=$(walrus store file.txt --json | jq -r '.blob_id')
+
+# List with JSON output
+walrus list --json | jq '.blobs[] | select(.size > 1048576)'
+
+# Blob status as JSON
+walrus blob-status $BLOB_ID --json | jq '.availability'
+
+# Error handling with JSON
+if ! RESULT=$(walrus store large-file.bin --json 2>&1); then
+    ERROR=$(echo "$RESULT" | jq -r '.error // "Unknown error"')
+    echo "Upload failed: $ERROR"
+    exit 1
+fi`}
+</CollapsibleCodeBlock>
+
+### Performance Tuning
+
+<CollapsibleCodeBlock
+  title="Optimize CLI Performance"
+  description="Tips for maximizing upload and download speeds"
+  language="bash"
+  defaultCollapsed={true}
+>
+{`# Parallel uploads for multiple files
+walrus store *.jpg --parallel 8 --epochs 30
+
+# Chunked upload for large files
+walrus store huge-file.zip --chunk-size 10MB --progress
+
+# Compression control
+walrus store data.json --compress  # Force compression
+walrus store image.jpg --no-compress  # Skip compression
+
+# Network optimization
+walrus store file.bin \
+  --timeout 60s \
+  --retry 5 \
+  --retry-delay 2s
+
+# Memory-efficient streaming
+walrus read $BLOB_ID --stream | process-stream
+
+# Benchmark mode
+walrus benchmark --file test.bin --size 10MB
+# Output:
+# Upload speed: 5.2 MB/s
+# Download speed: 12.8 MB/s
+# Compression ratio: 68%
+# Optimal chunk size: 8MB
+
+# Cache management
+walrus cache clear
+walrus cache stats
+# Cache size: 245 MB
+# Hit rate: 78%
+# Entries: 42`}
+</CollapsibleCodeBlock>
+
+## Troubleshooting
+
+### Common Issues
+
+<div className="card padding--md mt-4">
+  <h3><img src="/img/icons/error.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />Common CLI Issues</h3>
+  
+  **"Insufficient funds" error:**
+  ```bash
+  # Check balances
+  walrus wallet balance
+  sui client gas
+  
+  # Get more tokens
+  walrus get-wal --testnet --amount 1000
+  ```
+  
+  **"Connection timeout" error:**
+  ```bash
+  # Increase timeout
+  walrus store file.bin --timeout 120s
+  
+  # Use alternative endpoint
+  WALRUS_PUBLISHER_URL=https://wal-publisher-testnet.staketab.org walrus store file.bin
+  ```
+  
+  **"File too large" error:**
+  ```bash
+  # Check file size limit
+  walrus config show | grep max_file_size
+  
+  # Split large file
+  split -b 50M large-file.zip part-
+  walrus store part-* --epochs 30
+  ```
+</div>
+
+### Debug Mode
+
+<CollapsibleCodeBlock
+  title="Enable Debug Output"
+  description="Troubleshoot issues with verbose logging"
+  language="bash"
+  defaultCollapsed={true}
+>
+{`# Enable debug logging
+export WALRUS_DEBUG=true
+export WALRUS_LOG_LEVEL=debug
+
+# Run with debug output
+walrus store file.txt --debug
+
+# Debug output includes:
+# - HTTP request/response details
+# - Transaction information
+# - Timing metrics
+# - Error stack traces
+
+# Example debug output:
+[DEBUG] Loading config from: ~/.walrus/config.yaml
+[DEBUG] Active wallet address: 0x123...
+[DEBUG] Preparing upload for: file.txt (1024 bytes)
+[DEBUG] POST https://publisher.walrus-testnet.walrus.space/v1/store
+[DEBUG] Headers: {"Content-Type": "multipart/form-data"}
+[DEBUG] Response: 200 OK
+[DEBUG] Transaction digest: 0xabc...
+[DEBUG] Storage successful: 2g4h5j6k8l9m0n2p3q4r5s6t7u8v9w0x1y2z3a4b5c6d
+
+# Save debug log
+walrus store file.txt --debug 2>&1 | tee debug.log
+
+# Network trace
+walrus store file.txt --trace
+# Shows detailed network timing`}
+</CollapsibleCodeBlock>
+
+## CLI vs SDK vs HTTP API
+
+<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+  <Card>
+    <CardHeader>
+      <CardTitle>CLI Best For</CardTitle>
+      <CardDescription>
+        • Quick testing<br/>
+        • Shell scripts<br/>
+        • CI/CD pipelines<br/>
+        • One-off operations<br/>
+        • System administration
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>SDK Best For</CardTitle>
+      <CardDescription>
+        • Application integration<br/>
+        • Complex error handling<br/>
+        • Type safety<br/>
+        • Performance critical<br/>
+        • User interfaces
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>HTTP API Best For</CardTitle>
+      <CardDescription>
+        • Custom implementations<br/>
+        • Non-JS languages<br/>
+        • Microservices<br/>
+        • Direct control<br/>
+        • Proxy/gateway services
+      </CardDescription>
+    </CardHeader>
+  </Card>
+</div>
+
+## Security Best Practices
+
+<div className="card padding--md mt-4">
+  <h3><img src="/img/icons/security.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />CLI Security</h3>
+  
+  **Wallet Security:**
+  - Never share your recovery phrase
+  - Use hardware wallets for mainnet
+  - Regularly backup wallet configuration
+  - Use separate wallets for testing
+  
+  **Data Security:**
+  - Always encrypt sensitive data before uploading
+  - Verify blob integrity after download
+  - Use secure channels for blob ID sharing
+  - Implement access controls at application level
+  
+  **Operational Security:**
+  - Restrict CLI access on shared systems
+  - Use environment variables for sensitive config
+  - Audit CLI operations regularly
+  - Monitor unexpected storage costs
+</div>
+
+## Next Steps
+
+- Explore [Example Use Cases](/docs/sui-integration/storage/walrus-examples) for real-world implementations
+- Review the [Architecture Overview](/docs/sui-integration/storage/walrus-architecture) for system understanding
+- Try the [TypeScript SDK](/docs/sui-integration/storage/walrus-sdk) for application integration
+- Use the [HTTP API](/docs/sui-integration/storage/walrus-http-api) for custom implementations

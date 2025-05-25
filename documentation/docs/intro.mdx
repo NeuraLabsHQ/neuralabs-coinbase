@@ -1,0 +1,142 @@
+---
+id: intro
+title: Introduction
+sidebar_position: 1
+---
+
+import { Card, CardHeader, CardTitle, CardDescription } from '@site/src/components/Card';
+import { Features, Feature } from '@site/src/components/Features';
+
+# Welcome to NeuraLabs Documentation
+
+NeuraLabs is a decentralized AI workflow platform built on the SUI blockchain, designed to democratize access to AI capabilities through a visual workflow builder and NFT-based access control system.
+
+## What is NeuraLabs?
+
+NeuraLabs combines the power of:
+
+<Features>
+  <Feature 
+    icon="/img/icons/ai-workflow.svg" 
+    title="Decentralized AI Workflows" 
+    description="Create and share AI-powered workflows without centralized control"
+  />
+  <Feature 
+    icon="/img/icons/frontend.svg" 
+    title="Visual Flow Builder" 
+    description="Intuitive drag-and-drop interface for building complex AI pipelines"
+  />
+  <Feature 
+    icon="/img/icons/blockchain.svg" 
+    title="NFT Access Control" 
+    description="Secure and tradeable access to workflows through blockchain technology"
+  />
+  <Feature 
+    icon="/img/icons/security.svg" 
+    title="Zero-Knowledge Authentication" 
+    description="Privacy-preserving authentication using zkLogin"
+  />
+  <Feature 
+    icon="/img/icons/database.svg" 
+    title="Decentralized Storage" 
+    description="Leveraging Walrus for distributed data storage"
+  />
+  <Feature 
+    icon="/img/icons/ai-workflow.svg" 
+    title="Multi-Model Support" 
+    description="Integration with various AI providers including Anthropic, DeepSeek, and AWS Bedrock"
+  />
+</Features>
+
+## Documentation Overview
+
+This documentation is organized into two main sections:
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+  <Card>
+    <CardHeader>
+      <CardTitle><img src="/img/icons/docs.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} /> Theoretical Concepts</CardTitle>
+      <CardDescription>
+        Learn about the core concepts, architecture, and design principles behind NeuraLabs:
+        - Platform Overview
+        - System Architecture
+        - Blockchain Integration
+        - Security Model
+        - AI Workflow Design
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle><img src="/img/icons/code.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} /> Implementation Guides</CardTitle>
+      <CardDescription>
+        Step-by-step guides for working with each component:
+        1. Database Setup
+        2. Frontend Development
+        3. Backend Services
+        4. HPC Execution Node
+        5. Smart Contracts
+        6. Prover Service
+      </CardDescription>
+    </CardHeader>
+  </Card>
+</div>
+
+## Quick Links
+
+- [Getting Started Guide](./theoretical/getting-started)
+- [Architecture Overview](./theoretical/architecture)
+- [Frontend Setup](./implementation/02-frontend/setup)
+- [Smart Contract Deployment](./implementation/05-smart-contracts/deployment)
+
+## Prerequisites
+
+Before diving into the implementation guides, ensure you have:
+
+```bash
+# Required tools
+- Node.js 18+ and npm/yarn
+- Python 3.12 with conda
+- SUI CLI tools
+- Docker and Docker Compose
+- Basic understanding of blockchain concepts
+```
+
+## Getting Started
+
+### Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/neuralabs/neuralabs-sui
+cd neuralabs-sui
+
+# Install dependencies
+npm install
+cd frontend && npm install
+cd ../neuralabs-backend && pip install -r requirements.txt
+
+# Start services
+docker-compose up -d
+```
+
+For detailed setup instructions, follow our [Getting Started Guide](./theoretical/getting-started).
+
+## Community and Support
+
+<div className="flex gap-4 mt-8">
+  <a href="https://github.com/neuralabs/neuralabs-sui" className="button button--primary">
+    GitHub Repository
+  </a>
+  <a href="#" className="button button--secondary">
+    Discord Community
+  </a>
+  <a href="#" className="button button--secondary">
+    Developer Forum
+  </a>
+</div>
+
+---
+
+Ready to get started? Head over to our [Getting Started Guide](./theoretical/getting-started) or jump directly into the [Implementation Guides](./implementation/01-database/setup).

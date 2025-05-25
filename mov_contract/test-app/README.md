@@ -1,14 +1,24 @@
 # NeuraLabs Test App
 
-A React-based test application for the NeuraLabs NFT smart contract with Seal encryption and Walrus storage integration.
+A React-based test application for the NeuraLabs NFT smart contract with Seal encryption and Walrus storage integration using the official Walrus SDK.
 
 ## Features
 
 - **NFT Management**: Create and manage AI workflow NFTs with 6 access levels
 - **Access Control**: Grant and revoke access to different users
 - **Seal Encryption**: Encrypt/decrypt files using threshold encryption
-- **Walrus Storage**: Store encrypted files on decentralized storage
+- **Walrus Storage**: Store encrypted files on decentralized storage using the official SDK
 - **Wallet Integration**: Connect with Sui wallets for on-chain interactions
+
+## What's New: Walrus SDK Integration
+
+This test app now uses the official `@mysten/walrus` SDK instead of HTTP API calls, providing:
+
+- **Type-safe API**: Full TypeScript support with proper types
+- **Automatic retries**: Built-in retry logic for failed operations
+- **Progress tracking**: Monitor upload/download progress for large files
+- **Cost estimation**: See storage costs before uploading
+- **Native SUI integration**: Seamless integration with SUI wallet for signing
 
 ## Prerequisites
 
@@ -29,6 +39,65 @@ npm install
 cp .env.example .env
 # Edit .env with your contract addresses
 ```
+
+### Understanding the Registry ID
+
+The **Registry ID** is a critical component of the NeuraLabs contract system:
+
+- **What it is**: A shared object on Sui blockchain that acts as a global permission database
+- **Purpose**: Stores all NFT access permissions in a centralized registry
+- **Type**: `AccessRegistry` - a shared object that anyone can read but only NFT owners can modify
+- **Structure**: Maps NFT IDs to user permissions (NFT ID → User Address → Access Level)
+
+```
+AccessRegistry (Shared Object)
+├── ID: 0xb01b33f8...  <-- This is your REGISTRY_ID
+└── permissions: Table
+    ├── NFT_ID_1 → Table
+    │   ├── User_A → Level 6 (owner)
+    │   ├── User_B → Level 4 (can download)
+    │   └── User_C → Level 1 (can use)
+    └── NFT_ID_2 → Table
+        ├── User_D → Level 6 (owner)
+        └── User_E → Level 2 (can resell)
+```
+
+#### How to get your Registry ID:
+
+1. **After deploying the contract**, you must initialize the registry:
+```bash
+sui client call \
+  --package $PACKAGE_ID \
+  --module access \
+  --function init_registry \
+  --gas-budget 10000000
+```
+
+2. **Look for the created object** in the transaction output:
+```
+Created Objects:
+  ┌──
+  │ ObjectID: 0xb01b33f8038a78532a946b3d9093616cf050f23f...  <-- This is your Registry ID
+  │ Owner: Shared
+  │ ObjectType: 0x31717ba3482c33f3bfe0bab05b3f509053a206b0::access::AccessRegistry
+  └──
+```
+
+3. **The Registry ID is**:
+   - A shared object (owned by no one, accessible by everyone)
+   - Required for ALL access control operations
+   - The same for all NFTs in your deployment
+   - Must be passed to functions that check or modify permissions
+
+### What values to change in .env:
+
+| Variable | Must Change? | Description |
+|----------|--------------|-------------|
+| `REACT_APP_PACKAGE_ID` | ✅ YES | Your deployed contract address |
+| `REACT_APP_REGISTRY_ID` | ✅ YES | Your AccessRegistry object ID |
+| All Walrus URLs | ❌ NO | Official testnet endpoints |
+| Walrus System Objects | ❌ NO | Official testnet objects |
+| Other settings | ❌ NO | Good defaults |
 
 3. Run the app:
 ```bash
@@ -59,11 +128,13 @@ Displays contract deployment information and configuration details.
 - Decrypt files (requires level 4+ access)
 - Support for 1-of-2 and 2-of-2 threshold
 
-### WalrusStorage
-- Upload encrypted files to Walrus
-- Link files to NFTs
-- Track stored files and metadata
-- Generate Walrus blob IDs
+### WalrusStorage (SDK Version)
+- Upload encrypted files to Walrus using the official SDK
+- Link files to NFTs with on-chain metadata
+- Track stored files, costs, and storage duration
+- Download files directly using blob IDs
+- Real-time status of SDK initialization
+- Support for configurable storage epochs
 
 ## Access Levels
 
@@ -115,10 +186,38 @@ src/
 │   ├── NFTManager.jsx
 │   ├── AccessControl.jsx
 │   ├── SealEncryption.jsx
-│   └── WalrusStorage.jsx
+│   ├── WalrusStorage.jsx    # SDK version (new)
+│   └── WalrusStorage.old.jsx # HTTP API version (legacy)
 ├── App.jsx          # Main app component
 ├── main.jsx         # Entry point
 └── index.css        # Styles
+```
+
+### Walrus SDK Usage
+
+The new WalrusStorage component uses the official `@mysten/walrus` SDK:
+
+```javascript
+import { WalrusClient } from '@mysten/walrus'
+
+// Initialize client
+const walrusClient = new WalrusClient({
+  network: 'testnet',
+  suiClient: suiClient
+})
+
+// Upload file
+const result = await walrusClient.writeBlob({
+  blob: fileData,
+  deletable: false,
+  epochs: 5,
+  signer: keypair
+})
+
+// Download file
+const data = await walrusClient.readBlob({ 
+  blobId: 'your-blob-id' 
+})
 ```
 
 ### Adding Features

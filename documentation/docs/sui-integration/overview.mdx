@@ -1,0 +1,234 @@
+---
+id: sui-integration-overview
+title: SUI Integration Overview
+sidebar_label: Overview
+sidebar_position: 0
+---
+
+import { Card, CardHeader, CardTitle, CardDescription } from '@site/src/components/Card';
+
+# <img src="/img/icons/blockchain.svg" width="32" height="32" style={{ verticalAlign: 'middle', marginRight: '12px' }} />SUI Integration
+
+Complete integration guide for SUI blockchain technologies in the NeuraLabs platform, including smart contracts, zkLogin authentication, Seal threshold encryption, and Walrus decentralized storage.
+
+## Overview
+
+The NeuraLabs platform leverages SUI's advanced blockchain technologies to create a secure, decentralized AI workflow platform. This integration encompasses multiple components working together to provide:
+
+- **NFT-based access control** through smart contracts
+- **Passwordless authentication** via zkLogin
+- **Threshold encryption** using Seal
+- **Decentralized storage** with Walrus
+- **Zero-knowledge proofs** through custom prover service
+
+## Integration Components
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/prover.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} /> zkLogin Authentication
+      </CardTitle>
+      <CardDescription>
+        Zero-knowledge authentication with salt server and custom prover service
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/terminal.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} /> Prover Service
+      </CardTitle>
+      <CardDescription>
+        Custom prover service setup for testnet zkLogin functionality
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/blockchain.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} /> Smart Contracts
+      </CardTitle>
+      <CardDescription>
+        NFT contracts with 6-level access control and Seal integration
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/security.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} /> Seal Encryption
+      </CardTitle>
+      <CardDescription>
+        Threshold encryption for secure data management and access control
+      </CardDescription>
+    </CardHeader>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/database.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} /> Walrus Storage
+      </CardTitle>
+      <CardDescription>
+        Decentralized blob storage for encrypted AI workflow data
+      </CardDescription>
+    </CardHeader>
+  </Card>
+</div>
+
+## Architecture Overview
+
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        UI[React Frontend]
+        WC[Wallet Connect]
+        ZK[zkLogin Client]
+    end
+    
+    subgraph "Authentication Layer"
+        PS[Prover Service]
+        SS[Salt Server]
+        JWT[JWT Tokens]
+    end
+    
+    subgraph "SUI Blockchain"
+        NFT[NFT Contracts]
+        AC[Access Control]
+        SA[seal_approve Functions]
+    end
+    
+    subgraph "Encryption Layer"
+        SEAL[Seal Infrastructure]
+        KS1[Key Server 1]
+        KS2[Key Server 2]
+        TE[Threshold Encryption]
+    end
+    
+    subgraph "Storage Layer"
+        WAL[Walrus Network]
+        ED[Encrypted Data]
+        META[Metadata Storage]
+    end
+    
+    UI --> WC
+    UI --> ZK
+    ZK --> PS
+    ZK --> SS
+    ZK --> JWT
+    
+    UI --> NFT
+    NFT --> AC
+    AC --> SA
+    
+    UI --> SEAL
+    SEAL --> KS1
+    SEAL --> KS2
+    SEAL --> TE
+    
+    UI --> WAL
+    WAL --> ED
+    NFT --> META
+```
+
+## Implementation Sequence
+
+Follow this recommended order for SUI integration:
+
+### Phase 1: Foundation
+1. **[zkLogin Setup](./authentication/zklogin)** - Configure authentication infrastructure
+2. **[Prover Service](./authentication/prover-service)** - Deploy custom prover for testnet
+
+### Phase 2: Core Integration
+3. **[Smart Contracts](./smart-contracts/smart-contracts)** - Deploy NFT contracts with access control
+4. **[Seal Integration](./encryption/seal)** - Configure threshold encryption
+
+### Phase 3: Storage & Optimization
+5. **[Walrus Integration](./storage/walrus)** - Set up decentralized storage
+
+## Key Features
+
+### 🔐 Six-Level Access Control
+- **Level 1-3**: Basic usage, resale, and replication rights
+- **Level 4+**: File decryption capabilities (minimum for Seal)
+- **Level 5**: Data modification rights
+- **Level 6**: Absolute ownership and admin controls
+
+### 🔑 Threshold Encryption
+- **1-of-2 threshold** for development and testing
+- **2-of-3 threshold** recommended for production
+- **Identity-based encryption** with automatic key derivation
+- **Session key management** for seamless user experience
+
+### 📡 Decentralized Storage
+- **Content-addressed storage** on Walrus network
+- **Encrypted blob management** with access control
+- **Metadata storage** on SUI blockchain
+- **Automatic redundancy** and data integrity
+
+## Prerequisites
+
+Before starting the SUI integration, ensure you have:
+
+<div className="card padding--md mt-4">
+  <h3><img src="/img/icons/settings.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />Required Tools</h3>
+  <ul>
+    <li>SUI CLI installed and configured</li>
+    <li>Node.js 18+ for frontend integration</li>
+    <li>Python 3.12 for backend services</li>
+    <li>Docker for prover service deployment</li>
+    <li>Testnet SUI tokens for gas fees</li>
+  </ul>
+</div>
+
+<div className="card padding--md mt-4">
+  <h3><img src="/img/icons/network.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />Network Configuration</h3>
+  <ul>
+    <li>SUI Testnet access</li>
+    <li>Walrus Testnet endpoints</li>
+    <li>Mysten Labs Seal key servers</li>
+    <li>OAuth provider credentials (Google, Facebook, etc.)</li>
+  </ul>
+</div>
+
+## Security Considerations
+
+<div className="card padding--md mt-4" style={{ borderLeft: '4px solid #ff6b6b' }}>
+  <h3><img src="/img/icons/warning.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />Important Security Notes</h3>
+  <ul>
+    <li><strong>Testnet Only</strong>: This guide is for testnet deployment. Production requires additional security measures.</li>
+    <li><strong>Key Management</strong>: Never commit private keys or mnemonic phrases to version control.</li>
+    <li><strong>Access Control</strong>: Verify access control logic thoroughly before deployment.</li>
+    <li><strong>Gas Management</strong>: Set appropriate gas limits to prevent excessive fees.</li>
+  </ul>
+</div>
+
+## Performance Expectations
+
+| Operation | Expected Time | Throughput |
+|-----------|---------------|------------|
+| NFT Creation | < 2 seconds | 10-20 TPS |
+| Access Grant/Revoke | < 1 second | 20-30 TPS |
+| File Encryption | Variable | 10+ MB/s |
+| File Decryption | Variable | 15+ MB/s |
+| Walrus Upload | Variable | 5+ MB/s |
+
+## Next Steps
+
+1. **Start with [zkLogin Setup](./authentication/zklogin)** to configure authentication
+2. **Deploy [Prover Service](./authentication/prover-service)** for testnet functionality
+3. **Deploy [Smart Contracts](./smart-contracts/smart-contracts)** for core NFT functionality
+4. **Configure [Seal](./encryption/seal)** for threshold encryption
+5. **Integrate [Walrus](./storage/walrus)** for decentralized storage
+
+## Support & Resources
+
+- **SUI Documentation**: https://docs.sui.io/
+- **Seal Documentation**: https://github.com/MystenLabs/seal
+- **Walrus Documentation**: https://docs.walrus.space/
+- **NeuraLabs GitHub**: https://github.com/neuralabs/neuralabs-sui
+- **Discord Support**: https://discord.gg/neuralabs
