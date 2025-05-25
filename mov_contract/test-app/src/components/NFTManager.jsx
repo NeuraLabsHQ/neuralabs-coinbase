@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useCurrentAccount, useSuiClient } from '@mysten/dapp-kit'
+import { useCurrentAccount, useSuiClient, useSignAndExecuteTransactionBlock } from '@mysten/dapp-kit'
 import { TransactionBlock } from '@mysten/sui.js/transactions'
 import toast from 'react-hot-toast'
 
@@ -10,12 +10,12 @@ import toast from 'react-hot-toast'
 function NFTManager({ config }) {
   const account = useCurrentAccount()
   const client = useSuiClient()
+  const { mutate: signAndExecuteTransactionBlock } = useSignAndExecuteTransactionBlock()
   
   const [isCreating, setIsCreating] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
-    accessLevel: 4
+    description: ''
   })
   
   const [myNFTs, setMyNFTs] = useState([])
@@ -36,47 +36,55 @@ function NFTManager({ config }) {
     try {
       const tx = new TransactionBlock()
       
-      // Call create_nft function
+      // Call mint_to_sender function
       tx.moveCall({
-        target: `${config.PACKAGE_ID}::nft::create_nft`,
+        target: `${config.PACKAGE_ID}::nft::mint_to_sender`,
         arguments: [
-          tx.object(config.COLLECTION_ID),
           tx.pure(formData.name),
           tx.pure(formData.description),
-          tx.pure(parseInt(formData.accessLevel)),
           tx.object('0x6') // Clock object
         ],
       })
 
       // Execute transaction
-      const result = await client.signAndExecuteTransactionBlock({
-        signer: account,
-        transactionBlock: tx,
-        options: {
-          showEffects: true,
-          showObjectChanges: true,
+      signAndExecuteTransactionBlock(
+        {
+          transactionBlock: tx,
+          options: {
+            showEffects: true,
+            showObjectChanges: true,
+          },
         },
-      })
+        {
+          onSuccess: (result) => {
+            console.log('NFT created:', result)
+            
+            // Extract NFT object ID from created objects
+            const createdNFT = result.objectChanges?.find(
+              change => change.type === 'created' && change.objectType.includes('NFT')
+            )
 
-      console.log('NFT created:', result)
-      
-      // Extract NFT object ID from created objects
-      const createdNFT = result.objectChanges?.find(
-        change => change.type === 'created' && change.objectType.includes('NFT')
+            toast.success('NFT created successfully!', { id: toastId })
+            
+            // Reset form
+            setFormData({ name: '', description: '' })
+            
+            // Reload NFTs
+            loadMyNFTs()
+            
+            setIsCreating(false)
+          },
+          onError: (error) => {
+            console.error('Error creating NFT:', error)
+            toast.error(`Failed to create NFT: ${error.message}`, { id: toastId })
+            setIsCreating(false)
+          }
+        }
       )
-
-      toast.success('NFT created successfully!', { id: toastId })
-      
-      // Reset form
-      setFormData({ name: '', description: '', accessLevel: 4 })
-      
-      // Reload NFTs
-      loadMyNFTs()
       
     } catch (error) {
       console.error('Error creating NFT:', error)
       toast.error(`Failed to create NFT: ${error.message}`, { id: toastId })
-    } finally {
       setIsCreating(false)
     }
   }
@@ -91,7 +99,7 @@ function NFTManager({ config }) {
       const objects = await client.getOwnedObjects({
         owner: account.address,
         filter: {
-          StructType: `${config.PACKAGE_ID}::nft::NFT`
+          StructType: `${config.PACKAGE_ID}::nft::NeuraLabsNFT`
         },
         options: {
           showType: true,
@@ -99,10 +107,18 @@ function NFTManager({ config }) {
         }
       })
 
-      const nfts = objects.data.map(obj => ({
-        id: obj.data.objectId,
-        ...obj.data.content.fields
-      }))
+      const nfts = objects.data.map(obj => {
+        const fields = obj.data?.content?.fields || {};
+        // Handle nested id structure
+        const id = fields.id?.id || fields.id || '';
+        return {
+          id: obj.data?.objectId || '',
+          name: fields.name || '',
+          description: fields.description || '',
+          creator: fields.creator || '',
+          created_at: fields.created_at || fields.creation_date || Date.now()
+        };
+      })
 
       setMyNFTs(nfts)
     } catch (error) {
@@ -157,25 +173,6 @@ function NFTManager({ config }) {
             />
           </div>
           
-          <div>
-            <label className="block text-sm font-medium mb-1">Access Level</label>
-            <select
-              value={formData.accessLevel}
-              onChange={(e) => setFormData({ ...formData, accessLevel: e.target.value })}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="1">Level 1 - USE_MODEL</option>
-              <option value="2">Level 2 - RESALE</option>
-              <option value="3">Level 3 - CREATE_REPLICA</option>
-              <option value="4">Level 4 - VIEW_DOWNLOAD (Can decrypt)</option>
-              <option value="5">Level 5 - EDIT_DATA</option>
-              <option value="6">Level 6 - ABSOLUTE_OWNERSHIP</option>
-            </select>
-            <p className="text-xs text-gray-500 mt-1">
-              Level 4 and above can decrypt files using Seal
-            </p>
-          </div>
-          
           <button
             type="submit"
             disabled={isCreating}
@@ -212,13 +209,10 @@ function NFTManager({ config }) {
                     <h4 className="font-medium">{nft.name}</h4>
                     <p className="text-sm text-gray-600 mt-1">{nft.description}</p>
                     <div className="flex items-center mt-2 space-x-4 text-xs text-gray-500">
-                      <span>Token ID: {nft.token_id}</span>
-                      <span>Created: {new Date(Number(nft.creation_date)).toLocaleDateString()}</span>
+                      <span>Creator: {typeof nft.creator === 'object' ? nft.creator.id || JSON.stringify(nft.creator) : nft.creator}</span>
+                      <span>Created: {new Date(Number(nft.created_at)).toLocaleDateString()}</span>
                     </div>
                   </div>
-                  <span className={`px-2 py-1 rounded text-xs font-medium access-level-${nft.level_of_ownership}`}>
-                    Level {nft.level_of_ownership}
-                  </span>
                 </div>
               </div>
             ))}
@@ -231,7 +225,7 @@ function NFTManager({ config }) {
         <h4 className="font-medium text-blue-900 mb-2">💡 Quick Tips</h4>
         <ul className="text-sm text-blue-800 space-y-1">
           <li>• NFTs represent AI workflows with encrypted data</li>
-          <li>• Level 4+ access allows decrypting files with Seal</li>
+          <li>• NFT ownership enables access to encrypted files via Seal</li>
           <li>• You can grant access to other users in the Access Control tab</li>
           <li>• Encrypted files are stored on Walrus</li>
         </ul>
