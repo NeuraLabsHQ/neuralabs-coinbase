@@ -21,7 +21,12 @@ function AccessControl({ config }) {
   
   const [myNFTs, setMyNFTs] = useState([])
   const [myAccessCaps, setMyAccessCaps] = useState([])
-  const [accessList, setAccessList] = useState([])
+  const [accessList, setAccessList] = useState([]) // Access I've granted to others
+  const [accessGrantedToMe, setAccessGrantedToMe] = useState([]) // Access others have granted to me
+  
+  // For checking access to specific NFTs
+  const [checkNFTId, setCheckNFTId] = useState('')
+  const [isCheckingAccess, setIsCheckingAccess] = useState(false)
 
   // Load user's NFTs
   const loadMyNFTs = async () => {
@@ -87,11 +92,113 @@ function AccessControl({ config }) {
     }
   }
 
+  // Check access level for a specific user and NFT using blockchain query
+  const checkAccessLevel = async (nftId, userAddress) => {
+    try {
+      // Call the smart contract's get_access_level function
+      const result = await client.devInspectTransactionBlock({
+        transactionBlock: (() => {
+          const tx = new Transaction()
+          tx.moveCall({
+            target: `${config.PACKAGE_ID}::access::get_access_level`,
+            arguments: [
+              tx.object(config.REGISTRY_ID),
+              tx.pure.id(nftId),
+              tx.pure.address(userAddress),
+            ],
+          })
+          return tx
+        })(),
+        sender: account.address,
+      })
+      
+      if (result.results?.[0]?.returnValues?.[0]) {
+        const accessLevel = parseInt(result.results[0].returnValues[0][0])
+        return accessLevel
+      }
+      
+      return 0
+    } catch (error) {
+      console.error('Error checking access level:', error)
+      return 0
+    }
+  }
+
+  // Load access data from localStorage (for persistence across sessions)
+  const loadStoredAccessData = () => {
+    try {
+      // Load access I've granted
+      const grantedAccess = localStorage.getItem(`granted_access_${account?.address}`)
+      if (grantedAccess) {
+        setAccessList(JSON.parse(grantedAccess))
+      }
+      
+      // Load access granted to me  
+      const receivedAccess = localStorage.getItem(`received_access_${account?.address}`)
+      if (receivedAccess) {
+        setAccessGrantedToMe(JSON.parse(receivedAccess))
+      }
+    } catch (error) {
+      console.error('Error loading stored access data:', error)
+    }
+  }
+
+  // Check if I have access to a specific NFT
+  const checkMyAccessToNFT = async () => {
+    if (!checkNFTId || !account) {
+      toast.error('Please enter an NFT ID')
+      return
+    }
+
+    setIsCheckingAccess(true)
+    const toastId = toast.loading('Checking access...')
+
+    try {
+      const accessLevel = await checkAccessLevel(checkNFTId, account.address)
+      
+      if (accessLevel > 0) {
+        // I have access! Add it to the list if not already there
+        const existingAccess = accessGrantedToMe.find(item => item.tokenId === checkNFTId)
+        
+        if (!existingAccess) {
+          const newAccessEntry = {
+            tokenId: checkNFTId,
+            nftName: `NFT ${String(checkNFTId).slice(0, 10)}...`,
+            level: accessLevel.toString(),
+            timestamp: new Date().toISOString(),
+            grantedBy: 'Unknown', // We can't easily determine who granted it
+            checkedManually: true
+          }
+          
+          const updatedList = [...accessGrantedToMe, newAccessEntry]
+          setAccessGrantedToMe(updatedList)
+          
+          // Store in localStorage
+          localStorage.setItem(`received_access_${account.address}`, JSON.stringify(updatedList))
+          
+          toast.success(`You have level ${accessLevel} access to this NFT!`, { id: toastId })
+        } else {
+          toast.success(`Access already known: Level ${accessLevel}`, { id: toastId })
+        }
+      } else {
+        toast.error('You do not have access to this NFT', { id: toastId })
+      }
+      
+      setCheckNFTId('')
+    } catch (error) {
+      console.error('Error checking access:', error)
+      toast.error(`Failed to check access: ${error.message}`, { id: toastId })
+    } finally {
+      setIsCheckingAccess(false)
+    }
+  }
+
   // Load data on mount
   React.useEffect(() => {
     if (account) {
       loadMyNFTs()
       loadMyAccessCaps()
+      loadStoredAccessData()
     }
   }, [account])
 
@@ -141,17 +248,31 @@ function AccessControl({ config }) {
           },
         },
         {
-          onSuccess: (result) => {
+          onSuccess: async (result) => {
             console.log('Access granted:', result)
             toast.success('Access granted successfully!', { id: toastId })
             
-            // Add to local list
-            setAccessList([...accessList, {
+            // Create access entry
+            const accessEntry = {
               tokenId: selectedNFT,
+              nftName: myNFTs.find(nft => nft.id === selectedNFT)?.name || 'Unknown NFT',
               user: userAddress,
               level: accessLevel,
               timestamp: new Date().toISOString()
-            }])
+            }
+            
+            // Add to local state
+            const newAccessList = [...accessList, accessEntry]
+            setAccessList(newAccessList)
+            
+            // Store access I've granted
+            localStorage.setItem(`granted_access_${account.address}`, JSON.stringify(newAccessList))
+            
+            // Reload AccessCaps to get fresh object references
+            // Add a small delay to ensure blockchain state is updated
+            setTimeout(async () => {
+              await loadMyAccessCaps()
+            }, 1000)
             
             // Reset form
             setUserAddress('')
@@ -198,8 +319,10 @@ function AccessControl({ config }) {
             console.log('AccessCap created:', result)
             toast.success('Access Capability created successfully!', { id: toastId })
             
-            // Reload AccessCaps
-            await loadMyAccessCaps()
+            // Reload AccessCaps with delay to ensure blockchain state is updated
+            setTimeout(async () => {
+              await loadMyAccessCaps()
+            }, 1000)
           },
           onError: (error) => {
             console.error('Error creating AccessCap:', error)
@@ -247,14 +370,25 @@ function AccessControl({ config }) {
           },
         },
         {
-          onSuccess: (result) => {
+          onSuccess: async (result) => {
             console.log('Access revoked:', result)
             toast.success('Access revoked successfully!', { id: toastId })
             
-            // Remove from local list
-            setAccessList(accessList.filter(
+            // Remove from local state
+            const updatedAccessList = accessList.filter(
               item => !(item.tokenId === tokenId && item.user === user)
-            ))
+            )
+            setAccessList(updatedAccessList)
+            
+            // Update localStorage
+            localStorage.setItem(`granted_access_${account.address}`, JSON.stringify(updatedAccessList))
+            
+            // Reload AccessCaps to get fresh object references
+            // Add a small delay to ensure blockchain state is updated
+            setTimeout(async () => {
+              await loadMyAccessCaps()
+            }, 1000)
+            
             setIsRevoking(false)
           },
           onError: (error) => {
@@ -284,7 +418,15 @@ function AccessControl({ config }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold mb-4">Access Control</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Access Control</h2>
+          <button
+            onClick={() => window.location.reload()}
+            className="text-sm text-gray-500 hover:text-gray-700 px-2 py-1 border rounded"
+          >
+            🔄 Clear Cache & Reload
+          </button>
+        </div>
         <p className="text-gray-600 mb-4">
           Grant or revoke access to your NFTs. Users with level 4+ can decrypt associated files.
         </p>
@@ -447,9 +589,17 @@ function AccessControl({ config }) {
         </form>
       </div>
 
-      {/* Access List */}
+      {/* Access I've Granted */}
       <div className="border rounded-lg p-6">
-        <h3 className="font-medium mb-4">Current Access Rights</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-medium">Access I've Granted to Others</h3>
+          <button
+            onClick={loadStoredAccessData}
+            className="text-sm text-blue-500 hover:text-blue-600 flex items-center"
+          >
+            🔄 Refresh
+          </button>
+        </div>
         
         {accessList.length === 0 ? (
           <p className="text-gray-500 text-center py-8">
@@ -462,7 +612,7 @@ function AccessControl({ config }) {
                 <div className="flex justify-between items-center">
                   <div>
                     <div className="flex items-center space-x-3">
-                      <span className="text-sm font-medium">Token #{item.tokenId}</span>
+                      <span className="text-sm font-medium">{item.nftName || `NFT ${String(item.tokenId).slice(0, 10)}...`}</span>
                       <span className={`px-2 py-1 rounded text-xs font-medium access-level-${item.level}`}>
                         Level {item.level} - {accessLevelInfo[item.level].name}
                       </span>
@@ -473,7 +623,10 @@ function AccessControl({ config }) {
                       )}
                     </div>
                     <p className="text-sm text-gray-600 mt-1">
-                      User: <code className="bg-gray-100 px-1 rounded">{item.user}</code>
+                      User: <code className="bg-gray-100 px-1 rounded">{String(item.user).slice(0, 10)}...{String(item.user).slice(-6)}</code>
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      NFT ID: <code className="bg-gray-100 px-1 rounded text-xs">{String(item.tokenId).slice(0, 16)}...</code>
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       Granted: {new Date(item.timestamp).toLocaleString()}
@@ -486,6 +639,85 @@ function AccessControl({ config }) {
                   >
                     Revoke
                   </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Check Access to Specific NFT */}
+      <div className="border rounded-lg p-6">
+        <h3 className="font-medium mb-4">Check My Access to NFT</h3>
+        <p className="text-gray-600 text-sm mb-4">
+          Enter an NFT Object ID to check if you have access to it
+        </p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={checkNFTId}
+            onChange={(e) => setCheckNFTId(e.target.value)}
+            className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="0x... (NFT Object ID)"
+          />
+          <button
+            onClick={checkMyAccessToNFT}
+            disabled={isCheckingAccess || !checkNFTId}
+            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50"
+          >
+            {isCheckingAccess ? 'Checking...' : 'Check Access'}
+          </button>
+        </div>
+      </div>
+
+      {/* Access Granted to Me */}
+      <div className="border rounded-lg p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-medium">Access Granted to Me</h3>
+          <button
+            onClick={loadStoredAccessData}
+            className="text-sm text-blue-500 hover:text-blue-600 flex items-center"
+          >
+            🔄 Refresh
+          </button>
+        </div>
+        
+        {accessGrantedToMe.length === 0 ? (
+          <p className="text-gray-500 text-center py-8">
+            No one has granted you access to their NFTs yet.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {accessGrantedToMe.map((item, index) => (
+              <div key={index} className="border rounded-lg p-4 hover:bg-gray-50">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="flex items-center space-x-3">
+                      <span className="text-sm font-medium">{item.nftName || `NFT ${String(item.tokenId).slice(0, 10)}...`}</span>
+                      <span className={`px-2 py-1 rounded text-xs font-medium access-level-${item.level}`}>
+                        Level {item.level} - {accessLevelInfo[item.level].name}
+                      </span>
+                      {accessLevelInfo[item.level].canDecrypt && (
+                        <span className="text-xs text-green-600">
+                          🔓 Can decrypt
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Granted by: <code className="bg-gray-100 px-1 rounded">{String(item.grantedBy).slice(0, 10)}...{String(item.grantedBy).slice(-6)}</code>
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      NFT ID: <code className="bg-gray-100 px-1 rounded text-xs">{String(item.tokenId).slice(0, 16)}...</code>
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Granted: {new Date(item.timestamp).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="ml-4">
+                    <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                      Active Access
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
 import { Transaction } from '@mysten/sui/transactions'
 import { WalrusClient } from '@mysten/walrus'
-// Removed Ed25519Keypair import - we'll use the connected wallet instead
 import toast from 'react-hot-toast'
 
 /**
@@ -21,7 +20,7 @@ function WalrusStorage({ config }) {
     encryptedKeyId: '',
     threshold: '3',
     keyServerCount: '5',
-    epochs: '5'
+    epochs: '1'
   })
   
   const [storedFiles, setStoredFiles] = useState([])
@@ -29,95 +28,156 @@ function WalrusStorage({ config }) {
   const [isStoring, setIsStoring] = useState(false)
   const [downloadBlobId, setDownloadBlobId] = useState('')
   const [isDownloading, setIsDownloading] = useState(false)
+  
+  // New state for NFT management
+  const [myNFTs, setMyNFTs] = useState([])
+  const [selectedNFTFromDropdown, setSelectedNFTFromDropdown] = useState('')
 
-  // Initialize Walrus client
+  // Load user's NFTs
+  const loadMyNFTs = async () => {
+    if (!account) return
+
+    try {
+      const objects = await suiClient.getOwnedObjects({
+        owner: account.address,
+        filter: {
+          StructType: `${config.PACKAGE_ID}::nft::NeuraLabsNFT`
+        },
+        options: {
+          showType: true,
+          showContent: true,
+        }
+      })
+
+      const nfts = objects.data.map(obj => {
+        const fields = obj.data?.content?.fields || {};
+        return {
+          id: obj.data?.objectId || '',
+          name: fields.name || '',
+          description: fields.description || '',
+          creator: fields.creator || '',
+          created_at: fields.created_at || fields.creation_date || Date.now()
+        };
+      })
+
+      setMyNFTs(nfts)
+    } catch (error) {
+      console.error('Error loading NFTs:', error)
+    }
+  }
+
+  // Initialize Walrus client and load NFTs
   useEffect(() => {
     const initWalrusClient = async () => {
       if (!account) {
         console.log('No account connected, skipping Walrus client initialization')
+        setWalrusClient(null)
         return
       }
       
       try {
+        console.log('Initializing Walrus SDK for account:', account.address)
+        
+        // Initialize Walrus client according to official documentation
         const client = new WalrusClient({
           network: 'testnet',
           suiClient: suiClient,
         })
+        
         setWalrusClient(client)
-        console.log('Walrus client initialized for account:', account.address)
+        console.log('Walrus SDK client initialized successfully')
       } catch (error) {
         console.error('Failed to initialize Walrus client:', error)
         toast.error('Failed to initialize Walrus client')
       }
     }
     
+    // Only initialize once when account changes
     initWalrusClient()
-  }, [suiClient, account])
-
-  // Upload file to Walrus using transaction-based approach with wallet
-  const uploadToWalrusSDK = async (fileData, fileName, epochs) => {
-    if (!walrusClient) {
-      throw new Error('Walrus client not initialized')
+    
+    // Load NFTs when account is connected
+    if (account) {
+      loadMyNFTs()
     }
+  }, [account?.address, suiClient])
 
+  // Upload file to Walrus using HTTP API (more reliable than SDK for dApp Kit integration)
+  const uploadToWalrusHTTP = async (fileData, fileName, epochs) => {
     if (!account) {
       throw new Error('No wallet connected')
     }
 
-    return new Promise((resolve, reject) => {
-      try {
-        console.log(`Uploading ${fileName} for ${epochs} epochs...`)
-        
-        // Use the wallet client's transaction execution
-        walrusClient.writeBlob({
-          blob: fileData,
-          deletable: false,
-          epochs: parseInt(epochs),
-        }).then((result) => {
-          console.log('Upload successful:', {
-            blobId: result.blobId,
-            storageCost: result.cost?.storageCost,
-            writeFee: result.cost?.writeFee
-          })
-          
-          resolve({
-            blobId: result.blobId,
-            cost: result.cost,
-            url: `https://aggregator.walrus-testnet.walrus.space/v1/${result.blobId}`
-          })
-        }).catch((error) => {
-          console.error('Walrus upload error:', error)
-          
-          // If the error is about WAL tokens, provide helpful message
-          if (error.message.includes('Not enough coins of type') && error.message.includes('WAL')) {
-            reject(new Error('Insufficient WAL tokens. Please get WAL tokens from the Walrus testnet faucet.'))
-          } else {
-            reject(new Error(`Failed to upload to Walrus: ${error.message}`))
-          }
-        })
-        
-      } catch (error) {
-        console.error('Walrus upload error:', error)
-        reject(new Error(`Failed to upload to Walrus: ${error.message}`))
+    try {
+      console.log(`Uploading ${fileName} for ${epochs} epochs using HTTP API...`)
+      
+      // Use Walrus HTTP API for upload
+      const response = await fetch(`https://publisher.walrus-testnet.walrus.space/v1/blobs?epochs=${epochs}`, {
+        method: 'PUT',
+        body: fileData,
+        headers: {
+          'Content-Type': 'application/octet-stream'
+        }
+      })
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`)
       }
-    })
+      
+      const result = await response.json()
+      console.log('Upload successful via HTTP:', result)
+      
+      if (result.newlyCreated) {
+        return {
+          blobId: result.newlyCreated.blobObject.blobId,
+          cost: result.newlyCreated.cost,
+          url: `https://aggregator.walrus-testnet.walrus.space/v1/${result.newlyCreated.blobObject.blobId}`
+        }
+      } else if (result.alreadyCertified) {
+        return {
+          blobId: result.alreadyCertified.blobId,
+          cost: { storageCost: '0', writeFee: '0' },
+          url: `https://aggregator.walrus-testnet.walrus.space/v1/${result.alreadyCertified.blobId}`
+        }
+      } else {
+        throw new Error('Unexpected response format from Walrus')
+      }
+      
+    } catch (error) {
+      console.error('Walrus HTTP upload error:', error)
+      
+      if (error.message.includes('403') || error.message.includes('Unauthorized')) {
+        throw new Error('This might be a public Walrus node. Try again or use a different approach.')
+      } else {
+        throw new Error(`Failed to upload to Walrus: ${error.message}`)
+      }
+    }
   }
 
-  // Download file from Walrus using SDK
+  // Download file from Walrus using official SDK
   const downloadFromWalrusSDK = async (blobId) => {
     if (!walrusClient) {
-      throw new Error('Walrus client not initialized')
+      throw new Error('Walrus SDK not initialized')
     }
 
     try {
-      console.log(`Downloading blob: ${blobId}`)
+      console.log(`Downloading blob: ${blobId} using Walrus SDK`)
       
+      // Use the official Walrus SDK readBlob method
       const data = await walrusClient.readBlob({ blobId })
       
       console.log(`Download successful: ${data.length} bytes`)
       return data
     } catch (error) {
-      console.error('Walrus download error:', error)
+      console.error('Walrus SDK download error:', error)
+      
+      // Handle retryable errors according to SDK documentation
+      if (error.constructor.name === 'RetryableWalrusClientError') {
+        console.log('Retryable error encountered, resetting client and retrying...')
+        walrusClient.reset()
+        throw new Error('Walrus network error - please try again')
+      }
+      
       throw new Error(`Failed to download from Walrus: ${error.message}`)
     }
   }
@@ -146,9 +206,9 @@ function WalrusStorage({ config }) {
       encryptedData.set(prefix)
       encryptedData.set(fileData, prefix.length)
       
-      // Upload to Walrus using SDK
-      toast.loading('Uploading to Walrus via SDK...', { id: toastId })
-      const walrusResult = await uploadToWalrusSDK(
+      // Upload to Walrus using HTTP API
+      toast.loading('Uploading to Walrus via HTTP API...', { id: toastId })
+      const walrusResult = await uploadToWalrusHTTP(
         encryptedData, 
         uploadForm.file.name,
         uploadForm.epochs
@@ -182,7 +242,7 @@ function WalrusStorage({ config }) {
       }
       
       setStoredFiles([...storedFiles, storedFile])
-      toast.success('File uploaded successfully via Walrus SDK!', { id: toastId })
+      toast.success('File uploaded successfully via Walrus HTTP API!', { id: toastId })
       
       // Reset form
       setUploadForm({
@@ -191,8 +251,9 @@ function WalrusStorage({ config }) {
         encryptedKeyId: '',
         threshold: '3',
         keyServerCount: '5',
-        epochs: '5'
+        epochs: '1'
       })
+      setSelectedNFTFromDropdown('')
       
     } catch (error) {
       console.error('Error uploading file:', error)
@@ -213,7 +274,7 @@ function WalrusStorage({ config }) {
     const toastId = toast.loading('Downloading from Walrus...')
 
     try {
-      // Download from Walrus using SDK
+      // Download from Walrus using official SDK
       const encryptedData = await downloadFromWalrusSDK(downloadBlobId)
       
       // Mock decryption (in production, use Seal)
@@ -257,40 +318,66 @@ function WalrusStorage({ config }) {
     setIsStoring(true)
     
     try {
+      // Validate required data
+      if (!data.nftObjectId || !data.walrusBlobId || !data.fileHash) {
+        throw new Error('Missing required data: nftObjectId, walrusBlobId, or fileHash')
+      }
+      
       const tx = new Transaction()
       
-      // Convert encrypted key ID to vector<u8>
-      const keyIdBytes = data.encryptedKeyId.split(' ').map(n => parseInt(n))
+      // Convert encrypted key ID to vector<u8> with validation
+      let keyIdBytes
+      try {
+        if (!data.encryptedKeyId || data.encryptedKeyId.trim() === '') {
+          // Generate default key ID if none provided
+          keyIdBytes = [1, 2, 3, 4, 5, 6, 7, 8]
+        } else {
+          keyIdBytes = data.encryptedKeyId.split(' ').map(n => {
+            const num = parseInt(n.trim())
+            if (isNaN(num)) throw new Error(`Invalid number: ${n}`)
+            return num
+          })
+        }
+      } catch (error) {
+        console.error('Error parsing encrypted key ID:', error)
+        // Use fallback key ID
+        keyIdBytes = [1, 2, 3, 4, 5, 6, 7, 8]
+      }
       
       tx.moveCall({
-        target: `${config.PACKAGE_ID}::nft::add_encrypted_data`,
+        target: `${config.PACKAGE_ID}::storage::upload_encrypted_data`,
         arguments: [
-          tx.object(data.nftObjectId),
-          tx.object(config.REGISTRY_ID),
-          tx.pure.string(data.walrusBlobId),
-          tx.pure.vector('u8', keyIdBytes),
-          tx.pure.string(JSON.stringify({
-            threshold: parseInt(uploadForm.threshold),
-            keyServers: parseInt(uploadForm.keyServerCount)
-          })),
-          tx.pure.string(data.fileHash),
-          tx.pure.u64(data.fileSize),
-          tx.pure.string(data.contentType),
-          tx.pure.u8(parseInt(uploadForm.threshold)),
-          tx.pure.u8(parseInt(uploadForm.keyServerCount)),
-          tx.object('0x6') // Clock
+          tx.object(data.nftObjectId),              // nft: &mut NeuraLabsNFT
+          tx.object(config.REGISTRY_ID),            // registry: &AccessRegistry
+          tx.pure.string(data.walrusBlobId),        // walrus_blob_id: String
+          tx.pure.vector('u8', keyIdBytes),         // seal_key_id: vector<u8>
+          tx.pure.string(data.fileHash || ''),     // file_hash: String
+          tx.pure.u64(data.fileSize || 0),         // file_size: u64
+          tx.pure.string(data.contentType || 'application/octet-stream'), // content_type: String
+          tx.object('0x6')                         // clock: &sui::clock::Clock
         ],
       })
 
-      const result = await suiClient.signAndExecuteTransaction({
-        signer: account,
-        transaction: tx,
-        options: {
-          showEffects: true,
-        },
+      return new Promise((resolve, reject) => {
+        signAndExecuteTransaction(
+          {
+            transaction: tx,
+            options: {
+              showEffects: true,
+            },
+          },
+          {
+            onSuccess: (result) => {
+              console.log('Reference stored:', result)
+              resolve(result)
+            },
+            onError: (error) => {
+              console.error('Error storing reference:', error)
+              reject(error)
+            }
+          }
+        )
       })
-
-      console.log('Reference stored:', result)
       
     } catch (error) {
       throw error
@@ -338,14 +425,14 @@ function WalrusStorage({ config }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold mb-4">Walrus Storage (SDK)</h2>
+        <h2 className="text-xl font-semibold mb-4">Walrus Storage (HTTP API)</h2>
         <p className="text-gray-600 mb-4">
-          Upload encrypted files to Walrus decentralized storage using the official SDK.
+          Upload encrypted files to Walrus decentralized storage using the HTTP API.
         </p>
         {walrusClient ? (
-          <div className="text-sm text-green-600">✅ Walrus SDK initialized</div>
+          <div className="text-sm text-green-600">✅ Walrus client configured</div>
         ) : (
-          <div className="text-sm text-yellow-600">⏳ Initializing Walrus SDK...</div>
+          <div className="text-sm text-yellow-600">⏳ Configuring Walrus client...</div>
         )}
       </div>
 
@@ -354,17 +441,55 @@ function WalrusStorage({ config }) {
         <h3 className="font-medium mb-4">Upload Encrypted File</h3>
         <form onSubmit={handleFileUpload} className="space-y-4">
           <div>
+            <label className="block text-sm font-medium mb-1">Select NFT (Optional)</label>
+            <select
+              value={selectedNFTFromDropdown}
+              onChange={(e) => {
+                setSelectedNFTFromDropdown(e.target.value)
+                if (e.target.value) {
+                  setUploadForm({ ...uploadForm, nftObjectId: e.target.value })
+                }
+              }}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+            >
+              <option value="">Choose from your NFTs...</option>
+              {myNFTs.map((nft) => (
+                <option key={nft.id} value={nft.id}>
+                  {nft.name} ({String(nft.id).slice(0, 10)}...)
+                </option>
+              ))}
+            </select>
+            {myNFTs.length === 0 && account && (
+              <p className="text-xs text-amber-600 mb-2">
+                No NFTs found. Create NFTs in the NFT Manager tab first.
+              </p>
+            )}
+          </div>
+          
+          <div>
             <label className="block text-sm font-medium mb-1">NFT Object ID</label>
             <input
               type="text"
               value={uploadForm.nftObjectId}
-              onChange={(e) => setUploadForm({ ...uploadForm, nftObjectId: e.target.value })}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(e) => {
+                setUploadForm({ ...uploadForm, nftObjectId: e.target.value })
+                // Clear dropdown selection if user manually edits the input
+                if (e.target.value !== selectedNFTFromDropdown) {
+                  setSelectedNFTFromDropdown('')
+                }
+              }}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                selectedNFTFromDropdown ? 'bg-gray-100' : ''
+              }`}
               placeholder="0x... (NFT object to attach file to)"
+              disabled={selectedNFTFromDropdown !== ''}
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              The NFT object ID (not token ID) to attach this file to
+              {selectedNFTFromDropdown 
+                ? 'Selected from dropdown above. Clear dropdown to edit manually.'
+                : 'The NFT object ID (not token ID) to attach this file to'
+              }
             </p>
           </div>
           
@@ -455,7 +580,7 @@ function WalrusStorage({ config }) {
             disabled={isUploading || isStoring || !walrusClient}
             className="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
           >
-            {isUploading ? 'Uploading via SDK...' : 'Upload to Walrus'}
+            {isUploading ? 'Uploading via HTTP...' : 'Upload to Walrus'}
           </button>
         </form>
       </div>
@@ -545,8 +670,8 @@ function WalrusStorage({ config }) {
           <ul className="text-sm text-gray-600 space-y-1">
             <li>• Native TypeScript support</li>
             <li>• Automatic retry logic</li>
-            <li>• Progress tracking for large files</li>
-            <li>• Cost estimation before upload</li>
+            <li>• Error handling & recovery</li>
+            <li>• Cost estimation</li>
             <li>• Type-safe API</li>
           </ul>
         </div>
