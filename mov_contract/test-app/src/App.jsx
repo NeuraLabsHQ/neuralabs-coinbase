@@ -13,6 +13,7 @@ import NFTDetailsPage from './components/NFTDetailsPage'
 import SUIToWALConverter from './components/SUIToWALConverter'
 import EncryptionJourney from './components/EncryptionJourney'
 import InteractiveEncryptionJourney from './components/InteractiveEncryptionJourney'
+import InteractiveEncryptionJourneyV2 from './components/InteractiveEncryptionJourneyV2'
 
 // Configuration
 const CONFIG = {
@@ -111,7 +112,7 @@ function App() {
               {activeTab === 'details' && <NFTDetailsPage config={CONFIG} />}
               {activeTab === 'converter' && <SUIToWALConverter config={CONFIG} />}
               {activeTab === 'journey' && <EncryptionJourney config={CONFIG} />}
-              {activeTab === 'interactive' && <InteractiveEncryptionJourney config={CONFIG} />}
+              {activeTab === 'interactive' && <InteractiveEncryptionJourneyV2 config={CONFIG} />}
             </div>
           </>
         )}
