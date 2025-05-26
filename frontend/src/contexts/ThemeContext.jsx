@@ -22,13 +22,17 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     const root = window.document.documentElement;
     
+    // Update classes for backward compatibility
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
     
-    // Update theme color meta for mobile
+    // Set data-theme attribute for new color system
+    root.setAttribute('data-theme', theme);
+    
+    // Update theme color meta for mobile using new color system
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
-      meta.setAttribute('content', theme === 'dark' ? '#1e1f21' : '#ffffff');
+      meta.setAttribute('content', theme === 'dark' ? '#0A0C0F' : '#FFFFFF');
     }
   }, [theme]);
 

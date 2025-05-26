@@ -37,6 +37,7 @@ import { useNavigate } from 'react-router-dom';
 import templateImage1 from "../../assets/template.png";
 import { accessManagementApi } from "../../utils/access-api";
 import { agentAPI } from "../../utils/agent-api";
+import colors from "../../color.js";
 import CreateAgentModal from "./Popup/CreateAgentModal";
 
 const TemplateCard = ({ title, hasButton = false, onClick, imageUrl }) => {
@@ -223,20 +224,20 @@ const AccessHomePage = ({ onSelectFlow }) => {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const bgColor = useColorModeValue("white", "gray.900");
-  const cardBgColor = useColorModeValue("gray.50", "gray.800");
-  const textColor = useColorModeValue("gray.800", "white");
-  const mutedTextColor = useColorModeValue("gray.500", "gray.400");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const theadBgColor = useColorModeValue("gray.100", "#1f1f1f");
-  const inputBgColor = useColorModeValue("white", "#1f1f1f");
-  const hoverBgColor = useColorModeValue("gray.50", "gray.800");
-  const activeTabBg = useColorModeValue("blue.50", "gray.700");
-  const inactiveTabBg = useColorModeValue("gray.100", "gray.800");
-  const buttonBgColor = useColorModeValue("gray.100", "gray.800");
-  const activeBgColor = useColorModeValue("blue.50", "gray.700");
-  const listhoverBgColor =  useColorModeValue('#fdfdfd', '#1e1f21');
-  const searchbarcolor = useColorModeValue("white", "#1f1f1f");
+  const bgColor = useColorModeValue(colors.accessManagement.mainContent.bg.light, colors.accessManagement.mainContent.bg.dark);
+  const cardBgColor = useColorModeValue(colors.accessManagement.flowCard.bg.light, colors.accessManagement.flowCard.bg.dark);
+  const textColor = useColorModeValue(colors.accessManagement.mainContent.heading.light, colors.accessManagement.mainContent.heading.dark);
+  const mutedTextColor = useColorModeValue(colors.accessManagement.sidebar.icon.light, colors.accessManagement.sidebar.icon.dark);
+  const borderColor = useColorModeValue(colors.accessManagement.detailPanel.border.light, colors.accessManagement.detailPanel.border.dark);
+  const theadBgColor = useColorModeValue(colors.accessManagement.detailPanel.addressBg.light, colors.accessManagement.detailPanel.addressBg.dark);
+  const inputBgColor = useColorModeValue(colors.accessManagement.detailPanel.bg.light, colors.accessManagement.detailPanel.bg.dark);
+  const hoverBgColor = useColorModeValue(colors.accessManagement.sidebar.itemHover.light, colors.accessManagement.sidebar.itemHover.dark);
+  const activeTabBg = useColorModeValue(colors.accessManagement.sidebar.selected.light, colors.accessManagement.sidebar.selected.dark);
+  const inactiveTabBg = useColorModeValue(colors.accessManagement.detailPanel.addressBg.light, colors.accessManagement.detailPanel.addressBg.dark);
+  const buttonBgColor = useColorModeValue(colors.accessManagement.detailPanel.addressBg.light, colors.accessManagement.detailPanel.addressBg.dark);
+  const activeBgColor = useColorModeValue(colors.accessManagement.sidebar.selected.light, colors.accessManagement.sidebar.selected.dark);
+  const listhoverBgColor = useColorModeValue(colors.accessManagement.sidebar.itemHover.light, colors.accessManagement.sidebar.itemHover.dark);
+  const searchbarcolor = useColorModeValue(colors.accessManagement.detailPanel.bg.light, colors.accessManagement.detailPanel.bg.dark);
 
 
 
@@ -500,7 +501,7 @@ const AccessHomePage = ({ onSelectFlow }) => {
             <Box 
               height="24px" 
               width="1px" 
-              bg={useColorModeValue("gray.300", "gray.600")} 
+              bg={useColorModeValue(colors.accessManagement.detailPanel.border.light, colors.accessManagement.detailPanel.border.dark)} 
               mx={1}
               my={1} 
             />
@@ -545,8 +546,8 @@ const AccessHomePage = ({ onSelectFlow }) => {
                   <Box
                     p={2}
                     borderRadius="md"
-                    bg={`black.${(flow.accessLevel * 100) % 900 || 500}`}
-                    color="white"
+                    bg={useColorModeValue(colors.accessManagement.flowCard.iconBg.light, colors.accessManagement.flowCard.iconBg.dark)}
+                    color={useColorModeValue(colors.accessManagement.flowCard.iconText.light, colors.accessManagement.flowCard.iconText.dark)}
                     display="inline-flex"
                     alignItems="center"
                     justifyContent="center"

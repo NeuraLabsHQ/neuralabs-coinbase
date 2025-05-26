@@ -9,6 +9,7 @@ import {
 } from 'react-icons/fi';
 // Define the icon mapping object
 import ICON_MAP from '../Common/IconMap';
+import colors from '../../../color.js';
 
 const FlowCanvas = ({ 
   nodes, 
@@ -339,8 +340,8 @@ const handlePortMouseDown = (e, nodeId, portType, portIndex) => {
   const originalStroke = clickedPort.getAttribute('stroke');
   
   // Highlight the port when clicked
-  clickedPort.setAttribute('fill', '#4ADE80'); // Green fill
-  clickedPort.setAttribute('stroke', '#16A34A'); // Darker green stroke
+  clickedPort.setAttribute('fill', colors.ports.active[colorMode]); // Active port color
+  clickedPort.setAttribute('stroke', colors.green[900]); // Darker green stroke
   clickedPort.setAttribute('stroke-width', '3');
   
   const svg = svgRef.current;
@@ -688,7 +689,7 @@ const renderNode = (node) => {
             <text
               x="12"
               y="5"
-              fill={colorMode === 'dark' ? '#A0AEC0' : '#718096'}
+              fill={colors.gray[colorMode === 'dark' ? '400' : '500']}
               fontSize="10"
               fontWeight="bold"
             >
@@ -721,7 +722,7 @@ const renderNode = (node) => {
             <text
               x="12"
               y="5"
-              fill={colorMode === 'dark' ? '#A0AEC0' : '#718096'}
+              fill={colors.gray[colorMode === 'dark' ? '400' : '500']}
               fontSize="10"
               fontWeight="bold"
             >
@@ -756,8 +757,8 @@ const renderNode = (node) => {
     
     const isHighlighted = isConnectionHighlighted(edge.id);
     const strokeColor = isHighlighted 
-    ? (colorMode === 'dark' ? '#63B3ED' : '#3182CE') // blue.300 or blue.500
-    : (colorMode === 'dark' ? '#A0AEC0' : '#718096'); // gray.400 or gray.500
+    ? colors.blue[colorMode === 'dark' ? '300' : '500'] // blue accent
+    : colors.gray[colorMode === 'dark' ? '400' : '500']; // gray default
     
     const strokeWidth = isHighlighted ? 3 : 2;
 
@@ -810,7 +811,7 @@ const renderNode = (node) => {
             markerHeight="6"
             orient="auto"
           >
-            <path d="M 0 0 L 10 5 L 0 10 z" fill={colorMode === 'dark' ? '#A0AEC0' : '#718096'} />
+            <path d="M 0 0 L 10 5 L 0 10 z" fill={colors.gray[colorMode === 'dark' ? '400' : '500']} />
           </marker>
           <marker
             id="arrow-highlighted"
@@ -821,7 +822,7 @@ const renderNode = (node) => {
             markerHeight="6"
             orient="auto"
           >
-            <path d="M 0 0 L 10 5 L 0 10 z" fill={colorMode === 'dark' ? '#63B3ED' : '#3182CE'} />
+            <path d="M 0 0 L 10 5 L 0 10 z" fill={colors.blue[colorMode === 'dark' ? '300' : '500']} />
           </marker>
         </defs> */}
         <defs>
@@ -838,7 +839,7 @@ const renderNode = (node) => {
     <path 
       d="M 0 0 L 10 5 L 0 10" 
       fill="none" 
-      stroke={colorMode === 'dark' ? '#A0AEC0' : '#718096'} 
+      stroke={colors.gray[colorMode === 'dark' ? '400' : '500']} 
       strokeWidth="1.5"
       strokeLinejoin="round"
     />
@@ -856,7 +857,7 @@ const renderNode = (node) => {
     <path 
       d="M 0 0 L 10 5 L 0 10" 
       fill="none" 
-      stroke={colorMode === 'dark' ? '#63B3ED' : '#3182CE'} 
+      stroke={colors.blue[colorMode === 'dark' ? '300' : '500']} 
       strokeWidth="1.5"
       strokeLinejoin="round"
     />
@@ -871,7 +872,7 @@ const renderNode = (node) => {
                 }}>
           {/* Grid (optional) */}
           <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-            <path d="M 50 0 L 0 0 0 50" fill="none" stroke={colorMode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} strokeWidth="1"/>
+            <path d="M 50 0 L 0 0 0 50" fill="none" stroke={colors.shadows.small[colorMode]} strokeWidth="1"/>
           </pattern>
           <rect width="10000" height="10000" x="-5000" y="-5000" fill="url(#grid)" />
           
