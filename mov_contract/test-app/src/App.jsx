@@ -11,11 +11,13 @@ import SealEncryption from './components/SealEncryption'
 import WalrusStorage from './components/WalrusStorage'
 import NFTDetailsPage from './components/NFTDetailsPage'
 import SUIToWALConverter from './components/SUIToWALConverter'
+import EncryptionJourney from './components/EncryptionJourney'
+import InteractiveEncryptionJourney from './components/InteractiveEncryptionJourney'
 
 // Configuration
 const CONFIG = {
   PACKAGE_ID: process.env.REACT_APP_PACKAGE_ID || '0x0',
-  REGISTRY_ID: process.env.REACT_APP_REGISTRY_ID || 'YOUR_REGISTRY_ID',
+  REGISTRY_ID: process.env.REACT_APP_REGISTRY_ID || '0x0',
   SEAL_KEY_SERVERS: [
     {
       name: 'mysten-testnet-1',
@@ -41,7 +43,9 @@ function App() {
     { id: 'seal', label: 'Seal Encryption', icon: '🔒' },
     { id: 'walrus', label: 'Walrus Storage', icon: '🐋' },
     { id: 'details', label: 'NFT Details', icon: '🔍' },
-    { id: 'converter', label: 'SUI ↔ WAL', icon: '💱' }
+    { id: 'converter', label: 'SUI ↔ WAL', icon: '💱' },
+    { id: 'journey', label: 'Encryption Journey', icon: '🚀' },
+    { id: 'interactive', label: 'Interactive Journey', icon: '✨' }
   ]
 
   return (
@@ -98,7 +102,7 @@ function App() {
             </div>
 
             {/* Tab Content */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className={activeTab === 'journey' || activeTab === 'interactive' ? '' : 'bg-white rounded-lg shadow p-6'}>
               {activeTab === 'info' && <ContractInfo config={CONFIG} />}
               {activeTab === 'nft' && <NFTManager config={CONFIG} />}
               {activeTab === 'access' && <AccessControl config={CONFIG} />}
@@ -106,6 +110,8 @@ function App() {
               {activeTab === 'walrus' && <WalrusStorage config={CONFIG} />}
               {activeTab === 'details' && <NFTDetailsPage config={CONFIG} />}
               {activeTab === 'converter' && <SUIToWALConverter config={CONFIG} />}
+              {activeTab === 'journey' && <EncryptionJourney config={CONFIG} />}
+              {activeTab === 'interactive' && <InteractiveEncryptionJourney config={CONFIG} />}
             </div>
           </>
         )}
