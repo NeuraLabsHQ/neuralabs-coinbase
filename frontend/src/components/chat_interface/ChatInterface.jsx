@@ -152,6 +152,11 @@ const ChatInterface = ({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    // Scroll to bottom when thinking state changes (for real-time streaming)
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [thinkingState.isThinking, thinkingState.executionSteps, messageThinkingStates]);
+
   const handleInputChange = (e) => {
     const value = e.target.value;
     setInput(value);

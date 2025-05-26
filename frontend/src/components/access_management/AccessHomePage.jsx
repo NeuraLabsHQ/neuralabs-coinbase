@@ -411,7 +411,7 @@ const AccessHomePage = ({ onSelectFlow }) => {
   };
 
   return (
-    <Box bg={bgColor} minH="100%" width={"100%"} maxW="1400px" mx="auto">
+    <Box bg={bgColor} minH="100%" width={"100%"} mx="auto">
       {/* Project title */}
       <Center pt={8} pb={6} marginTop={"30px"}>
         <Heading size="lg" color={textColor}>

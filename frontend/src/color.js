@@ -44,6 +44,7 @@ const colors = {
     800: "#1F1F1F",
     900: "#141414",
     950: "#161619",
+    1000: "#222121"
   },
 
   // Blue - Primary accent & data nodes
@@ -259,7 +260,7 @@ const colors = {
     },
     listhoverBg: {
       dark: "#1B1D21",
-      light: "#F9F9FA",
+      light: "#FFFFFF",
     },
     selected_category: {
       dark: "#5290FF",
@@ -396,12 +397,12 @@ const colors = {
         dark: "#3E4045",
       },
       iconBg: {
-        light: "#333333",
-        dark: "#ABB2B7",
+        dark: "#333333",
+        light: "#ABB2B7",
       },
       iconText: {
-        light: "#FFFFFF",
-        dark: "#16181C",
+        light: "#16181C",
+        dark: "#FFFFFF",
       },
     },
     detailPanel: {
@@ -430,7 +431,7 @@ const colors = {
       light: "#F2F3F4",
     },
     grid: {
-      dark: "#1B1D21",
+      dark: "rgba(255, 255, 255, 0.15)",
       light: "#E6E7E9",
     },
     controls: {
@@ -521,7 +522,7 @@ const colors = {
     },
     borderColor: {
       light: "#E6E7E9",
-      dark: "#3E4045",
+      dark: "gray.700",
     },
     borderLight: {
       light: "#F2F3F4",

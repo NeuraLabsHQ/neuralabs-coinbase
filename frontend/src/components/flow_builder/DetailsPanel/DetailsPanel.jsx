@@ -111,8 +111,9 @@ const DetailsPanel = ({
   const mutedTextColor = useColorModeValue(colors.gray[500], colors.gray[400]);
   const sectionBgColor = useColorModeValue(colors.gray[50], colors.gray[600]);
   const formBgColor = useColorModeValue(colors.detailpanel.inputbg.light, colors.detailpanel.inputbg.dark);
-  const clickableBg = useColorModeValue(colors.gray[100], colors.gray[700]);
-  const clickableHoverBg = useColorModeValue(colors.gray[200], colors.gray[600]);
+  const clickableBg = useColorModeValue(colors.gray[100], colors.gray[1000]);
+  const descriptionPreviewColor = useColorModeValue(colors.gray[100], colors.gray[1000]);
+  const clickableHoverBg = useColorModeValue(colors.gray[200], colors.gray[700]);
   
   const getNodeTypeColor = (type) => {
     switch (type) {
@@ -627,7 +628,7 @@ const DetailsPanel = ({
                 {nodeData.description && (
                   <Box>
                     <Text fontSize="sm" fontWeight="medium" color={mutedTextColor} mb={1}>Description</Text>
-                    <Box py={2} px={3} bg={sectionBgColor} borderRadius="md">
+                    <Box py={2} px={3} bg={descriptionPreviewColor} borderRadius="md">
                       <Text fontSize="sm">{nodeData.description}</Text>
                     </Box>
                   </Box>

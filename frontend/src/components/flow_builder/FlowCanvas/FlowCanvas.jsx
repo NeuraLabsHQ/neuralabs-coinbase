@@ -872,7 +872,7 @@ const renderNode = (node) => {
                 }}>
           {/* Grid (optional) */}
           <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-            <path d="M 50 0 L 0 0 0 50" fill="none" stroke={colors.shadows.small[colorMode]} strokeWidth="1"/>
+            <path d="M 50 0 L 0 0 0 50" fill="none" stroke={colors.canvas.grid[colorMode]} strokeWidth="1"/>
           </pattern>
           <rect width="10000" height="10000" x="-5000" y="-5000" fill="url(#grid)" />
           
