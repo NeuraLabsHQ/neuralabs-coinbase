@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import { getUserNFTs, initializeSealClient } from '../../utils/blockchain'
 import { useCurrentAccount, useSuiClient } from '@mysten/dapp-kit'
-import { initializeSealClient } from '@blockchain/seal-encryption'
-import { getUserNFTs } from '@blockchain/nfts'
-import { SessionKeySection } from './components/SessionKeySection'
-import { EncryptSection } from './components/EncryptSection'
+import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import { DecryptSection } from './components/DecryptSection'
 import { EncryptedFilesList } from './components/EncryptedFilesList'
-import toast from 'react-hot-toast'
+import { EncryptSection } from './components/EncryptSection'
+import { SessionKeySection } from './components/SessionKeySection'
 
 /**
  * SealEncryption Page Component

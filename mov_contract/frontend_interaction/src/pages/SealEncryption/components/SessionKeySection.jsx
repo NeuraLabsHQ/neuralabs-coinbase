@@ -1,5 +1,5 @@
-import React from 'react'
-import { createSealSessionKey, exportSessionKey, importSessionKey } from '@blockchain/seal-encryption'
+
+import { createSealSessionKey, exportSessionKey, importSessionKey } from '../../../utils/blockchain'
 import { useSignPersonalMessage } from '@mysten/dapp-kit'
 import toast from 'react-hot-toast'
 

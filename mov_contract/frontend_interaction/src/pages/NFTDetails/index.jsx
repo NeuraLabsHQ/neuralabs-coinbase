@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import { checkUserAccess, getUserNFTs } from '../../utils/blockchain'
 import { useCurrentAccount, useSuiClient } from '@mysten/dapp-kit'
-import { getUserNFTs, getNFTDetails } from '@blockchain/nfts'
-import { checkUserAccess } from '@blockchain/access-management'
-import { NFTSelector } from './components/NFTSelector'
-import { BasicInfoSection } from './components/BasicInfoSection'
-import { AccessControlSection } from './components/AccessControlSection'
-import { EncryptedDataSection } from './components/EncryptedDataSection'
-import { TechnicalDetailsSection } from './components/TechnicalDetailsSection'
+import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import { AccessControlSection } from './components/AccessControlSection'
+import { BasicInfoSection } from './components/BasicInfoSection'
+import { EncryptedDataSection } from './components/EncryptedDataSection'
+import { NFTSelector } from './components/NFTSelector'
+import { TechnicalDetailsSection } from './components/TechnicalDetailsSection'
 
 /**
  * NFT Details Page Component

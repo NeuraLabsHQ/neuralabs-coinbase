@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import { getAccessCaps, getUserNFTs } from '../../utils/blockchain'
 import { useCurrentAccount } from '@mysten/dapp-kit'
-import { getUserNFTs } from '@blockchain/nfts'
-import { getAccessCaps } from '@blockchain/access-management'
-import { MyNFTsSection } from './components/MyNFTsSection'
-import { GrantAccessForm } from './components/GrantAccessForm'
+import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
+import { AccessControlMatrix } from './components/AccessControlMatrix'
 import { AccessList } from './components/AccessList'
 import { CheckAccessSection } from './components/CheckAccessSection'
-import { AccessControlMatrix } from './components/AccessControlMatrix'
-import toast from 'react-hot-toast'
+import { GrantAccessForm } from './components/GrantAccessForm'
+import { MyNFTsSection } from './components/MyNFTsSection'
 
 /**
  * AccessControl Page Component

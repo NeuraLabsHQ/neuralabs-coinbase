@@ -1,4 +1,4 @@
-import React from 'react'
+
 
 export function BasicInfoSection({ nftDetails }) {
   const formatTimestamp = (timestamp) => {

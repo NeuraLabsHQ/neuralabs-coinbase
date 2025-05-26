@@ -1,4 +1,4 @@
-import React from 'react';
+;
 
 export default function NFTList({ nfts, loading, onRefresh }) {
   if (loading) {

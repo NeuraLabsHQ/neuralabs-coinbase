@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { getContractInfo } from '../../utils/blockchain';
 import { useSuiClient } from '@mysten/dapp-kit';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { contracts } from '@blockchain/index';
 import ContractInfoDisplay from './components/ContractInfoDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
 
@@ -20,7 +20,7 @@ export default function ContractInfo({ config }) {
       setLoading(true);
       setError(null);
       
-      const info = await contracts.getContractInfo(client, config);
+      const info = await getContractInfo(client, config);
       setContractInfo(info);
       
       toast.success('Contract information loaded successfully');

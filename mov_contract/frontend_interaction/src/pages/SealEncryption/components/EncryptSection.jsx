@@ -1,8 +1,6 @@
-import React, { useState } from 'react'
-import { encryptData } from '@blockchain/seal-encryption'
-import { checkUserAccess } from '@blockchain/access-management'
-import { uploadToWalrus } from '@blockchain/walrus'
+import { checkUserAccess, encryptData, uploadToWalrus } from '../../../utils/blockchain'
 import { fromHex, toHex } from '@mysten/sui/utils'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
 
 export function EncryptSection({ account, sealClient, sessionKey, userNFTs, config, onFileEncrypted }) {

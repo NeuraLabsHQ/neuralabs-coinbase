@@ -1,5 +1,5 @@
-import React from 'react'
-import { createAccessCap } from '@blockchain/access-management'
+
+import { createAccessCap } from '../../../utils/blockchain'
 import toast from 'react-hot-toast'
 
 export function MyNFTsSection({ nfts, accessCaps, onAccessCapCreated, account }) {

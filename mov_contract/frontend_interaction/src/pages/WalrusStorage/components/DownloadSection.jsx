@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { downloadFromWalrus } from '@blockchain/walrus'
+import { downloadFromWalrus } from '../../../utils/blockchain'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
 
 export function DownloadSection() {

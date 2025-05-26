@@ -1,9 +1,6 @@
-import React, { useState } from 'react'
-import { decryptData, fetchDecryptionKeys, storeEncryptedData, getStoredData } from '@blockchain/seal-encryption'
-import { checkUserAccess } from '@blockchain/access-management'
-import { downloadFromWalrus } from '@blockchain/walrus'
-import { createTransaction } from '@blockchain/transaction-proposer'
+import { checkUserAccess, decryptData, fetchDecryptionKeys, storeEncryptedData, downloadFromWalrus, createTransaction } from '../../../utils/blockchain'
 import { fromHex, toHex } from '@mysten/sui/utils'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
 
 export function DecryptSection({ account, sealClient, sessionKey, userNFTs, config }) {

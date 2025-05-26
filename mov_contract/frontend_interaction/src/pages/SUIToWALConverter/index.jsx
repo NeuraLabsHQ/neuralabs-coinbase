@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import { convertSUIToWAL, getSUIBalance, getWALBalance } from '../../utils/blockchain'
 import { useCurrentAccount } from '@mysten/dapp-kit'
-import { getSUIBalance, getWALBalance, convertSUIToWAL } from '@blockchain/exchange'
+import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import { BalanceDisplay } from './components/BalanceDisplay'
 import { ConversionForm } from './components/ConversionForm'
-import { TransactionDetails } from './components/TransactionDetails'
 import { HowItWorks } from './components/HowItWorks'
 import { ImportantNotes } from './components/ImportantNotes'
-import toast from 'react-hot-toast'
+import { TransactionDetails } from './components/TransactionDetails'
 
 /**
  * SUI to WAL Token Converter Page Component

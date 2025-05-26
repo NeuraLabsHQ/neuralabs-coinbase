@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import { getUserNFTs } from '../../utils/blockchain'
 import { useCurrentAccount } from '@mysten/dapp-kit'
-import { getUserNFTs } from '@blockchain/nfts'
-import { UploadSection } from './components/UploadSection'
+import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import { DownloadSection } from './components/DownloadSection'
 import { StoredFilesList } from './components/StoredFilesList'
+import { UploadSection } from './components/UploadSection'
 import { WalrusInfo } from './components/WalrusInfo'
-import toast from 'react-hot-toast'
 
 /**
  * WalrusStorage Page Component

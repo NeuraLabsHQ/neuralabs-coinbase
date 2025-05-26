@@ -1,5 +1,5 @@
-import React from 'react'
-import { ACCESS_LEVELS } from '@blockchain/utils/constants'
+
+import { ACCESS_LEVELS } from '../../../utils/blockchain'
 
 export function AccessControlSection({ accessDetails }) {
   if (accessDetails.length === 0) {

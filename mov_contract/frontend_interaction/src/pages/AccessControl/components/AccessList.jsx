@@ -1,6 +1,5 @@
-import React, { useState } from 'react'
-import { revokeUserAccess } from '@blockchain/access-management'
-import { ACCESS_LEVELS } from '@blockchain/utils/constants'
+import { revokeUserAccess, ACCESS_LEVELS } from '../../../utils/blockchain'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
 
 export function AccessList({ accessList, accessCaps, account, onAccessRevoked, title, showRevoke = true }) {

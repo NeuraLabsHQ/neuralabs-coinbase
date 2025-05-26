@@ -1,4 +1,4 @@
-import React from 'react';
+;
 
 export default function NFTStats({ userNFTCount, totalNFTCount, userAddress }) {
   const formatAddress = (address) => {

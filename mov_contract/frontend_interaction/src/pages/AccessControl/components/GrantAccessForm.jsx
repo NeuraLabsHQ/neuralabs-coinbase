@@ -1,6 +1,5 @@
-import React, { useState } from 'react'
-import { grantAccessToUser } from '@blockchain/access-management'
-import { ACCESS_LEVELS } from '@blockchain/utils/constants'
+import { useState } from 'react'
+import { grantAccessToUser, ACCESS_LEVELS } from '../../../utils/blockchain'
 import toast from 'react-hot-toast'
 
 export function GrantAccessForm({ nfts, accessCaps, account, onAccessGranted }) {

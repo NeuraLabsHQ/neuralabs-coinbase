@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { checkUserAccess } from '@blockchain/access-management'
+import { checkUserAccess } from '../../../utils/blockchain'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
 
 export function CheckAccessSection({ account, onAccessFound }) {

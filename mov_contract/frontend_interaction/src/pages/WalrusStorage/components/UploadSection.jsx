@@ -1,7 +1,5 @@
-import React, { useState } from 'react'
-import { uploadToWalrus } from '@blockchain/walrus'
-import { storeWalrusMetadata } from '@blockchain/walrus'
-import { checkUserAccess } from '@blockchain/access-management'
+import { checkUserAccess, uploadToWalrus } from '../../../utils/blockchain'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
 
 export function UploadSection({ account, myNFTs, onFileUploaded }) {

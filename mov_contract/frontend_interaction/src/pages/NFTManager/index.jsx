@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
+import { mintNFT, getUserNFTs, getTotalNFTCount } from '../../utils/blockchain';
+import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { nfts, wallet } from '@blockchain/index';
 import MintNFTForm from './components/MintNFTForm';
 import NFTList from './components/NFTList';
 import NFTStats from './components/NFTStats';
@@ -28,7 +28,7 @@ export default function NFTManager({ config }) {
     
     try {
       setLoading(true);
-      const nftList = await nfts.getUserNFTs(client, config, currentAccount.address);
+      const nftList = await getUserNFTs(client, config, currentAccount.address);
       setUserNFTs(nftList);
     } catch (error) {
       console.error('Error loading NFTs:', error);
@@ -40,7 +40,7 @@ export default function NFTManager({ config }) {
 
   const loadTotalCount = async () => {
     try {
-      const count = await nfts.getTotalNFTCount(client, config);
+      const count = await getTotalNFTCount(client, config);
       setTotalNFTCount(count);
     } catch (error) {
       console.error('Error loading NFT count:', error);
@@ -49,15 +49,21 @@ export default function NFTManager({ config }) {
 
   const handleMintNFT = async (nftData) => {
     try {
-      wallet.checkWalletConnection(currentAccount);
+      if (!currentAccount) {
+        throw new Error('Please connect your wallet');
+      }
       setMinting(true);
       
-      const result = await nfts.mintNFT(
+      const result = await mintNFT(
         client,
         config,
         currentAccount,
         signAndExecuteTransaction,
-        nftData
+        {
+          name: nftData.name,
+          description: nftData.description,
+          url: nftData.url || ''
+        }
       );
       
       toast.success('NFT minted successfully!');

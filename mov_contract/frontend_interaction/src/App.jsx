@@ -3,16 +3,16 @@ import { Toaster } from 'react-hot-toast'
 import { ConnectButton } from '@mysten/dapp-kit'
 import { useCurrentAccount } from '@mysten/dapp-kit'
 
-// Import page components from new structure
-import ContractInfo from '@pages/ContractInfo'
-import NFTManager from '@pages/NFTManager'
+// Import all page components from new structure
+import ContractInfo from './pages/ContractInfo'
+import NFTManager from './pages/NFTManager'
+import AccessControl from './pages/AccessControl'
+import SealEncryption from './pages/SealEncryption'
+import WalrusStorage from './pages/WalrusStorage'
+import NFTDetails from './pages/NFTDetails'
+import SUIToWALConverter from './pages/SUIToWALConverter'
 
-// Import old components (will be refactored later)
-import AccessControl from './components/AccessControl'
-import SealEncryption from './components/SealEncryption'
-import WalrusStorage from './components/WalrusStorage'
-import NFTDetailsPage from './components/NFTDetailsPage'
-import SUIToWALConverter from './components/SUIToWALConverter'
+// Import complex components that haven't been modularized yet
 import EncryptionJourney from './components/EncryptionJourney'
 import InteractiveEncryptionJourneyV2 from './components/InteractiveEncryptionJourneyV2'
 
@@ -103,7 +103,7 @@ function App() {
               {activeTab === 'access' && <AccessControl config={CONFIG} />}
               {activeTab === 'seal' && <SealEncryption config={CONFIG} />}
               {activeTab === 'walrus' && <WalrusStorage config={CONFIG} />}
-              {activeTab === 'details' && <NFTDetailsPage config={CONFIG} />}
+              {activeTab === 'details' && <NFTDetails config={CONFIG} />}
               {activeTab === 'converter' && <SUIToWALConverter config={CONFIG} />}
               {activeTab === 'journey' && <EncryptionJourney config={CONFIG} />}
               {activeTab === 'interactive' && <InteractiveEncryptionJourneyV2 config={CONFIG} />}
