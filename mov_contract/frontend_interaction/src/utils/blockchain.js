@@ -81,12 +81,22 @@ export {
   downloadFromWalrus
 } from '../blockchain_module/walrus/index.ts'
 
-// Re-export exchange functions (keeping original names)
+// Import exchange functions from the correct files
+import {
+  getSuiBalance,
+  getWalBalance
+} from '../blockchain_module/exchange/balance.ts'
+
+import {
+  convertSuiToWal
+} from '../blockchain_module/exchange/convert.ts'
+
+// Re-export exchange functions
 export {
   getSuiBalance,
   getWalBalance,
   convertSuiToWal
-} from '../blockchain_module/exchange/index.ts'
+}
 
 // Create aliases for backward compatibility
 export const getSUIBalance = getSuiBalance
