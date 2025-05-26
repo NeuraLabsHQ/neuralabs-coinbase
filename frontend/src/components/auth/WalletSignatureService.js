@@ -57,7 +57,7 @@ export const signAuthMessage = (walletAddress, signPersonalMessage) => {
  */
 export const authenticateWithBackend = async (signatureData) => {
   try {
-    const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/auth/login', {
+    const response = await fetch(import.meta.env.VITE_BACKEND_URL + '/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -183,7 +183,7 @@ export const logout = () => {
 
   const token = getStoredAuthToken();
   if (token) {
-    fetch(process.env.REACT_APP_BACKEND_URL + '/api/auth/logout', {
+    fetch(import.meta.env.VITE_BACKEND_URL + '/api/auth/logout', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

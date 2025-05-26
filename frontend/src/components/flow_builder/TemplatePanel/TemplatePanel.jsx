@@ -1,29 +1,29 @@
 // src/components/flow_builder/TemplatePanel/TemplatePanel.jsx
-import React, { useState, useEffect } from 'react';
 import {
-  Box,
-  Flex,
-  VStack,
-  Heading,
-  Button,
-  IconButton,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
-  Input,
-  Textarea,
-  FormControl,
-  FormLabel,
-  useColorModeValue,
+    Box,
+    Button,
+    Flex,
+    FormControl,
+    FormLabel,
+    Heading,
+    IconButton,
+    Input,
+    Tab,
+    TabList,
+    TabPanel,
+    TabPanels,
+    Tabs,
+    Textarea,
+    useColorModeValue,
+    VStack,
 } from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
 import {
-  FiX,
-  FiCode,
-  FiSave,
-  FiTrash2,
-  FiPlus,
+    FiCode,
+    FiPlus,
+    FiSave,
+    FiTrash2,
+    FiX,
 } from 'react-icons/fi';
 
 const TemplatePanel = ({ template, onClose, onSaveTemplate, onToggleCode, codeOpen }) => {

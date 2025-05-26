@@ -1,25 +1,23 @@
 // src/components/flow_builder/VisualizePanel/VisualizePanel.jsx
-import React, { useState } from "react";
 import {
-  Box,
-  Flex,
-  Button,
-  VStack,
-  Text,
-  Tooltip,
-  useColorModeValue,
+    Box,
+    Button,
+    Flex,
+    Text,
+    Tooltip,
+    useColorModeValue,
+    VStack,
 } from "@chakra-ui/react";
-import {
-  FiType,
-  FiEye,
-  FiMaximize2,
-  FiZoomIn,
-  FiZoomOut,
-  FiDownload,
-  FiUpload,
-  FiSave,
-} from "react-icons/fi";
+import { useState } from 'react';
 import { FaAngleDoubleLeft, FaAngleDoubleRight } from "react-icons/fa";
+import {
+    FiDownload,
+    FiEye,
+    FiMaximize2,
+    FiSave,
+    FiType,
+    FiUpload
+} from "react-icons/fi";
 import ExportModal from "./ExportModal"; // Import the new modal
 
 const VisualizePanel = ({

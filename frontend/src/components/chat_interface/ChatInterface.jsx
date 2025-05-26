@@ -1,40 +1,37 @@
 // src/components/chat_interface/ChatInterface.jsx
-import React, { useState, useRef, useEffect } from "react";
 import {
-  Box,
-  Flex,
-  Text,
-  Textarea,
-  IconButton,
-  HStack,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  Button,
-  Tooltip,
-  Divider,
-  Center,
-  VStack,
+    Box,
+    Button,
+    Divider,
+    Flex,
+    HStack,
+    IconButton,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuList,
+    Text,
+    Textarea,
+    Tooltip,
+    VStack
 } from "@chakra-ui/react";
+import { useEffect, useRef, useState } from 'react';
 import {
-  FiSend,
-  FiChevronDown,
-  FiPaperclip,
-  FiArrowUp,
-  FiCode,
-  FiImage,
-  FiSearch,
-  FiThumbsUp,
-  FiThumbsDown,
+    FiArrowUp,
+    FiChevronDown,
+    FiCode,
+    FiPaperclip,
+    FiSearch,
+    FiThumbsDown,
+    FiThumbsUp
 } from "react-icons/fi";
 
 // Import the separate ThinkingUI component
 import ThinkingUI from "./ThinkingUI/ThinkingUI";
 
 // Import colors
-import colors from "../../color";
 import { useColorModeValue } from "@chakra-ui/react";
+import colors from "../../color";
 // Sample AI models/agents
 const AI_MODELS = [
   { id: "portfolio", name: "Portfolio Manager" },

@@ -1,21 +1,21 @@
 
-import React, { useEffect, useState, useRef } from "react";
-import {
-  Box,
-  Flex,
-  VStack,
-  Text,
-  List,
-  ListItem,
-  useColorModeValue,
-  Spinner,
-} from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
-import { FiCheck, FiList } from "react-icons/fi";
+import {
+    Box,
+    Flex,
+    List,
+    ListItem,
+    Spinner,
+    Text,
+    useColorModeValue,
+    VStack,
+} from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import thinkresponse from "../../../utils/thinkresponse.json";
-import thinkingStepTemplates from "../../../utils/thinkingStepTemplates.json";
+import { useEffect, useRef, useState } from 'react';
+import { FiCheck } from "react-icons/fi";
 import colors from "../../../color";
+import thinkingStepTemplates from "../../../utils/thinkingStepTemplates.json";
+import thinkresponse from "../../../utils/thinkresponse.json";
 
 
 const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true }) => {

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Flex, useDisclosure, useColorMode } from '@chakra-ui/react';
+import { Flex, useColorMode, useDisclosure } from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
+import thinkingdata from '../../../utils/thinkingdata.json';
+import useUiColors from '../../../utils/uiColors';
 import ChatHistoryPanel from '../ChatHistoryPanel/ChatHistoryPanel';
 import ChatInterface from '../ChatInterface';
-import useUiColors from '../../../utils/uiColors';
-import thinkingdata from '../../../utils/thinkingdata.json';
 
 const ChatPage = () => {
   const colors = useUiColors();

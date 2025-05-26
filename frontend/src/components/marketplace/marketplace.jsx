@@ -1,9 +1,9 @@
 // src/components/marketplace/marketplace.jsx
-import React, { useState, useEffect } from 'react';
 import { Flex } from '@chakra-ui/react';
-import MarketplaceSidebar from './MarketplacePanel/MarketplaceSidebar';
-import MarketplaceContent from './MarketplaceContent/MarketplaceContent';
+import { useEffect, useState } from 'react';
 import { marketplaceApi } from '../../utils/api';
+import MarketplaceContent from './MarketplaceContent/MarketplaceContent';
+import MarketplaceSidebar from './MarketplacePanel/MarketplaceSidebar';
 
 const Marketplace = () => {
   const [selectedItem, setSelectedItem] = useState(null);

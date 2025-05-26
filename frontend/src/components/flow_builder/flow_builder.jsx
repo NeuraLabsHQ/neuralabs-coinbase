@@ -1,29 +1,27 @@
 
-import React, { useState, useEffect, useRef ,useCallback} from 'react';
-import { Flex, useColorMode, useColorModeValue, useToast, Box } from '@chakra-ui/react';
-import { FiActivity, FiDatabase, FiSliders, FiExternalLink, FiRepeat, FiGitBranch } from 'react-icons/fi';
+import { Flex, useColorMode, useToast } from '@chakra-ui/react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import NavPanel from '../common_components/NavPanel/NavelPanel';
+import * as d3 from 'd3';
+import { agentAPI } from '../../utils/agent-api';
+import { flowBuilderAPI } from '../../utils/flow-builder-api';
+import { beautifyFlow } from '../../utils/flowBeautifier';
+import { exportFlowAsPNG } from '../../utils/flowExport';
+import { exportFlowAsJSON } from '../../utils/flowExportJson';
+import { exportFlowAsYAML, importFlowFromYAML } from '../../utils/flowExportYaml';
+import { importFlowFromJSON } from '../../utils/flowImportJson';
+import MarketplaceDetailPanel from '../marketplace/MarketplaceContent/MarketplaceDetailPanel';
+import MarketplaceSidebar from '../marketplace/MarketplacePanel/MarketplaceSidebar';
 import BlocksPanel from './BlocksPanel/BlocksPanel';
-import FlowCanvas from './FlowCanvas/FlowCanvas';
-import DetailsPanel from './DetailsPanel/DetailsPanel';
-import TemplatePanel from './TemplatePanel/TemplatePanel';
-import VisualizePanel from './VisualizePanel/VisualizePanel';
 import CodePanel from './CodePanel/CodePanel';
 import ConnectionPopup from './ConnectionPopup/ConnectionPopup';
-import MarketplaceSidebar from '../marketplace/MarketplacePanel/MarketplaceSidebar';
-import MarketplaceDetailPanel from '../marketplace/MarketplaceContent/MarketplaceDetailPanel';
-import { beautifyFlow } from '../../utils/flowBeautifier';
-import * as d3 from 'd3';
-import { exportFlowAsPNG } from '../../utils/flowExport';
-import {exportFlowAsJSON} from '../../utils/flowExportJson';
-import {importFlowFromJSON} from '../../utils/flowImportJson';
-import { exportFlowAsYAML, importFlowFromYAML } from '../../utils/flowExportYaml';
-import { flowBuilderAPI } from '../../utils/flow-builder-api';
-import { agentAPI } from '../../utils/agent-api';
+import DetailsPanel from './DetailsPanel/DetailsPanel';
+import FlowCanvas from './FlowCanvas/FlowCanvas';
+import TemplatePanel from './TemplatePanel/TemplatePanel';
+import VisualizePanel from './VisualizePanel/VisualizePanel';
 
 
-import ICON_MAP from './Common/IconMap'
+import ICON_MAP from './Common/IconMap';
 
 const FlowBuilder = ({ agentId, agentData }) => {
   const { colorMode } = useColorMode();

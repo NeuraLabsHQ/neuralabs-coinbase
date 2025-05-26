@@ -1,39 +1,14 @@
 // src/components/flow_builder/FlowCanvas/FlowCanvas.jsx
-import React, { useEffect, useRef, useState } from 'react';
-import * as d3 from 'd3';
 import { Box, useColorMode, useColorModeValue } from '@chakra-ui/react';
-import { 
-  FiX, 
-  FiActivity, 
-  FiEdit2,
-  FiLayers,
-  FiMaximize2,
-  FiAlertCircle,
-  FiDatabase, 
-  FiSliders, 
-  FiExternalLink, 
-  FiRepeat, 
-  FiGitBranch,
-  FiPlayCircle,
-  FiXCircle,
-  FiMessageCircle,
-  FiBookOpen,
-  FiServer,
-  FiGlobe,
-  FiLink,
-  FiFileText,
-  FiFilter,
-  FiGitMerge,
-  FiShuffle,
-  FiClock,
-  FiCpu,
-  FiLayout,
-  FiCode,
-  FiChevronRight,
-  FiChevronDown
+import * as d3 from 'd3';
+import { useEffect, useRef, useState } from 'react';
+import {
+    FiActivity,
+    FiDatabase,
+    FiSliders
 } from 'react-icons/fi';
 // Define the icon mapping object
-import ICON_MAP from '../Common/IconMap'
+import ICON_MAP from '../Common/IconMap';
 
 const FlowCanvas = ({ 
   nodes, 
