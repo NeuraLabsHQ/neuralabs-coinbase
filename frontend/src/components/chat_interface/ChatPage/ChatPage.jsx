@@ -31,6 +31,7 @@ const ChatPage = () => {
   const websocketRef = useRef(null);
   const timerRef = useRef(null);
   const streamBufferRef = useRef('');
+  const messageStreamBuffers = useRef({});
 
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: false });
   const { colorMode, toggleColorMode } = useColorMode();
@@ -91,8 +92,9 @@ const ChatPage = () => {
       return newState;
     });
 
-    // Clear stream buffer
+    // Clear stream buffer and initialize message-specific buffer
     streamBufferRef.current = '';
+    messageStreamBuffers.current[messageId] = '';
 
     // Start timer for this specific message
     timerRef.current = setInterval(() => {
@@ -123,6 +125,9 @@ const ChatPage = () => {
     
     const ws = new WebSocket(wsUrl);
     websocketRef.current = ws;
+    
+    // Store the message ID this WebSocket is handling
+    ws.messageId = messageId;
 
     ws.onopen = () => {
       console.log('✅ WebSocket connected to backend');
@@ -230,13 +235,17 @@ const ChatPage = () => {
         )
       }));
     } else if (type === 'llm_chunk') {
-      // Accumulate LLM chunks
-      if (data.content) {
-        streamBufferRef.current += data.content;
+      // Accumulate LLM chunks in message-specific buffer
+      if (data.content && messageId) {
+        messageStreamBuffers.current[messageId] = (messageStreamBuffers.current[messageId] || '') + data.content;
+        console.log('LLM chunk for message:', messageId, 'total length:', messageStreamBuffers.current[messageId].length);
       }
     } else if (type === 'final_output') {
-      // Extract answer from final output
-      const finalText = data.text_output || streamBufferRef.current;
+      // Extract answer from final output using message-specific buffer
+      const messageBuffer = messageStreamBuffers.current[messageId] || '';
+      const finalText = data.text_output || messageBuffer;
+      console.log('Final output for message:', messageId, 'using buffer:', finalText.substring(0, 100) + '...');
+      
       const answerMatch = finalText.match(/<answer>([\s\S]*?)<\/answer>/);
       
       if (answerMatch) {
@@ -247,7 +256,8 @@ const ChatPage = () => {
           id: Date.now().toString(),
           role: 'assistant',
           content: answerContent,
-          timestamp: new Date()
+          timestamp: new Date(),
+          parentMessageId: messageId // Link to the user message
         };
         setMessages(prev => [...prev, assistantMessage]);
       } else if (finalText) {
@@ -256,7 +266,8 @@ const ChatPage = () => {
           id: Date.now().toString(),
           role: 'assistant',
           content: finalText,
-          timestamp: new Date()
+          timestamp: new Date(),
+          parentMessageId: messageId // Link to the user message
         };
         setMessages(prev => [...prev, assistantMessage]);
       }
@@ -272,8 +283,11 @@ const ChatPage = () => {
         isThinking: false
       }));
 
-      // Clear stream buffer
+      // Clear stream buffers
       streamBufferRef.current = '';
+      if (messageId && messageStreamBuffers.current[messageId]) {
+        delete messageStreamBuffers.current[messageId];
+      }
       
       // Close WebSocket
       if (websocketRef.current) {
@@ -373,6 +387,7 @@ const ChatPage = () => {
   const handleSendMessage = (content, modelId) => {
     // First, close any existing WebSocket connection and stop thinking UI
     if (websocketRef.current) {
+      console.log('Closing existing WebSocket connection');
       websocketRef.current.close();
       websocketRef.current = null;
     }
@@ -382,7 +397,14 @@ const ChatPage = () => {
       timerRef.current = null;
     }
     
-    // Reset thinking state
+    // Clear all stream buffers
+    streamBufferRef.current = '';
+    Object.keys(messageStreamBuffers.current).forEach(key => {
+      delete messageStreamBuffers.current[key];
+    });
+    
+    // Reset thinking state and clear active message
+    setActiveMessageId(null);
     setThinkingState({
       isThinking: false,
       steps: [],
@@ -413,8 +435,11 @@ const ChatPage = () => {
 
     setMessages(prev => [...prev, userMessage]);
 
-    // Always call the backend for every user input with the message ID
-    simulateThinking(content, modelId, userMessageId);
+    // Small delay to ensure WebSocket is fully closed before starting new connection
+    setTimeout(() => {
+      // Always call the backend for every user input with the message ID
+      simulateThinking(content, modelId, userMessageId);
+    }, 100);
   };
 
   return (
