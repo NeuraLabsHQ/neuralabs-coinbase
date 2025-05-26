@@ -1,0 +1,354 @@
+{
+  "exportDate": "2025-05-26T19:06:33.596Z",
+  "nodes": [
+    {
+      "id": "node-1748286327624",
+      "type": "Start",
+      "name": "Start",
+      "x": -574.8447934199882,
+      "y": 118.04088848497932,
+      "inputs": [],
+      "outputs": [],
+      "hyperparameters": [],
+      "description": "Entry point of a flow",
+      "processing_message": "Processing...",
+      "layer": 0,
+      "tags": [],
+      "code": "",
+      "metadata": {},
+      "templateId": null
+    },
+    {
+      "id": "node-1748286334145",
+      "type": "ContextHistory",
+      "name": "ContextHistory",
+      "x": -261.0947934199882,
+      "y": 113.04088848497932,
+      "inputs": [
+        {
+          "name": "context_history",
+          "type": "array",
+          "required": true,
+          "description": "List of previous conversation messages",
+          "items": {
+            "type": "object"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "context_history",
+          "type": "array",
+          "required": true,
+          "description": "Conversation history",
+          "items": {
+            "type": "object"
+          }
+        }
+      ],
+      "hyperparameters": [],
+      "description": "Access conversation history and context",
+      "processing_message": "Processing...",
+      "layer": 0,
+      "tags": [],
+      "code": "",
+      "metadata": {},
+      "templateId": null
+    },
+    {
+      "id": "node-1748286339970",
+      "type": "ChatInput",
+      "name": "ChatInput",
+      "x": -831.0947934199882,
+      "y": 256.7908884849793,
+      "inputs": [
+        {
+          "name": "chat_input",
+          "type": "string",
+          "required": true,
+          "description": "User input text from chat"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "chat_input",
+          "type": "string",
+          "required": true,
+          "description": "User input text"
+        }
+      ],
+      "hyperparameters": [],
+      "description": "Capture user input text from chat interface",
+      "processing_message": "Processing...",
+      "layer": 0,
+      "tags": [],
+      "code": "",
+      "metadata": {},
+      "templateId": null
+    },
+    {
+      "id": "node-1748286346238",
+      "type": "LLMStructured",
+      "name": "LLMStructured",
+      "x": -587.3447934199882,
+      "y": 369.2908884849793,
+      "inputs": [
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": true,
+          "description": "Main prompt for structured generation"
+        },
+        {
+          "name": "context",
+          "type": "string",
+          "required": false,
+          "description": "Additional context information"
+        },
+        {
+          "name": "additional_data",
+          "type": "any",
+          "required": false,
+          "description": "Extra data to include in generation"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "structured_output",
+          "type": "object",
+          "required": true,
+          "description": "Generated structured data from the LLM"
+        }
+      ],
+      "hyperparameters": [
+        {
+          "name": "model",
+          "type": "string",
+          "required": true,
+          "description": "LLM model to use",
+          "enum": [
+            "gpt-4",
+            "gpt-3.5-turbo",
+            "claude-3",
+            "llama-2"
+          ]
+        },
+        {
+          "name": "max_tokens",
+          "type": "number",
+          "required": false,
+          "description": "Maximum tokens to generate",
+          "default": 1000
+        },
+        {
+          "name": "temperature",
+          "type": "number",
+          "required": false,
+          "description": "Creativity level (0-1)",
+          "default": 0.3,
+          "max": 1,
+          "min": 0
+        },
+        {
+          "name": "output_schema",
+          "type": "object",
+          "required": true,
+          "description": "Expected output structure schema"
+        },
+        {
+          "name": "wrapper_prompt",
+          "type": "string",
+          "required": false,
+          "description": "Template to wrap the prompt"
+        },
+        {
+          "name": "llm_hidden_prompt",
+          "type": "string",
+          "required": false,
+          "description": "Hidden system prompt"
+        }
+      ],
+      "description": "Generate structured data using Large Language Models",
+      "processing_message": "Processing...",
+      "layer": 0,
+      "tags": [],
+      "code": "",
+      "metadata": {},
+      "templateId": null
+    },
+    {
+      "id": "node-1748286347096",
+      "type": "LLMText",
+      "name": "LLMText",
+      "x": -522.3447934199882,
+      "y": 584.2908884849793,
+      "inputs": [
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": true,
+          "description": "Main prompt for text generation"
+        },
+        {
+          "name": "context",
+          "type": "string",
+          "required": false,
+          "description": "Additional context information"
+        },
+        {
+          "name": "additional_data",
+          "type": "any",
+          "required": false,
+          "description": "Extra data to include in generation"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "llm_output",
+          "type": "string",
+          "required": true,
+          "description": "Generated text from the LLM"
+        }
+      ],
+      "hyperparameters": [
+        {
+          "name": "model",
+          "type": "string",
+          "required": true,
+          "description": "LLM model to use",
+          "enum": [
+            "gpt-4",
+            "gpt-3.5-turbo",
+            "claude-3",
+            "llama-2"
+          ]
+        },
+        {
+          "name": "max_tokens",
+          "type": "number",
+          "required": false,
+          "description": "Maximum tokens to generate",
+          "default": 1000
+        },
+        {
+          "name": "temperature",
+          "type": "number",
+          "required": false,
+          "description": "Creativity level (0-1)",
+          "default": 0.7,
+          "max": 1,
+          "min": 0
+        },
+        {
+          "name": "wrapper_prompt",
+          "type": "string",
+          "required": false,
+          "description": "Template to wrap the prompt"
+        }
+      ],
+      "description": "Generate free-form text using Large Language Models",
+      "processing_message": "Processing...",
+      "layer": 0,
+      "tags": [],
+      "code": "",
+      "metadata": {},
+      "templateId": null
+    },
+    {
+      "id": "node-1748286362057",
+      "type": "End",
+      "name": "End",
+      "x": -516.0947934199882,
+      "y": 881.7908884849794,
+      "inputs": [
+        {
+          "name": "text_input",
+          "type": "string",
+          "required": false,
+          "description": "Text input to be output"
+        },
+        {
+          "name": "proposed_transaction",
+          "type": "object",
+          "required": false,
+          "description": "Optional transaction proposal"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text_output",
+          "type": "string",
+          "required": false,
+          "description": "Final text output"
+        },
+        {
+          "name": "proposed_transaction",
+          "type": "object",
+          "required": false,
+          "description": "Optional transaction proposal"
+        }
+      ],
+      "hyperparameters": [],
+      "description": "Exit point of a flow",
+      "processing_message": "Processing...",
+      "layer": 0,
+      "tags": [],
+      "code": "",
+      "metadata": {},
+      "templateId": null
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1748286367151",
+      "source": "node-1748286339970",
+      "target": "node-1748286346238",
+      "sourceName": "ChatInput",
+      "targetName": "LLMStructured",
+      "mappings": [],
+      "sourcePort": 0,
+      "targetPort": 0
+    },
+    {
+      "id": "edge-1748286373085",
+      "source": "node-1748286327624",
+      "target": "node-1748286346238",
+      "sourceName": "Start",
+      "targetName": "LLMStructured",
+      "mappings": [],
+      "sourcePort": 0,
+      "targetPort": 0
+    },
+    {
+      "id": "edge-1748286378142",
+      "source": "node-1748286334145",
+      "target": "node-1748286346238",
+      "sourceName": "ContextHistory",
+      "targetName": "LLMStructured",
+      "mappings": [],
+      "sourcePort": 0,
+      "targetPort": 0
+    },
+    {
+      "id": "edge-1748286381294",
+      "source": "node-1748286346238",
+      "target": "node-1748286347096",
+      "sourceName": "LLMStructured",
+      "targetName": "LLMText",
+      "mappings": [],
+      "sourcePort": 0,
+      "targetPort": 0
+    },
+    {
+      "id": "edge-1748286384571",
+      "source": "node-1748286347096",
+      "target": "node-1748286362057",
+      "sourceName": "LLMText",
+      "targetName": "End",
+      "mappings": [],
+      "sourcePort": 0,
+      "targetPort": 0
+    }
+  ],
+  "version": "1.0"
+}
