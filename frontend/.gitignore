@@ -25,3 +25,8 @@ yarn-error.log*
 package-lock.json
 
 /.logs
+# Vite
+dist
+dist-ssr
+*.local
+.vite
