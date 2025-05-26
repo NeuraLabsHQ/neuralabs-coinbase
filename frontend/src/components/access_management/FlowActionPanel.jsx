@@ -9,7 +9,7 @@ import {
     VStack,
 } from "@chakra-ui/react";
 import { useCurrentWallet } from "@mysten/dapp-kit";
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { FaAngleDoubleLeft, FaAngleDoubleRight } from "react-icons/fa";
 import {
     FiBarChart2,
@@ -48,7 +48,7 @@ const FlowActionPanel = ({ toggleSidebar, sidebarOpen, currentPage, onPageChange
   const toast = useToast();
   
   // Update active action based on current page
-  React.useEffect(() => {
+useEffect(() => {
     const pageToAction = {
       'summary': 'Home',
       'chat': 'Chat',
