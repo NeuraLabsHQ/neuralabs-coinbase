@@ -1,16 +1,15 @@
-import React, { useState } from 'react'
+import { ConnectButton, useCurrentAccount } from '@mysten/dapp-kit'
+import { useState } from 'react'
 import { Toaster } from 'react-hot-toast'
-import { ConnectButton } from '@mysten/dapp-kit'
-import { useCurrentAccount } from '@mysten/dapp-kit'
 
 // Import all page components from new structure
-import ContractInfo from './pages/ContractInfo'
-import NFTManager from './pages/NFTManager'
 import AccessControl from './pages/AccessControl'
-import SealEncryption from './pages/SealEncryption'
-import WalrusStorage from './pages/WalrusStorage'
+import ContractInfo from './pages/ContractInfo'
 import NFTDetails from './pages/NFTDetails'
+import NFTManager from './pages/NFTManager'
+import SealEncryption from './pages/SealEncryption'
 import SUIToWALConverter from './pages/SUIToWALConverter'
+import WalrusStorage from './pages/WalrusStorage'
 
 // Import complex components that haven't been modularized yet
 import EncryptionJourney from './components/EncryptionJourney'
@@ -18,9 +17,9 @@ import InteractiveEncryptionJourneyV2 from './components/InteractiveEncryptionJo
 
 // Configuration based on deployment-config.json
 const CONFIG = {
-  PACKAGE_ADDRESS: import.meta.env.VITE_PACKAGE_ID || '0x31717ba3482c33f3bfe0bab05b3f509053a206b01e727c3184c0bb791d74c7fe',
-  REGISTRY_ADDRESS: import.meta.env.VITE_REGISTRY_ID || '0xd7092aa8c1614c522f42b42cc3410b1276083eea23e66ef83051c9716f8b9970',
-  ACCESS_REGISTRY_ADDRESS: import.meta.env.VITE_ACCESS_REGISTRY_ID || '0xb01b33f8038a78532a946b3d9093616cf050f23f01fb3cfa94d19d2bfc7a2125',
+  PACKAGE_ID: import.meta.env.VITE_PACKAGE_ID || '0x31717ba3482c33f3bfe0bab05b3f509053a206b01e727c3184c0bb791d74c7fe',
+  REGISTRY_ID: import.meta.env.VITE_REGISTRY_ID || '0xd7092aa8c1614c522f42b42cc3410b1276083eea23e66ef83051c9716f8b9970',
+  ACCESS_REGISTRY_ID: import.meta.env.VITE_ACCESS_REGISTRY_ID || '0xb01b33f8038a78532a946b3d9093616cf050f23f01fb3cfa94d19d2bfc7a2125',
   WALRUS_AGGREGATOR: 'https://aggregator.walrus-testnet.walrus.space',
   WALRUS_PUBLISHER: 'https://publisher.walrus-testnet.walrus.space',
   SEAL_APP_NAME: 'NeuraLabs',
@@ -28,8 +27,20 @@ const CONFIG = {
 }
 
 function App() {
+
+
+
   const account = useCurrentAccount()
   const [activeTab, setActiveTab] = useState('info')
+
+// // At the top of App component, after the hooks
+// useEffect(() => {
+//   // Set global references for blockchain wrapper
+//   window.config = CONFIG
+//   window.suiClient = client
+//   window.signAndExecute = signAndExecuteTransaction
+//   window.currentAccount = account
+// }, [account, client, signAndExecuteTransaction])
 
   const tabs = [
     { id: 'info', label: 'Contract Info', icon: '📄' },

@@ -1,9 +1,9 @@
 // Core blockchain types for the NeuraLabs platform
 
 export interface NeuralabsConfig {
-  PACKAGE_ADDRESS: string;
-  REGISTRY_ADDRESS: string;
-  ACCESS_REGISTRY_ADDRESS: string;
+  PACKAGE_ID: string;
+  REGISTRY_ID: string;
+  ACCESS_REGISTRY_ID: string;
   WALRUS_AGGREGATOR: string;
   WALRUS_PUBLISHER: string;
   SEAL_APP_NAME?: string;
@@ -30,6 +30,7 @@ export interface AccessCapData {
   owner: string;
   level: number;
   expires_at?: number;
+  nft_id?: string;  // Add this field
 }
 
 export interface EncryptedData {

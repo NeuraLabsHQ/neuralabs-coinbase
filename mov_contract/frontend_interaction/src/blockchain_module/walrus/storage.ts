@@ -1,11 +1,11 @@
 // Walrus storage integration with blockchain
 
 import { SuiClient } from '@mysten/sui/client';
-import { NeuralabsConfig, TransactionResult } from '../types';
-import { createTransaction, signAndExecuteTransaction } from '../transaction-proposer';
-import { checkWalletConnection } from '../wallet-connection';
 import { checkUserAccess } from '../access-management/check';
-import { ACCESS_LEVELS, STORAGE_CONSTANTS } from '../utils/constants';
+import { createTransaction, signAndExecuteTransaction } from '../transaction-proposer';
+import { NeuralabsConfig, TransactionResult } from '../types';
+import { STORAGE_CONSTANTS } from '../utils/constants';
+import { checkWalletConnection } from '../wallet-connection';
 
 export interface UploadEncryptedDataParams {
   nftId: string;
@@ -37,12 +37,12 @@ export async function uploadEncryptedDataReference(
   };
   
   tx.moveCall({
-    target: `${config.PACKAGE_ADDRESS}::storage::upload_encrypted_data`,
+    target: `${config.PACKAGE_ID}::storage::upload_encrypted_data`,
     arguments: [
       tx.object(params.nftId),
       tx.pure.string(params.blobId),
       tx.pure.string(JSON.stringify(fullMetadata)),
-      tx.object(config.ACCESS_REGISTRY_ADDRESS),
+      tx.object(config.ACCESS_REGISTRY_ID),
     ]
   });
   
@@ -110,8 +110,8 @@ export async function checkStorageAccess(
 ): Promise<boolean> {
   const access = await checkUserAccess(client, config, nftId, userAddress);
   
-  // User needs at least contributor access to upload
-  return access.level >= ACCESS_LEVELS.CONTRIBUTOR;
+  // User needs at least level 5 (Edit Data) to upload
+  return access.level >= 5;
 }
 
 export function validateFileSize(fileSize: number): void {
@@ -133,11 +133,11 @@ export async function removeStoredData(
   const tx = createTransaction();
   
   tx.moveCall({
-    target: `${config.PACKAGE_ADDRESS}::storage::remove_stored_data`,
+    target: `${config.PACKAGE_ID}::storage::remove_stored_data`,
     arguments: [
       tx.object(nftId),
       tx.pure.string(blobId),
-      tx.object(config.ACCESS_REGISTRY_ADDRESS),
+      tx.object(config.ACCESS_REGISTRY_ID),
     ]
   });
   

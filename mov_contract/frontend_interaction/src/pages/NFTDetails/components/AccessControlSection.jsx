@@ -1,4 +1,3 @@
-
 import { ACCESS_LEVELS } from '../../../utils/blockchain'
 
 export function AccessControlSection({ accessDetails }) {

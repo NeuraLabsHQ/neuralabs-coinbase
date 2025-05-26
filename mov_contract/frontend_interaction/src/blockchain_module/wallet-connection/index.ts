@@ -1,5 +1,6 @@
 // Wallet connection module for SUI blockchain
 
+import { WalletAccount } from '@mysten/wallet-standard';
 import { WalletState } from '../types';
 import { ERROR_MESSAGES } from '../utils/constants';
 
@@ -10,33 +11,25 @@ export class WalletConnectionError extends Error {
   }
 }
 
-export function checkWalletConnection(currentWallet: any): void {
-  if (!currentWallet?.isConnected) {
+export function checkWalletConnection(currentAccount: WalletAccount | null): void {
+  if (!currentAccount || !currentAccount.address) {
     throw new WalletConnectionError(ERROR_MESSAGES.WALLET_NOT_CONNECTED);
   }
 }
 
-export function getWalletAddress(currentWallet: any): string {
-  checkWalletConnection(currentWallet);
-  
-  if (!currentWallet.accounts || currentWallet.accounts.length === 0) {
-    throw new WalletConnectionError('No wallet accounts found');
-  }
-  
-  return currentWallet.accounts[0].address;
+export function getWalletAddress(currentAccount: WalletAccount | null): string {
+  checkWalletConnection(currentAccount);
+  return currentAccount!.address;
 }
 
-export function getWalletState(currentWallet: any): WalletState {
-  if (!currentWallet) {
+export function getWalletState(currentAccount: WalletAccount | null): WalletState {
+  if (!currentAccount) {
     return { isConnected: false };
   }
   
-  const isConnected = currentWallet.isConnected ?? false;
-  const address = isConnected && currentWallet.accounts?.[0]?.address;
-  
   return {
-    isConnected,
-    address: address || undefined,
+    isConnected: true,
+    address: currentAccount.address,
   };
 }
 

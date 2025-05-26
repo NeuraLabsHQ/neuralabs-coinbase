@@ -137,6 +137,6 @@ export async function checkEncryptionAccess(
 ): Promise<boolean> {
   const access = await checkUserAccess(client, config, nftId, userAddress);
   
-  // User needs at least contributor access to encrypt/decrypt
-  return access.level >= ACCESS_LEVELS.CONTRIBUTOR;
+  // User needs at least level 5 (Edit Data) to encrypt/decrypt
+  return access.level >= 5;
 }

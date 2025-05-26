@@ -1,64 +1,111 @@
 // JavaScript wrapper for blockchain modules
 // This ensures compatibility between JS and TS files
 
+// Import the client instances
+import { useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
+
 // Re-export contract functions
 export { getContractInfo } from '../blockchain_module/contracts/index.ts'
 
-// Re-export NFT functions  
+// Re-export NFT functions with wrappers
 export { 
-  mintNFT, 
   getUserNFTs, 
   getTotalNFTCount 
 } from '../blockchain_module/nfts/index.ts'
 
-// Import access management functions first
-import {
-  grantAccess,
-  revokeAccess,
-  checkUserAccess,
-  getUserAccessCaps,
-  createAccessCap
-} from '../blockchain_module/access-management/index.ts'
+// Import NFT creation function
+import { mintNFT as _mintNFT } from '../blockchain_module/nfts/index.ts'
 
-// Re-export access management functions (keeping original names)
-export {
-  grantAccess,
-  revokeAccess,
-  checkUserAccess,
-  getUserAccessCaps,
-  createAccessCap
+// Wrap mintNFT to handle the client and signAndExecute properly
+export const mintNFT = async (client, config, currentAccount, signAndExecute, params) => {
+  return _mintNFT(client, config, currentAccount, signAndExecute, params)
 }
 
-// Create aliases for backward compatibility
-export const grantAccessToUser = grantAccess
-export const revokeUserAccess = revokeAccess
-export const getAccessCaps = getUserAccessCaps
-
-// Import seal encryption functions first
+// Import access management functions first
 import {
-  getSealClient,
-  createSessionKey,
-  importSessionKey,
-  encryptData,
-  decryptData,
-  storeEncryptedData,
+  grantAccess as _grantAccess,
+  revokeAccess as _revokeAccess,
+  checkUserAccess as _checkUserAccess,
+  getUserAccessCaps as _getUserAccessCaps,
+  createAccessCap as _createAccessCap
+} from '../blockchain_module/access-management/index.ts'
+
+// Wrap access functions
+export const grantAccessToUser = async (params) => {
+  const client = params.client || window.suiClient
+  const signAndExecute = params.signAndExecute || window.signAndExecute
+  const config = params.config || window.config
+  const currentAccount = params.currentAccount || window.currentAccount
+  
+  return _grantAccess(client, config, currentAccount, signAndExecute, {
+    nftId: params.nftId,
+    recipientAddress: params.userAddress,
+    accessLevel: params.accessLevel,
+    accessCapId: params.accessCapId
+  })
+}
+
+export const revokeUserAccess = async (params) => {
+  const client = params.client || window.suiClient
+  const signAndExecute = params.signAndExecute || window.signAndExecute
+  const config = params.config || window.config
+  const currentAccount = params.currentAccount || window.currentAccount
+  
+  return _revokeAccess(client, config, currentAccount, signAndExecute, {
+    nftId: params.nftId,
+    userAddress: params.userAddress,
+    accessCapId: params.accessCapId
+  })
+}
+
+export const checkUserAccess = async (nftId, userAddress) => {
+  const client = window.suiClient
+  const config = window.config
+  return _checkUserAccess(client, config, nftId, userAddress)
+}
+
+export const getAccessCaps = async (client, config, userAddress) => {
+  return _getUserAccessCaps(client, config, userAddress)
+}
+
+export const createAccessCap = async (nftId, userAddress) => {
+  const client = window.suiClient
+  const signAndExecute = window.signAndExecute
+  const config = window.config
+  const currentAccount = window.currentAccount
+  
+  return _createAccessCap(client, config, currentAccount, signAndExecute, { nftId })
+}
+
+// Import seal encryption functions
+import {
+  getSealClient as _getSealClient,
+  createSessionKey as _createSessionKey,
+  importSessionKey as _importSessionKey,
+  encryptData as _encryptData,
+  decryptData as _decryptData,
+  storeEncryptedData as _storeEncryptedData,
   SessionKey
 } from '../blockchain_module/seal-encryption/index.ts'
 
-// Re-export seal encryption functions (keeping original names)
-export {
-  getSealClient,
-  createSessionKey,
-  importSessionKey,
-  encryptData,
-  decryptData,
-  storeEncryptedData,
-  SessionKey
+// Wrap Seal functions
+export const initializeSealClient = (suiClient) => {
+  return _getSealClient({ suiClient, network: 'testnet', verifyKeyServers: false })
 }
 
-// Create aliases for backward compatibility
-export const initializeSealClient = getSealClient
-export const createSealSessionKey = createSessionKey
+export const createSealSessionKey = (params) => {
+  return new SessionKey({
+    address: params.address,
+    packageId: params.packageId,
+    ttlMin: params.ttlMin || 10
+  })
+}
+
+export const importSessionKey = _importSessionKey
+export const encryptData = _encryptData
+export const decryptData = _decryptData
+export const storeEncryptedData = _storeEncryptedData
+export { SessionKey }
 
 // Create wrapper functions for missing/complex operations
 export const exportSessionKey = async (sessionKey) => {
@@ -70,8 +117,7 @@ export const exportSessionKey = async (sessionKey) => {
 
 export const fetchDecryptionKeys = async ({ ids, tx, sessionKey, threshold, client }) => {
   // This is typically handled within the decrypt operation itself
-  // For now, return a placeholder or integrate with the actual decryption flow
-  console.warn('fetchDecryptionKeys is a complex operation - handled within decryptData')
+  console.warn('fetchDecryptionKeys is handled within decryptData')
   return Promise.resolve()
 }
 
@@ -81,30 +127,23 @@ export {
   downloadFromWalrus
 } from '../blockchain_module/walrus/index.ts'
 
-// Import exchange functions from the correct files
-import {
-  getSuiBalance,
-  getWalBalance
-} from '../blockchain_module/exchange/balance.ts'
-
-import {
-  convertSuiToWal
-} from '../blockchain_module/exchange/convert.ts'
-
 // Re-export exchange functions
 export {
-  getSuiBalance,
-  getWalBalance,
-  convertSuiToWal
-}
-
-// Create aliases for backward compatibility
-export const getSUIBalance = getSuiBalance
-export const getWALBalance = getWalBalance
-export const convertSUIToWAL = convertSuiToWal
+  getSuiBalance as getSUIBalance,
+  getWalBalance as getWALBalance,
+  convertSuiToWal as convertSUIToWAL
+} from '../blockchain_module/exchange/index.ts'
 
 // Re-export transaction proposer functions
 export { createTransaction } from '../blockchain_module/transaction-proposer/index.ts'
 
 // Re-export constants
 export { ACCESS_LEVELS } from '../blockchain_module/utils/constants.ts'
+
+// Set up global references for easy access
+if (typeof window !== 'undefined') {
+  window.config = null
+  window.suiClient = null
+  window.signAndExecute = null
+  window.currentAccount = null
+}

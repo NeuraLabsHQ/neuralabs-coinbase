@@ -13,7 +13,7 @@ export async function getUserNFTs(
     const objects = await client.getOwnedObjects({
       owner: userAddress,
       filter: {
-        StructType: `${config.PACKAGE_ADDRESS}::nft::NeuraLabsNFT`,
+        StructType: `${config.PACKAGE_ID}::nft::NeuraLabsNFT`,
       },
       options: {
         showContent: true,
@@ -81,7 +81,7 @@ export async function getTotalNFTCount(
 ): Promise<number> {
   try {
     const registryObject = await client.getObject({
-      id: config.REGISTRY_ADDRESS,
+      id: config.REGISTRY_ID,
       options: { showContent: true },
     });
     

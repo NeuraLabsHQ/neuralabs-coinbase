@@ -1,6 +1,6 @@
 // Seal client management
 
-import { getAllowlistedKeyServers, SealClient, SessionKey } from '@mysten/seal';
+import {getAllowlistedKeyServers ,  SealClient, SessionKey } from '@mysten/seal';
 import { SuiClient } from '@mysten/sui/client';
 
 let sealClientInstance: SealClient | null = null;
@@ -13,6 +13,7 @@ export interface SealClientConfig {
 
 export function getSealClient(config: SealClientConfig): SealClient {
   if (!sealClientInstance) {
+    // Use the fixed testnet key servers from the example
     const network = config.network || 'testnet';
     
     // Get allowlisted key servers for the network
@@ -20,9 +21,11 @@ export function getSealClient(config: SealClientConfig): SealClient {
       id => [id, 1] as [string, number]
     );
     
+    
+    
     sealClientInstance = new SealClient({
       suiClient: config.suiClient,
-      serverObjectIds,
+      serverObjectIds: serverObjectIds,
       verifyKeyServers: config.verifyKeyServers ?? false,
     });
   }
@@ -36,7 +39,7 @@ export function resetSealClient(): void {
 
 export interface SessionKeyResult {
   sessionKey: SessionKey;
-  exported: string; // Keep as string for JSON storage
+  exported: string;
   expiresAt: number;
 }
 
@@ -48,25 +51,20 @@ export async function createSessionKey(
   ttlMin: number = 10
 ): Promise<SessionKeyResult> {
   try {
-    // Create a new session key
     const sessionKey = new SessionKey({
-      address,
-      packageId,
-      ttlMin, // Time to live in minutes
+      address: address,
+      packageId: packageId,
+      ttlMin: ttlMin,
     });
     
-    // Get the personal message to sign
     const message = sessionKey.getPersonalMessage();
     
-    // Sign the message
     const { signature } = await signPersonalMessage({
       message,
     });
     
-    // Set the signature on the session key
     await sessionKey.setPersonalMessageSignature(signature);
     
-    // Export for persistence
     const exported = JSON.stringify(await sessionKey.export());
     const expiresAt = Date.now() + (ttlMin * 60 * 1000);
     
@@ -81,16 +79,13 @@ export async function createSessionKey(
   }
 }
 
-// Import an existing session key
 export async function importSessionKey(
   exported: string,
   options: { signer?: any; client?: any } = {}
 ): Promise<SessionKey> {
   try {
-    // SessionKey.import needs parsed export and options
     const sessionKey = await SessionKey.import(JSON.parse(exported), options);
     
-    // Check if expired
     if (sessionKey.isExpired()) {
       throw new Error('Session key has expired');
     }
@@ -102,7 +97,6 @@ export async function importSessionKey(
   }
 }
 
-// Helper to check if a session key is expired
 export function isSessionKeyExpired(expiresAt: number): boolean {
   return Date.now() > expiresAt;
 }

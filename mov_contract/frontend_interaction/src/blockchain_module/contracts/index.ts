@@ -30,19 +30,19 @@ export async function getContractInfo(
   try {
     // Fetch package info
     const packageObject = await client.getObject({
-      id: config.PACKAGE_ADDRESS,
+      id: config.PACKAGE_ID,
       options: { showContent: true },
     });
     
     // Fetch registry info
     const registryObject = await client.getObject({
-      id: config.REGISTRY_ADDRESS,
+      id: config.REGISTRY_ID,
       options: { showContent: true },
     });
     
     // Fetch access registry info
     const accessRegistryObject = await client.getObject({
-      id: config.ACCESS_REGISTRY_ADDRESS,
+      id: config.ACCESS_REGISTRY_ID,
       options: { showContent: true },
     });
     
@@ -52,18 +52,18 @@ export async function getContractInfo(
     
     return {
       package: {
-        id: config.PACKAGE_ADDRESS,
+        id: config.PACKAGE_ID,
         version: packageFields?.version || '1.0.0',
         published_at: packageFields?.published_at || 'Unknown',
       },
       registry: {
-        id: config.REGISTRY_ADDRESS,
+        id: config.REGISTRY_ID,
         creator: registryFields?.creator || '',
         nft_count: Number(registryFields?.nft_count || 0),
-        access_registry: registryFields?.access_registry || config.ACCESS_REGISTRY_ADDRESS,
+        access_registry: registryFields?.access_registry || config.ACCESS_REGISTRY_ID,
       },
       accessRegistry: {
-        id: config.ACCESS_REGISTRY_ADDRESS,
+        id: config.ACCESS_REGISTRY_ID,
         creator: accessRegistryFields?.creator || '',
         grant_count: Number(accessRegistryFields?.grant_count || 0),
       },
@@ -75,13 +75,13 @@ export async function getContractInfo(
 }
 
 export function getPackageAddress(config: NeuralabsConfig): string {
-  return config.PACKAGE_ADDRESS;
+  return config.PACKAGE_ID;
 }
 
 export function getRegistryAddress(config: NeuralabsConfig): string {
-  return config.REGISTRY_ADDRESS;
+  return config.REGISTRY_ID;
 }
 
 export function getAccessRegistryAddress(config: NeuralabsConfig): string {
-  return config.ACCESS_REGISTRY_ADDRESS;
+  return config.ACCESS_REGISTRY_ID;
 }

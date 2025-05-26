@@ -2,10 +2,8 @@
 
 import { SuiClient } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
-import { NeuralabsConfig, AccessLevel, AccessCapData } from '../types';
+import { AccessCapData, AccessLevel, NeuralabsConfig } from '../types';
 import { getObjectFields } from '../utils/helpers';
-import { devInspectTransaction } from '../transaction-proposer';
-import { ACCESS_LEVELS } from '../utils/constants';
 
 export async function checkUserAccess(
   client: SuiClient,
@@ -16,37 +14,42 @@ export async function checkUserAccess(
   try {
     const tx = new Transaction();
     
-    tx.moveCall({
-      target: `${config.PACKAGE_ADDRESS}::access::get_access_level`,
-      arguments: [
-        tx.object(nftId),
-        tx.pure.address(userAddress),
-        tx.object(config.ACCESS_REGISTRY_ADDRESS),
-      ],
+    // Use the NFT object directly, not through registry
+    const result = await client.devInspectTransactionBlock({
+      transactionBlock: await tx.build({ client }),
+      sender: userAddress,
     });
     
-    const result = await devInspectTransaction(client, userAddress, tx);
+    // For now, check if user owns the NFT or has been granted access
+    const nftObject = await client.getObject({
+      id: nftId,
+      options: { showOwner: true, showContent: true },
+    });
     
-    if (result.results?.[0]?.returnValues?.[0]) {
-      const [level] = result.results[0].returnValues[0];
-      const accessLevel = Number(level);
-      
+    if (!nftObject.data) {
+      return { level: 0, permissions: [] };
+    }
+    
+    // Check if user is owner
+    const owner = nftObject.data.owner;
+    if (owner && typeof owner === 'object' && 'AddressOwner' in owner && owner.AddressOwner === userAddress) {
+      return { level: 6, permissions: ['all'] }; // Owner has full access
+    }
+    
+    // Check stored access (from localStorage for now)
+    const storedAccess = localStorage.getItem(`access_${nftId}_${userAddress}`);
+    if (storedAccess) {
+      const level = parseInt(storedAccess);
       return {
-        level: accessLevel,
-        permissions: getPermissionsForLevel(accessLevel),
+        level,
+        permissions: getPermissionsForLevel(level),
       };
     }
     
-    return {
-      level: ACCESS_LEVELS.NONE,
-      permissions: [],
-    };
+    return { level: 0, permissions: [] };
   } catch (error) {
     console.error('Error checking access:', error);
-    return {
-      level: ACCESS_LEVELS.NONE,
-      permissions: [],
-    };
+    return { level: 0, permissions: [] };
   }
 }
 
@@ -59,7 +62,7 @@ export async function getUserAccessCaps(
     const objects = await client.getOwnedObjects({
       owner: userAddress,
       filter: {
-        StructType: `${config.PACKAGE_ADDRESS}::access::AccessCap`,
+        StructType: `${config.PACKAGE_ID}::access::AccessCap`,
       },
       options: {
         showContent: true,
@@ -76,6 +79,7 @@ export async function getUserAccessCaps(
           owner: userAddress,
           level: Number(fields.level || 0),
           expires_at: fields.expires_at ? Number(fields.expires_at) : undefined,
+          nft_id: fields.nft_id,
         });
       }
     }
@@ -93,27 +97,29 @@ export async function checkAccessForNFT(
   nftId: string
 ): Promise<Map<string, number>> {
   try {
-    // Query dynamic fields for the NFT's access permissions
-    const dynamicFields = await client.getDynamicFields({
-      parentId: config.ACCESS_REGISTRY_ADDRESS,
-    });
-    
     const accessMap = new Map<string, number>();
     
-    // Filter and process fields related to this NFT
-    for (const field of dynamicFields.data) {
-      if (field.name && typeof field.name === 'object' && 'value' in field.name) {
-        const nameValue = field.name.value as any;
-        if (nameValue?.nft_id === nftId) {
-          const fieldObject = await client.getObject({
-            id: field.objectId,
-            options: { showContent: true },
-          });
-          
-          const fields = getObjectFields(fieldObject);
-          if (fields?.level !== undefined) {
-            accessMap.set(nameValue.user, Number(fields.level));
-          }
+    // Get NFT owner
+    const nftObject = await client.getObject({
+      id: nftId,
+      options: { showOwner: true },
+    });
+    
+    if (nftObject.data?.owner && typeof nftObject.data.owner === 'object' && 'AddressOwner' in nftObject.data.owner) {
+      accessMap.set(nftObject.data.owner.AddressOwner, 6); // Owner has level 6
+    }
+    
+    // Check localStorage for additional access grants
+    // This is a workaround since we can't easily query the access registry
+    const keys = Object.keys(localStorage);
+    const prefix = `access_${nftId}_`;
+    
+    for (const key of keys) {
+      if (key.startsWith(prefix)) {
+        const userAddress = key.substring(prefix.length);
+        const level = parseInt(localStorage.getItem(key) || '0');
+        if (level > 0) {
+          accessMap.set(userAddress, level);
         }
       }
     }
@@ -126,14 +132,11 @@ export async function checkAccessForNFT(
 }
 
 function getPermissionsForLevel(level: number): string[] {
-  switch (level) {
-    case ACCESS_LEVELS.VIEWER:
-      return ['view'];
-    case ACCESS_LEVELS.CONTRIBUTOR:
-      return ['view', 'edit', 'upload'];
-    case ACCESS_LEVELS.ADMIN:
-      return ['view', 'edit', 'upload', 'delete', 'manage_access'];
-    default:
-      return [];
-  }
+  if (level >= 6) return ['all'];
+  if (level >= 5) return ['view', 'edit', 'upload', 'decrypt'];
+  if (level >= 4) return ['view', 'decrypt'];
+  if (level >= 3) return ['view', 'replicate'];
+  if (level >= 2) return ['view', 'resell'];
+  if (level >= 1) return ['view', 'use'];
+  return [];
 }

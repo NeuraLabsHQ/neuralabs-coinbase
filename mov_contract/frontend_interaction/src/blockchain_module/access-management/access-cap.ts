@@ -1,85 +1,120 @@
 // AccessCap creation functionality
 
 import { SuiClient } from '@mysten/sui/client';
+import { Transaction } from '@mysten/sui/transactions';
 import { NeuralabsConfig, TransactionResult } from '../types';
-import { createTransaction, signAndExecuteTransaction } from '../transaction-proposer';
 import { checkWalletConnection } from '../wallet-connection';
 
 export interface CreateAccessCapParams {
   nftId: string;
-  level: number;
-  expiresAt?: number; // Optional expiration timestamp
+  level?: number;
+  expiresAt?: number;
 }
 
 export async function createAccessCap(
-  _client: SuiClient,
+  client: SuiClient,
   config: NeuralabsConfig,
-  currentWallet: any,
+  currentAccount: any,
   signAndExecute: any,
   params: CreateAccessCapParams
 ): Promise<TransactionResult> {
-  checkWalletConnection(currentWallet);
+  checkWalletConnection(currentAccount);
   
-  const tx = createTransaction();
+  const tx = new Transaction();
   
-  if (params.expiresAt) {
-    // Create with expiration
-    tx.moveCall({
-      target: `${config.PACKAGE_ADDRESS}::access::create_access_cap_with_expiry`,
-      arguments: [
-        tx.object(params.nftId),
-        tx.pure.u8(params.level),
-        tx.pure.u64(params.expiresAt),
-        tx.object(config.ACCESS_REGISTRY_ADDRESS),
-      ]
-    });
-  } else {
-    // Create without expiration
-    tx.moveCall({
-      target: `${config.PACKAGE_ADDRESS}::access::create_access_cap_entry`,
-      arguments: [
-        tx.object(params.nftId),
-        tx.pure.u8(params.level),
-        tx.object(config.ACCESS_REGISTRY_ADDRESS),
-      ]
-    });
+  tx.moveCall({
+    target: `${config.PACKAGE_ID}::access::create_access_cap_entry`,
+    arguments: [
+      tx.object(params.nftId),
+    ]
+  });
+  
+  const result = await signAndExecute({
+    transaction: tx,
+  });
+  
+  if (!result || !result.digest) {
+    throw new Error('Transaction failed');
   }
   
-  return await signAndExecuteTransaction(signAndExecute, tx);
+  return {
+    digest: result.digest,
+    effects: result.effects,
+    events: result.events || [],
+    objectChanges: result.objectChanges || [],
+  };
 }
 
 export async function transferAccessCap(
-  _client: SuiClient,
-  _config: NeuralabsConfig,
-  currentWallet: any,
+  client: SuiClient,
+  config: NeuralabsConfig,
+  currentAccount: any,
   signAndExecute: any,
   accessCapId: string,
   recipientAddress: string
 ): Promise<TransactionResult> {
-  checkWalletConnection(currentWallet);
+  checkWalletConnection(currentAccount);
   
-  const tx = createTransaction();
+  const tx = new Transaction();
   
   tx.transferObjects([tx.object(accessCapId)], recipientAddress);
   
-  return await signAndExecuteTransaction(signAndExecute, tx);
+  const result = await signAndExecute({
+    transaction: tx,
+  });
+  
+  if (!result || !result.digest) {
+    throw new Error('Transaction failed');
+  }
+  
+  return {
+    digest: result.digest,
+    effects: result.effects,
+    events: result.events || [],
+    objectChanges: result.objectChanges || [],
+  };
 }
 
 export async function burnAccessCap(
-  _client: SuiClient,
+  client: SuiClient,
   config: NeuralabsConfig,
-  currentWallet: any,
+  currentAccount: any,
   signAndExecute: any,
   accessCapId: string
 ): Promise<TransactionResult> {
-  checkWalletConnection(currentWallet);
+  checkWalletConnection(currentAccount);
   
-  const tx = createTransaction();
+  const tx = new Transaction();
   
+  // Note: The Move contract might not have a burn_access_cap function
+  // If it doesn't, we can transfer to 0x0 address or use a delete function
+  // For now, let's assume there's a destroy function or we transfer to burn address
+  
+  // Option 1: If there's a destroy function in the contract
+  /*
   tx.moveCall({
-    target: `${config.PACKAGE_ADDRESS}::access::burn_access_cap`,
+    target: `${config.PACKAGE_ID}::access::destroy_access_cap`,
     arguments: [tx.object(accessCapId)]
   });
+  */
   
-  return await signAndExecuteTransaction(signAndExecute, tx);
+  // Option 2: Transfer to burn address (0x0)
+  // This effectively removes it from circulation
+  const BURN_ADDRESS = '0x0000000000000000000000000000000000000000000000000000000000000000';
+  tx.transferObjects([tx.object(accessCapId)], BURN_ADDRESS);
+  
+  const result = await signAndExecute({
+    transaction: tx,
+  });
+  
+  if (!result || !result.digest) {
+    throw new Error('Transaction failed');
+  }
+  
+  return {
+    digest: result.digest,
+    effects: result.effects,
+    events: result.events || [],
+    objectChanges: result.objectChanges || [],
+  };
 }

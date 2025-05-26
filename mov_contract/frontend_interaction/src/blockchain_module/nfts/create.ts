@@ -1,9 +1,9 @@
 // NFT creation functionality
 
 import { SuiClient } from '@mysten/sui/client';
+import { Transaction } from '@mysten/sui/transactions';
 import { NeuralabsConfig, TransactionResult } from '../types';
 import { SUI_CONSTANTS } from '../utils/constants';
-import { createTransaction, signAndExecuteTransaction } from '../transaction-proposer';
 import { checkWalletConnection } from '../wallet-connection';
 
 export interface MintNFTParams {
@@ -13,54 +13,75 @@ export interface MintNFTParams {
 }
 
 export async function mintNFT(
-  _client: SuiClient,
+  client: SuiClient,
   config: NeuralabsConfig,
-  currentWallet: any,
+  currentAccount: any,
   signAndExecute: any,
   params: MintNFTParams
 ): Promise<TransactionResult> {
-  checkWalletConnection(currentWallet);
+  checkWalletConnection(currentAccount);
   
-  const tx = createTransaction();
+  const tx = new Transaction();
   
   tx.moveCall({
-    target: `${config.PACKAGE_ADDRESS}::nft::mint_to_sender`,
+    target: `${config.PACKAGE_ID}::nft::mint_to_sender`,
     arguments: [
       tx.pure.string(params.name),
       tx.pure.string(params.description),
-      tx.pure.string(params.url),
-      tx.object(config.REGISTRY_ADDRESS),
       tx.object(SUI_CONSTANTS.CLOCK_OBJECT_ID),
     ]
   });
   
-  return await signAndExecuteTransaction(signAndExecute, tx);
+  const result = await signAndExecute({
+    transaction: tx,
+  });
+  
+  if (!result || !result.digest) {
+    throw new Error('Transaction failed');
+  }
+  
+  return {
+    digest: result.digest,
+    effects: result.effects,
+    events: result.events || [],
+    objectChanges: result.objectChanges || [],
+  };
 }
 
 export async function batchMintNFTs(
-  _client: SuiClient,
+  client: SuiClient,
   config: NeuralabsConfig,
-  currentWallet: any,
+  currentAccount: any,
   signAndExecute: any,
   nfts: MintNFTParams[]
 ): Promise<TransactionResult> {
-  checkWalletConnection(currentWallet);
+  checkWalletConnection(currentAccount);
   
-  const tx = createTransaction();
+  const tx = new Transaction();
   
-  // Add multiple mint calls in a single transaction
   for (const nft of nfts) {
     tx.moveCall({
-      target: `${config.PACKAGE_ADDRESS}::nft::mint_to_sender`,
+      target: `${config.PACKAGE_ID}::nft::mint_to_sender`,
       arguments: [
         tx.pure.string(nft.name),
         tx.pure.string(nft.description),
-        tx.pure.string(nft.url),
-        tx.object(config.REGISTRY_ADDRESS),
         tx.object(SUI_CONSTANTS.CLOCK_OBJECT_ID),
       ],
     });
   }
   
-  return await signAndExecuteTransaction(signAndExecute, tx);
+  const result = await signAndExecute({
+    transaction: tx,
+  });
+  
+  if (!result || !result.digest) {
+    throw new Error('Transaction failed');
+  }
+  
+  return {
+    digest: result.digest,
+    effects: result.effects,
+    events: result.events || [],
+    objectChanges: result.objectChanges || [],
+  };
 }

@@ -8,7 +8,7 @@ export const SUI_CONSTANTS = {
 } as const;
 
 export const NFT_CONSTANTS = {
-  TYPE_PREFIX: 'neuranft_contract::nft::',
+  TYPE_PREFIX: 'neuralabs::nft::',
   NFT_TYPE: 'NeuraLabsNFT',
   ACCESS_CAP_TYPE: 'AccessCap',
 } as const;
@@ -21,10 +21,12 @@ export const STORAGE_CONSTANTS = {
 } as const;
 
 export const ACCESS_LEVELS = {
-  NONE: 0,
-  VIEWER: 1,
-  CONTRIBUTOR: 2,
-  ADMIN: 3,
+  1: { name: 'Use Model', canDecrypt: false },
+  2: { name: 'Resale', canDecrypt: false },
+  3: { name: 'Create Replica', canDecrypt: false },
+  4: { name: 'View/Download', canDecrypt: true },
+  5: { name: 'Edit Data', canDecrypt: true },
+  6: { name: 'Absolute Ownership', canDecrypt: true }
 } as const;
 
 export const ERROR_MESSAGES = {

@@ -1,8 +1,8 @@
 // Seal storage integration with blockchain
 
 import { SuiClient } from '@mysten/sui/client';
-import { NeuralabsConfig, TransactionResult, EncryptedData } from '../types';
 import { createTransaction, signAndExecuteTransaction } from '../transaction-proposer';
+import { EncryptedData, NeuralabsConfig, TransactionResult } from '../types';
 import { checkWalletConnection } from '../wallet-connection';
 
 export interface StoreEncryptedDataParams {
@@ -27,13 +27,13 @@ export async function storeEncryptedData(
   const metadataJson = params.metadata ? JSON.stringify(params.metadata) : '{}';
   
   tx.moveCall({
-    target: `${config.PACKAGE_ADDRESS}::storage::add_encrypted_data`,
+    target: `${config.PACKAGE_ID}::storage::add_encrypted_data`,
     arguments: [
       tx.object(params.nftId),
       tx.pure.string(params.blobId),
       tx.pure.string(params.encryptionType),
       tx.pure.string(metadataJson),
-      tx.object(config.ACCESS_REGISTRY_ADDRESS),
+      tx.object(config.ACCESS_REGISTRY_ID),
     ]
   });
   
@@ -97,11 +97,11 @@ export async function removeEncryptedData(
   const tx = createTransaction();
   
   tx.moveCall({
-    target: `${config.PACKAGE_ADDRESS}::storage::remove_encrypted_data`,
+    target: `${config.PACKAGE_ID}::storage::remove_encrypted_data`,
     arguments: [
       tx.object(nftId),
       tx.pure.string(blobId),
-      tx.object(config.ACCESS_REGISTRY_ADDRESS),
+      tx.object(config.ACCESS_REGISTRY_ID),
     ]
   });
   
