@@ -83,7 +83,7 @@ function SealEncryption({ config }) {
 
         // The first element is the object ID, and the second element is the weight of the key server.
 
-        keyServerIds = [[ keyServerIds[0], 1 ], [ keyServerIds[1], 1]]
+        // keyServerIds = [[ keyServerIds[0], 1 ], [ keyServerIds[1], 1]]
         const seal = new SealClient({
           client,
           serverObjectIds: keyServerIds,
