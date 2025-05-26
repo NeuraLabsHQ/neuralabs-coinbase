@@ -27,9 +27,9 @@ export async function grantAccess(
   tx.moveCall({
     target: `${config.PACKAGE_ID}::access::grant_access`,
     arguments: [
-      tx.object(config.ACCESS_REGISTRY_ID),
+      tx.object(config.REGISTRY_ID),
       tx.object(params.accessCapId),
-      tx.object(params.nftId),
+      tx.pure.id(params.nftId),
       tx.pure.address(params.recipientAddress),
       tx.pure.u8(params.accessLevel),
     ]
@@ -72,9 +72,9 @@ export async function revokeAccess(
   tx.moveCall({
     target: `${config.PACKAGE_ID}::access::revoke_access`,
     arguments: [
-      tx.object(config.ACCESS_REGISTRY_ID),
+      tx.object(config.REGISTRY_ID),
       tx.object(params.accessCapId),
-      tx.object(params.nftId),
+      tx.pure.id(params.nftId),
       tx.pure.address(params.userAddress),
     ]
   });
@@ -117,7 +117,7 @@ export async function changeAccessLevel(
   tx.moveCall({
     target: `${config.PACKAGE_ID}::access::grant_access`,
     arguments: [
-      tx.object(config.ACCESS_REGISTRY_ID),
+      tx.object(config.REGISTRY_ID),
       tx.object(nftId), // Assuming we need the NFT ID here
       tx.pure.address(userAddress),
       tx.pure.u8(newLevel),
