@@ -13,7 +13,10 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': '/src'
+      '@': '/src',
+      '@blockchain': '/src/blockchain_module',
+      '@pages': '/src/pages',
+      '@components': '/src/components'
     }
   },
   define: {

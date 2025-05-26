@@ -302,5 +302,5 @@ describe('Seal Integration Tests', () => {
     });
 });
 
-// Export for use in other tests
-export { sealClient, suiClient };
+// Note: sealClient and suiClient are scoped within the describe block
+// If needed for other tests, they should be initialized separately

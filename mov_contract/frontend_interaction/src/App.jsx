@@ -3,9 +3,11 @@ import { Toaster } from 'react-hot-toast'
 import { ConnectButton } from '@mysten/dapp-kit'
 import { useCurrentAccount } from '@mysten/dapp-kit'
 
-// Import components
-import ContractInfo from './components/ContractInfo'
-import NFTManager from './components/NFTManager'
+// Import page components from new structure
+import ContractInfo from '@pages/ContractInfo'
+import NFTManager from '@pages/NFTManager'
+
+// Import old components (will be refactored later)
 import AccessControl from './components/AccessControl'
 import SealEncryption from './components/SealEncryption'
 import WalrusStorage from './components/WalrusStorage'
@@ -15,22 +17,15 @@ import EncryptionJourney from './components/EncryptionJourney'
 import InteractiveEncryptionJourney from './components/InteractiveEncryptionJourney'
 import InteractiveEncryptionJourneyV2 from './components/InteractiveEncryptionJourneyV2'
 
-// Configuration
+// Configuration based on deployment-config.json
 const CONFIG = {
-  PACKAGE_ID: import.meta.env.VITE_PACKAGE_ID || '0x0',
-  REGISTRY_ID: import.meta.env.VITE_REGISTRY_ID || '0x0',
-  SEAL_KEY_SERVERS: [
-    {
-      name: 'mysten-testnet-1',
-      url: 'https://seal-key-server-testnet-1.mystenlabs.com',
-      objectId: '0x13a86a87ab1bf3a2e81b3c13b2e7a3b0db8b3c4d5e6f708192a3b4c5d6e7f809'
-    },
-    {
-      name: 'mysten-testnet-2',
-      url: 'https://seal-key-server-testnet-2.mystenlabs.com',
-      objectId: '0x23b97b98bc2cf4a3f92c4d14c3f8b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6'
-    }
-  ]
+  PACKAGE_ADDRESS: import.meta.env.VITE_PACKAGE_ADDRESS || '0x31717ba3482c33f3bfe0bab05b3f509053a206b01e727c3184c0bb791d74c7fe',
+  REGISTRY_ADDRESS: import.meta.env.VITE_REGISTRY_ADDRESS || '0xd7092aa8c1614c522f42b42cc3410b1276083eea23e66ef83051c9716f8b9970',
+  ACCESS_REGISTRY_ADDRESS: import.meta.env.VITE_ACCESS_REGISTRY_ADDRESS || '0xb01b33f8038a78532a946b3d9093616cf050f23f01fb3cfa94d19d2bfc7a2125',
+  WALRUS_AGGREGATOR: 'https://aggregator.walrus-testnet.walrus.space',
+  WALRUS_PUBLISHER: 'https://publisher.walrus-testnet.walrus.space',
+  SEAL_APP_NAME: 'NeuraLabs',
+  SEAL_URL: 'https://seal-testnet.mystenlabs.com',
 }
 
 function App() {
