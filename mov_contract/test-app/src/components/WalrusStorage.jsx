@@ -34,7 +34,7 @@ function WalrusStorage({ config }) {
   const [selectedNFTFromDropdown, setSelectedNFTFromDropdown] = useState('')
 
   // Load user's NFTs
-  const loadMyNFTs = async () => {
+  const loadMyNFTs = React.useCallback(async () => {
     if (!account) return
 
     try {
@@ -64,7 +64,7 @@ function WalrusStorage({ config }) {
     } catch (error) {
       console.error('Error loading NFTs:', error)
     }
-  }
+  }, [account, suiClient, config.PACKAGE_ID])
 
   // Initialize Walrus client and load NFTs
   useEffect(() => {
@@ -99,7 +99,7 @@ function WalrusStorage({ config }) {
     if (account) {
       loadMyNFTs()
     }
-  }, [account?.address, suiClient])
+  }, [account?.address, suiClient, loadMyNFTs])
 
   // Upload file to Walrus using HTTP API (more reliable than SDK for dApp Kit integration)
   const uploadToWalrusHTTP = async (fileData, fileName, epochs) => {

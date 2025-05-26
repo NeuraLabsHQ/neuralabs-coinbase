@@ -21,7 +21,6 @@ const networks = {
 
 const root = ReactDOM.createRoot(document.getElementById('root'))
 root.render(
-  <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <SuiClientProvider networks={networks} defaultNetwork="testnet">
         <WalletProvider>
@@ -29,5 +28,4 @@ root.render(
         </WalletProvider>
       </SuiClientProvider>
     </QueryClientProvider>
-  </React.StrictMode>
 )

@@ -148,6 +148,10 @@ postgres:
         nft_mint_trx_id:
           type: VARCHAR(64)
           description: "Transaction ID for NFT minting"
+        other_data:
+          type: JSONB
+          nullable: true
+          description: "Additional blockchain-related data"
     
     CHAIN_DETAILS:
       columns:
