@@ -14,7 +14,6 @@ import WalrusStorage from './components/WalrusStorage'
 import NFTDetailsPage from './components/NFTDetailsPage'
 import SUIToWALConverter from './components/SUIToWALConverter'
 import EncryptionJourney from './components/EncryptionJourney'
-import InteractiveEncryptionJourney from './components/InteractiveEncryptionJourney'
 import InteractiveEncryptionJourneyV2 from './components/InteractiveEncryptionJourneyV2'
 
 // Configuration based on deployment-config.json
