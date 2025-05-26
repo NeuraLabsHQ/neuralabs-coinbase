@@ -22,16 +22,4 @@ export default defineConfig({
   define: {
     global: 'globalThis',
   },
-  optimizeDeps: {
-    esbuildOptions: {
-      loader: {
-        '.js': 'jsx',
-        '.ts': 'tsx',
-      },
-    },
-  },
-  esbuild: {
-    loader: 'jsx',
-    include: /src\/.*\.(jsx?|tsx?)$/,
-  },
 })
