@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 // Create context for wallet-related state
 const WalletContext = createContext(null);

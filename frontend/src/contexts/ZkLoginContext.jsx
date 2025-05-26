@@ -1,6 +1,6 @@
 // frontend/src/contexts/ZkLoginContext.js
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import ZkLoginService from '../components/auth/ZkLoginService';
 
 // Create context for zkLogin-related state
@@ -148,7 +148,7 @@ export const ZkLoginContextProvider = ({ children, googleClientId }) => {
       // If we have a token, call backend logout endpoint
       if (jwtToken) {
         try {
-          await makeAuthenticatedRequest(process.env.REACT_APP_BACKEND_URL + '/api/zk-login/zklogin-logout', {
+          await makeAuthenticatedRequest(import.meta.env.VITE_BACKEND_URL + '/api/zk-login/zklogin-logout', {
             method: 'POST'
           });
         } catch (err) {
@@ -178,7 +178,7 @@ export const ZkLoginContextProvider = ({ children, googleClientId }) => {
       }
 
       const response = await makeAuthenticatedRequest(
-        process.env.REACT_APP_BACKEND_URL + '/api/zk-login/zklogin-validate'
+        import.meta.env.VITE_BACKEND_URL + '/api/zk-login/zklogin-validate'
       );
       
       if (response.ok) {
