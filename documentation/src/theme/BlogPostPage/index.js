@@ -2,6 +2,7 @@ import React from 'react';
 import Layout from '@theme/Layout'; 
 import { PageMetadata } from '@docusaurus/theme-common'; 
 import Link from '@docusaurus/Link'; 
+import '@site/src/css/blog.css'; 
 
 function BlogPostPageMetadata(props) { 
   const { content: BlogPostContent } = props; 
@@ -40,42 +41,17 @@ function BlogPostPageContent(props) {
     '5 min read';
   
   return (
-    <Layout
-      title={title}
-      description={description}
-    >
-      {/* Full-Width Hero Section - True 100% width */}
-      <div style={{
-        width: '100vw',
-        position: 'relative',
-        left: '50%',
-        right: '50%',
-        marginLeft: '-50vw',
-        marginRight: '-50vw',
-        background: `
-          linear-gradient(135deg, 
-            var(--ifm-color-primary-lightest) 0%, 
-            var(--ifm-color-secondary-lightest) 50%,
-            var(--ifm-color-primary-lightest) 100%)
-        `,
-        borderBottom: '1px solid var(--ifm-color-emphasis-200)',
-        overflow: 'hidden'
-      }}>
-        {/* Enhanced background pattern - theme aware */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage: `
-            radial-gradient(circle at 25% 25%, rgba(var(--ifm-font-color-base-rgb, 0,0,0), 0.1) 0%, transparent 40%),
-            radial-gradient(circle at 75% 75%, rgba(var(--ifm-font-color-base-rgb, 0,0,0), 0.05) 0%, transparent 40%),
-            linear-gradient(45deg, transparent 40%, rgba(var(--ifm-font-color-base-rgb, 0,0,0), 0.02) 50%, transparent 60%)
-          `,
-          mixBlendMode: 'overlay',
-          pointerEvents: 'none'
-        }} />
+    <div className="blog-page">
+      <Layout
+        title={title}
+        description={description}
+      >
+        {/* Full-Width Hero Section - True 100% width */}
+        <div className="blog-hero" style={{
+          borderBottom: '1px solid var(--ifm-color-emphasis-200)'
+        }}>
+          {/* Enhanced background pattern - theme aware */}
+          <div className="blog-pattern-overlay" />
         
         <div className="container padding-vert--xl" style={{position: 'relative', zIndex: 1}}>
           <div className="row">
@@ -158,16 +134,8 @@ function BlogPostPageContent(props) {
         <div className="row">
           {/* Table of Contents Sidebar */}
           <div className="col col--3">
-            <div style={{
-              position: 'sticky',
-              top: 'calc(var(--ifm-navbar-height) + 2rem)',
-              padding: '1.5rem',
-              background: 'var(--ifm-background-surface-color)',
-              border: '1px solid var(--ifm-color-emphasis-200)',
-              borderRadius: '12px',
-              marginBottom: '2rem'
-            }}>
-              <h4 style={{margin: '0 0 1rem 0', color: 'var(--ifm-heading-color)', fontSize: '1rem'}}>
+            <div className="blog-sidebar">
+              <h4>
                 <img src="/img/icons/docs.svg" width="16" height="16" style={{marginRight: '8px', verticalAlign: 'middle', opacity: '0.8'}} />
                 Table of Contents
               </h4>
@@ -177,45 +145,23 @@ function BlogPostPageContent(props) {
             </div>
             
             {/* Blog Navigation */}
-            <div style={{
-              padding: '1.5rem',
-              background: 'var(--ifm-background-surface-color)',
-              border: '1px solid var(--ifm-color-emphasis-200)',
-              borderRadius: '12px'
-            }}>
-              <h4 style={{margin: '0 0 1rem 0', color: 'var(--ifm-heading-color)', fontSize: '1rem'}}>
+            <div className="blog-sidebar">
+              <h4>
                 <img src="/img/icons/arrow-right.svg" width="16" height="16" style={{marginRight: '8px', verticalAlign: 'middle', opacity: '0.8', transform: 'rotate(180deg)'}} />
                 Blog Navigation
               </h4>
               <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
                 <Link 
                   to="/blog" 
-                  style={{
-                    color: 'var(--ifm-color-content-secondary)',
-                    textDecoration: 'none',
-                    fontSize: '0.9rem',
-                    padding: '0.5rem 0',
-                    borderBottom: '1px solid var(--ifm-color-emphasis-100)'
-                  }}
+                  className="blog-sidebar-link"
                 >
                   ← All Blog Posts
                 </Link>
                 <div style={{fontSize: '0.85rem', color: 'var(--ifm-color-content-secondary)'}}>
                   Reading Progress
                 </div>
-                <div style={{
-                  height: '4px',
-                  background: 'var(--ifm-color-emphasis-200)',
-                  borderRadius: '2px',
-                  overflow: 'hidden'
-                }}>
-                  <div style={{
-                    height: '100%',
-                    width: '0%',
-                    background: 'var(--ifm-color-primary)',
-                    transition: 'width 0.3s ease',
-                    borderRadius: '2px'
-                  }} id="reading-progress"></div>
+                <div className="blog-reading-progress">
+                  <div className="blog-reading-progress-bar" id="reading-progress"></div>
                 </div>
               </div>
             </div>
@@ -226,25 +172,15 @@ function BlogPostPageContent(props) {
             <article>
               {/* Tags - moved below hero */}
               {tags.length > 0 && (
-                <div className="margin-bottom--xl text--center">
-                  <div style={{marginBottom: '0.5rem', color: 'var(--ifm-color-content-secondary)', fontSize: '0.9rem', fontWeight: '500'}}>
+                <div className="blog-tags-section">
+                  <div className="blog-tags-label">
                     Filed under:
                   </div>
                   {tags.map((tag) => (
                     <Link
                       key={tag.label}
                       to={tag.permalink}
-                      className="badge badge--secondary margin-right--sm margin-bottom--sm"
-                      style={{
-                        fontSize: '0.85rem',
-                        padding: '0.4rem 0.8rem',
-                        borderRadius: '16px',
-                        textTransform: 'none',
-                        fontWeight: '500',
-                        background: 'var(--ifm-color-emphasis-200)',
-                        color: 'var(--ifm-color-content)',
-                        border: '1px solid var(--ifm-color-emphasis-300)'
-                      }}
+                      className="blog-tag"
                     >
                       {tag.label}
                     </Link>
@@ -253,11 +189,7 @@ function BlogPostPageContent(props) {
               )}
               
               {/* Content with enhanced typography */}
-              <div className="markdown" style={{
-                fontSize: '1.1rem',
-                lineHeight: '1.8',
-                letterSpacing: '0.01em'
-              }}>
+              <div className="blog-article-content markdown">
                 <BlogPostContent />
               </div>
               
@@ -367,21 +299,13 @@ function BlogPostPageContent(props) {
           
           {/* Right Sidebar - Related Content */}
           <div className="col col--3">
-            <div style={{
-              position: 'sticky',
-              top: 'calc(var(--ifm-navbar-height) + 2rem)',
-              padding: '1.5rem',
-              background: 'var(--ifm-background-surface-color)',
-              border: '1px solid var(--ifm-color-emphasis-200)',
-              borderRadius: '12px',
-              marginBottom: '2rem'
-            }}>
-              <h4 style={{margin: '0 0 1rem 0', color: 'var(--ifm-heading-color)', fontSize: '1rem'}}>
+            <div className="blog-sidebar">
+              <h4>
                 <img src="/img/icons/info.svg" width="16" height="16" style={{marginRight: '8px', verticalAlign: 'middle', opacity: '0.8'}} />
                 Article Info
               </h4>
-              <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.9rem'}}>
-                <div style={{color: 'var(--ifm-color-content-secondary)'}}>
+              <div className="blog-article-meta">
+                <div className="blog-article-meta-item">
                   <strong>Published:</strong><br />
                   {new Date(date).toLocaleDateString('en-US', {
                     year: 'numeric',
@@ -390,13 +314,13 @@ function BlogPostPageContent(props) {
                   })}
                 </div>
                 {readingTime && (
-                  <div style={{color: 'var(--ifm-color-content-secondary)'}}>
+                  <div className="blog-article-meta-item">
                     <strong>Reading Time:</strong><br />
                     {Math.ceil(readingTime)} minutes
                   </div>
                 )}
                 {authors?.[0] && (
-                  <div style={{color: 'var(--ifm-color-content-secondary)'}}>
+                  <div className="blog-article-meta-item">
                     <strong>Author:</strong><br />
                     {authors[0].name}
                   </div>
@@ -405,28 +329,17 @@ function BlogPostPageContent(props) {
             </div>
             
             {/* Share Section */}
-            <div style={{
-              padding: '1.5rem',
-              background: 'var(--ifm-background-surface-color)',
-              border: '1px solid var(--ifm-color-emphasis-200)',
-              borderRadius: '12px'
-            }}>
-              <h4 style={{margin: '0 0 1rem 0', color: 'var(--ifm-heading-color)', fontSize: '1rem'}}>
+            <div className="blog-sidebar">
+              <h4>
                 <img src="/img/icons/external-link.svg" width="16" height="16" style={{marginRight: '8px', verticalAlign: 'middle', opacity: '0.8'}} />
                 Share Article
               </h4>
-              <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
+              <div>
                 <a 
                   href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(`https://docs.neuralabs.ai${permalink}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{
-                    color: 'var(--ifm-color-content-secondary)',
-                    textDecoration: 'none',
-                    fontSize: '0.9rem',
-                    padding: '0.5rem 0',
-                    borderBottom: '1px solid var(--ifm-color-emphasis-100)'
-                  }}
+                  className="blog-share-link"
                 >
                   Share on Twitter
                 </a>
@@ -434,12 +347,7 @@ function BlogPostPageContent(props) {
                   href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`https://docs.neuralabs.ai${permalink}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{
-                    color: 'var(--ifm-color-content-secondary)',
-                    textDecoration: 'none',
-                    fontSize: '0.9rem',
-                    padding: '0.5rem 0'
-                  }}
+                  className="blog-share-link"
                 >
                   Share on LinkedIn
                 </a>
@@ -448,7 +356,8 @@ function BlogPostPageContent(props) {
           </div>
         </div>
       </div>
-    </Layout>
+      </Layout>
+    </div>
   );
 }
 

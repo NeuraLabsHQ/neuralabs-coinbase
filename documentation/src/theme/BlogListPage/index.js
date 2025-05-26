@@ -2,6 +2,7 @@ import React from 'react';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 import { PageMetadata } from '@docusaurus/theme-common';
+import '@site/src/css/blog.css';
 
 function BlogListPageMetadata(props) {
   const { metadata } = props;
@@ -17,42 +18,17 @@ function BlogListPageContent(props) {
   const { metadata, items } = props;
   
   return (
-    <Layout
-      title={metadata.blogTitle}
-      description={metadata.blogDescription}
-    >
-      {/* Full-Width Hero Section - True 100% width */}
-      <div className="hero margin-bottom--xl" style={{
-        width: '100vw',
-        position: 'relative',
-        left: '50%',
-        right: '50%',
-        marginLeft: '-50vw',
-        marginRight: '-50vw',
-        background: `
-          linear-gradient(135deg, 
-            var(--ifm-color-primary-lightest) 0%, 
-            var(--ifm-color-secondary-lightest) 50%,
-            var(--ifm-color-primary-lightest) 100%)
-        `,
-        borderBottom: '1px solid var(--ifm-color-emphasis-200)',
-        overflow: 'hidden'
-      }}>
-        {/* Enhanced background pattern - theme aware */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage: `
-            radial-gradient(circle at 25% 25%, rgba(var(--ifm-font-color-base-rgb, 0,0,0), 0.1) 0%, transparent 40%),
-            radial-gradient(circle at 75% 75%, rgba(var(--ifm-font-color-base-rgb, 0,0,0), 0.05) 0%, transparent 40%),
-            linear-gradient(45deg, transparent 40%, rgba(var(--ifm-font-color-base-rgb, 0,0,0), 0.02) 50%, transparent 60%)
-          `,
-          mixBlendMode: 'overlay',
-          pointerEvents: 'none'
-        }} />
+    <div className="blog-page">
+      <Layout
+        title={metadata.blogTitle}
+        description={metadata.blogDescription}
+      >
+        {/* Full-Width Hero Section - True 100% width */}
+        <div className="blog-hero hero margin-bottom--xl" style={{
+          borderBottom: '1px solid var(--ifm-color-emphasis-200)'
+        }}>
+          {/* Enhanced background pattern - theme aware */}
+          <div className="blog-pattern-overlay" />
         
         <div className="container padding-vert--xl" style={{position: 'relative', zIndex: 1}}>
           <div className="row">
@@ -344,7 +320,8 @@ function BlogListPageContent(props) {
           </div>
         </div>
       </div>
-    </Layout>
+      </Layout>
+    </div>
   );
 }
 
