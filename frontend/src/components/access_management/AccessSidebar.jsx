@@ -1,24 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  VStack, 
-  Text, 
-  Input, 
-  InputGroup, 
-  InputLeftElement,
-  Divider,
-  Flex,
-  Button,
-  useColorModeValue,
-  Icon,
-  Spinner,
-  Collapse,
-  Tooltip
+import {
+    Box,
+    Flex,
+    Icon,
+    Input,
+    InputGroup,
+    InputLeftElement,
+    Spinner,
+    Text,
+    Tooltip,
+    useColorModeValue,
+    VStack
 } from '@chakra-ui/react';
-import { FiSearch, FiPlus, FiHome, FiList, FiChevronRight, FiChevronDown } from 'react-icons/fi';
+import { useEffect, useState } from 'react';
+import { FiHome, FiList, FiSearch } from 'react-icons/fi';
+import colors from '../../color';
 import { accessManagementApi } from '../../utils/access-api'; // Updated import path
 import SidebarItem from './SidebarItem';
-import colors from '../../color';
 
 
 const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = false }) => {

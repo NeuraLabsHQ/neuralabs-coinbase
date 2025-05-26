@@ -1,47 +1,43 @@
-import React, { useState, useEffect } from "react";
 import {
-  Box,
-  Center,
-  Text,
-  Heading,
-  Input,
-  InputGroup,
-  InputLeftElement,
-  SimpleGrid,
-  Flex,
-  Button,
-  HStack,
-  Grid,
-  Avatar,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  useColorModeValue,
-  Icon,
-  ButtonGroup,
-  IconButton,
-  useToast,
+    Box,
+    Button,
+    ButtonGroup,
+    Center,
+    Flex,
+    Heading,
+    HStack,
+    Icon,
+    IconButton,
+    Input,
+    InputGroup,
+    InputLeftElement,
+    SimpleGrid,
+    Table,
+    Tbody,
+    Td,
+    Text,
+    Tr,
+    useColorModeValue,
+    useToast
 } from "@chakra-ui/react";
+import { useEffect, useState } from 'react';
 import {
-  FiSearch,
-  FiGrid,
-  FiList,
-  FiPlus,
-  FiChevronLeft,
-  FiChevronRight,
-  FiUpload,
-  FiBarChart2,
-  FiPieChart,
-  FiActivity
+    FiActivity,
+    FiBarChart2,
+    FiChevronLeft,
+    FiChevronRight,
+    FiGrid,
+    FiList,
+    FiPieChart,
+    FiPlus,
+    FiSearch,
+    FiUpload
 } from "react-icons/fi";
 import { useNavigate } from 'react-router-dom';
+import templateImage1 from "../../assets/template.png";
 import { accessManagementApi } from "../../utils/access-api";
 import { agentAPI } from "../../utils/agent-api";
 import CreateAgentModal from "./Popup/CreateAgentModal";
-import templateImage1 from "../../assets/template.png";
 
 const TemplateCard = ({ title, hasButton = false, onClick, imageUrl }) => {
   const bgColor = useColorModeValue("white", "gray.800");

@@ -1,18 +1,18 @@
 // src/components/access_management/pages/MetadataPage.jsx
-import React, { useState } from 'react';
-import { 
-  Box, 
-  VStack, 
-  HStack,
-  Text, 
+import {
+  Box,
   Button,
+  Flex,
+  Heading,
+  HStack,
+  Text,
   Textarea,
   useColorModeValue,
   useToast,
-  Heading,
-  Flex
+  VStack
 } from '@chakra-ui/react';
-import { FiSave, FiEye, FiEdit } from 'react-icons/fi';
+import { useState } from 'react';
+import { FiEdit, FiEye, FiSave } from 'react-icons/fi';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import colors from '../../../color';

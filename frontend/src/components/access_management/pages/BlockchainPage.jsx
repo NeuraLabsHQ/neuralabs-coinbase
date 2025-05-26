@@ -1,5 +1,4 @@
 // src/components/access_management/pages/BlockchainPage.jsx
-import React from 'react';
 import { 
   Box, 
   VStack, 

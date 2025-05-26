@@ -1,40 +1,39 @@
 // src/components/access_management/FlowActionPanel.jsx
-import React, { useState } from "react";
 import {
-  Box,
-  Flex,
-  Button,
-  VStack,
-  Tooltip,
-  useColorModeValue,
-  useToast,
+    Box,
+    Button,
+    Flex,
+    Tooltip,
+    useColorModeValue,
+    useToast,
+    VStack,
 } from "@chakra-ui/react";
-import {
-  FiHome,
-  FiMessageSquare,
-  FiKey,
-  FiEdit,
-  FiTag,
-  FiClock,
-  FiUpload,
-  FiSettings,
-  FiLayout,
-  FiLink,
-  FiBarChart2,
-  FiDownload,
-  FiDollarSign,
-  FiCreditCard,
-  FiGitBranch,
-  FiUsers,
-  FiSend, // Added for Publish icon
-} from "react-icons/fi";
-import { FaAngleDoubleLeft, FaAngleDoubleRight } from "react-icons/fa";
 import { useCurrentWallet } from "@mysten/dapp-kit";
-import { useWallet } from "../../contexts/WalletContext";
-import { useExecuteContractFunction } from "../../utils/transaction";
-import flowIcons from "../../utils/my-flow-icons.json";
-import PublishModal from "./Popup/PublishModal"; // Import the new modal
+import { useState } from 'react';
+import { FaAngleDoubleLeft, FaAngleDoubleRight } from "react-icons/fa";
+import {
+    FiBarChart2,
+    FiClock,
+    FiCreditCard,
+    FiDollarSign,
+    FiDownload,
+    FiEdit,
+    FiGitBranch,
+    FiHome,
+    FiKey,
+    FiLayout,
+    FiLink,
+    FiMessageSquare,
+    FiSend,
+    FiSettings,
+    FiTag,
+    FiUpload,
+    FiUsers,
+} from "react-icons/fi";
 import colors from '../../color';
+import flowIcons from "../../utils/my-flow-icons.json";
+import { useExecuteContractFunction } from "../../utils/transaction";
+import PublishModal from "./Popup/PublishModal"; // Import the new modal
 
 const FlowActionPanel = ({ toggleSidebar, sidebarOpen, currentPage, onPageChange }) => {
   const [activeAction, setActiveAction] = useState('Summary');
