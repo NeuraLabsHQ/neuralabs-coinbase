@@ -1,5 +1,5 @@
 import { getAccessCaps, getUserNFTs } from '../../utils/blockchain'
-import { useCurrentAccount } from '@mysten/dapp-kit'
+import { useCurrentAccount, useSuiClient } from '@mysten/dapp-kit'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { AccessControlMatrix } from './components/AccessControlMatrix'
@@ -14,6 +14,7 @@ import { MyNFTsSection } from './components/MyNFTsSection'
  */
 function AccessControl({ config }) {
   const account = useCurrentAccount()
+  const client = useSuiClient()
   
   const [myNFTs, setMyNFTs] = useState([])
   const [myAccessCaps, setMyAccessCaps] = useState([])
@@ -26,7 +27,7 @@ function AccessControl({ config }) {
     if (!account) return
 
     try {
-      const nfts = await getUserNFTs(account.address)
+      const nfts = await getUserNFTs(client, config, account.address)
       setMyNFTs(nfts)
     } catch (error) {
       console.error('Error loading NFTs:', error)
@@ -39,7 +40,7 @@ function AccessControl({ config }) {
     if (!account) return
 
     try {
-      const caps = await getAccessCaps(account.address)
+      const caps = await getAccessCaps(client, config, account.address)
       setMyAccessCaps(caps)
     } catch (error) {
       console.error('Error loading AccessCaps:', error)

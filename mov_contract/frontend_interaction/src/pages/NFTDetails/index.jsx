@@ -28,7 +28,7 @@ function NFTDetails({ config }) {
     if (!account) return
 
     try {
-      const nfts = await getUserNFTs(account.address)
+      const nfts = await getUserNFTs(client, config, account.address)
       setMyNFTs(nfts)
     } catch (error) {
       console.error('Error loading NFTs:', error)

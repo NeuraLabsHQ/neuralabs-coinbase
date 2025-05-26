@@ -53,7 +53,7 @@ function SealEncryption({ config }) {
 
     setLoadingNFTs(true)
     try {
-      const nfts = await getUserNFTs(account.address)
+      const nfts = await getUserNFTs(client, config, account.address)
       setUserNFTs(nfts)
     } catch (error) {
       console.error('Error loading NFTs:', error)

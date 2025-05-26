@@ -11,25 +11,54 @@ export {
   getTotalNFTCount 
 } from '../blockchain_module/nfts/index.ts'
 
-// Re-export access management functions with aliases for backward compatibility
-export {
-  grantAccess as grantAccessToUser,
-  revokeAccess as revokeUserAccess,
+// Import access management functions first
+import {
+  grantAccess,
+  revokeAccess,
   checkUserAccess,
-  getUserAccessCaps as getAccessCaps,
+  getUserAccessCaps,
   createAccessCap
 } from '../blockchain_module/access-management/index.ts'
 
-// Re-export seal encryption functions with aliases for backward compatibility
+// Re-export access management functions (keeping original names)
 export {
-  getSealClient as initializeSealClient,
-  createSessionKey as createSealSessionKey,
+  grantAccess,
+  revokeAccess,
+  checkUserAccess,
+  getUserAccessCaps,
+  createAccessCap
+}
+
+// Create aliases for backward compatibility
+export const grantAccessToUser = grantAccess
+export const revokeUserAccess = revokeAccess
+export const getAccessCaps = getUserAccessCaps
+
+// Import seal encryption functions first
+import {
+  getSealClient,
+  createSessionKey,
   importSessionKey,
   encryptData,
   decryptData,
   storeEncryptedData,
   SessionKey
 } from '../blockchain_module/seal-encryption/index.ts'
+
+// Re-export seal encryption functions (keeping original names)
+export {
+  getSealClient,
+  createSessionKey,
+  importSessionKey,
+  encryptData,
+  decryptData,
+  storeEncryptedData,
+  SessionKey
+}
+
+// Create aliases for backward compatibility
+export const initializeSealClient = getSealClient
+export const createSealSessionKey = createSessionKey
 
 // Create wrapper functions for missing/complex operations
 export const exportSessionKey = async (sessionKey) => {
@@ -52,12 +81,17 @@ export {
   downloadFromWalrus
 } from '../blockchain_module/walrus/index.ts'
 
-// Re-export exchange functions with aliases for backward compatibility
+// Re-export exchange functions (keeping original names)
 export {
-  getSuiBalance as getSUIBalance,
-  getWalBalance as getWALBalance,
-  convertSuiToWal as convertSUIToWAL
+  getSuiBalance,
+  getWalBalance,
+  convertSuiToWal
 } from '../blockchain_module/exchange/index.ts'
+
+// Create aliases for backward compatibility
+export const getSUIBalance = getSuiBalance
+export const getWALBalance = getWalBalance
+export const convertSUIToWAL = convertSuiToWal
 
 // Re-export transaction proposer functions
 export { createTransaction } from '../blockchain_module/transaction-proposer/index.ts'
