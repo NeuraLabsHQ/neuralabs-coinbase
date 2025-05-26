@@ -1,5 +1,7 @@
 import { ConnectButton, useCurrentAccount } from '@mysten/dapp-kit'
-import { useState } from 'react'
+import { useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
+
+import { useState, useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
 
 // Import all page components from new structure
@@ -33,14 +35,17 @@ function App() {
   const account = useCurrentAccount()
   const [activeTab, setActiveTab] = useState('info')
 
-// // At the top of App component, after the hooks
-// useEffect(() => {
-//   // Set global references for blockchain wrapper
-//   window.config = CONFIG
-//   window.suiClient = client
-//   window.signAndExecute = signAndExecuteTransaction
-//   window.currentAccount = account
-// }, [account, client, signAndExecuteTransaction])
+const client = useSuiClient()
+const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction()
+
+
+useEffect(() => {
+  // Set global references for blockchain wrapper
+  window.config = CONFIG
+  window.suiClient = client
+  window.signAndExecute = signAndExecuteTransaction
+  window.currentAccount = account
+}, [account, client, signAndExecuteTransaction])
 
   const tabs = [
     { id: 'info', label: 'Contract Info', icon: '📄' },

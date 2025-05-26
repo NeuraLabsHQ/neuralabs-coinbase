@@ -3,27 +3,29 @@ import { createAccessCap } from '../../../utils/blockchain'
 import toast from 'react-hot-toast'
 
 export function MyNFTsSection({ nfts, accessCaps, onAccessCapCreated, account }) {
-  const handleCreateAccessCap = async (nftId) => {
-    if (!account) {
-      toast.error('Please connect your wallet')
-      return
-    }
 
-    const toastId = toast.loading('Creating Access Capability...')
-    
-    try {
-      const result = await createAccessCap(nftId, account.address)
-      toast.success('Access Capability created successfully!', { id: toastId })
-      
-      // Trigger refresh after delay
-      setTimeout(() => {
-        onAccessCapCreated()
-      }, 1000)
-    } catch (error) {
-      console.error('Error creating AccessCap:', error)
-      toast.error(`Failed to create AccessCap: ${error.message}`, { id: toastId })
-    }
+  const handleCreateAccessCap = async (nftId) => {
+  if (!account) {
+    toast.error('Please connect your wallet')
+    return
   }
+
+  const toastId = toast.loading('Creating Access Capability...')
+  
+  try {
+    // Pass the account address directly
+    const result = await createAccessCap(nftId, account.address)
+    toast.success('Access Capability created successfully!', { id: toastId })
+    
+    // Trigger refresh after delay
+    setTimeout(() => {
+      onAccessCapCreated()
+    }, 1000)
+  } catch (error) {
+    console.error('Error creating AccessCap:', error)
+    toast.error(`Failed to create AccessCap: ${error.message}`, { id: toastId })
+  }
+}
 
   if (nfts.length === 0) {
     return (

@@ -68,7 +68,13 @@ export const getAccessCaps = async (client, config, userAddress) => {
   return _getUserAccessCaps(client, config, userAddress)
 }
 
+
 export const createAccessCap = async (nftId, userAddress) => {
+  // Make sure global references exist
+  if (!window.suiClient || !window.signAndExecute || !window.config || !window.currentAccount) {
+    throw new Error('Blockchain services not initialized. Please ensure wallet is connected.')
+  }
+  
   const client = window.suiClient
   const signAndExecute = window.signAndExecute
   const config = window.config
