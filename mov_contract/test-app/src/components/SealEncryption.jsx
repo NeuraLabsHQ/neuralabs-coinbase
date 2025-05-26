@@ -78,8 +78,12 @@ function SealEncryption({ config }) {
         
         // the below is a key step as the input that seal client expects is [str,int][]
 
-        keyServerIds = [["id1", keyServerIds[0]], ["id2", keyServerIds[1]]]
+        // keyServerIds = [["id1", keyServerIds[0]], ["id2", keyServerIds[1]]]
+        // keyServerIds = [["id1", keyServerIds[0]], ["id2", keyServerIds[1]]]
 
+        // The first element is the object ID, and the second element is the weight of the key server.
+
+        keyServerIds = [[ keyServerIds[0], 1 ], [ keyServerIds[1], 1]]
         const seal = new SealClient({
           client,
           serverObjectIds: keyServerIds,
