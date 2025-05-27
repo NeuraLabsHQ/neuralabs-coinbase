@@ -33,7 +33,7 @@ export async function checkUserAccess(
     tx.moveCall({
       target: `${config.PACKAGE_ID}::access::get_access_level`,
       arguments: [
-        tx.object(config.REGISTRY_ID),
+        tx.object(config.ACCESS_REGISTRY_ID),
         tx.pure.id(nftId),
         tx.pure.address(userAddress),
       ],

@@ -16,7 +16,8 @@ export function CheckAccessSection({ account, onAccessFound }) {
     const toastId = toast.loading('Checking access...')
 
     try {
-      const accessLevel = await checkUserAccess(checkNFTId, account.address)
+      const accessResult = await checkUserAccess(checkNFTId, account.address)
+      const accessLevel = accessResult.level
       
       if (accessLevel > 0) {
         const newAccessEntry = {
