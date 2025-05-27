@@ -43,9 +43,6 @@ export async function grantAccess(
     throw new Error('Transaction failed');
   }
   
-  // Store in localStorage for retrieval
-  localStorage.setItem(`access_${params.nftId}_${params.recipientAddress}`, params.accessLevel.toString());
-  
   return {
     digest: result.digest,
     effects: result.effects,
@@ -86,9 +83,6 @@ export async function revokeAccess(
   if (!result || !result.digest) {
     throw new Error('Transaction failed');
   }
-  
-  // Remove from localStorage
-  localStorage.removeItem(`access_${params.nftId}_${params.userAddress}`);
   
   return {
     digest: result.digest,
@@ -131,9 +125,6 @@ export async function changeAccessLevel(
   if (!result || !result.digest) {
     throw new Error('Transaction failed');
   }
-  
-  // Update in localStorage
-  localStorage.setItem(`access_${nftId}_${userAddress}`, newLevel.toString());
   
   return {
     digest: result.digest,

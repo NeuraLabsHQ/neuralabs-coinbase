@@ -12,15 +12,7 @@ export async function checkUserAccess(
   userAddress: string
 ): Promise<AccessLevel> {
   try {
-    const tx = new Transaction();
-    
-    // Use the NFT object directly, not through registry
-    const result = await client.devInspectTransactionBlock({
-      transactionBlock: await tx.build({ client }),
-      sender: userAddress,
-    });
-    
-    // For now, check if user owns the NFT or has been granted access
+    // First, check if user owns the NFT
     const nftObject = await client.getObject({
       id: nftId,
       options: { showOwner: true, showContent: true },
@@ -36,10 +28,25 @@ export async function checkUserAccess(
       return { level: 6, permissions: ['all'] }; // Owner has full access
     }
     
-    // Check stored access (from localStorage for now)
-    const storedAccess = localStorage.getItem(`access_${nftId}_${userAddress}`);
-    if (storedAccess) {
-      const level = parseInt(storedAccess);
+    // Query the blockchain for access level using devInspectTransactionBlock
+    const tx = new Transaction();
+    tx.moveCall({
+      target: `${config.PACKAGE_ID}::access::get_access_level`,
+      arguments: [
+        tx.object(config.REGISTRY_ID),
+        tx.pure.id(nftId),
+        tx.pure.address(userAddress),
+      ],
+    });
+    
+    const result = await client.devInspectTransactionBlock({
+      transactionBlock: await tx.build({ client }),
+      sender: userAddress,
+    });
+    
+    // Extract access level from the result
+    if (result.results?.[0]?.returnValues?.[0]) {
+      const level = parseInt(result.results[0].returnValues[0][0] || '0');
       return {
         level,
         permissions: getPermissionsForLevel(level),
@@ -109,20 +116,9 @@ export async function checkAccessForNFT(
       accessMap.set(nftObject.data.owner.AddressOwner, 6); // Owner has level 6
     }
     
-    // Check localStorage for additional access grants
-    // This is a workaround since we can't easily query the access registry
-    const keys = Object.keys(localStorage);
-    const prefix = `access_${nftId}_`;
-    
-    for (const key of keys) {
-      if (key.startsWith(prefix)) {
-        const userAddress = key.substring(prefix.length);
-        const level = parseInt(localStorage.getItem(key) || '0');
-        if (level > 0) {
-          accessMap.set(userAddress, level);
-        }
-      }
-    }
+    // Note: To get all users with access, you would need to query blockchain events
+    // or maintain this information in the smart contract itself
+    // For now, this only returns the owner
     
     return accessMap;
   } catch (error) {
