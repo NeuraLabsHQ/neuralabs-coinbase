@@ -1,5 +1,9 @@
-import { Card, CardHeader, CardTitle, CardDescription, Callout, Features, Feature } from '@site/src/components/Card';
+import { Card, CardHeader, CardTitle, CardDescription } from '@site/src/components/Card';
+import { Callout } from '@site/src/components/Callout';
+import { Features, Feature } from '@site/src/components/Features';
 import { CollapsibleCodeBlock, InlineCodeCard } from '@site/src/components/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 
 # Welcome to NeuraLabs Documentation
@@ -168,9 +172,9 @@ Our documentation is organized into comprehensive sections designed to take you 
       <div className="card__body">
         <p>Start with our foundational guides:</p>
         <ul>
-          <li><a href="./theoretical/getting-started">Getting Started Guide</a></li>
-          <li><a href="./theoretical/overview">Platform Overview</a></li>
-          <li><a href="./theoretical/blockchain-architecture">Blockchain Architecture</a></li>
+          <li><a href="./02-theoretical/03-getting-started">Getting Started Guide</a></li>
+          <li><a href="./02-theoretical/02-overview">Platform Overview</a></li>
+          <li><a href="./02-theoretical/04-blockchain-architecture">Blockchain Architecture</a></li>
         </ul>
       </div>
     </div>
@@ -184,9 +188,9 @@ Our documentation is organized into comprehensive sections designed to take you 
       <div className="card__body">
         <p>Jump into implementation:</p>
         <ul>
-          <li><a href="./implementation/01-database/setup">Database Setup</a></li>
-          <li><a href="./implementation/02-frontend/setup">Frontend Development</a></li>
-          <li><a href="./sui-integration/smart-contracts/deployment">Smart Contract Deployment</a></li>
+          <li><a href="./03-implementation/01-database/setup">Database Setup</a></li>
+          <li><a href="./03-implementation/02-frontend/setup">Frontend Development</a></li>
+          <li><a href="./04-sui-integration/02-smart-contracts/02-deployment">Smart Contract Deployment</a></li>
         </ul>
       </div>
     </div>
@@ -281,10 +285,10 @@ docker-compose up -d
     Start your journey into decentralized AI development
   </p>
   
-  <a href="./theoretical/getting-started" className="button button--primary button--lg margin-right--md">
+  <a href="./02-theoretical/03-getting-started" className="button button--primary button--lg margin-right--md">
     Read the Guide
   </a>
-  <a href="./implementation" className="button button--secondary button--lg">
+  <a href="./03-implementation" className="button button--secondary button--lg">
     Start Building
   </a>
 </div>
