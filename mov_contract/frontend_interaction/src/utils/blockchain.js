@@ -110,7 +110,18 @@ export const createSealSessionKey = (params) => {
 export const importSessionKey = _importSessionKey
 export const encryptData = _encryptData
 export const decryptData = _decryptData
-export const storeEncryptedData = _storeEncryptedData
+export const storeEncryptedData = async (params) => {
+  const client = window.suiClient
+  const signAndExecute = window.signAndExecute
+  const config = window.config
+  const currentAccount = window.currentAccount
+  
+  if (!client || !signAndExecute || !config || !currentAccount) {
+    throw new Error('Blockchain services not initialized. Please ensure wallet is connected.')
+  }
+  
+  return _storeEncryptedData(client, config, currentAccount, signAndExecute, params)
+}
 export { SessionKey }
 
 // Create wrapper functions for missing/complex operations
