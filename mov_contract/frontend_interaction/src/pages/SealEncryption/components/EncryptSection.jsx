@@ -44,9 +44,9 @@ export function EncryptSection({ account, sealClient, sessionKey, userNFTs, conf
     }
 
     // Check NFT access before encrypting
-    const access = await checkUserAccess(encryptForm.nftId, account.address)
-    if (access < 4) {
-      toast.error(`Insufficient access level (${access}/4). You need level 4+ to encrypt/decrypt files.`)
+    const accessResult = await checkUserAccess(encryptForm.nftId, account.address)
+    if (accessResult.level < 4) {
+      toast.error(`Insufficient access level (${accessResult.level}/4). You need level 4+ to encrypt/decrypt files.`)
       return
     }
 
@@ -58,23 +58,16 @@ export function EncryptSection({ account, sealClient, sessionKey, userNFTs, conf
       const fileContent = await readFileAsArrayBuffer(encryptForm.file)
       const data = new Uint8Array(fileContent)
 
-      // Create ID from NFT object ID + nonce
-      const nftIdBytes = fromHex(encryptForm.nftId)
-      // Ensure NFT ID is 32 bytes (pad with zeros if needed)
-      const paddedNftId = new Uint8Array(32)
-      paddedNftId.set(nftIdBytes.slice(0, 32))
-
       // Generate a random nonce
-      const nonce = crypto.getRandomValues(new Uint8Array(16))
-      const fullId = toHex(new Uint8Array([...paddedNftId, ...nonce]))
+      const nonce = crypto.getRandomValues(new Uint8Array(5))
 
       // Encrypt using Seal
-      const { encryptedData, symmetricKey } = await encryptData({
+      const { encryptedData, encryptedId } = await encryptData(sealClient, {
         data,
         threshold: parseInt(encryptForm.threshold),
         packageId: config.PACKAGE_ID,
-        encryptionId: fullId,
-        client: sealClient
+        policyId: encryptForm.nftId,
+        nonce: nonce
       })
 
       // Store encrypted file info
@@ -83,8 +76,7 @@ export function EncryptSection({ account, sealClient, sessionKey, userNFTs, conf
         fileSize: encryptForm.file.size,
         nftId: encryptForm.nftId,
         encryptedData: toHex(encryptedData),
-        symmetricKey: toHex(symmetricKey),
-        encryptionId: fullId,
+        encryptionId: encryptedId,
         threshold: encryptForm.threshold,
         timestamp: new Date().toISOString()
       }
