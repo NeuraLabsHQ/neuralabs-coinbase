@@ -123,10 +123,12 @@ function NFTDetails({ config }) {
 
       // Check access levels for known addresses
       const accessPromises = Array.from(knownAddresses).map(async (address) => {
-        const level = await checkUserAccess(nftId, address)
+        const accessResult = await checkUserAccess(nftId, address)
+        const level = accessResult.level
         return {
           address,
           level,
+          permissions: accessResult.permissions,
           isOwner: address === nftInfo?.creator,
           isCurrentUser: address === account.address
         }
