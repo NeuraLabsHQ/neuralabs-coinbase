@@ -1,5 +1,4 @@
 // src/components/access_management/pages/ComingSoonPage.jsx
-import React from 'react';
 import { 
   Box, 
   Center, 

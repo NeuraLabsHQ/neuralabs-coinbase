@@ -1,40 +1,38 @@
 // src/components/chat_interface/ChatInterface.jsx
-import React, { useState, useRef, useEffect } from "react";
 import {
-  Box,
-  Flex,
-  Text,
-  Textarea,
-  IconButton,
-  HStack,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  Button,
-  Tooltip,
-  Divider,
-  Center,
-  VStack,
+    Box,
+    Button,
+    Divider,
+    Flex,
+    HStack,
+    IconButton,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuList,
+    Text,
+    Textarea,
+    Tooltip,
+    VStack
 } from "@chakra-ui/react";
+import { useEffect, useRef, useState,Fragment } from 'react';
 import {
-  FiSend,
-  FiChevronDown,
-  FiPaperclip,
-  FiArrowUp,
-  FiCode,
-  FiImage,
-  FiSearch,
-  FiThumbsUp,
-  FiThumbsDown,
+    FiArrowUp,
+    FiChevronDown,
+    FiCode,
+    FiPaperclip,
+    FiSearch,
+    FiThumbsDown,
+    FiThumbsUp
 } from "react-icons/fi";
 
 // Import the separate ThinkingUI component
 import ThinkingUI from "./ThinkingUI/ThinkingUI";
+import MarkdownRenderer from "./MarkdownRenderer";
 
 // Import colors
-import colors from "../../color";
 import { useColorModeValue } from "@chakra-ui/react";
+import colors from "../../color";
 // Sample AI models/agents
 const AI_MODELS = [
   { id: "portfolio", name: "Portfolio Manager" },
@@ -71,7 +69,11 @@ const Message = ({ message }) => {
           bg={isUser ? userMessageBg : assistantMessageBg}
           color={textColor}
         >
-          <Text>{message.content}</Text>
+          {isUser ? (
+            <Text>{message.content}</Text>
+          ) : (
+            <MarkdownRenderer content={message.content} textColor={textColor} />
+          )}
         </Box>
       </Flex>
 
@@ -120,6 +122,7 @@ const ChatInterface = ({
   onSendMessage,
   isLanding = false,
   thinkingState = { isThinking: false },
+  messageThinkingStates = {},
   onToggleColorMode,
 }) => {
   const [input, setInput] = useState("");
@@ -148,6 +151,11 @@ const ChatInterface = ({
     // Scroll to bottom when messages change
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    // Scroll to bottom when thinking state changes (for real-time streaming)
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [thinkingState.isThinking, thinkingState.executionSteps, messageThinkingStates]);
 
   const handleInputChange = (e) => {
     const value = e.target.value;
@@ -314,23 +322,25 @@ const handleSendMessage = () => {
       <Message key={message.id} message={message} />
     );
     
-    // Check if this is a user message and if it's the last message or followed by a non-user message
+    // Check if this is the very last user message in the entire conversation
     const isLastUserMessage = 
       message.role === "user" && 
-      (index === messages.length - 1 || messages[index + 1].role !== "user");
+      index === messages.length - 1;
     
-    // If it's the last user message and thinking is happening or was happening, 
-    // return both the message and ThinkingUI
-    if (isLastUserMessage) {
+    // Check if this message has a thinking state (either active or completed)
+    const messageThinkingState = messageThinkingStates[message.id];
+    
+    // Show thinking UI for user messages that have thinking state
+    if (message.role === "user" && messageThinkingState) {
       return (
-        <React.Fragment key={`fragment-${message.id}`}>
+        <Fragment key={`fragment-${message.id}`}>
           {messageElement}
           <ThinkingUI 
-            thinkingState={thinkingState} 
-            query={lastQueryText} 
+            thinkingState={messageThinkingState} 
+            query={message.content} 
             shouldPersist={true} 
           />
-        </React.Fragment>
+        </Fragment>
       );
     }
     

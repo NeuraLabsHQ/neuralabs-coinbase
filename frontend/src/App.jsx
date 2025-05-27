@@ -1,6 +1,5 @@
 // frontend/src/App.jsx
 
-import React from 'react';
 import { ChakraProvider, ColorModeScript } from '@chakra-ui/react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/layout';
@@ -32,12 +31,12 @@ const { networkConfig } = createNetworkConfig({
 const queryClient = new QueryClient();
 
 // Google OAuth Client ID - Replace with your actual client ID
-const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CREDENTIALS;
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CREDENTIALS;
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-        <SuiClientProvider networks={networkConfig} defaultNetwork={process.env.REACT_APP_SUI_NETWORK}>        
+        <SuiClientProvider networks={networkConfig} defaultNetwork={import.meta.env.VITE_SUI_NETWORK}>        
           <WalletProvider autoConnect={true} preferredWallets={['Slush']}>
           <ZkLoginContextProvider googleClientId={GOOGLE_CLIENT_ID}>
             <ChakraProvider theme={theme}>

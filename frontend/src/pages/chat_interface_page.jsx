@@ -1,5 +1,4 @@
 // src/pages/chat_interface_page.jsx
-import React from 'react';
 import { Box } from '@chakra-ui/react';
 import ChatPage from '../components/chat_interface/ChatPage/ChatPage';
 

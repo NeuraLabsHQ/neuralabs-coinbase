@@ -1,5 +1,4 @@
 // src/pages/access_management_page.jsx
-import React from 'react';
 import { Box } from '@chakra-ui/react';
 import { useParams } from 'react-router-dom';
 import AccessPage from '../components/access_management/AccessPage';

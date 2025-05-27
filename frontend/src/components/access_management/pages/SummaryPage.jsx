@@ -1,5 +1,4 @@
 // src/components/access_management/pages/SummaryPage.jsx
-import React from 'react';
 import { Box, useColorModeValue } from '@chakra-ui/react';
 import FlowDetailComponent from '../FlowDetailComponent';
 import colors from '../../../color';

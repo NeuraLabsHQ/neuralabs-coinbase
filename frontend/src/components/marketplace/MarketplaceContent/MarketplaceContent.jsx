@@ -1,22 +1,22 @@
-import React, { useState } from 'react';
-import { 
-  Box, 
-  Flex,
-  Heading, 
-  Text, 
-  SimpleGrid, 
-  Spinner, 
-  Center,
-  useColorModeValue,
-  InputGroup,
-  Input,
-  InputRightElement,
-  IconButton,
-  FormControl
+import {
+    Box,
+    Center,
+    Flex,
+    FormControl,
+    Heading,
+    IconButton,
+    Input,
+    InputGroup,
+    InputRightElement,
+    SimpleGrid,
+    Spinner,
+    Text,
+    useColorModeValue
 } from '@chakra-ui/react';
+import { useState } from 'react';
 import { FiSearch, FiX } from 'react-icons/fi';
-import MarketplaceDetailPanel from './MarketplaceDetailPanel';
 import colors from '../../../color';
+import MarketplaceDetailPanel from './MarketplaceDetailPanel';
 
 // MarketplaceCard component - extracted from marketplace.jsx
 const MarketplaceCard = ({ item, onClick }) => {

@@ -15,8 +15,6 @@
     "@tanstack/react-query": "^5.76.1",
     "@telegram-apps/bridge": "^2.4.0",
     "@testing-library/dom": "^10.4.0",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.8.4",
     "buffer": "^6.0.3",
@@ -31,21 +29,21 @@
     "konva": "^9.3.19",
     "petra-plugin-wallet-adapter": "^0.4.5",
     "react": "^19.0.0",
-    "react-app-rewired": "^2.2.1",
     "react-dom": "^19.0.0",
     "react-icons": "^5.0.1",
     "react-konva": "^19.0.3",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.4.0",
-    "react-scripts": "^5.0.1",
     "remark-gfm": "^4.0.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
-    "test": "react-app-rewired test",
-    "eject": "react-scripts eject"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "eslintConfig": {
     "extends": [
@@ -66,6 +64,17 @@
     ]
   },
   "devDependencies": {
-    "sass": "^1.85.1"
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@vitejs/plugin-react": "^4.5.0",
+    "@vitest/ui": "^3.1.4",
+    "autoprefixer": "^10.4.21",
+    "jsdom": "^26.1.0",
+    "postcss": "^8.5.3",
+    "sass": "^1.85.1",
+    "tailwindcss": "^3.4.17",
+    "vite": "^6.3.5",
+    "vite-plugin-node-polyfills": "^0.23.0",
+    "vitest": "^3.1.4"
   }
 }

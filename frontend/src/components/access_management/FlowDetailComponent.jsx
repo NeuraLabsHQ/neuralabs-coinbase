@@ -1,6 +1,5 @@
 // export default FlowDetailComponent;
 // src/components/access_management/FlowDetailComponent.jsx
-import React from "react";
 import {
   Box,
   Flex,

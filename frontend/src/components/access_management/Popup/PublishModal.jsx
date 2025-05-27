@@ -1,23 +1,21 @@
 // src/components/access_management/PublishModal.jsx
-import React, { useState } from "react";
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  VStack,
-  Text,
-  Input,
-  Select,
-  Switch,
-  FormControl,
-  FormLabel,
-  Box,
-  useColorModeValue,
+    Box,
+    Button,
+    FormControl,
+    FormLabel,
+    Input,
+    Modal,
+    ModalBody,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
+    Text,
+    useColorModeValue,
+    VStack
 } from "@chakra-ui/react";
+import { useState } from 'react';
 
 const PublishModal = ({ isOpen, onClose, onPublish }) => {
   const [versionName, setVersionName] = useState("");

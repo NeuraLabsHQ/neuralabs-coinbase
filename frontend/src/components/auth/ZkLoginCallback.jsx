@@ -1,20 +1,20 @@
 // frontend/src/components/auth/ZkLoginCallback.jsx
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  Box, 
-  Flex, 
-  Spinner, 
-  Text, 
-  VStack, 
-  Alert, 
-  AlertIcon,
-  AlertTitle,
-  AlertDescription, 
-  Button,
-  useColorModeValue 
+import {
+    Alert,
+    AlertDescription,
+    AlertIcon,
+    AlertTitle,
+    Box,
+    Button,
+    Flex,
+    Spinner,
+    Text,
+    useColorModeValue,
+    VStack
 } from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useZkLogin } from '../../contexts/ZkLoginContext';
 
 const ZkLoginCallback = () => {

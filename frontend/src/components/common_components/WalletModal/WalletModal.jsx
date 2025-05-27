@@ -1,27 +1,27 @@
-import React, { useState } from 'react';
-import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
-  Button,
-  VStack,
-  Text,
-  Flex,
-  Image,
-  useColorModeValue,
-  Spinner,
-  useToast,
-  Box,
-  Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription
-} from '@chakra-ui/react';
-import { useWallet } from '../../../contexts/WalletContext';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
+import {
+    Alert,
+    AlertDescription,
+    AlertIcon,
+    AlertTitle,
+    Box,
+    Button,
+    Flex,
+    Image,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalHeader,
+    ModalOverlay,
+    Spinner,
+    Text,
+    useColorModeValue,
+    useToast,
+    VStack
+} from '@chakra-ui/react';
+import { useState } from 'react';
+import { useWallet } from '../../../contexts/WalletContext';
 
 const WalletModal = ({ isOpen, onClose }) => {
   const { connect, wallets, connecting, connected, disconnect } = useWallet();

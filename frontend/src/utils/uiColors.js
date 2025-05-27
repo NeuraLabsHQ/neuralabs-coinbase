@@ -1,37 +1,38 @@
 // src/utils/uiColors.js
 import { useColorModeValue } from '@chakra-ui/react';
+import colors from '../color.js';
 
 export const useUiColors = () => {
   // Background colors
-  const bgPrimary = useColorModeValue("#FFFFFF", "#121212");
-  const bgSecondary = useColorModeValue("#F9F9F9", "#1E1E1E");
-  const bgTertiary = useColorModeValue("#F3F4F6", "#252525");
-  const bgInput = useColorModeValue("white", "rgba(40, 40, 40, 0.5)");
-  const bgHover = useColorModeValue("gray.100", "gray.700");
-  const bgSelected = useColorModeValue("blue.50", "#333");
-  const bgSource = useColorModeValue("gray.50", "gray.800");
-  const bgButton = useColorModeValue("white", "#333");
-  const bgButtonHover = useColorModeValue("gray.100", "#444");
+  const bgPrimary = useColorModeValue(colors.chat.bgPrimary.light, colors.chat.bgPrimary.dark);
+  const bgSecondary = useColorModeValue(colors.chat.bgSecondary.light, colors.chat.bgSecondary.dark);
+  const bgTertiary = useColorModeValue(colors.chat.bgTertiary.light, colors.chat.bgTertiary.dark);
+  const bgInput = useColorModeValue(colors.chat.bgInput.light, colors.chat.bgInput.dark);
+  const bgHover = useColorModeValue(colors.chat.bgHover.light, colors.chat.bgHover.dark);
+  const bgSelected = useColorModeValue(colors.chat.bgSelected.light, colors.chat.bgSelected.dark);
+  const bgSource = useColorModeValue(colors.chat.bgSource.light, colors.chat.bgSource.dark);
+  const bgButton = useColorModeValue(colors.chat.bgButton.light, colors.chat.bgButton.dark);
+  const bgButtonHover = useColorModeValue(colors.chat.bgButtonHover.light, colors.chat.bgButtonHover.dark);
   
   // Text colors
-  const textPrimary = useColorModeValue("gray.800", "white");
-  const textSecondary = useColorModeValue("gray.600", "gray.400");
-  const textMuted = useColorModeValue("gray.500", "gray.500");
+  const textPrimary = useColorModeValue(colors.chat.textPrimary.light, colors.chat.textPrimary.dark);
+  const textSecondary = useColorModeValue(colors.chat.textSecondary.light, colors.chat.textSecondary.dark);
+  const textMuted = useColorModeValue(colors.chat.textMuted.light, colors.chat.textMuted.dark);
   
   // Border colors
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const borderLight = useColorModeValue("gray.100", "#333");
+  const borderColor = useColorModeValue(colors.chat.borderColor.light, colors.chat.borderColor.dark);
+  const borderLight = useColorModeValue(colors.chat.borderLight.light, colors.chat.borderLight.dark);
   
   // UI element colors
-  const iconColor = useColorModeValue("gray.500", "gray.400");
-  const linkColor = useColorModeValue("blue.500", "blue.300");
-  const checkmarkBgColor = useColorModeValue("green.500", "green.400");
-  const spinnerBgColor = useColorModeValue("gray.200", "gray.700");
-  const spinnerColor = useColorModeValue("gray.500", "gray.300");
+  const iconColor = useColorModeValue(colors.chat.iconColor.light, colors.chat.iconColor.dark);
+  const linkColor = useColorModeValue(colors.chat.linkColor.light, colors.chat.linkColor.dark);
+  const checkmarkBgColor = useColorModeValue(colors.chat.checkmarkBgColor.light, colors.chat.checkmarkBgColor.dark);
+  const spinnerBgColor = useColorModeValue(colors.chat.spinnerBgColor.light, colors.chat.spinnerBgColor.dark);
+  const spinnerColor = useColorModeValue(colors.chat.spinnerColor.light, colors.chat.spinnerColor.dark);
   
   // Chat message colors
-  const userMessageBg = useColorModeValue("gray.200", "gray.700");
-  const assistantMessageBg = useColorModeValue("white", "transparent");
+  const userMessageBg = useColorModeValue(colors.chat.userMessageBg.light, colors.chat.userMessageBg.dark);
+  const assistantMessageBg = useColorModeValue(colors.chat.assistantMessageBg.light, colors.chat.assistantMessageBg.dark);
   
   return {
     // Backgrounds

@@ -1,5 +1,4 @@
 // src/components/flow_builder/VisualizePanel/ExportModal.jsx
-import React from "react";
 import {
   Modal,
   ModalOverlay,

@@ -1,5 +1,4 @@
 // SVG component for icons
-import React from 'react';
 
 const SvgIcon = ({ src, alt, className }) => {
   return (

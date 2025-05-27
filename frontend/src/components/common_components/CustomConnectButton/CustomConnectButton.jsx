@@ -1,6 +1,6 @@
 // frontend/src/components/common_components/CustomConnectButton/CustomConnectButton.jsx
 
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { 
   Box, 
   Button, 

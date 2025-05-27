@@ -1,5 +1,4 @@
 // src/components/access_management/pages/BlockchainPage.jsx
-import React from 'react';
 import { 
   Box, 
   VStack, 
@@ -16,9 +15,10 @@ import {
 } from '@chakra-ui/react';
 import { FiExternalLink, FiCopy, FiCheck } from 'react-icons/fi';
 import colors from '../../../color';
+import {useState,useEffect} from 'react';
 
 const BlockchainPage = ({ agentData }) => {
-  const [copiedField, setCopiedField] = React.useState(null);
+  const [copiedField, setCopiedField] = useState(null);
   
   const bgColor = useColorModeValue(colors.accessManagement.mainContent.bg.light, colors.accessManagement.mainContent.bg.dark);
   const cardBg = useColorModeValue(colors.accessManagement.flowCard.bg.light, colors.accessManagement.flowCard.bg.dark);

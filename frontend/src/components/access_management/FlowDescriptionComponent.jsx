@@ -1,5 +1,4 @@
 // src/components/access_management/FlowDescriptionComponent.jsx
-import React from 'react';
 import { 
   Box, 
 Flex,

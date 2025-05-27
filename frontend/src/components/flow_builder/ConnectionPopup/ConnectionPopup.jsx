@@ -1,28 +1,27 @@
-import React, { useState, useEffect } from 'react';
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  TableContainer,
-  Select,
-  Box,
-  Text,
-  HStack,
-  IconButton,
-  useColorModeValue,
-  Badge,
+    Box,
+    Button,
+    HStack,
+    IconButton,
+    Modal,
+    ModalBody,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
+    Select,
+    Table,
+    TableContainer,
+    Tbody,
+    Td,
+    Text,
+    Th,
+    Thead,
+    Tr,
+    useColorModeValue
 } from '@chakra-ui/react';
-import { FiPlus, FiX, FiMoreHorizontal } from 'react-icons/fi';
+import { useEffect, useState } from 'react';
+import { FiX } from 'react-icons/fi';
 import DeleteConnectionPopup from './DeleteConnectionPopup';
 
 const ConnectionPopup = ({

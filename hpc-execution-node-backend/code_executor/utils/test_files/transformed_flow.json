@@ -1,0 +1,192 @@
+{
+    "flow_id": "flow_97ac14d2_e910_4acb_844c_78bc6f1d5aec",
+    "flow_definition": {
+        "flow_id": "flow_97ac14d2_e910_4acb_844c_78bc6f1d5aec",
+        "elements": {
+            "start_1748286327624": {
+                "type": "start",
+                "element_id": "start_1748286327624",
+                "name": "Start",
+                "description": "Entry point of a flow",
+                "input_schema": {},
+                "output_schema": {}
+            },
+            "context_history_1748286334145": {
+                "type": "context_history",
+                "element_id": "context_history_1748286334145",
+                "name": "ContextHistory",
+                "description": "Access conversation history and context",
+                "input_schema": {
+                    "context_history": {
+                        "type": "list",
+                        "description": "List of previous conversation messages",
+                        "required": true
+                    }
+                },
+                "output_schema": {
+                    "context_history": {
+                        "type": "list",
+                        "description": "Conversation history",
+                        "required": true
+                    }
+                }
+            },
+            "chat_input_1748286339970": {
+                "type": "chat_input",
+                "element_id": "chat_input_1748286339970",
+                "name": "ChatInput",
+                "description": "Capture user input text from chat interface",
+                "input_schema": {
+                    "chat_input": {
+                        "type": "string",
+                        "description": "User input text from chat",
+                        "required": true
+                    }
+                },
+                "output_schema": {
+                    "chat_input": {
+                        "type": "string",
+                        "description": "User input text",
+                        "required": true
+                    }
+                }
+            },
+            "llm_structured_1748286346238": {
+                "type": "llm_structured",
+                "element_id": "llm_structured_1748286346238",
+                "name": "LLMStructured",
+                "description": "Generate structured data using Large Language Models",
+                "input_schema": {
+                    "prompt": {
+                        "type": "string",
+                        "description": "Main prompt for structured generation",
+                        "required": true
+                    },
+                    "context": {
+                        "type": "string",
+                        "description": "Additional context information",
+                        "required": false
+                    },
+                    "additional_data": {
+                        "type": "json",
+                        "description": "Extra data to include in generation",
+                        "required": false
+                    }
+                },
+                "output_schema": {
+                    "structured_output": {
+                        "type": "json",
+                        "description": "Generated structured data from the LLM",
+                        "required": true
+                    }
+                },
+                "model": null,
+                "max_tokens": 1000,
+                "temperature": 0.3,
+                "wrapper_prompt": null,
+                "llm_hidden_prompt": null
+            },
+            "llm_text_1748286347096": {
+                "type": "llm_text",
+                "element_id": "llm_text_1748286347096",
+                "name": "LLMText",
+                "description": "Generate free-form text using Large Language Models",
+                "input_schema": {
+                    "prompt": {
+                        "type": "string",
+                        "description": "Main prompt for text generation",
+                        "required": true
+                    },
+                    "context": {
+                        "type": "string",
+                        "description": "Additional context information",
+                        "required": false
+                    },
+                    "additional_data": {
+                        "type": "json",
+                        "description": "Extra data to include in generation",
+                        "required": false
+                    }
+                },
+                "output_schema": {
+                    "llm_output": {
+                        "type": "string",
+                        "description": "Generated text from the LLM",
+                        "required": true
+                    }
+                },
+                "model": null,
+                "max_tokens": 1000,
+                "temperature": 0.7,
+                "wrapper_prompt": null
+            },
+            "end_1748286362057": {
+                "type": "end",
+                "element_id": "end_1748286362057",
+                "name": "End",
+                "description": "Exit point of a flow",
+                "input_schema": {
+                    "text_input": {
+                        "type": "string",
+                        "description": "Text input to be output",
+                        "required": false
+                    },
+                    "proposed_transaction": {
+                        "type": "json",
+                        "description": "Optional transaction proposal",
+                        "required": false
+                    }
+                },
+                "output_schema": {
+                    "text_output": {
+                        "type": "string",
+                        "description": "Final text output",
+                        "required": false
+                    },
+                    "proposed_transaction": {
+                        "type": "json",
+                        "description": "Optional transaction proposal",
+                        "required": false
+                    }
+                }
+            }
+        },
+        "connections": [
+            {
+                "from_id": "chat_input_1748286339970",
+                "to_id": "llm_structured_1748286346238",
+                "from_output": "chat_input",
+                "to_input": "prompt"
+            },
+            {
+                "from_id": "start_1748286327624",
+                "to_id": "llm_structured_1748286346238"
+            },
+            {
+                "from_id": "context_history_1748286334145",
+                "to_id": "llm_structured_1748286346238",
+                "from_output": "context_history",
+                "to_input": "context"
+            },
+            {
+                "from_id": "llm_structured_1748286346238",
+                "to_id": "llm_text_1748286347096",
+                "from_output": "structured_output",
+                "to_input": "additional_data"
+            },
+            {
+                "from_id": "llm_text_1748286347096",
+                "to_id": "end_1748286362057",
+                "from_output": "llm_output",
+                "to_input": "text_input"
+            }
+        ],
+        "start_element_id": "start_1748286327624",
+        "metadata": {
+            "name": "Flow flow_97ac14d2_e910_4acb_844c_78bc6f1d5aec",
+            "description": "Flow imported from flow builder",
+            "created_from": "flow_builder"
+        }
+    },
+    "initial_inputs": {}
+}

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, Heading, Text, VStack, Button, Image, useColorModeValue, Flex } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import homepageBackground from '../assets/homepage.png';
