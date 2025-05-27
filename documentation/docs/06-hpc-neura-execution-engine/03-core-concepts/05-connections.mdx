@@ -62,6 +62,12 @@ Every connection consists of four key components:
           <td>Specific input variable on target</td>
           <td>No*</td>
         </tr>
+        <tr>
+          <td><code>connection_type</code></td>
+          <td><code>"control" | "data" | "both"</code></td>
+          <td>Purpose of the connection</td>
+          <td>No (default: "both")</td>
+        </tr>
       </tbody>
     </table>
     <p style={{ marginTop: '1rem', fontSize: '0.9em' }}>
@@ -172,6 +178,79 @@ connections:
     from_output: "user_input:prompt"
     to_input: "ai_generator:query"`}
       </CollapsibleCodeBlock>
+    </div>
+  </TabItem>
+  
+  <TabItem value="typed" label="Connection Purpose Types">
+    <div style={{ marginTop: '1rem' }}>
+      <p>Define the purpose of each connection - control flow, data flow, or both:</p>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Connection Purpose Types</CardTitle>
+        </CardHeader>
+        <div style={{ padding: '1rem' }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Purpose</th>
+                <th>Behavior</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>control</code></td>
+                <td>Execution order only</td>
+                <td>Defines when to execute, no data transfer</td>
+              </tr>
+              <tr>
+                <td><code>data</code></td>
+                <td>Data dependency only</td>
+                <td>Transfers data, doesn't trigger execution</td>
+              </tr>
+              <tr>
+                <td><code>both</code></td>
+                <td>Traditional connection</td>
+                <td>Triggers execution AND transfers data (default)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </Card>
+      
+      <CollapsibleCodeBlock
+        title="Typed Connection Example"
+        description="Using different connection types for precise flow control"
+        language="yaml"
+      >
+{`connections:
+  # Control flow: Execute B after A, but no data transfer
+  - from_id: initializer
+    to_id: api_caller
+    connection_type: control
+    
+  # Data flow: B needs A's output but doesn't execute after A
+  - from_id: config_loader
+    to_id: processor
+    from_output: "config_loader:settings"
+    to_input: "processor:config"
+    connection_type: data
+    
+  # Both: Traditional behavior (default)
+  - from_id: processor
+    to_id: formatter
+    from_output: "processor:result"
+    to_input: "formatter:data"
+    connection_type: both  # or omit for default`}
+      </CollapsibleCodeBlock>
+      
+      <Callout type="success" title="Benefits of Typed Connections">
+        • **Clearer Intent**: Explicitly state whether a connection is for ordering or data
+        • **Better Control**: Prevent unwanted executions in complex flows
+        • **Efficient Execution**: Engine can optimize based on connection types
+        • **Easier Debugging**: Understand flow behavior at a glance
+      </Callout>
     </div>
   </TabItem>
 </Tabs>
@@ -315,6 +394,96 @@ connections:
     to_id: complex_handler
     # Enabled when complexity >= 0.5`}
 </CollapsibleCodeBlock>
+
+### Advanced Pattern: Cross-Path Dependencies
+
+Using typed connections to handle complex scenarios where nodes in different execution paths need to share data:
+
+<CollapsibleCodeBlock
+  title="Cross-Path Dependency Pattern"
+  description="Sharing data between conditional paths using typed connections"
+  language="yaml"
+>
+{`nodes:
+  start: { type: start }
+  config_loader: { type: constants }
+  case_router: { type: case }
+  
+  # Path A nodes
+  path_a_processor: { type: llm_structured }
+  path_a_transformer: { type: custom }
+  path_a_validator: { type: custom }
+  
+  # Path B nodes  
+  path_b_initializer: { type: custom }
+  path_b_processor: { type: llm_text }
+  # Note: path_b_processor needs data from path_a_transformer!
+  
+  merger: { type: merger }
+  end: { type: end }
+
+connections:
+  # Setup connections
+  - from_id: start
+    to_id: config_loader
+    connection_type: control
+    
+  - from_id: config_loader
+    to_id: case_router
+    connection_type: both
+    
+  # Path A - control flow
+  - from_id: case_router
+    to_id: path_a_processor
+    connection_type: control  # Case enables this path
+    
+  - from_id: path_a_processor
+    to_id: path_a_transformer
+    connection_type: both
+    
+  - from_id: path_a_transformer
+    to_id: path_a_validator
+    connection_type: both
+    
+  # Path B - control flow  
+  - from_id: case_router
+    to_id: path_b_initializer
+    connection_type: control  # Case enables this path
+    
+  - from_id: path_b_initializer
+    to_id: path_b_processor
+    connection_type: control
+    
+  # Cross-path data dependency
+  - from_id: path_a_transformer
+    to_id: path_b_processor
+    from_output: "path_a_transformer:auth_token"
+    to_input: "path_b_processor:authorization"
+    connection_type: data  # Only data, no control flow
+    
+  # Convergence
+  - from_id: path_a_validator
+    to_id: merger
+    connection_type: both
+    
+  - from_id: path_b_processor
+    to_id: merger
+    connection_type: both
+    
+  - from_id: merger
+    to_id: end
+    connection_type: both`}
+</CollapsibleCodeBlock>
+
+<Callout type="info" title="How Cross-Path Dependencies Work">
+When Path B is selected:
+1. **Control flow** follows: `case_router` → `path_b_initializer` → `path_b_processor`
+2. When `path_b_processor` needs the auth token, it triggers **backtracking**
+3. The engine executes only what's needed: `path_a_processor` → `path_a_transformer`
+4. `path_a_transformer` provides the auth token via the **data connection**
+5. `path_b_processor` continues with the required data
+6. `path_a_validator` is never executed (no control path to it from Path B)
+</Callout>
 
 ## Advanced Connection Techniques
 

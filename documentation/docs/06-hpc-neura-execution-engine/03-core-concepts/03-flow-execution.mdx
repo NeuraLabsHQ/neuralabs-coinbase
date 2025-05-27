@@ -40,17 +40,17 @@ The execution of a flow follows a well-defined lifecycle from initiation to comp
 
 ### Dependency-Based Execution
 
-The engine uses a dependency-based execution model where nodes execute only when their dependencies are satisfied.
+The engine uses a sophisticated dependency-based execution model with two key mechanisms:
 
 <Features>
-  <Feature title="Automatic Ordering" icon="/img/icons/ai-workflow.svg">
-    Nodes execute in the correct order based on connections
+  <Feature title="Downward Execution" icon="/img/icons/arrow-right.svg">
+    Normal forward flow following control connections
   </Feature>
-  <Feature title="Parallel Execution" icon="/img/icons/hpc.svg">
-    Independent nodes can execute simultaneously
+  <Feature title="Backtracking" icon="/img/icons/network.svg">
+    Automatic resolution of missing data dependencies
   </Feature>
-  <Feature title="Backtracking" icon="/img/icons/arrow-right.svg">
-    Missing dependencies are automatically resolved
+  <Feature title="Parallel Processing" icon="/img/icons/hpc.svg">
+    Independent nodes execute simultaneously
   </Feature>
 </Features>
 
@@ -86,6 +86,89 @@ nodes:
 #     |
 #     F`}
 </CollapsibleCodeBlock>
+
+### Backtracking Mechanism
+
+<Card>
+  <CardHeader>
+    <CardTitle>Understanding Backtracking</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <p>Backtracking occurs when a node needs data from an upstream node that hasn't executed yet. This is common in complex flows with cross-path dependencies.</p>
+    
+    <h4>Key Characteristics:</h4>
+    <ul>
+      <li><strong>Automatic</strong>: Triggered when dependencies aren't satisfied</li>
+      <li><strong>Minimal</strong>: Only executes required nodes</li>
+      <li><strong>No Forward Propagation</strong>: Backtracked nodes don't trigger downstream execution</li>
+      <li><strong>Data-Only</strong>: Purely for satisfying data dependencies</li>
+    </ul>
+    
+    <CollapsibleCodeBlock
+      title="Backtracking Example"
+      description="How backtracking resolves dependencies"
+      language="yaml"
+    >
+{`# Scenario: Node D needs data from Node B, but B hasn't executed
+# Current execution at Node D:
+
+1. Node D checks dependencies
+2. Finds B.executed = false
+3. Triggers backtracking to B
+4. B executes with backtracking=true
+5. B provides data to D
+6. D continues execution
+7. B's downstream nodes (C) are NOT triggered`}
+    </CollapsibleCodeBlock>
+  </div>
+</Card>
+
+### Downward Execution Control
+
+<Card>
+  <CardHeader>
+    <CardTitle>Forward Flow Management</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <p>Each node has a <code>downwards_execute</code> flag that controls whether it triggers downstream nodes after completion.</p>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Flag Value</th>
+          <th>Behavior</th>
+          <th>Use Case</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>true</code> (default)</td>
+          <td>Triggers all downstream connections</td>
+          <td>Normal flow progression</td>
+        </tr>
+        <tr>
+          <td><code>false</code></td>
+          <td>Blocks downstream execution</td>
+          <td>Conditional paths, error states</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <CollapsibleCodeBlock
+      title="Downward Execution with Typed Connections"
+      description="How connection types affect execution flow"
+      language="python"
+    >
+{`# In the execution engine:
+if not backtracking and element.downwards_execute:
+    for conn in element.connections:
+        # With typed connections:
+        if conn.connection_type in ["control", "both"]:
+            await execute_element(conn.to_element)
+        # Data-only connections are NOT followed for execution`}
+    </CollapsibleCodeBlock>
+  </div>
+</Card>
 
 ### Execution Control
 
@@ -377,6 +460,134 @@ Each flow execution carries context that's available to all nodes:
 The execution context is injected into metadata nodes automatically and can be accessed by any node that needs user or session information.
 </Callout>
 
+## Comprehensive Execution Example
+
+<Card>
+  <CardHeader>
+    <CardTitle>Complex Flow with Cross-Path Dependencies</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <p>This example demonstrates backtracking, downward execution, and typed connections working together:</p>
+    
+    <CollapsibleCodeBlock
+      title="Multi-Path Flow with Dependencies"
+      description="A real-world scenario showing all execution concepts"
+      language="yaml"
+    >
+{`# Flow: Customer service with premium/standard paths
+nodes:
+  start: { type: start }
+  customer_data: { type: metadata }
+  auth_service: { type: rest_api }  # Generates auth token
+  router: { type: case }  # Routes based on customer tier
+  
+  # Premium path
+  premium_ai: { type: llm_text, model: "gpt-4" }
+  premium_formatter: { type: custom }
+  
+  # Standard path  
+  standard_queue: { type: custom }
+  standard_ai: { type: llm_text, model: "gpt-3.5" }
+  # Note: standard_ai needs auth token from auth_service!
+  
+  response_merger: { type: merger }
+  audit_logger: { type: custom }  # Logs all responses
+  end: { type: end }
+
+connections:
+  # Initial setup
+  - from_id: start
+    to_id: customer_data
+    connection_type: control
+    
+  - from_id: start
+    to_id: auth_service
+    connection_type: control
+    
+  - from_id: customer_data
+    to_id: router
+    from_output: "customer_data:tier"
+    to_input: "router:variables.customer_tier"
+    connection_type: both
+    
+  # Premium path (Case 1: tier == "premium")
+  - from_id: router
+    to_id: premium_ai
+    connection_type: control  # Enabled by case
+    
+  - from_id: auth_service
+    to_id: premium_ai
+    from_output: "auth_service:token"
+    to_input: "premium_ai:auth"
+    connection_type: data  # Just data dependency
+    
+  - from_id: premium_ai
+    to_id: premium_formatter
+    connection_type: both
+    
+  # Standard path (Case 2: tier == "standard")  
+  - from_id: router
+    to_id: standard_queue
+    connection_type: control  # Enabled by case
+    
+  - from_id: standard_queue
+    to_id: standard_ai
+    connection_type: control
+    
+  - from_id: auth_service
+    to_id: standard_ai
+    from_output: "auth_service:token"
+    to_input: "standard_ai:auth"
+    connection_type: data  # Cross-path dependency!
+    
+  # Convergence
+  - from_id: premium_formatter
+    to_id: response_merger
+    connection_type: both
+    
+  - from_id: standard_ai
+    to_id: response_merger
+    connection_type: both
+    
+  - from_id: response_merger
+    to_id: audit_logger
+    connection_type: both
+    
+  - from_id: response_merger
+    to_id: end
+    connection_type: control
+    
+  - from_id: audit_logger
+    to_id: end
+    from_output: "audit_logger:log_id"
+    to_input: "end:metadata.audit_id"
+    connection_type: data
+
+# Execution walkthrough for STANDARD customer:
+
+1. start → customer_data, auth_service (parallel)
+2. customer_data completes → router evaluates (tier="standard")
+3. router disables premium path, enables standard path
+4. router → standard_queue (control flow)
+5. standard_queue → standard_ai (control flow)
+6. standard_ai needs auth token (data dependency)
+7. BACKTRACKING: auth_service executes if not already done
+8. auth_service provides token to standard_ai (data flow)
+9. standard_ai executes with auth token
+10. standard_ai → response_merger
+11. response_merger → audit_logger, end (parallel)
+12. audit_logger provides log_id to end (data only)
+13. Flow completes
+
+Key points:
+- premium_ai never executes (no control path)
+- auth_service executes via backtracking if needed
+- audit_logger and end run in parallel
+- Data flows independently of control flow`}
+    </CollapsibleCodeBlock>
+  </div>
+</Card>
+
 ## Best Practices
 
 <Features>
@@ -390,6 +601,16 @@ The execution context is injected into metadata nodes automatically and can be a
     Enable streaming for LLM nodes to improve response times
   </Feature>
 </Features>
+
+### Execution Design Guidelines
+
+<Callout type="success" title="Best Practices for Flow Execution">
+1. **Use Typed Connections**: Be explicit about control vs data dependencies
+2. **Plan for Backtracking**: Design with cross-path dependencies in mind
+3. **Leverage Parallelism**: Use control connections to enable parallel execution
+4. **Avoid Circular Dependencies**: Ensure your flow is a true DAG
+5. **Test All Paths**: Verify both normal and backtracking scenarios
+</Callout>
 
 ### Performance Tips
 
