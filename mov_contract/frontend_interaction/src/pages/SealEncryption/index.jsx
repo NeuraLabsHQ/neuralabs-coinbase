@@ -138,6 +138,7 @@ function SealEncryption({ config }) {
             sessionKey={sessionKey}
             userNFTs={userNFTs}
             config={config}
+            client={client}
           />
 
           {/* Encrypted Files List */}

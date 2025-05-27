@@ -138,11 +138,44 @@ export const fetchDecryptionKeys = async ({ ids, tx, sessionKey, threshold, clie
   return Promise.resolve()
 }
 
-// Re-export walrus functions
-export {
-  uploadToWalrus,
-  downloadFromWalrus
+// Import walrus functions
+import {
+  uploadToWalrus as _uploadToWalrus,
+  downloadFromWalrus as _downloadFromWalrus
 } from '../blockchain_module/walrus/index.ts'
+
+// Wrap Walrus functions with proper configuration
+export const uploadToWalrus = async (data) => {
+  const config = window.config
+  if (!config || !config.WALRUS_PUBLISHER) {
+    throw new Error('Walrus publisher URL not configured')
+  }
+  
+  // Convert data to proper format if needed
+  let uploadData
+  if (data instanceof Blob) {
+    uploadData = await data.arrayBuffer()
+  } else if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
+    uploadData = data
+  } else {
+    throw new Error('Invalid data format for upload')
+  }
+  
+  // Call with proper parameters: publisherUrl first, then data
+  const result = await _uploadToWalrus(config.WALRUS_PUBLISHER, uploadData)
+  
+  // Return just the blob ID for backward compatibility
+  return result.blobId
+}
+
+export const downloadFromWalrus = async (blobId) => {
+  const config = window.config
+  if (!config || !config.WALRUS_AGGREGATOR) {
+    throw new Error('Walrus aggregator URL not configured')
+  }
+  
+  return _downloadFromWalrus(config.WALRUS_AGGREGATOR, blobId)
+}
 
 // Re-export exchange functions
 export {

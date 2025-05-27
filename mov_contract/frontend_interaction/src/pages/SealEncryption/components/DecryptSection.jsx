@@ -1,12 +1,10 @@
 import { checkUserAccess, decryptData, downloadFromWalrus, createTransaction } from '../../../utils/blockchain'
 import { fromHex, toHex } from '@mysten/sui/utils'
 import { Transaction } from '@mysten/sui/transactions'
-import { useSuiClient } from '@mysten/dapp-kit'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 
-export function DecryptSection({ account, sealClient, sessionKey, userNFTs, config }) {
-  const suiClient = useSuiClient()
+export function DecryptSection({ account, sealClient, sessionKey, userNFTs, config, client }) {
   const [decryptForm, setDecryptForm] = useState({
     nftId: '',
     encryptedData: '',
@@ -76,10 +74,10 @@ export function DecryptSection({ account, sealClient, sessionKey, userNFTs, conf
       })
 
       // Get transaction bytes for decryption
-      if (!suiClient) {
+      if (!client) {
         throw new Error('SUI client not available')
       }
-      const txBytes = await tx.build({ client: suiClient, onlyTransactionKind: true })
+      const txBytes = await tx.build({ client: client, onlyTransactionKind: true })
 
       // Decrypt the data using the seal client directly
       const decrypted = await decryptData(sealClient, {
