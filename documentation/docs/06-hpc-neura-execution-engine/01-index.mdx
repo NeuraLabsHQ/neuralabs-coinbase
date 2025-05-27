@@ -1,0 +1,88 @@
+---
+id: index
+title: HPC Neura Execution Engine
+sidebar_label: Overview
+sidebar_position: 1
+---
+
+import { Card, CardHeader, CardTitle, CardDescription } from '@site/src/components/Card';
+import { Callout } from '@site/src/components/Callout';
+import { Features, Feature } from '@site/src/components/Features';
+import { CollapsibleCodeBlock, InlineCodeCard } from '@site/src/components/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+# HPC Neura Execution Engine
+
+The HPC Neura Execution Engine is a powerful workflow execution system designed to process complex AI-driven workflows with high performance and reliability. It provides a flexible, scalable platform for executing neural computation graphs integrated with various AI models and blockchain operations.
+
+<Callout type="info">
+The HPC Neura Execution Engine powers the core workflow execution capabilities of the NeuraLabs platform, enabling seamless integration of AI models, blockchain operations, and custom logic.
+</Callout>
+
+## Key Features
+
+<Features>
+  <Feature title="Flow-Based Execution" icon="network">
+    Visual workflow design with drag-and-drop elements connected in a directed graph
+  </Feature>
+  <Feature title="Multi-Model AI Support" icon="ai-workflow">
+    Integration with multiple AI providers including AWS Bedrock, Anthropic, and DeepSeek
+  </Feature>
+  <Feature title="Blockchain Integration" icon="blockchain">
+    Native support for SUI blockchain operations and smart contract interactions
+  </Feature>
+  <Feature title="Real-Time Streaming" icon="terminal">
+    Server-sent events (SSE) for streaming AI responses and execution updates
+  </Feature>
+</Features>
+
+## Architecture Overview
+
+The execution engine consists of:
+
+- **Flow Executor**: Core engine that processes workflow graphs
+- **Element Registry**: Extensible system of workflow elements
+- **Service Layer**: Integration with external services and APIs
+- **WebSocket API**: Real-time communication with clients
+
+## Quick Navigation
+
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem', marginTop: '2rem' }}>
+  <Card>
+    <CardHeader>
+      <CardTitle>Getting Started</CardTitle>
+      <CardDescription>
+        Quick start guide, installation, and basic concepts
+      </CardDescription>
+    </CardHeader>
+  </Card>
+  
+  <Card>
+    <CardHeader>
+      <CardTitle>Core Concepts</CardTitle>
+      <CardDescription>
+        Understand flows, elements, connections, and execution model
+      </CardDescription>
+    </CardHeader>
+  </Card>
+  
+  <Card>
+    <CardHeader>
+      <CardTitle>Element Reference</CardTitle>
+      <CardDescription>
+        Complete documentation of all available workflow elements
+      </CardDescription>
+    </CardHeader>
+  </Card>
+  
+  <Card>
+    <CardHeader>
+      <CardTitle>API Reference</CardTitle>
+      <CardDescription>
+        Detailed API documentation for integration
+      </CardDescription>
+    </CardHeader>
+  </Card>
+</div>

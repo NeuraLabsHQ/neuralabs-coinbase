@@ -1,0 +1,8 @@
+{
+  "label": "External APIs",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "Integration with external APIs and services"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "label": "AWS Bedrock",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "description": "Integration with AWS Bedrock for AI models"
+  }
+}
