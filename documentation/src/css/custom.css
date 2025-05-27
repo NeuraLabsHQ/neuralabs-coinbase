@@ -1552,6 +1552,7 @@ html[data-theme='dark'] .generated-index .card:hover {
   margin-bottom: 1rem;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -2411,4 +2412,70 @@ html[data-theme='dark'] .generated-index .card:hover {
 
 .markdown > h4 + * {
   margin-top: 0.5rem;
+}
+
+/* ===============================
+   AUTOMATIC HIERARCHICAL NUMBERING
+   =============================== */
+
+/* Style for automatically generated heading numbers */
+.heading-number {
+  display: inline-block;
+  margin-right: 0.75rem;
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+  font-family: 'SF Mono', Monaco, Inconsolata, 'Fira Code', 'Courier New', monospace;
+  opacity: 0.8;
+}
+
+/* Adjust spacing for numbered headings */
+.theme-doc-markdown h1 .heading-number,
+.theme-doc-markdown h2 .heading-number,
+.theme-doc-markdown h3 .heading-number,
+.theme-doc-markdown h4 .heading-number,
+.theme-doc-markdown h5 .heading-number,
+.theme-doc-markdown h6 .heading-number {
+  user-select: none;
+}
+
+/* Dark mode number styling */
+[data-theme='dark'] .heading-number {
+  color: var(--ifm-color-primary);
+  opacity: 0.7;
+}
+
+/* Hover effect on headings with numbers */
+.theme-doc-markdown h1:hover .heading-number,
+.theme-doc-markdown h2:hover .heading-number,
+.theme-doc-markdown h3:hover .heading-number,
+.theme-doc-markdown h4:hover .heading-number,
+.theme-doc-markdown h5:hover .heading-number,
+.theme-doc-markdown h6:hover .heading-number {
+  opacity: 1;
+}
+
+/* Table of contents numbering alignment */
+.table-of-contents .heading-number {
+  font-size: 0.875em;
+  margin-right: 0.5rem;
+}
+
+/* Prevent numbering in specific contexts */
+.hero h1 .heading-number,
+.hero h2 .heading-number,
+.navbar .heading-number,
+.footer .heading-number,
+.blog-post-header .heading-number,
+.admonition .heading-number,
+.tabs-container .heading-number,
+.theme-admonition .heading-number {
+  display: none !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .heading-number {
+    font-size: 0.9em;
+    margin-right: 0.5rem;
+  }
 }

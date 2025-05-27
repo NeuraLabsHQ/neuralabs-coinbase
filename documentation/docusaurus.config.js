@@ -55,6 +55,10 @@ const config = {
 
   themes: ['@docusaurus/theme-mermaid'],
   
+  plugins: [
+    './src/plugins/auto-numbering-plugin.js',
+  ],
+  
   markdown: {
     mermaid: true,
   },
