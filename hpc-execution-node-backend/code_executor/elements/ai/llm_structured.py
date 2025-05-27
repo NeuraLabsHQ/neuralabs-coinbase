@@ -19,7 +19,8 @@ class LLMStructured(ElementBase):
                  temperature    : float = 0.3,
                  max_tokens     : int = 1000, 
                  wrapper_prompt : str = "",
-                 llm_hidden_prompt: str = ""):
+                 llm_hidden_prompt: str = "",
+                 custom_output_schema: Optional[Dict[str, Any]] = None):
         super().__init__(
             element_id=element_id,
             name=name,
@@ -33,6 +34,7 @@ class LLMStructured(ElementBase):
         self.max_tokens         = max_tokens
         self.wrapper_prompt     = wrapper_prompt
         self.llm_hidden_prompt  = llm_hidden_prompt
+        self.custom_output_schema = custom_output_schema or {}
     
     async def execute(self, executor, backtracking=False) -> Dict[str, Any]:
         """Execute LLM structured output generation."""
@@ -74,9 +76,12 @@ class LLMStructured(ElementBase):
                                         
         # Generate structured output
         try:
+            # Use custom schema if provided, otherwise use default output_schema
+            generation_schema = self.custom_output_schema if self.custom_output_schema else self.output_schema
+            
             structured_output = await bedrock_service.generate_structured_output(
                                                                                     prompt          = formatted_prompt,
-                                                                                    output_schema   = self.output_schema,
+                                                                                    output_schema   = generation_schema,
                                                                                     temperature     = self.temperature,
                                                                                     max_tokens      = self.max_tokens
                                                                                 )
@@ -95,9 +100,9 @@ class LLMStructured(ElementBase):
                         "raw_response": raw
                     })
                     
-                    # Set up a default output structure based on schema
+                    # Set up a default output structure based on generation schema
                     recovered_output = {}
-                    for key, schema in self.output_schema.items():
+                    for key, schema in generation_schema.items():
                         # Set default values based on type
                         if schema.get('type') == 'string':
                             recovered_output[key] = ""
@@ -111,7 +116,17 @@ class LLMStructured(ElementBase):
                     structured_output = recovered_output
             
             # Set output based on structured result
-            self.outputs = structured_output
+            # Always include the structured_output field for compatibility
+            # Convert structured_output to JSON string for compatibility with End element
+            structured_output_str = json.dumps(structured_output) if isinstance(structured_output, (dict, list)) else str(structured_output)
+            
+            self.outputs = {
+                "structured_output": structured_output_str
+            }
+            
+            # Only include individual fields if structured_output is a dict
+            if isinstance(structured_output, dict):
+                self.outputs.update(structured_output)
             
             # Stream structured result
             await executor._stream_event("llm_structured_result", {
@@ -149,8 +164,9 @@ class LLMStructured(ElementBase):
                 additional_data_str = f"\nAdditional Information: {str(additional_data)}"
                 logger.warning(f"Error formatting additional data as JSON: {str(e)}")
         
-        # Format output schema
-        schema_str = json.dumps(self.output_schema, indent=2)
+        # Format output schema (use custom schema if provided)
+        generation_schema = self.custom_output_schema if self.custom_output_schema else self.output_schema
+        schema_str = json.dumps(generation_schema, indent=2)
         
         # Combine user wrapper prompt with hidden prompt and schema
         user_part = ""

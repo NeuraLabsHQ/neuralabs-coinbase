@@ -1,19 +1,58 @@
 {
-  "flow_id": "flow_5659a707_6e85_44b2_b31c_3504442a7e4e",
+  "flow_id": "flow_acedbef9_4798_4b8d_9593_b2bd3d5b4a65",
   "flow_definition": {
-    "flow_id": "flow_5659a707_6e85_44b2_b31c_3504442a7e4e",
+    "flow_id": "flow_acedbef9_4798_4b8d_9593_b2bd3d5b4a65",
     "elements": {
-      "start": {
-        "type": "start",
-        "element_id": "start_1748291017680",
-        "name": "Start",
-        "description": "Entry point of a flow",
-        "input_schema": {},
-        "output_schema": {}
+      "llm_structured": {
+        "type": "llm_structured",
+        "element_id": "llm_structured_1748325748889",
+        "name": "LLMStructured",
+        "description": "Generate structured data using Large Language Models",
+        "input_schema": {
+          "prompt": {
+            "type": "string",
+            "description": "Main prompt for structured generation",
+            "required": true
+          },
+          "context": {
+            "type": "string",
+            "description": "Additional context information",
+            "required": false
+          },
+          "additional_data": {
+            "type": "json",
+            "description": "Extra data to include in generation",
+            "required": false
+          }
+        },
+        "output_schema": {
+          "structured_output": {
+            "type": "json",
+            "description": "Generated structured data from the LLM",
+            "required": true
+          }
+        },
+        "model": null,
+        "max_tokens": 1000,
+        "temperature": 0.3,
+        "custom_output_schema": {
+          "name": {
+            "type": "string",
+            "description": "Generated name",
+            "required": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Generated email",
+            "required": true
+          }
+        },
+        "wrapper_prompt": "Extract contact information from the following text: {prompt}",
+        "llm_hidden_prompt": "You are a contact information extraction assistant. Extract only the information that is explicitly mentioned in the text."
       },
       "llm_text": {
         "type": "llm_text",
-        "element_id": "llm_text_1748291030899",
+        "element_id": "llm_text_1748325749805",
         "name": "LLMText",
         "description": "Generate free-form text using Large Language Models",
         "input_schema": {
@@ -43,51 +82,11 @@
         "model": null,
         "max_tokens": 1000,
         "temperature": 0.7,
-        "wrapper_prompt": "You are a helpful AI assistant. Please respond to the following: {prompt}\n\nContext: {context}, enclose the chain of thought inside <think> Thought </think> tags. and answer within <answer> </answer> tags."
-      },
-      "context_history": {
-        "type": "context_history",
-        "element_id": "context_history_1748291035209",
-        "name": "ContextHistory",
-        "description": "Access conversation history and context",
-        "input_schema": {
-          "context_history": {
-            "type": "list",
-            "description": "List of previous conversation messages",
-            "required": true
-          }
-        },
-        "output_schema": {
-          "context_history": {
-            "type": "list",
-            "description": "Conversation history",
-            "required": true
-          }
-        }
-      },
-      "chat_input": {
-        "type": "chat_input",
-        "element_id": "chat_input_1748291036402",
-        "name": "ChatInput",
-        "description": "Capture user input text from chat interface",
-        "input_schema": {
-          "chat_input": {
-            "type": "string",
-            "description": "User input text from chat",
-            "required": true
-          }
-        },
-        "output_schema": {
-          "chat_input": {
-            "type": "string",
-            "description": "User input text",
-            "required": true
-          }
-        }
+        "wrapper_prompt": "You are a helpful AI assistant. Please respond to the following: {prompt}\\\\n\\\\nContext: {context}, enclose the chain of thought inside <think> Thought </think> tags. and answer within <answer> </answer> tags."
       },
       "end": {
         "type": "end",
-        "element_id": "end_1748291063402",
+        "element_id": "end_1748325752047",
         "name": "End",
         "description": "Exit point of a flow",
         "input_schema": {
@@ -114,23 +113,126 @@
             "required": false
           }
         }
+      },
+      "start": {
+        "type": "start",
+        "element_id": "start_1748325753408",
+        "name": "Start",
+        "description": "Entry point of a flow",
+        "input_schema": {},
+        "output_schema": {}
+      },
+      "selector": {
+        "type": "selector",
+        "element_id": "selector_1748325760307",
+        "name": "Selector",
+        "description": "Extract specific values from input data using keys",
+        "input_schema": {
+          "data": {
+            "type": "json",
+            "description": "Input data to extract values from",
+            "required": true
+          }
+        },
+        "output_schema": {
+          "value": {
+            "type": "json",
+            "description": "Extracted data value",
+            "required": true
+          }
+        },
+        "key": "name"
+      },
+      "chat_input": {
+        "type": "chat_input",
+        "element_id": "chat_input_1748325769596",
+        "name": "ChatInput",
+        "description": "Capture user input text from chat interface",
+        "input_schema": {
+          "chat_input": {
+            "type": "string",
+            "description": "User input text from chat",
+            "required": true
+          }
+        },
+        "output_schema": {
+          "chat_input": {
+            "type": "string",
+            "description": "User input text",
+            "required": true
+          }
+        }
+      },
+      "merger": {
+        "type": "merger",
+        "element_id": "merger_1748325803673",
+        "name": "Merger",
+        "description": "Combine multiple data inputs into a single output",
+        "input_schema": {
+          "data1": {
+            "type": "json",
+            "description": "First data input",
+            "required": true
+          },
+          "data2": {
+            "type": "json",
+            "description": "Second data input",
+            "required": true
+          },
+          "data3": {
+            "type": "json",
+            "description": "Third data input",
+            "required": false
+          },
+          "data4": {
+            "type": "json",
+            "description": "Fourth data input",
+            "required": false
+          }
+        },
+        "output_schema": {
+          "merged_data": {
+            "type": "json",
+            "description": "Combined data from all inputs",
+            "required": true
+          }
+        },
+        "merge_strategy": "shallow"
       }
     },
     "connections": [
       {
-        "from_id": "start",
-        "to_id": "llm_text"
+        "from_id": "chat_input",
+        "to_id": "llm_structured",
+        "from_output": "chat_input",
+        "to_input": "prompt"
       },
       {
-        "from_id": "context_history",
-        "to_id": "llm_text",
-        "from_output": "context_history",
-        "to_input": "additional_data"
+        "from_id": "start",
+        "to_id": "llm_structured"
+      },
+      {
+        "from_id": "llm_structured",
+        "to_id": "selector",
+        "from_output": "structured_output",
+        "to_input": "data"
+      },
+      {
+        "from_id": "selector",
+        "to_id": "merger",
+        "from_output": "value",
+        "to_input": "data1"
       },
       {
         "from_id": "chat_input",
-        "to_id": "llm_text",
+        "to_id": "merger",
         "from_output": "chat_input",
+        "to_input": "data2"
+      },
+      {
+        "from_id": "merger",
+        "to_id": "llm_text",
+        "from_output": "merged_data",
         "to_input": "prompt"
       },
       {
@@ -142,19 +244,14 @@
     ],
     "start_element_id": "start",
     "metadata": {
-      "name": "Flow flow_5659a707_6e85_44b2_b31c_3504442a7e4e",
+      "name": "Flow flow_acedbef9_4798_4b8d_9593_b2bd3d5b4a65",
       "description": "Flow imported from flow builder",
       "created_from": "flow_builder"
     }
   },
   "initial_inputs": {
     "chat_input": {
-      "chat_input": "How to write a python script?"
-    },
-    "context_history": {
-      "context_history": [
-        "Hello, I'm a user"
-      ]
+      "chat_input": "please run"
     }
   }
 }

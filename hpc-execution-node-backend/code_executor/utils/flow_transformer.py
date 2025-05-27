@@ -108,13 +108,37 @@ def transform_flow_builder_to_backend(flow_builder_data: Dict[str, Any],
         # Add hyperparameters as direct properties
         for hyperparam in node.get("hyperparameters", []):
             param_name = hyperparam["name"]
-            param_value = hyperparam.get("default")
+            param_value = hyperparam.get("default") or hyperparam.get("value")
+            param_type = hyperparam.get("type", "")
             
-            # Handle special cases
+            # Try to parse string values that should be JSON objects
+            if param_value and isinstance(param_value, str) and param_type == "object":
+                try:
+                    import json
+                    # Handle special format like "{ contact:string , name : string}"
+                    if param_name == "output_schema":
+                        # Convert to proper JSON format and then parse
+                        json_str = param_value.replace(" ", "").replace(":", '":"').replace("{", '{"').replace(",", '","').replace("}", '"}')
+                        parsed_value = json.loads(json_str)
+                        # Convert to proper schema format
+                        schema_dict = {}
+                        for key, value_type in parsed_value.items():
+                            schema_dict[key] = {
+                                "type": _convert_type(value_type),
+                                "description": f"Generated {key}",
+                                "required": True
+                            }
+                        param_value = schema_dict
+                    else:
+                        param_value = json.loads(param_value)
+                except (json.JSONDecodeError, ValueError):
+                    # If parsing fails, keep as string
+                    pass
+            
+            # Handle special case for LLM structured output_schema
             if param_name == "output_schema" and element_type == "llm_structured":
-                # For LLM structured, output_schema hyperparameter becomes the actual output_schema
-                if param_value:
-                    element_def["output_schema"] = param_value
+                # Rename to custom_output_schema for LLM structured elements
+                element_def["custom_output_schema"] = param_value
             else:
                 element_def[param_name] = param_value
         
@@ -349,7 +373,7 @@ if __name__ == "__main__":
     
     # import json
     
-    with open("flow_builder_2.json", "r") as f:
+    with open("./test_files/flow_builder_2.json", "r") as f:
         flow_builder_data = json.load(f)
     
     # Example old format initial inputs - these will now work directly!
@@ -365,7 +389,7 @@ if __name__ == "__main__":
     )
     
     # dump the result to see the new format in json transformed_flow_2
-    with open("transformed_flow_2.json", "w") as f:
+    with open("./test_files/transformed_flow_2.json", "w") as f:
         json.dump(result, f, indent=2)
 
     

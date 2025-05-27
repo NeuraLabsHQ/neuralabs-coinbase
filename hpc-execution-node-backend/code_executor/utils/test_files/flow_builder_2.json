@@ -1,16 +1,92 @@
 {
-  "exportDate": "2025-05-26T20:24:31.463Z",
+  "exportDate": "2025-05-27T06:09:36.621Z",
   "nodes": [
     {
-      "id": "node-1748291017680",
-      "type": "Start",
-      "name": "Start",
-      "x": 427,
-      "y": 190,
-      "inputs": [],
-      "outputs": [],
-      "hyperparameters": [],
-      "description": "Entry point of a flow",
+      "id": "node-1748325748889",
+      "type": "LLMStructured",
+      "name": "LLMStructured",
+      "x": 415.25,
+      "y": 311.25,
+      "inputs": [
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": true,
+          "description": "Main prompt for structured generation"
+        },
+        {
+          "name": "context",
+          "type": "string",
+          "required": false,
+          "description": "Additional context information"
+        },
+        {
+          "name": "additional_data",
+          "type": "any",
+          "required": false,
+          "description": "Extra data to include in generation"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "structured_output",
+          "type": "object",
+          "required": true,
+          "description": "Generated structured data from the LLM"
+        }
+      ],
+      "hyperparameters": [
+        {
+          "name": "model",
+          "type": "string",
+          "required": true,
+          "description": "LLM model to use",
+          "enum": [
+            "gpt-4",
+            "gpt-3.5-turbo",
+            "claude-3",
+            "llama-2"
+          ]
+        },
+        {
+          "name": "max_tokens",
+          "type": "number",
+          "required": false,
+          "description": "Maximum tokens to generate",
+          "default": 1000
+        },
+        {
+          "name": "temperature",
+          "type": "number",
+          "required": false,
+          "description": "Creativity level (0-1)",
+          "default": 0.3,
+          "max": 1,
+          "min": 0
+        },
+        {
+          "name": "output_schema",
+          "type": "object",
+          "required": true,
+          "description": "Expected output structure schema",
+          "value": "{ name : string, email : string }"
+        },
+        {
+          "name": "wrapper_prompt",
+          "type": "string",
+          "required": false,
+          "description": "Template to wrap the prompt",
+          "value": "Extract contact information from the following text: {prompt}"
+        },
+        {
+          "name": "llm_hidden_prompt",
+          "type": "string",
+          "required": false,
+          "description": "Hidden system prompt",
+          "value": "You are a contact information extraction assistant. Extract only the information that is explicitly mentioned in the text."
+        }
+      ],
+      "description": "Generate structured data using Large Language Models",
       "processing_message": "Processing...",
       "layer": 0,
       "tags": [],
@@ -19,11 +95,11 @@
       "templateId": null
     },
     {
-      "id": "node-1748291030899",
+      "id": "node-1748325749805",
       "type": "LLMText",
       "name": "LLMText",
-      "x": 435,
-      "y": 487,
+      "x": 272.5,
+      "y": 807.75,
       "inputs": [
         {
           "name": "prompt",
@@ -85,7 +161,8 @@
           "name": "wrapper_prompt",
           "type": "string",
           "required": false,
-          "description": "Template to wrap the prompt"
+          "description": "Template to wrap the prompt",
+          "value": "You are a helpful AI assistant. Please respond to the following: {prompt}\\\\n\\\\nContext: {context}, enclose the chain of thought inside <think> Thought </think> tags. and answer within <answer> </answer> tags."
         }
       ],
       "description": "Generate free-form text using Large Language Models",
@@ -97,79 +174,11 @@
       "templateId": null
     },
     {
-      "id": "node-1748291035209",
-      "type": "ContextHistory",
-      "name": "ContextHistory",
-      "x": 670,
-      "y": 274,
-      "inputs": [
-        {
-          "name": "context_history",
-          "type": "array",
-          "required": true,
-          "description": "List of previous conversation messages",
-          "items": {
-            "type": "object"
-          }
-        }
-      ],
-      "outputs": [
-        {
-          "name": "context_history",
-          "type": "array",
-          "required": true,
-          "description": "Conversation history",
-          "items": {
-            "type": "object"
-          }
-        }
-      ],
-      "hyperparameters": [],
-      "description": "Access conversation history and context",
-      "processing_message": "Processing...",
-      "layer": 0,
-      "tags": [],
-      "code": "",
-      "metadata": {},
-      "templateId": null
-    },
-    {
-      "id": "node-1748291036402",
-      "type": "ChatInput",
-      "name": "ChatInput",
-      "x": 193,
-      "y": 228,
-      "inputs": [
-        {
-          "name": "chat_input",
-          "type": "string",
-          "required": true,
-          "description": "User input text from chat"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "chat_input",
-          "type": "string",
-          "required": true,
-          "description": "User input text"
-        }
-      ],
-      "hyperparameters": [],
-      "description": "Capture user input text from chat interface",
-      "processing_message": "Processing...",
-      "layer": 0,
-      "tags": [],
-      "code": "",
-      "metadata": {},
-      "templateId": null
-    },
-    {
-      "id": "node-1748291063402",
+      "id": "node-1748325752047",
       "type": "End",
       "name": "End",
-      "x": 415,
-      "y": 796,
+      "x": 302.75,
+      "y": 1083.25,
       "inputs": [
         {
           "name": "text_input",
@@ -206,43 +215,166 @@
       "code": "",
       "metadata": {},
       "templateId": null
+    },
+    {
+      "id": "node-1748325753408",
+      "type": "Start",
+      "name": "Start",
+      "x": 424,
+      "y": 124,
+      "inputs": [],
+      "outputs": [],
+      "hyperparameters": [],
+      "description": "Entry point of a flow",
+      "processing_message": "Processing...",
+      "layer": 0,
+      "tags": [],
+      "code": "",
+      "metadata": {},
+      "templateId": null
+    },
+    {
+      "id": "node-1748325760307",
+      "type": "Selector",
+      "name": "Selector",
+      "x": 340.5,
+      "y": 473.5,
+      "inputs": [
+        {
+          "name": "data",
+          "type": "any",
+          "required": true,
+          "description": "Input data to extract values from"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "any",
+          "required": true,
+          "description": "Extracted data value"
+        }
+      ],
+      "hyperparameters": [
+        {
+          "name": "key",
+          "type": "any",
+          "required": true,
+          "description": "Key or path to extract (string or array)",
+          "value": "name"
+        }
+      ],
+      "description": "Extract specific values from input data using keys",
+      "processing_message": "Processing...",
+      "layer": 0,
+      "tags": [],
+      "code": "",
+      "metadata": {},
+      "templateId": null
+    },
+    {
+      "id": "node-1748325769596",
+      "type": "ChatInput",
+      "name": "ChatInput",
+      "x": 143,
+      "y": 181,
+      "inputs": [
+        {
+          "name": "chat_input",
+          "type": "string",
+          "required": true,
+          "description": "User input text from chat"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "chat_input",
+          "type": "string",
+          "required": true,
+          "description": "User input text"
+        }
+      ],
+      "hyperparameters": [],
+      "description": "Capture user input text from chat interface",
+      "processing_message": "Processing...",
+      "layer": 0,
+      "tags": [],
+      "code": "",
+      "metadata": {},
+      "templateId": null
+    },
+    {
+      "id": "node-1748325803673",
+      "type": "Merger",
+      "name": "Merger",
+      "x": 167,
+      "y": 635.75,
+      "inputs": [
+        {
+          "name": "data1",
+          "type": "any",
+          "required": true,
+          "description": "First data input"
+        },
+        {
+          "name": "data2",
+          "type": "any",
+          "required": true,
+          "description": "Second data input"
+        },
+        {
+          "name": "data3",
+          "type": "any",
+          "required": false,
+          "description": "Third data input"
+        },
+        {
+          "name": "data4",
+          "type": "any",
+          "required": false,
+          "description": "Fourth data input"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "merged_data",
+          "type": "any",
+          "required": true,
+          "description": "Combined data from all inputs"
+        }
+      ],
+      "hyperparameters": [
+        {
+          "name": "merge_strategy",
+          "type": "string",
+          "required": false,
+          "description": "How to merge the data",
+          "default": "shallow",
+          "enum": [
+            "shallow",
+            "deep",
+            "array",
+            "concatenate"
+          ],
+          "value": "concat the chat input with the response of the selector."
+        }
+      ],
+      "description": "Combine multiple data inputs into a single output",
+      "processing_message": "Processing...",
+      "layer": 0,
+      "tags": [],
+      "code": "",
+      "metadata": {},
+      "templateId": null
     }
   ],
   "edges": [
     {
-      "id": "edge-1748291047354",
-      "source": "node-1748291017680",
-      "target": "node-1748291030899",
-      "sourceName": "Start",
-      "targetName": "LLMText",
-      "mappings": [],
-      "sourcePort": 0,
-      "targetPort": 0
-    },
-    {
-      "id": "edge-1748291052579",
-      "source": "node-1748291035209",
-      "target": "node-1748291030899",
-      "sourceName": "ContextHistory",
-      "targetName": "LLMText",
-      "mappings": [
-        {
-          "index": 0,
-          "fromOutput": "context_history",
-          "toInput": "additional_data",
-          "fromType": "array",
-          "toType": "any"
-        }
-      ],
-      "sourcePort": 0,
-      "targetPort": 0
-    },
-    {
-      "id": "edge-1748291057262",
-      "source": "node-1748291036402",
-      "target": "node-1748291030899",
+      "id": "edge-1748325817375",
+      "source": "node-1748325769596",
+      "target": "node-1748325748889",
       "sourceName": "ChatInput",
-      "targetName": "LLMText",
+      "targetName": "LLMStructured",
       "mappings": [
         {
           "index": 0,
@@ -256,9 +388,91 @@
       "targetPort": 0
     },
     {
-      "id": "edge-1748291068096",
-      "source": "node-1748291030899",
-      "target": "node-1748291063402",
+      "id": "edge-1748325825008",
+      "source": "node-1748325753408",
+      "target": "node-1748325748889",
+      "sourceName": "Start",
+      "targetName": "LLMStructured",
+      "mappings": [],
+      "sourcePort": 0,
+      "targetPort": 0
+    },
+    {
+      "id": "edge-1748325841027",
+      "source": "node-1748325748889",
+      "target": "node-1748325760307",
+      "sourceName": "LLMStructured",
+      "targetName": "Selector",
+      "mappings": [
+        {
+          "index": 0,
+          "fromOutput": "structured_output",
+          "toInput": "data",
+          "fromType": "object",
+          "toType": "any"
+        }
+      ],
+      "sourcePort": 0,
+      "targetPort": 0
+    },
+    {
+      "id": "edge-1748325875444",
+      "source": "node-1748325760307",
+      "target": "node-1748325803673",
+      "sourceName": "Selector",
+      "targetName": "Merger",
+      "mappings": [
+        {
+          "index": 0,
+          "fromOutput": "value",
+          "toInput": "data1",
+          "fromType": "any",
+          "toType": "any"
+        }
+      ],
+      "sourcePort": 0,
+      "targetPort": 0
+    },
+    {
+      "id": "edge-1748325880372",
+      "source": "node-1748325769596",
+      "target": "node-1748325803673",
+      "sourceName": "ChatInput",
+      "targetName": "Merger",
+      "mappings": [
+        {
+          "index": 1,
+          "fromOutput": "chat_input",
+          "toInput": "data2",
+          "fromType": "string",
+          "toType": "any"
+        }
+      ],
+      "sourcePort": 0,
+      "targetPort": 0
+    },
+    {
+      "id": "edge-1748325886716",
+      "source": "node-1748325803673",
+      "target": "node-1748325749805",
+      "sourceName": "Merger",
+      "targetName": "LLMText",
+      "mappings": [
+        {
+          "index": 0,
+          "fromOutput": "merged_data",
+          "toInput": "prompt",
+          "fromType": "any",
+          "toType": "string"
+        }
+      ],
+      "sourcePort": 0,
+      "targetPort": 0
+    },
+    {
+      "id": "edge-1748325895388",
+      "source": "node-1748325749805",
+      "target": "node-1748325752047",
       "sourceName": "LLMText",
       "targetName": "End",
       "mappings": [
