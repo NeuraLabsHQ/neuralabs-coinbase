@@ -1,0 +1,484 @@
+---
+id: hpc-flow-execution
+title: Flow Execution
+sidebar_label: Flow Execution
+sidebar_position: 3
+---
+
+import { Card, CardHeader, CardTitle, CardDescription } from '@site/src/components/Card';
+import { Callout } from '@site/src/components/Callout';
+import { Features, Feature } from '@site/src/components/Features';
+import { CollapsibleCodeBlock, InlineCodeCard } from '@site/src/components/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+# Flow Execution
+
+The Flow Execution system is the heart of the HPC Neura Execution Engine. It orchestrates how nodes execute, manages dependencies, handles data flow, and provides real-time visibility into the execution process.
+
+## Execution Lifecycle
+
+The execution of a flow follows a well-defined lifecycle from initiation to completion:
+
+<Card>
+  <CardHeader>
+    <CardTitle>Execution Phases</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <ol>
+      <li><strong>Initialization</strong>: Flow is loaded, validated, and prepared for execution</li>
+      <li><strong>Dependency Resolution</strong>: Node dependencies are analyzed and execution order determined</li>
+      <li><strong>Node Execution</strong>: Nodes execute based on dependencies and data availability</li>
+      <li><strong>Data Flow</strong>: Outputs from nodes flow to connected nodes as inputs</li>
+      <li><strong>Completion</strong>: Flow reaches an end node or all paths are exhausted</li>
+    </ol>
+  </div>
+</Card>
+
+## Execution Model
+
+### Dependency-Based Execution
+
+The engine uses a dependency-based execution model where nodes execute only when their dependencies are satisfied.
+
+<Features>
+  <Feature title="Automatic Ordering" icon="/img/icons/ai-workflow.svg">
+    Nodes execute in the correct order based on connections
+  </Feature>
+  <Feature title="Parallel Execution" icon="/img/icons/hpc.svg">
+    Independent nodes can execute simultaneously
+  </Feature>
+  <Feature title="Backtracking" icon="/img/icons/arrow-right.svg">
+    Missing dependencies are automatically resolved
+  </Feature>
+</Features>
+
+<CollapsibleCodeBlock
+  title="Execution Order Example"
+  description="How the engine determines execution order"
+  language="yaml"
+>
+{`# Given this flow structure:
+nodes:
+  A: { type: start }
+  B: { type: chat_input, depends_on: [A] }
+  C: { type: llm_text, depends_on: [B] }
+  D: { type: selector, depends_on: [B] }
+  E: { type: merger, depends_on: [C, D] }
+  F: { type: end, depends_on: [E] }
+
+# Execution order:
+# 1. A (start) - no dependencies
+# 2. B - depends on A
+# 3. C and D in parallel - both depend only on B
+# 4. E - waits for both C and D
+# 5. F - depends on E
+
+# Visual representation:
+#     A
+#     |
+#     B
+#    / \\
+#   C   D
+#    \\ /
+#     E
+#     |
+#     F`}
+</CollapsibleCodeBlock>
+
+### Execution Control
+
+<Tabs>
+  <TabItem value="flags" label="Execution Flags" default>
+    <div style={{ marginTop: '1rem' }}>
+      <h4>downwards_execute</h4>
+      <p>Each node has a <code>downwards_execute</code> flag that controls whether its downstream connections should be executed.</p>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Flag Behavior</CardTitle>
+        </CardHeader>
+        <div style={{ padding: '1rem' }}>
+          <ul>
+            <li><strong>True (default)</strong>: All downstream nodes will execute</li>
+            <li><strong>False</strong>: Downstream execution is blocked</li>
+            <li><strong>Modified by Case nodes</strong>: Can selectively enable/disable paths</li>
+          </ul>
+        </div>
+      </Card>
+    </div>
+  </TabItem>
+  
+  <TabItem value="conditional" label="Conditional Execution">
+    <div style={{ marginTop: '1rem' }}>
+      <h4>Case-Based Control</h4>
+      <p>Case nodes evaluate conditions and control which paths execute:</p>
+      
+      <CollapsibleCodeBlock
+        title="Conditional Path Example"
+        description="How case nodes control execution paths"
+        language="yaml"
+      >
+{`case_node:
+  type: case
+  cases:
+    - premium_path:
+        variable1: user_type
+        variable2: "premium"
+        compare: "=="
+    - standard_path:
+        variable1: user_type
+        variable2: "standard"
+        compare: "=="
+
+# If user_type == "premium":
+#   - Connections to premium nodes are enabled
+#   - Connections to standard nodes are disabled
+# And vice versa`}
+      </CollapsibleCodeBlock>
+    </div>
+  </TabItem>
+  
+  <TabItem value="error" label="Error Handling">
+    <div style={{ marginTop: '1rem' }}>
+      <h4>Execution Failures</h4>
+      <p>When a node fails, the execution engine:</p>
+      
+      <ol>
+        <li>Stops execution of downstream nodes</li>
+        <li>Emits an <code>element_error</code> event</li>
+        <li>Includes error details in the event stream</li>
+        <li>Marks the flow as failed</li>
+      </ol>
+      
+      <Callout type="warning">
+        Node failures are not automatically retried. The flow developer must implement retry logic using conditional nodes if needed.
+      </Callout>
+    </div>
+  </TabItem>
+</Tabs>
+
+## Data Flow During Execution
+
+Data flows through connections as nodes execute:
+
+<CollapsibleCodeBlock
+  title="Data Flow Example"
+  description="How data moves through a flow during execution"
+  language="python"
+>
+{`# Step 1: Chat input node executes
+chat_input_output = {
+    "chat_input_001:chat_input": "What is blockchain?"
+}
+
+# Step 2: LLM node receives input via connection
+llm_input = {
+    "llm_001:prompt": chat_input_output["chat_input_001:chat_input"]
+}
+
+# Step 3: LLM node executes and produces output
+llm_output = {
+    "llm_001:response": "Blockchain is a distributed ledger...",
+    "llm_001:confidence": 0.95
+}
+
+# Step 4: Multiple nodes can receive the output
+selector_input = {
+    "selector_001:data": llm_output["llm_001:response"]
+}
+
+analyzer_input = {
+    "analyzer_001:text": llm_output["llm_001:response"],
+    "analyzer_001:confidence": llm_output["llm_001:confidence"]
+}`}
+</CollapsibleCodeBlock>
+
+## Real-Time Event Streaming
+
+The execution engine provides real-time visibility through event streaming:
+
+<Card>
+  <CardHeader>
+    <CardTitle>Event Types</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <table>
+      <thead>
+        <tr>
+          <th>Event</th>
+          <th>When Emitted</th>
+          <th>Data Included</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>flow_started</code></td>
+          <td>Flow execution begins</td>
+          <td>Flow ID, start time, initial inputs</td>
+        </tr>
+        <tr>
+          <td><code>element_started</code></td>
+          <td>Node begins execution</td>
+          <td>Node ID, type, inputs</td>
+        </tr>
+        <tr>
+          <td><code>element_completed</code></td>
+          <td>Node finishes successfully</td>
+          <td>Node ID, outputs, duration</td>
+        </tr>
+        <tr>
+          <td><code>llm_chunk</code></td>
+          <td>LLM streams response chunk</td>
+          <td>Node ID, chunk content</td>
+        </tr>
+        <tr>
+          <td><code>element_error</code></td>
+          <td>Node encounters error</td>
+          <td>Node ID, error message, stack trace</td>
+        </tr>
+        <tr>
+          <td><code>flow_completed</code></td>
+          <td>Flow execution completes</td>
+          <td>Flow ID, final outputs, total duration</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</Card>
+
+<CollapsibleCodeBlock
+  title="Event Stream Example"
+  description="Sample event stream during flow execution"
+  language="json"
+>
+{`// Flow started
+{
+  "event": "flow_started",
+  "timestamp": "2025-01-27T10:00:00Z",
+  "data": {
+    "flow_id": "flow_abc123",
+    "initial_inputs": {
+      "chat_input_001": {
+        "chat_input_001:chat_input": "Hello"
+      }
+    }
+  }
+}
+
+// Node execution
+{
+  "event": "element_started",
+  "timestamp": "2025-01-27T10:00:01Z",
+  "data": {
+    "element_id": "llm_001",
+    "element_type": "llm_text",
+    "inputs": {
+      "llm_001:prompt": "Hello"
+    }
+  }
+}
+
+// Streaming response
+{
+  "event": "llm_chunk",
+  "timestamp": "2025-01-27T10:00:02Z",
+  "data": {
+    "element_id": "llm_001",
+    "chunk": "Hello! How can I"
+  }
+}
+
+// Node completion
+{
+  "event": "element_completed",
+  "timestamp": "2025-01-27T10:00:03Z",
+  "data": {
+    "element_id": "llm_001",
+    "outputs": {
+      "llm_001:response": "Hello! How can I help you today?"
+    },
+    "duration_ms": 2000
+  }
+}`}
+</CollapsibleCodeBlock>
+
+## Execution Optimizations
+
+The engine implements several optimizations for efficient execution:
+
+<Features>
+  <Feature title="Parallel Processing" icon="/img/icons/hpc.svg">
+    Independent nodes execute concurrently using async operations
+  </Feature>
+  <Feature title="Lazy Evaluation" icon="/img/icons/settings.svg">
+    Nodes execute only when their outputs are needed
+  </Feature>
+  <Feature title="Resource Pooling" icon="/img/icons/database.svg">
+    Connections to external services are pooled and reused
+  </Feature>
+</Features>
+
+### Memory Management
+
+<Tabs>
+  <TabItem value="streaming" label="Streaming Data" default>
+    <p>Large data outputs (e.g., from LLMs) are streamed rather than buffered entirely in memory.</p>
+  </TabItem>
+  
+  <TabItem value="cleanup" label="Automatic Cleanup">
+    <p>Node outputs are released from memory once all dependent nodes have consumed them.</p>
+  </TabItem>
+  
+  <TabItem value="limits" label="Resource Limits">
+    <p>Configurable limits on memory usage per node and total flow execution time.</p>
+  </TabItem>
+</Tabs>
+
+## Execution Context
+
+Each flow execution carries context that's available to all nodes:
+
+<CollapsibleCodeBlock
+  title="Execution Context Structure"
+  description="Metadata available during flow execution"
+  language="yaml"
+>
+{`metadata:
+  execution_context:
+    # L3 User Information
+    user_id: "user_123"
+    user_name: "John Doe"
+    user_email: "john@example.com"
+    wallet_address: "0x742d35Cc6634C0532925a3b844Bc9e7595f6E123"
+    
+    # Session Information
+    session_id: "session_xyz789"
+    session_count: 5
+    
+    # Execution Information
+    flow_id: "flow_abc123"
+    execution_id: "exec_def456"
+    start_time: "2025-01-27T10:00:00Z"
+    
+    # Environment
+    environment: "production"
+    region: "us-east-1"
+    
+    # Custom Context (L2 defined)
+    custom_data:
+      feature_flags:
+        premium_features: true
+        beta_access: false`}
+</CollapsibleCodeBlock>
+
+<Callout type="info">
+The execution context is injected into metadata nodes automatically and can be accessed by any node that needs user or session information.
+</Callout>
+
+## Best Practices
+
+<Features>
+  <Feature title="Design for Failure" icon="/img/icons/warning.svg">
+    Include error handling paths and validation nodes
+  </Feature>
+  <Feature title="Minimize Dependencies" icon="/img/icons/network.svg">
+    Reduce node dependencies for better parallelization
+  </Feature>
+  <Feature title="Use Streaming" icon="/img/icons/ai-workflow.svg">
+    Enable streaming for LLM nodes to improve response times
+  </Feature>
+</Features>
+
+### Performance Tips
+
+1. **Parallel Design**: Structure flows to maximize parallel execution
+2. **Early Validation**: Validate inputs early to fail fast
+3. **Selective Execution**: Use case nodes to avoid unnecessary processing
+4. **Resource Management**: Set appropriate timeouts and memory limits
+
+<CollapsibleCodeBlock
+  title="Optimized Flow Design"
+  description="Example of a well-designed flow for performance"
+  language="yaml"
+>
+{`# Good: Parallel validation and processing
+nodes:
+  input_validator:
+    type: custom
+    # Validates input format
+    
+  permission_checker:
+    type: custom
+    # Checks user permissions
+    
+  # Both can run in parallel after input
+connections:
+  - from_id: chat_input
+    to_id: input_validator
+  - from_id: chat_input
+    to_id: permission_checker
+    
+  # Process only if both succeed
+  - from_id: input_validator
+    to_id: processor
+  - from_id: permission_checker
+    to_id: processor`}
+</CollapsibleCodeBlock>
+
+## Monitoring and Debugging
+
+### Execution Logs
+
+Each node execution generates detailed logs:
+
+```
+[2025-01-27 10:00:00] INFO: Flow flow_abc123 started
+[2025-01-27 10:00:01] DEBUG: Node chat_input_001 started with inputs: {...}
+[2025-01-27 10:00:01] DEBUG: Node chat_input_001 completed in 50ms
+[2025-01-27 10:00:02] INFO: Node llm_001 started
+[2025-01-27 10:00:04] INFO: Node llm_001 completed in 2000ms
+[2025-01-27 10:00:05] INFO: Flow flow_abc123 completed successfully
+```
+
+### Execution Metrics
+
+Track key metrics for performance optimization:
+
+- **Node Duration**: Time taken by each node
+- **Queue Time**: Time spent waiting for dependencies
+- **Total Duration**: End-to-end flow execution time
+- **Resource Usage**: Memory and CPU per node
+
+## Next Steps
+
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginTop: '1.5rem' }}>
+  <Card>
+    <CardHeader>
+      <CardTitle>Elements Overview</CardTitle>
+      <CardDescription>
+        Explore the different types of nodes available
+      </CardDescription>
+    </CardHeader>
+    <div style={{ padding: '1rem', paddingTop: 0 }}>
+      <a href="./elements-overview" style={{ textDecoration: 'none' }}>
+        Learn about elements →
+      </a>
+    </div>
+  </Card>
+  
+  <Card>
+    <CardHeader>
+      <CardTitle>Connections</CardTitle>
+      <CardDescription>
+        Master data flow between nodes
+      </CardDescription>
+    </CardHeader>
+    <div style={{ padding: '1rem', paddingTop: 0 }}>
+      <a href="./connections" style={{ textDecoration: 'none' }}>
+        Understand connections →
+      </a>
+    </div>
+  </Card>
+</div>

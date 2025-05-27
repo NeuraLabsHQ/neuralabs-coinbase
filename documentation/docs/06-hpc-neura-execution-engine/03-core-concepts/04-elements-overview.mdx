@@ -1,0 +1,1021 @@
+---
+id: hpc-elements
+title: Elements
+sidebar_label: Elements
+sidebar_position: 4
+---
+
+import { Card, CardHeader, CardTitle, CardDescription } from '@site/src/components/Card';
+import { Callout } from '@site/src/components/Callout';
+import { Features, Feature } from '@site/src/components/Features';
+import { CollapsibleCodeBlock, InlineCodeCard } from '@site/src/components/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+# Elements
+
+Elements are the fundamental templates that define reusable components in the HPC Neura Execution Engine. Created by L1 developers and stored in the `element_data` table, elements serve as blueprints from which L2 developers create nodes for their flows.
+
+<Callout type="info">
+This page provides a deep dive into element structure and properties. For an overview of element types and categories, see the [Element Reference](/docs/hpc-neura-execution-engine/element-reference/overview) section.
+</Callout>
+
+## Element Anatomy
+
+Every element consists of multiple properties that define its behavior, constraints, and customization options. Understanding these properties is crucial for both L1 developers creating elements and L2 developers using them.
+
+<Card>
+  <CardHeader>
+    <CardTitle>Complete Element Structure</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <CollapsibleCodeBlock
+      title="Full Element Definition Example"
+      description="A complete element with all properties"
+      language="yaml"
+      defaultCollapsed={false}
+    >
+{`# Example: LLM Text Generation Element
+llm_text_element:
+  # Core Identification
+  type: "llm_text"
+  element_id: "llm_text_base_v1"  # Generated when stored
+  name: null  # Set by L2
+  
+  # Descriptions
+  node_description: "AI text generation using large language models"
+  description: null  # Customized by L2
+  
+  # Schemas
+  input_schema:
+    prompt:
+      type: string
+      required: true
+      description: "Input prompt for the LLM"
+    context:
+      type: list
+      required: false
+      description: "Previous conversation context"
+    temperature:
+      type: float
+      required: false
+      description: "Creativity parameter (0.0-1.0)"
+      
+  output_schema:
+    llm_output:
+      type: string
+      required: true
+      description: "Generated text response"
+    tokens_used:
+      type: int
+      required: false
+      description: "Number of tokens consumed"
+      
+  # Parameter Definition
+  parameter_schema_structure:
+    model:
+      type: string
+      enum: ["llama-3.3-70b", "deepseek-r1"]
+    temperature:
+      type: float
+      min: 0.0
+      max: 1.0
+    max_tokens:
+      type: int
+      min: 1
+      max: 4000
+    wrapper_prompt:
+      type: string
+      
+  # Default Parameters
+  parameters:
+    model: "llama-3.3-70b"
+    temperature: 0.7
+    max_tokens: 1000
+    api_endpoint: "\$\{AWS_BEDROCK_ENDPOINT}"
+    api_key: "\$\{AWS_BEDROCK_KEY}"
+    
+  # UI/UX
+  processing_message: "AI is generating response..."
+  
+  # Organization
+  tags: ["ai", "llm", "text-generation"]
+  layer: null  # Set by L2
+  
+  # Optional Code (for custom elements)
+  code: null
+  
+  # Flow Control (for control elements)
+  flow_control: null
+  
+  # Hyperparameters - The Key to Customization
+  hyperparameters:
+    type:
+      access: "fixed"
+      comment: "Element type cannot be changed"
+    element_id:
+      access: "fixed"
+      comment: "Auto-generated, immutable"
+    name:
+      access: "edit"
+      comment: "L2 must provide a custom name"
+    node_description:
+      access: "fixed"
+      comment: "Base description from L1"
+    description:
+      access: "edit"
+      comment: "L2 can provide custom description"
+    input_schema:
+      access: "fixed"
+      comment: "Input structure is fixed by L1"
+    output_schema:
+      access: "fixed"
+      comment: "Output structure is fixed by L1"
+    parameters.model:
+      access: "fixed"
+      comment: "Model selection fixed to llama-3.3-70b"
+    parameters.temperature:
+      access: "edit"
+      comment: "L2 can adjust within 0.0-1.0 range"
+    parameters.max_tokens:
+      access: "edit"
+      comment: "L2 can set between 1-4000"
+    parameters.wrapper_prompt:
+      access: "edit"
+      comment: "L2 can customize the prompt template"
+    parameters.api_key:
+      access: "hidden"
+      comment: "API key present but not visible to L2/L3"
+    processing_message:
+      access: "edit"
+      comment: "L2 can customize the loading message"
+    tags:
+      access: "append"
+      comment: "L2 can add tags but not remove L1 tags"
+    layer:
+      access: "edit"
+      comment: "L2 sets organizational layer"`}
+    </CollapsibleCodeBlock>
+  </div>
+</Card>
+
+## Element Properties Deep Dive
+
+### 1. Type
+
+<Card>
+  <CardHeader>
+    <CardTitle>
+      <code>type</code> - Element Category Identifier
+    </CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <table>
+      <tbody>
+        <tr>
+          <td><strong>Data Type</strong></td>
+          <td><code>string</code></td>
+        </tr>
+        <tr>
+          <td><strong>Defined By</strong></td>
+          <td>L1: Element Developer</td>
+        </tr>
+        <tr>
+          <td><strong>Modifiable</strong></td>
+          <td>No (always fixed)</td>
+        </tr>
+        <tr>
+          <td><strong>Purpose</strong></td>
+          <td>Identifies the element template type</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <p style={{ marginTop: '1rem' }}>The type determines the core functionality and behavior of the element. Common types include:</p>
+    <ul>
+      <li><code>llm_text</code> - AI text generation</li>
+      <li><code>llm_structured</code> - Structured AI output</li>
+      <li><code>selector</code> - Data extraction</li>
+      <li><code>case</code> - Conditional branching</li>
+      <li><code>custom</code> - Custom code execution</li>
+    </ul>
+  </div>
+</Card>
+
+### 2. Element ID
+
+<Card>
+  <CardHeader>
+    <CardTitle>
+      <code>element_id</code> - Unique Node Identifier
+    </CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <table>
+      <tbody>
+        <tr>
+          <td><strong>Data Type</strong></td>
+          <td><code>string</code></td>
+        </tr>
+        <tr>
+          <td><strong>Defined By</strong></td>
+          <td>Auto-generated at L2 stage</td>
+        </tr>
+        <tr>
+          <td><strong>Modifiable</strong></td>
+          <td>No (system-generated)</td>
+        </tr>
+        <tr>
+          <td><strong>Purpose</strong></td>
+          <td>Uniquely identifies node instance in flow</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <Callout type="info">
+      The element_id is automatically generated when L2 developers create a node from an element template. It serves as both the node's unique identifier and the key in the flow's nodes collection.
+    </Callout>
+  </div>
+</Card>
+
+### 3. Name Properties
+
+<Tabs>
+  <TabItem value="name" label="name" default>
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <code>name</code> - Custom Node Name
+        </CardTitle>
+      </CardHeader>
+      <div style={{ padding: '1rem' }}>
+        <table>
+          <tbody>
+            <tr>
+              <td><strong>Data Type</strong></td>
+              <td><code>string</code></td>
+            </tr>
+            <tr>
+              <td><strong>Defined By</strong></td>
+              <td>L2: Flow Developer</td>
+            </tr>
+            <tr>
+              <td><strong>Purpose</strong></td>
+              <td>Human-readable name for the node instance</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <p style={{ marginTop: '1rem' }}>Examples:</p>
+        <ul>
+          <li>"Customer Service AI"</li>
+          <li>"Input Validator"</li>
+          <li>"Transaction Builder"</li>
+        </ul>
+      </div>
+    </Card>
+  </TabItem>
+  
+  <TabItem value="node_description" label="node_description">
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <code>node_description</code> - Base Element Description
+        </CardTitle>
+      </CardHeader>
+      <div style={{ padding: '1rem' }}>
+        <table>
+          <tbody>
+            <tr>
+              <td><strong>Data Type</strong></td>
+              <td><code>string</code></td>
+            </tr>
+            <tr>
+              <td><strong>Defined By</strong></td>
+              <td>L1: Element Developer</td>
+            </tr>
+            <tr>
+              <td><strong>Purpose</strong></td>
+              <td>Describes what the element type does</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <p style={{ marginTop: '1rem' }}>This is the base description that explains the element's functionality. L2 developers see this when selecting elements.</p>
+      </div>
+    </Card>
+  </TabItem>
+  
+  <TabItem value="description" label="description">
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <code>description</code> - Custom Node Description
+        </CardTitle>
+      </CardHeader>
+      <div style={{ padding: '1rem' }}>
+        <table>
+          <tbody>
+            <tr>
+              <td><strong>Data Type</strong></td>
+              <td><code>string</code></td>
+            </tr>
+            <tr>
+              <td><strong>Defined By</strong></td>
+              <td>L2: Flow Developer</td>
+            </tr>
+            <tr>
+              <td><strong>Purpose</strong></td>
+              <td>Custom description for the specific node instance</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <p style={{ marginTop: '1rem' }}>L2 developers can provide context-specific descriptions for their node instances.</p>
+      </div>
+    </Card>
+  </TabItem>
+</Tabs>
+
+### 4. Schemas
+
+Schemas define the structure of data flowing in and out of elements:
+
+<Tabs>
+  <TabItem value="input" label="Input Schema" default>
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <code>input_schema</code> - Expected Input Structure
+        </CardTitle>
+      </CardHeader>
+      <div style={{ padding: '1rem' }}>
+        <CollapsibleCodeBlock
+          title="Input Schema Structure"
+          description="How to define input expectations"
+          language="yaml"
+        >
+{`input_schema:
+  # Each input variable
+  variable_name:
+    type: string|int|float|bool|json|list
+    required: true|false
+    description: "What this input represents"
+    # Optional constraints
+    default: "default value"
+    enum: ["option1", "option2"]
+    min_length: 1
+    max_length: 100
+    minimum: 0
+    maximum: 100
+    pattern: "regex pattern"
+    
+  # Example: Chat input with options
+  message:
+    type: string
+    required: true
+    description: "User's message"
+    max_length: 1000
+    
+  language:
+    type: string
+    required: false
+    description: "Message language"
+    default: "en"
+    enum: ["en", "es", "fr", "de"]
+    
+  options:
+    type: json
+    required: false
+    description: "Additional options"
+    default: {}`}
+        </CollapsibleCodeBlock>
+      </div>
+    </Card>
+  </TabItem>
+  
+  <TabItem value="output" label="Output Schema">
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <code>output_schema</code> - Produced Output Structure
+        </CardTitle>
+      </CardHeader>
+      <div style={{ padding: '1rem' }}>
+        <CollapsibleCodeBlock
+          title="Output Schema Structure"
+          description="How to define output structure"
+          language="yaml"
+        >
+{`output_schema:
+  # Each output variable
+  variable_name:
+    type: string|int|float|bool|json|list
+    required: true|false
+    description: "What this output contains"
+    
+  # Example: AI response with metadata
+  response:
+    type: string
+    required: true
+    description: "Generated AI response"
+    
+  confidence:
+    type: float
+    required: true
+    description: "Confidence score (0-1)"
+    
+  metadata:
+    type: json
+    required: false
+    description: "Additional response metadata"
+    
+  tokens_used:
+    type: int
+    required: false
+    description: "Number of tokens consumed"`}
+        </CollapsibleCodeBlock>
+      </div>
+    </Card>
+  </TabItem>
+  
+  <TabItem value="parameter" label="Parameter Schema">
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <code>parameter_schema_structure</code> - Parameter Definitions
+        </CardTitle>
+      </CardHeader>
+      <div style={{ padding: '1rem' }}>
+        <CollapsibleCodeBlock
+          title="Parameter Schema Structure"
+          description="Defining configurable parameters"
+          language="yaml"
+        >
+{`parameter_schema_structure:
+  # Each parameter with its constraints
+  parameter_name:
+    type: string|int|float|bool|json|list
+    # Type-specific constraints
+    enum: ["option1", "option2"]  # For string
+    min: 0                         # For numbers
+    max: 100
+    pattern: "regex"               # For string
+    
+  # Example: LLM configuration
+  model:
+    type: string
+    enum: ["llama-3.3-70b", "deepseek-r1", "claude-3"]
+    
+  temperature:
+    type: float
+    min: 0.0
+    max: 1.0
+    
+  max_tokens:
+    type: int
+    min: 1
+    max: 8000
+    
+  response_format:
+    type: string
+    enum: ["text", "json", "markdown"]`}
+        </CollapsibleCodeBlock>
+      </div>
+    </Card>
+  </TabItem>
+</Tabs>
+
+### 5. Parameters
+
+<Card>
+  <CardHeader>
+    <CardTitle>
+      <code>parameters</code> - Configuration Values
+    </CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <p>Parameters are the actual configuration values for the element, mapping parameter names to their values:</p>
+    
+    <CollapsibleCodeBlock
+      title="Parameters Example"
+      description="How parameters map to values"
+      language="yaml"
+    >
+{`parameters:
+  # L1 defined defaults
+  model: "llama-3.3-70b"
+  temperature: 0.7
+  max_tokens: 1000
+  
+  # Hidden parameters (via hyperparameters)
+  api_key: "\$\{AWS_BEDROCK_KEY}"
+  api_endpoint: "https://bedrock.amazonaws.com"
+  
+  # L2 customizable (if allowed by hyperparameters)
+  wrapper_prompt: |
+    You are a helpful assistant.
+    User: {prompt}
+    Assistant:
+  
+  response_format: "text"
+  streaming: true`}
+    </CollapsibleCodeBlock>
+    
+    <Callout type="info">
+      Which parameters can be modified by L2 is controlled by the hyperparameters configuration.
+    </Callout>
+  </div>
+</Card>
+
+### 6. UI/UX Properties
+
+<Features>
+  <Feature title="processing_message" icon="/img/icons/terminal.svg">
+    Message displayed while the node is executing
+  </Feature>
+  <Feature title="tags" icon="/img/icons/database.svg">
+    Organizational tags for categorization and search
+  </Feature>
+  <Feature title="layer" icon="/img/icons/network.svg">
+    Logical grouping layer for visual organization
+  </Feature>
+</Features>
+
+<CollapsibleCodeBlock
+  title="UI/UX Properties Example"
+  description="Enhancing user experience"
+  language="yaml"
+>
+{`# Processing message shown during execution
+processing_message: "Analyzing sentiment..."  # L1 default
+processing_message: "Processing your request..."  # L2 customized
+
+# Tags for organization
+tags: 
+  # L1 base tags
+  - "ai"
+  - "text-analysis"
+  # L2 additional tags (if hyperparameter allows append)
+  - "customer-service"
+  - "sentiment"
+  
+# Layer for visual grouping (L2 defined)
+layer: "preprocessing"  # or "ai-processing", "output-generation"`}
+</CollapsibleCodeBlock>
+
+### 7. Special Properties
+
+<Tabs>
+  <TabItem value="code" label="Code Property" default>
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <code>code</code> - Custom Code Execution
+        </CardTitle>
+      </CardHeader>
+      <div style={{ padding: '1rem' }}>
+        <p>Used primarily in custom elements to define executable Python code:</p>
+        
+        <CollapsibleCodeBlock
+          title="Code Property Example"
+          language="python"
+        >
+{`code: |
+  # Access inputs
+  user_data = inputs.get('user_data', {})
+  threshold = inputs.get('threshold', 0.5)
+  
+  # Access parameters
+  multiplier = parameters.get('multiplier', 2)
+  
+  # Process data
+  result = {}
+  for key, value in user_data.items():
+      if isinstance(value, (int, float)):
+          result[key] = value * multiplier
+      else:
+          result[key] = value
+          
+  # Set outputs
+  output['processed_data'] = result
+  output['above_threshold'] = any(
+      v > threshold for v in result.values() 
+      if isinstance(v, (int, float))
+  )`}
+        </CollapsibleCodeBlock>
+        
+        <Callout type="warning">
+          Code execution is sandboxed with resource limits. The hyperparameters control whether L2 can modify the code.
+        </Callout>
+      </div>
+    </Card>
+  </TabItem>
+  
+  <TabItem value="flow_control" label="Flow Control">
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <code>flow_control</code> - Control Flow Configuration
+        </CardTitle>
+      </CardHeader>
+      <div style={{ padding: '1rem' }}>
+        <p>Used in flow control elements (case, flow_select) to define branching logic:</p>
+        
+        <CollapsibleCodeBlock
+          title="Flow Control Example"
+          language="yaml"
+        >
+{`flow_control:
+  # For case elements
+  cases:
+    - high_priority:
+        condition:
+          variable1: "priority_score"
+          variable2: 0.8
+          operator: ">="
+        enable_connections: ["urgent_handler"]
+        disable_connections: ["normal_handler"]
+        
+    - medium_priority:
+        condition:
+          variable1: "priority_score"
+          variable2: 0.5
+          operator: ">="
+        enable_connections: ["normal_handler"]
+        
+  # For flow_select elements
+  flow_options:
+    - id: "payment_flow"
+      condition: "intent == 'payment'"
+    - id: "support_flow"
+      condition: "intent == 'support'"
+    - id: "default_flow"
+      condition: "true"`}
+        </CollapsibleCodeBlock>
+      </div>
+    </Card>
+  </TabItem>
+</Tabs>
+
+## Hyperparameters: The Control System
+
+Hyperparameters are the most critical part of an element definition. They define the rules for how L2 developers can customize elements when creating nodes.
+
+<Card>
+  <CardHeader>
+    <CardTitle>Understanding Hyperparameters</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <p>Hyperparameters map each element property to an access control configuration:</p>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Access Level</th>
+          <th>Description</th>
+          <th>L2 Capabilities</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>fixed</code></td>
+          <td>Cannot be modified</td>
+          <td>Read-only, uses L1 value</td>
+        </tr>
+        <tr>
+          <td><code>edit</code></td>
+          <td>Full control within constraints</td>
+          <td>Can modify, delete, or set new value</td>
+        </tr>
+        <tr>
+          <td><code>append</code></td>
+          <td>Can add but not remove</td>
+          <td>Add to L1 values (e.g., tags)</td>
+        </tr>
+        <tr>
+          <td><code>hidden</code></td>
+          <td>Present but not visible</td>
+          <td>Value used but not shown to L2/L3</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</Card>
+
+<CollapsibleCodeBlock
+  title="Complete Hyperparameters Example"
+  description="Comprehensive hyperparameter configuration"
+  language="yaml"
+  defaultCollapsed={false}
+>
+{`hyperparameters:
+  # Core properties - typically fixed
+  type:
+    access: "fixed"
+    comment: "Element type is immutable"
+    
+  element_id:
+    access: "fixed"
+    comment: "System-generated, cannot be changed"
+    
+  # Naming - typically editable
+  name:
+    access: "edit"
+    comment: "L2 must provide meaningful name"
+    
+  description:
+    access: "edit"
+    comment: "L2 can customize description"
+    
+  # Schemas - depends on element design
+  input_schema:
+    access: "fixed"
+    comment: "Input structure defined by L1"
+    
+  output_schema:
+    access: "fixed"
+    comment: "Output structure defined by L1"
+    
+  # Could also be editable for flexible elements
+  # input_schema:
+  #   access: "edit"
+  #   comment: "L2 can define custom inputs"
+    
+  # Parameters - granular control
+  parameters.model:
+    access: "fixed"
+    comment: "Model fixed to ensure compatibility"
+    
+  parameters.temperature:
+    access: "edit"
+    comment: "L2 can adjust creativity (0.0-1.0)"
+    constraints:
+      min: 0.0
+      max: 1.0
+      
+  parameters.api_key:
+    access: "hidden"
+    comment: "API credentials hidden from L2/L3"
+    
+  parameters.custom_prompt:
+    access: "edit"
+    comment: "L2 can define custom prompts"
+    
+  # Organization
+  tags:
+    access: "append"
+    comment: "L2 can add tags, cannot remove L1 tags"
+    base_tags: ["ai", "llm"]
+    
+  layer:
+    access: "edit"
+    comment: "L2 defines organizational layer"
+    
+  # Special properties
+  code:
+    access: "fixed"  # or "edit" for customizable elements
+    comment: "Code logic defined by L1"
+    
+  processing_message:
+    access: "edit"
+    comment: "L2 can customize user-facing messages"`}
+</CollapsibleCodeBlock>
+
+### Hyperparameter Use Cases
+
+<Tabs>
+  <TabItem value="fixed-element" label="Fixed Element" default>
+    <div style={{ marginTop: '1rem' }}>
+      <h4>Highly Controlled Element</h4>
+      <p>For critical or security-sensitive elements:</p>
+      
+      <CollapsibleCodeBlock
+        title="Fixed Element Example"
+        language="yaml"
+      >
+{`# Blockchain transaction element
+hyperparameters:
+  input_schema:
+    access: "fixed"
+    comment: "Transaction structure must be exact"
+  output_schema:
+    access: "fixed"
+  parameters.network:
+    access: "fixed"
+    comment: "Network cannot be changed"
+  parameters.contract_address:
+    access: "fixed"
+    comment: "Contract is pre-verified"
+  parameters.gas_limit:
+    access: "edit"
+    comment: "L2 can optimize gas usage"
+    constraints:
+      min: 21000
+      max: 1000000`}
+      </CollapsibleCodeBlock>
+    </div>
+  </TabItem>
+  
+  <TabItem value="flexible-element" label="Flexible Element">
+    <div style={{ marginTop: '1rem' }}>
+      <h4>Customizable Element</h4>
+      <p>For elements requiring flexibility:</p>
+      
+      <CollapsibleCodeBlock
+        title="Flexible Element Example"
+        language="yaml"
+      >
+{`# Custom code element
+hyperparameters:
+  input_schema:
+    access: "edit"
+    comment: "L2 defines inputs"
+  output_schema:
+    access: "edit"
+    comment: "L2 defines outputs"
+  code:
+    access: "edit"
+    comment: "L2 writes custom logic"
+  parameters.timeout:
+    access: "edit"
+    constraints:
+      min: 100
+      max: 30000
+  parameters.memory_limit:
+    access: "edit"
+    constraints:
+      min: 10
+      max: 100`}
+      </CollapsibleCodeBlock>
+    </div>
+  </TabItem>
+  
+  <TabItem value="mixed-element" label="Mixed Control">
+    <div style={{ marginTop: '1rem' }}>
+      <h4>Balanced Control Element</h4>
+      <p>Common pattern with mixed control levels:</p>
+      
+      <CollapsibleCodeBlock
+        title="Mixed Control Example"
+        language="yaml"
+      >
+{`# AI element with customization
+hyperparameters:
+  # Fixed core behavior
+  type: { access: "fixed" }
+  input_schema: { access: "fixed" }
+  output_schema: { access: "fixed" }
+  parameters.model: { access: "fixed" }
+  
+  # Hidden sensitive data
+  parameters.api_key: { access: "hidden" }
+  parameters.endpoint: { access: "hidden" }
+  
+  # Customizable behavior
+  parameters.temperature: 
+    access: "edit"
+    constraints: { min: 0, max: 1 }
+  parameters.system_prompt:
+    access: "edit"
+  
+  # Appendable metadata
+  tags:
+    access: "append"
+    base_tags: ["ai", "production"]`}
+      </CollapsibleCodeBlock>
+    </div>
+  </TabItem>
+</Tabs>
+
+## Input and Output Runtime Values
+
+<Card>
+  <CardHeader>
+    <CardTitle>Runtime Data Flow</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <table>
+      <thead>
+        <tr>
+          <th>Property</th>
+          <th>When Set</th>
+          <th>Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>input</code></td>
+          <td>L3 (User) or L4 (Runtime)</td>
+          <td>Actual values provided to the node during execution</td>
+        </tr>
+        <tr>
+          <td><code>output</code></td>
+          <td>L4 (Runtime)</td>
+          <td>Values produced by the node after execution</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <CollapsibleCodeBlock
+      title="Runtime Example"
+      description="How inputs flow to outputs"
+      language="yaml"
+    >
+{`# L3 provides input
+input:
+  prompt: "What is machine learning?"
+  temperature: 0.5  # Overrides default if allowed
+  
+# L4 executes and produces output
+output:
+  llm_output: "Machine learning is a subset of AI..."
+  tokens_used: 127
+  execution_time_ms: 1234`}
+    </CollapsibleCodeBlock>
+  </div>
+</Card>
+
+## Best Practices for Element Design
+
+<Features>
+  <Feature title="Clear Schemas" icon="/img/icons/docs.svg">
+    Define comprehensive schemas with descriptions and constraints
+  </Feature>
+  <Feature title="Thoughtful Hyperparameters" icon="/img/icons/security.svg">
+    Balance flexibility with safety using appropriate access levels
+  </Feature>
+  <Feature title="Meaningful Defaults" icon="/img/icons/success.svg">
+    Provide sensible default values that work out-of-the-box
+  </Feature>
+</Features>
+
+### Element Design Checklist
+
+<Callout type="success" title="Element Design Best Practices">
+✅ **Clear Purpose**: Each element should have a single, well-defined responsibility
+✅ **Complete Schemas**: Define all inputs/outputs with types and descriptions
+✅ **Appropriate Access**: Use hyperparameters to control customization appropriately
+✅ **Hidden Secrets**: Keep sensitive data (API keys) hidden from L2/L3
+✅ **Validation Rules**: Include constraints in schemas and parameter structures
+✅ **Helpful Defaults**: Provide working defaults for optional parameters
+✅ **Documentation**: Use descriptions and comments liberally
+✅ **Error Handling**: Design for graceful failure with clear error messages
+</Callout>
+
+## Summary
+
+Elements are sophisticated templates that encapsulate functionality while providing controlled customization through hyperparameters. Understanding each property and how they interact is crucial for:
+
+- **L1 Developers**: Creating reusable, secure, and flexible element templates
+- **L2 Developers**: Understanding what can be customized when creating nodes
+- **System Understanding**: Grasping how the multi-level architecture maintains security and flexibility
+
+The hyperparameter system is the key innovation that allows elements to be both powerful and secure, giving L1 developers fine-grained control over what L2 developers can modify while hiding sensitive implementation details.
+
+## Next Steps
+
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginTop: '1.5rem' }}>
+  <Card>
+    <CardHeader>
+      <CardTitle>Element Reference</CardTitle>
+      <CardDescription>
+        Explore all available element types
+      </CardDescription>
+    </CardHeader>
+    <div style={{ padding: '1rem', paddingTop: 0 }}>
+      <a href="/docs/hpc-neura-execution-engine/element-reference" style={{ textDecoration: 'none' }}>
+        View element catalog →
+      </a>
+    </div>
+  </Card>
+  
+  <Card>
+    <CardHeader>
+      <CardTitle>Creating Custom Elements</CardTitle>
+      <CardDescription>
+        Guide for L1 developers
+      </CardDescription>
+    </CardHeader>
+    <div style={{ padding: '1rem', paddingTop: 0 }}>
+      <a href="/docs/hpc-neura-execution-engine/creating-elements" style={{ textDecoration: 'none' }}>
+        Build elements →
+      </a>
+    </div>
+  </Card>
+  
+  <Card>
+    <CardHeader>
+      <CardTitle>Using Elements</CardTitle>
+      <CardDescription>
+        Guide for L2 developers
+      </CardDescription>
+    </CardHeader>
+    <div style={{ padding: '1rem', paddingTop: 0 }}>
+      <a href="/docs/hpc-neura-execution-engine/using-elements" style={{ textDecoration: 'none' }}>
+        Create nodes →
+      </a>
+    </div>
+  </Card>
+</div>

@@ -55,19 +55,25 @@ The system is built around the concept of elements that have inputs and outputs.
     name: AI Text Generator
     description: Generates a response using the LLM
 
-  | Name | Description | type |
-  |------|-------------|--------|
-  | type | The type of the element (e.g., llm_text, selector, etc.) | string |
-  | element_id | A unique identifier for the element  generally also the key of element in a flow| string |
-  | name | A human-readable name for the element | string | 
-  | description | A brief description of what the element does | string |
-  | input_schema | A schema defining the expected inputs for the element | dict |
-  | output_schema | A schema defining the outputs produced by the element | dict |
-  | parameters | Additional parameters specific to the element type | dict |
-  | processing_message | A message shown in the chat when the element is processing | string | 
-  |Tags| A list of tags associated with the element - user can create new similar to notion select and multiselect | list |
-  |Layer| The layer in which the element is placed - user can create new similar to notion select | string |
-
+  | Name | Description | Type | Defined By |
+  |------|-------------|--------|--------|
+  | type | The type of the element (e.g., llm_text, selector, etc.) | string | L1: Dev
+  | element_id | A unique identifier for the element  generally also the key of element in a flow| string | Auto Generated at L2 stage
+  | name | A human-readable name for the element | string | L2: FlowBuilder
+  | node description | A brief description of what the node does | string | L1: Dev
+  | description | A brief description of what the block does | string | L2: FlowBuilder
+  | input_schema | A schema defining the expected inputs for the element | dict | L1 or L2: FlowBuilder
+  | output_schema | A schema defining the outputs produced by the element | dict | L1 or L2: FlowBuilder
+  | parameters_structure | Structure of parameter eg list of parameter name and their time or mapping of parameter names and types | dict | L1 or L2
+  | parameters | Additional parameters specific to the element type -- mapping of parameter names to value| dict | L2 & L1
+  | processing_message | A message shown in the chat when the element is processing | string | L1 or L2 
+  |Tags| A list of tags associated with the element - user can create new similar to notion select and multiselect | list |L1 & L2
+  |Layer| The layer in which the element is placed - user can create new similar to notion select | string | L2
+  | hyper_parameters | Stores information about the element eg telling which field are editable and which are fixed as there could be case like input schemas and output schemas can ve defined by the user or can be fixed by L1. Also info like what L2 can change stuff like tags. L2 can add but not subtract tags set by the L1. So therefore be multiple situation. situations where L one has set Some parameters and parameter structure and L2 can either(modify, append, set or have no access) so basically hyper parameters are stuff which tells that what changes the user can make to the node once its created from an element. Also tells about which parameters are hidden by L1s kind of abstraction. eg LLM api key provided by L1 as a block which L2 and L3 can use but not see| dict | L1
+  |input| Input values to the node| L3 or L4
+  |output| Output values produced by the node| L4
+| code| Optional Script Enabled (using hyper-para) for elements like custom blocks (note langeuage etc could be part of parameters) | string | L1 or L2
+|Flow_control | Would be used to provide flow control option and inputs for flow control blocks (structure under development), would be enabled by (hyper-para) | dict | L1 or L2
 ## Component Categories and Element Reference Tables
 
 The Flow Executor organizes elements into the following categories:
