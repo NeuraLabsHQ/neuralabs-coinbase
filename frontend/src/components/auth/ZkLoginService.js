@@ -91,7 +91,7 @@ class ZkLoginService {
   }
 
   // *** UPDATED: Complete login with authentication ***
-  async completeLogin(jwt) {
+  async completeLogin(jwt, shouldSign = false) {
     try {
       const decodedJwt = jwtDecode(jwt);
       const email = decodedJwt.email;
@@ -137,6 +137,17 @@ class ZkLoginService {
       sessionStorage.setItem(this.STORAGE_PARTIAL_ZK_LOGIN, JSON.stringify(zkProof));
       sessionStorage.setItem('zkLoginJwt', jwt);
       sessionStorage.setItem('zkLoginAddress', zkLoginAddress);
+      
+      // If shouldSign is false, return early with preparation data
+      if (!shouldSign) {
+        return {
+          success: false,
+          needsSignature: true,
+          email,
+          timestamp: Date.now(),
+          address: zkLoginAddress
+        };
+      }
       
       // STEP 4: *** NEW *** - Sign authentication message and get JWT token
       const authResult = await this._authenticateWithBackend(

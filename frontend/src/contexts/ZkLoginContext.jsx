@@ -78,13 +78,13 @@ export const ZkLoginContextProvider = ({ children, googleClientId }) => {
   };
 
   // Complete the zkLogin process after OAuth callback
-  const completeZkLogin = async (jwt) => {
+  const completeZkLogin = async (jwt, shouldSign = false) => {
     try {
       setIsLoading(true);
       setError(null);
       
       // Complete the login process - this now includes authentication with backend
-      const result = await ZkLoginService.completeLogin(jwt);
+      const result = await ZkLoginService.completeLogin(jwt, shouldSign);
       
       if (result.success) {
         // Update state with authentication data
@@ -102,6 +102,9 @@ export const ZkLoginContextProvider = ({ children, googleClientId }) => {
         });
         
         console.log('zkLogin authentication completed successfully!');
+        return result;
+      } else if (result.needsSignature) {
+        // Return the result so the callback component can show the popup
         return result;
       } else {
         throw new Error(result.error || 'Authentication failed');

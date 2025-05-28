@@ -157,9 +157,26 @@ const ChatInterface = ({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [thinkingState.isThinking, thinkingState.executionSteps, messageThinkingStates]);
 
+  useEffect(() => {
+    // Initialize textarea height on mount
+    if (inputRef.current) {
+      inputRef.current.style.height = '60px';
+    }
+  }, []);
+
   const handleInputChange = (e) => {
     const value = e.target.value;
     setInput(value);
+    
+    // Auto-resize textarea based on content
+    if (inputRef.current) {
+      // Reset height to auto to get the accurate scrollHeight
+      inputRef.current.style.height = 'auto';
+      // Calculate the scroll height
+      const scrollHeight = inputRef.current.scrollHeight;
+      // Set height to scrollHeight, but respect min and max height
+      inputRef.current.style.height = `${Math.max(60, Math.min(scrollHeight, 200))}px`;
+    }
     
     // If the input is empty, reset the mentionSelected flag
     if (value.trim() === "") {
@@ -260,6 +277,11 @@ const handleSendMessage = () => {
     onSendMessage(cleanMessage.trim(), modelId, useThinkMode);
     setInput("");
     setMentionActive(false);
+    
+    // Reset textarea height after sending
+    if (inputRef.current) {
+      inputRef.current.style.height = '60px';
+    }
   };
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -403,10 +425,19 @@ const handleSendMessage = () => {
             border="none"
             _focus={{ border: "none", boxShadow: "none" }}
             resize="none"
-            minH="40px"
+            minH="60px"
             maxH="200px"
-            overflow="auto"
+            overflowY="auto"
             ref={inputRef}
+            transition="height 0.1s ease"
+            style={{ height: '60px' }}
+            sx={{
+              '&::-webkit-scrollbar': {
+                display: 'none',
+              },
+              '-ms-overflow-style': 'none',
+              'scrollbarWidth': 'none',
+            }}
           />
 
           {mentionActive && (

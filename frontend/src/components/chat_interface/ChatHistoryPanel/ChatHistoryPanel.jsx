@@ -171,7 +171,28 @@ const ChatHistoryPanel = ({
           </Text>
         </Box>
         
-        <VStack spacing={0} align="stretch" flex="1" overflowY="auto">
+        <VStack 
+          spacing={0} 
+          align="stretch" 
+          flex="1" 
+          overflowY="auto"
+          overflowX="hidden"
+          sx={{
+            '&::-webkit-scrollbar': {
+              width: '6px',
+            },
+            '&::-webkit-scrollbar-track': {
+              bg: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              bg: borderColor,
+              borderRadius: '3px',
+            },
+            '&::-webkit-scrollbar-thumb:hover': {
+              bg: mutedTextColor,
+            },
+          }}
+        >
           {chats.map(chat => (
             <Box 
               key={chat.id} 
@@ -226,7 +247,7 @@ const ChatHistoryPanel = ({
                 >
                   <Flex align="center">
                     <Box as={FiMessageCircle} mr={2} color={iconColor} />
-                    <Text color={textColor} fontSize="sm" isTruncated>{chat.title}</Text>
+                    <Text color={textColor} fontSize="sm" isTruncated maxW="180px">{chat.title}</Text>
                   </Flex>
                   <Flex 
                     visibility="hidden" 
