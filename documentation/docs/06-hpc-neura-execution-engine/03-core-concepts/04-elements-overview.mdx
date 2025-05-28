@@ -25,140 +25,429 @@ This page provides a deep dive into element structure and properties. For an ove
 
 Every element consists of multiple properties that define its behavior, constraints, and customization options. Understanding these properties is crucial for both L1 developers creating elements and L2 developers using them.
 
-<Card>
-  <CardHeader>
-    <CardTitle>Complete Element Structure</CardTitle>
-  </CardHeader>
-  <div style={{ padding: '1rem' }}>
-    <CollapsibleCodeBlock
-      title="Full Element Definition Example"
-      description="A complete element with all properties"
-      language="yaml"
-      defaultCollapsed={false}
-    >
-{`# Example: LLM Text Generation Element
-llm_text_element:
-  # Core Identification
-  type: "llm_text"
-  element_id: "llm_text_base_v1"  # Generated when stored
-  name: null  # Set by L2
-  
-  # Descriptions
-  node_description: "AI text generation using large language models"
-  description: null  # Customized by L2
-  
-  # Schemas
-  input_schema:
-    prompt:
-      type: string
-      required: true
-      description: "Input prompt for the LLM"
-    context:
-      type: list
-      required: false
-      description: "Previous conversation context"
-    temperature:
-      type: float
-      required: false
-      description: "Creativity parameter (0.0-1.0)"
-      
-  output_schema:
-    llm_output:
-      type: string
-      required: true
-      description: "Generated text response"
-    tokens_used:
-      type: int
-      required: false
-      description: "Number of tokens consumed"
-      
-  # Parameter Definition
-  parameter_schema_structure:
-    model:
-      type: string
-      enum: ["llama-3.3-70b", "deepseek-r1"]
-    temperature:
-      type: float
-      min: 0.0
-      max: 1.0
-    max_tokens:
-      type: int
-      min: 1
-      max: 4000
-    wrapper_prompt:
-      type: string
-      
-  # Default Parameters
-  parameters:
-    model: "llama-3.3-70b"
-    temperature: 0.7
-    max_tokens: 1000
-    api_endpoint: "\$\{AWS_BEDROCK_ENDPOINT}"
-    api_key: "\$\{AWS_BEDROCK_KEY}"
+<Tabs>
+  <TabItem value="structure" label="Element Structure" default>
+    <Card>
+      <CardHeader>
+        <CardTitle>Complete Element Structure</CardTitle>
+        <CardDescription>Generic template showing all possible properties and their format</CardDescription>
+      </CardHeader>
+      <div style={{ padding: '1rem' }}>
+        <CollapsibleCodeBlock
+          title="Full Element Structure with Placeholders"
+          description="All properties an element can have with generic placeholders"
+          language="yaml"
+          defaultCollapsed={false}
+        >
+{`# Element Template Structure
+type: "<element_type>"  # e.g., llm_text, selector, case, custom
+element_id: "<auto_generated_id>"  # Generated when L2 creates node
+name: "<custom_name>"  # Set by L2 developer
+node_description: "<base_description>"  # From L1, describes element functionality
+description: "<custom_description>"  # Optional, set by L2
+
+# Input Schema - Expected inputs
+input_schema:
+  input_field_1:
+    type: <string|int|float|bool|json|list>
+    required: <true|false>
+    description: "<field description>"
+    # Optional constraints for inputs
+    default: <default_value>
+    enum: ["option1", "option2", "option3"]
+    min_length: <number>  # For strings
+    max_length: <number>  # For strings
+    minimum: <number>     # For numbers
+    maximum: <number>     # For numbers
+    pattern: "<regex>"    # For strings
     
-  # UI/UX
-  processing_message: "AI is generating response..."
+  input_field_2:
+    type: <data_type>
+    required: <true|false>
+    description: "<field description>"
+    
+  # Additional input fields...
+
+# Output Schema - What element produces
+output_schema:
+  output_field_1:
+    type: <data_type>
+    required: <true|false>
+    description: "<field description>"
+    
+  output_field_2:
+    type: <data_type>
+    required: <true|false>
+    description: "<field description>"
+    
+  # Additional output fields...
+
+# Parameter Schema Structure - Valid parameter configurations
+parameter_schema_structure:
+  param_1:
+    type: <data_type>
+    description: "<parameter description>"
+    # Constraints for this parameter
+    enum: ["value1", "value2", "value3"]
+    min: <minimum_value>
+    max: <maximum_value>
+    pattern: "<validation_regex>"
+    
+  param_2:
+    type: <data_type>
+    description: "<parameter description>"
+    # Different constraints based on type
+    
+  # Additional parameters...
+
+# Parameters - Actual configuration values
+parameters:
+  param_1: <default_value>
+  param_2: <default_value>
+  param_3: <default_value>
+  # Special parameters (commonly hidden)
+  api_key: "\${ENVIRONMENT_VARIABLE}"
+  endpoint: "<service_endpoint>"
+  # Additional configuration...
+
+# UI/UX Properties
+processing_message: "<message shown during execution>"
+tags: ["<tag1>", "<tag2>", "<tag3>", "<additional_tags>"]
+layer: "<organizational_layer>"  # e.g., input, processing, output
+
+# Special Properties (Element Type Specific)
+
+# For custom elements only:
+code: |
+  # Python code for custom logic
+  input_value = inputs.get('input_field_1')
+  # Processing logic...
+  output['output_field_1'] = result
+
+# For flow control elements only (case, flow_select):
+flow_control:
+  # For case elements:
+  cases:
+    - case_id_1:
+        condition:
+          variable1: "<path.to.variable>"
+          variable2: "<value or path>"
+          operator: "<==|!=|>|<|>=|<=>"
+        enable_connections: ["<node_id_1>", "<node_id_2>"]
+        disable_connections: ["<node_id_3>", "<node_id_4>"]
+    - case_id_2:
+        condition:
+          variable1: "<path.to.variable>"
+          variable2: "<value>"
+          operator: "<operator>"
+        enable_connections: ["<node_ids>"]
+        
+  # For flow_select elements:
+  flow_options:
+    - id: "<flow_option_1>"
+      name: "<Display Name>"
+      condition: "<selection_criteria>"
+    - id: "<flow_option_2>"
+      name: "<Display Name>"
+      condition: "<selection_criteria>"
+
+# Hyperparameters - Access control for each property
+hyperparameters:
+  # Core properties
+  type:
+    access: "<fixed|edit|append|hidden>"
+    comment: "<explanation of access level>"
+    
+  element_id:
+    access: "<access_level>"
+    comment: "<explanation>"
+    
+  name:
+    access: "<access_level>"
+    comment: "<explanation>"
+    
+  node_description:
+    access: "<access_level>"
+    comment: "<explanation>"
+    
+  description:
+    access: "<access_level>"
+    comment: "<explanation>"
+    
+  # Schema access control
+  input_schema:
+    access: "<access_level>"
+    comment: "<explanation>"
+    
+  output_schema:
+    access: "<access_level>"
+    comment: "<explanation>"
+    
+  # Parameter-level access control
+  parameters.param_1:
+    access: "<access_level>"
+    comment: "<explanation>"
+    
+  parameters.param_2:
+    access: "<access_level>"
+    comment: "<explanation>"
+    
+  parameters.api_key:
+    access: "hidden"  # Commonly hidden
+    comment: "Sensitive credential"
+    
+  # UI properties access
+  processing_message:
+    access: "<access_level>"
+    comment: "<explanation>"
+    
+  tags:
+    access: "<access_level>"  # Often "append"
+    comment: "<explanation>"
+    
+  layer:
+    access: "<access_level>"
+    comment: "<explanation>"
+    
+  # Special properties access
+  code:
+    access: "<access_level>"  # If custom element
+    comment: "<explanation>"
+    
+  flow_control:
+    access: "<access_level>"  # If flow control element
+    comment: "<explanation>"`}
+        </CollapsibleCodeBlock>
+      </div>
+    </Card>
+  </TabItem>
   
-  # Organization
-  tags: ["ai", "llm", "text-generation"]
-  layer: null  # Set by L2
-  
-  # Optional Code (for custom elements)
-  code: null
-  
-  # Flow Control (for control elements)
-  flow_control: null
-  
-  # Hyperparameters - The Key to Customization
-  hyperparameters:
-    type:
-      access: "fixed"
-      comment: "Element type cannot be changed"
-    element_id:
-      access: "fixed"
-      comment: "Auto-generated, immutable"
-    name:
-      access: "edit"
-      comment: "L2 must provide a custom name"
-    node_description:
-      access: "fixed"
-      comment: "Base description from L1"
-    description:
-      access: "edit"
-      comment: "L2 can provide custom description"
-    input_schema:
-      access: "fixed"
-      comment: "Input structure is fixed by L1"
-    output_schema:
-      access: "fixed"
-      comment: "Output structure is fixed by L1"
-    parameters.model:
-      access: "fixed"
-      comment: "Model selection fixed to llama-3.3-70b"
-    parameters.temperature:
-      access: "edit"
-      comment: "L2 can adjust within 0.0-1.0 range"
-    parameters.max_tokens:
-      access: "edit"
-      comment: "L2 can set between 1-4000"
-    parameters.wrapper_prompt:
-      access: "edit"
-      comment: "L2 can customize the prompt template"
-    parameters.api_key:
-      access: "hidden"
-      comment: "API key present but not visible to L2/L3"
-    processing_message:
-      access: "edit"
-      comment: "L2 can customize the loading message"
-    tags:
-      access: "append"
-      comment: "L2 can add tags but not remove L1 tags"
-    layer:
-      access: "edit"
-      comment: "L2 sets organizational layer"`}
-    </CollapsibleCodeBlock>
-  </div>
-</Card>
+  <TabItem value="example" label="Real Example">
+    <Card>
+      <CardHeader>
+        <CardTitle>LLM Text Element Example</CardTitle>
+        <CardDescription>Complete configuration of an actual LLM text generation element</CardDescription>
+      </CardHeader>
+      <div style={{ padding: '1rem' }}>
+        <CollapsibleCodeBlock
+          title="Real LLM Text Element Configuration"
+          description="Fully configured element with actual values"
+          language="yaml"
+          defaultCollapsed={false}
+        >
+{`# LLM Text Generation Element
+type: "llm_text"
+element_id: "llm_text_customer_service_v1"
+name: "Customer Service AI Assistant"
+node_description: "AI text generation using large language models with streaming support"
+description: "Specialized for customer service interactions with context awareness"
+
+# Input Schema
+input_schema:
+  prompt:
+    type: string
+    required: true
+    description: "The user query or prompt for AI generation"
+    max_length: 4000
+    
+  context:
+    type: list
+    required: false
+    description: "Previous conversation messages for context"
+    default: []
+    
+  temperature:
+    type: float
+    required: false
+    description: "Controls response creativity (0=deterministic, 1=creative)"
+    default: 0.7
+    minimum: 0.0
+    maximum: 1.0
+    
+  system_prompt:
+    type: string
+    required: false
+    description: "System-level instructions for the AI"
+    default: "You are a helpful assistant."
+
+# Output Schema
+output_schema:
+  llm_output:
+    type: string
+    required: true
+    description: "The generated AI response text"
+    
+  tokens_used:
+    type: int
+    required: false
+    description: "Number of tokens consumed in generation"
+    
+  model_used:
+    type: string
+    required: false
+    description: "The model that was used for generation"
+    
+  generation_time_ms:
+    type: int
+    required: false
+    description: "Time taken for generation in milliseconds"
+
+# Parameter Schema Structure
+parameter_schema_structure:
+  model:
+    type: string
+    description: "AI model to use for generation"
+    enum: ["llama-3.3-70b", "deepseek-r1", "claude-3-haiku", "claude-3-sonnet"]
+    
+  temperature:
+    type: float
+    description: "Default temperature for responses"
+    min: 0.0
+    max: 1.0
+    
+  max_tokens:
+    type: int
+    description: "Maximum tokens to generate"
+    min: 1
+    max: 8000
+    
+  stream:
+    type: bool
+    description: "Enable streaming responses"
+    
+  wrapper_prompt:
+    type: string
+    description: "Template to wrap user prompts"
+    
+  stop_sequences:
+    type: list
+    description: "Sequences that stop generation"
+
+# Parameters
+parameters:
+  model: "llama-3.3-70b"
+  temperature: 0.7
+  max_tokens: 2000
+  stream: true
+  wrapper_prompt: |
+    You are a professional customer service representative for TechCorp.
+    Be helpful, polite, and concise.
+    
+    Customer Query: {prompt}
+    
+    Previous Context: {context}
+    
+    Response:
+  stop_sequences: ["\\n\\nCustomer:", "\\n\\nHuman:"]
+  api_endpoint: "\${AWS_BEDROCK_ENDPOINT}"
+  api_key: "\${AWS_BEDROCK_KEY}"
+  retry_attempts: 3
+  timeout_seconds: 30
+
+# UI/UX Properties
+processing_message: "AI is crafting a thoughtful response..."
+tags: ["ai", "llm", "text-generation", "customer-service", "streaming", "production-ready"]
+layer: "ai-processing"
+
+# Hyperparameters - Access Control
+hyperparameters:
+  # Core properties - mostly fixed
+  type:
+    access: "fixed"
+    comment: "Element type cannot be changed"
+    
+  element_id:
+    access: "fixed"
+    comment: "System-generated unique identifier"
+    
+  name:
+    access: "edit"
+    comment: "L2 must provide meaningful name for the node"
+    
+  node_description:
+    access: "fixed"
+    comment: "Base description defines element purpose"
+    
+  description:
+    access: "edit"
+    comment: "L2 can add context-specific description"
+    
+  # Schemas - typically fixed to ensure compatibility
+  input_schema:
+    access: "fixed"
+    comment: "Input structure must remain consistent"
+    
+  output_schema:
+    access: "fixed"
+    comment: "Output structure must remain consistent"
+    
+  # Parameters - mixed access levels
+  parameters.model:
+    access: "fixed"
+    comment: "Model fixed to ensure performance and cost predictability"
+    
+  parameters.temperature:
+    access: "edit"
+    comment: "L2 can adjust temperature between 0.0-1.0"
+    
+  parameters.max_tokens:
+    access: "edit"
+    comment: "L2 can set token limit based on use case"
+    
+  parameters.stream:
+    access: "edit"
+    comment: "L2 can enable/disable streaming"
+    
+  parameters.wrapper_prompt:
+    access: "edit"
+    comment: "L2 can fully customize the prompt template"
+    
+  parameters.stop_sequences:
+    access: "append"
+    comment: "L2 can add stop sequences but not remove defaults"
+    
+  # Hidden sensitive parameters
+  parameters.api_endpoint:
+    access: "hidden"
+    comment: "Service endpoint hidden for security"
+    
+  parameters.api_key:
+    access: "hidden"
+    comment: "API credentials must remain hidden"
+    
+  parameters.retry_attempts:
+    access: "fixed"
+    comment: "Retry logic controlled by L1"
+    
+  parameters.timeout_seconds:
+    access: "fixed"
+    comment: "Timeout controlled for system stability"
+    
+  # UI properties
+  processing_message:
+    access: "edit"
+    comment: "L2 can customize user-facing messages"
+    
+  tags:
+    access: "append"
+    comment: "L2 can add tags but cannot remove L1 tags"
+    
+  layer:
+    access: "edit"
+    comment: "L2 defines visual organization layer"`}
+        </CollapsibleCodeBlock>
+      </div>
+    </Card>
+  </TabItem>
+</Tabs>
+
+<Callout type="info" title="Key Understanding">
+**Parameter Schema Structure** defines WHAT values are valid (types, constraints, enums)
+
+**Hyperparameters** define WHO can modify properties (access levels: fixed, edit, append, hidden)
+
+These are completely separate concerns - constraints belong in the schema, not in hyperparameters.
+</Callout>
 
 ## Element Properties Deep Dive
 
@@ -686,7 +975,7 @@ Hyperparameters are the most critical part of an element definition. They define
         </tr>
         <tr>
           <td><code>edit</code></td>
-          <td>Full control within constraints</td>
+          <td>Full control</td>
           <td>Can modify, delete, or set new value</td>
         </tr>
         <tr>
@@ -751,9 +1040,6 @@ Hyperparameters are the most critical part of an element definition. They define
   parameters.temperature:
     access: "edit"
     comment: "L2 can adjust creativity (0.0-1.0)"
-    constraints:
-      min: 0.0
-      max: 1.0
       
   parameters.api_key:
     access: "hidden"
@@ -811,9 +1097,7 @@ hyperparameters:
   parameters.gas_limit:
     access: "edit"
     comment: "L2 can optimize gas usage"
-    constraints:
-      min: 21000
-      max: 1000000`}
+    `}
       </CollapsibleCodeBlock>
     </div>
   </TabItem>
@@ -845,9 +1129,7 @@ hyperparameters:
       max: 30000
   parameters.memory_limit:
     access: "edit"
-    constraints:
-      min: 10
-      max: 100`}
+`}
       </CollapsibleCodeBlock>
     </div>
   </TabItem>
@@ -876,7 +1158,6 @@ hyperparameters:
   # Customizable behavior
   parameters.temperature: 
     access: "edit"
-    constraints: { min: 0, max: 1 }
   parameters.system_prompt:
     access: "edit"
   
@@ -955,12 +1236,19 @@ output:
 
 <Callout type="success" title="Element Design Best Practices">
 ✅ **Clear Purpose**: Each element should have a single, well-defined responsibility
+
 ✅ **Complete Schemas**: Define all inputs/outputs with types and descriptions
+
 ✅ **Appropriate Access**: Use hyperparameters to control customization appropriately
+
 ✅ **Hidden Secrets**: Keep sensitive data (API keys) hidden from L2/L3
+
 ✅ **Validation Rules**: Include constraints in schemas and parameter structures
+
 ✅ **Helpful Defaults**: Provide working defaults for optional parameters
+
 ✅ **Documentation**: Use descriptions and comments liberally
+
 ✅ **Error Handling**: Design for graceful failure with clear error messages
 </Callout>
 
