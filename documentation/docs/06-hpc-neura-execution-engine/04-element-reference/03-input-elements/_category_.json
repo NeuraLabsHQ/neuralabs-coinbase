@@ -1,0 +1,8 @@
+{
+  "label": "Input Elements",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "Elements for providing input to flows"
+  }
+}

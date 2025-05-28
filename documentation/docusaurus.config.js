@@ -12,7 +12,7 @@ const config = {
   favicon: 'img/logo-light.svg',
 
   // Set the production url of your site here
-  url: 'https://docs.neuralabs.ai',
+  url: 'https://docs.neuralabs.org',
   // Set the /<baseUrl>/ pathname under which your site is served
   baseUrl: '/',
 
@@ -54,6 +54,10 @@ const config = {
   ],
 
   themes: ['@docusaurus/theme-mermaid'],
+  
+  plugins: [
+    './src/plugins/auto-numbering-plugin.js',
+  ],
   
   markdown: {
     mermaid: true,
@@ -123,7 +127,7 @@ const config = {
               },
               {
                 label: 'Forum',
-                href: 'https://forum.neuralabs.ai',
+                href: 'https://forum.neuralabs.org',
               },
             ],
           },
@@ -140,7 +144,7 @@ const config = {
               },
               {
                 label: 'Website',
-                href: 'https://neuralabs.ai',
+                href: 'https://neuralabs.org',
               },
             ],
           },

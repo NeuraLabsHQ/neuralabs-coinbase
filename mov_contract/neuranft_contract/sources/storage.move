@@ -13,6 +13,9 @@ use neuralabs::access::AccessRegistry;
 const EInsufficientAccess: u64 = 0;
 const EDataNotFound: u64 = 1;
 
+// Marker constant for simple blob publishing (following MystenLabs pattern)
+const MARKER: u64 = 3;
+
 /// Encrypted data stored on Walrus
 public struct EncryptedData has store, copy, drop {
     walrus_blob_id: String,
@@ -142,5 +145,42 @@ public fun get_data_info(data: &EncryptedData): (String, vector<u8>, String, u64
         data.content_type,
         data.encrypted_at
     )
+}
+
+/// Publish encrypted blob to NFT (following MystenLabs pattern)
+public fun publish(
+    nft: &mut NeuraLabsNFT,
+    registry: &AccessRegistry,
+    blob_id: String,
+    ctx: &TxContext
+) {
+    let user = ctx.sender();
+    let nft_id = neuralabs::nft::get_nft_id(nft);
+    
+    // Check if user has edit access (level 5+) or is creator
+    let access_level = neuralabs::access::get_access_level(registry, nft_id, user);
+    let (_, _, creator, _) = neuralabs::nft::get_info(nft);
+    assert!(access_level >= 5 || user == creator, EInsufficientAccess);
+    
+    // Simply add the blob_id as a dynamic field with MARKER value
+    df::add(neuralabs::nft::uid_mut(nft), blob_id, MARKER);
+}
+
+/// Entry function for publish
+entry fun publish_blob(
+    nft: &mut NeuraLabsNFT,
+    registry: &AccessRegistry,
+    blob_id: String,
+    ctx: &TxContext
+) {
+    publish(nft, registry, blob_id, ctx);
+}
+
+/// Check if a blob_id is published for this NFT
+public fun is_published(
+    nft: &NeuraLabsNFT,
+    blob_id: String
+): bool {
+    df::exists_(neuralabs::nft::uid(nft), blob_id)
 }
 }

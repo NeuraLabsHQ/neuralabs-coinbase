@@ -1,0 +1,523 @@
+---
+id: element-reference-overview
+title: Overview
+sidebar_label: Overview
+sidebar_position: 1
+---
+
+import { Card, CardHeader, CardTitle, CardDescription } from '@site/src/components/Card';
+import { Callout } from '@site/src/components/Callout';
+import { Features, Feature } from '@site/src/components/Features';
+import { CollapsibleCodeBlock, InlineCodeCard } from '@site/src/components/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+# Elements Overview
+
+Elements are the fundamental building blocks in the HPC Neura Execution Engine. They are predefined templates created by L1 developers that define reusable components with specific functionality. L2 developers use these elements to create nodes within their flows.
+
+<Callout type="info">
+This page provides an overview of element categories and types. For detailed implementation guides and examples, see the [Element Reference](/docs/hpc-neura-execution-engine/element-reference) section.
+</Callout>
+
+## Understanding Elements
+
+### Element vs Node Lifecycle
+
+<Card>
+  <CardHeader>
+    <CardTitle>From Template to Execution</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <ol>
+      <li><strong>L1 Development</strong>: Element templates are created and stored in <code>element_data</code> table</li>
+      <li><strong>L2 Configuration</strong>: Flow developers create nodes from elements, customizing allowed parameters</li>
+      <li><strong>L3 Interaction</strong>: Users provide inputs to configured nodes at runtime</li>
+      <li><strong>L4 Execution</strong>: Runtime processes nodes and generates outputs</li>
+    </ol>
+  </div>
+</Card>
+
+### Element Properties
+
+Each element template defines:
+
+<Features>
+  <Feature title="Core Functionality" icon="/img/icons/code.svg">
+    The operation the element performs (e.g., LLM generation, data selection)
+  </Feature>
+  <Feature title="Schemas" icon="/img/icons/docs.svg">
+    Input and output data structures with validation rules
+  </Feature>
+  <Feature title="Hyperparameters" icon="/img/icons/settings.svg">
+    Customization rules defining what L2 developers can modify
+  </Feature>
+</Features>
+
+## Element Categories
+
+The HPC Neura Execution Engine organizes elements into six main categories:
+
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem', marginTop: '1.5rem' }}>
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/network.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Flow Control
+      </CardTitle>
+      <CardDescription>
+        Control execution flow and branching
+      </CardDescription>
+    </CardHeader>
+  </Card>
+  
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/database.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Input Elements
+      </CardTitle>
+      <CardDescription>
+        Provide data from various sources
+      </CardDescription>
+    </CardHeader>
+  </Card>
+  
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/settings.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Utility Elements
+      </CardTitle>
+      <CardDescription>
+        Transform and manipulate data
+      </CardDescription>
+    </CardHeader>
+  </Card>
+  
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/ai-workflow.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        AI Elements
+      </CardTitle>
+      <CardDescription>
+        Generate content using language models
+      </CardDescription>
+    </CardHeader>
+  </Card>
+  
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/blockchain.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Blockchain Elements
+      </CardTitle>
+      <CardDescription>
+        Interact with blockchain networks
+      </CardDescription>
+    </CardHeader>
+  </Card>
+  
+  <Card>
+    <CardHeader>
+      <CardTitle>
+        <img src="/img/icons/code.svg" width="20" height="20" style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+        Custom Elements
+      </CardTitle>
+      <CardDescription>
+        Execute custom logic with Python
+      </CardDescription>
+    </CardHeader>
+  </Card>
+</div>
+
+## Element Reference Tables
+
+### Flow Control Elements
+
+Control the execution path and flow logic within your workflows.
+
+| Element Type | Description | Key Features |
+|-------------|-------------|--------------|
+| `start` | Entry point of a flow | • Receives initial inputs<br/>• No dependencies<br/>• Single per flow |
+| `end` | Exit point of a flow | • Returns final outputs<br/>• Supports transactions<br/>• Multiple allowed |
+| `case` | Conditional branching | • Evaluates conditions<br/>• Controls downstream paths<br/>• Multiple cases |
+| `flow_select` | Path selection | • Choose between flows<br/>• Dynamic routing<br/>• State preservation |
+
+### Input Elements
+
+Provide data to flows from various sources including user input, APIs, and storage.
+
+| Element Type | Description | Key Features |
+|-------------|-------------|--------------|
+| `chat_input` | User text input | • Captures user messages<br/>• String output<br/>• Interactive |
+| `context_history` | Conversation history | • Previous messages<br/>• List format<br/>• Context preservation |
+| `datablock` | Static data storage | • JSON/CSV support<br/>• L2 configurable<br/>• Reusable data |
+| `rest_api` | External API calls | • HTTP methods<br/>• Authentication<br/>• Response parsing |
+| `metadata` | Runtime context | • User information<br/>• Session data<br/>• Auto-injected |
+| `constants` | Fixed values | • Type-safe constants<br/>• L2 definable<br/>• Multiple types |
+
+### Utility Elements
+
+Transform, manipulate, and process data within flows.
+
+| Element Type | Description | Key Features |
+|-------------|-------------|--------------|
+| `selector` | Extract data values | • Key-based selection<br/>• Nested access<br/>• Type preservation |
+| `merger` | Combine data inputs | • Multiple inputs<br/>• Deep merging<br/>• Conflict resolution |
+| `random_generator` | Generate random values | • Multiple types<br/>• Configurable ranges<br/>• Seed support |
+| `time` | Time/date information | • Current time<br/>• Format options<br/>• Timezone support |
+
+### AI Elements
+
+Leverage language models for text generation and structured data creation.
+
+| Element Type | Description | Key Features |
+|-------------|-------------|--------------|
+| `llm_text` | Free-form text generation | • Streaming support<br/>• Temperature control<br/>• Custom prompts |
+| `llm_structured` | Structured data generation | • Schema validation<br/>• JSON output<br/>• Type safety |
+
+<Callout type="tip">
+AI elements use the **llama-3.3-70b** model by default, which is optimized for instruction following. DeepSeek models are also available but better suited for complex reasoning tasks.
+</Callout>
+
+### Blockchain Elements
+
+Interact with blockchain networks (primarily SUI).
+
+| Element Type | Description | Key Features |
+|-------------|-------------|--------------|
+| `read_blockchain_data` | Query blockchain state | • Contract calls<br/>• Data parsing<br/>• Multi-chain support |
+| `build_transaction_json` | Create transactions | • Transaction building<br/>• Parameter encoding<br/>• Gas estimation |
+
+### Custom Elements
+
+Execute custom Python code with security restrictions.
+
+| Element Type | Description | Key Features |
+|-------------|-------------|--------------|
+| `custom` | Python code execution | • Sandboxed environment<br/>• Resource limits<br/>• L2 configurable |
+
+## Element Configuration Levels
+
+Understanding how elements can be configured at different levels is crucial:
+
+<Tabs>
+  <TabItem value="l1" label="L1: Element Definition" default>
+    <div style={{ marginTop: '1rem' }}>
+      <h4>Element Developer Responsibilities</h4>
+      <ul>
+        <li>Define base functionality and behavior</li>
+        <li>Set input/output schemas</li>
+        <li>Configure hyperparameters</li>
+        <li>Implement security restrictions</li>
+        <li>Provide default values</li>
+      </ul>
+      
+      <CollapsibleCodeBlock
+        title="L1 Element Definition Example"
+        description="How L1 developers define elements"
+        language="yaml"
+      >
+{`# Element template in element_data table
+llm_text_element:
+  type: llm_text
+  node_description: "LLM text generation element"
+  
+  # Fixed schemas
+  input_schema:
+    prompt:
+      type: string
+      required: true
+      description: "Input prompt for generation"
+      
+  output_schema:
+    llm_output:
+      type: string
+      required: true
+      description: "Generated text output"
+      
+  # Default parameters
+  default_params:
+    model: "llama-3.3-70b"
+    temperature: 0.7
+    max_tokens: 1000
+    
+  # Hyperparameters define customization
+  hyperparameters:
+    model:
+      access: "fixed"
+      value: "llama-3.3-70b"
+    temperature:
+      access: "modify"
+      min: 0.0
+      max: 1.0
+    wrapper_prompt:
+      access: "set"
+      type: "string"
+    api_key:
+      access: "hidden"
+      value: "\$\{AWS_BEDROCK_KEY}"`}
+      </CollapsibleCodeBlock>
+    </div>
+  </TabItem>
+  
+  <TabItem value="l2" label="L2: Node Creation">
+    <div style={{ marginTop: '1rem' }}>
+      <h4>Flow Developer Customization</h4>
+      <p>L2 developers create nodes from elements, customizing based on hyperparameters:</p>
+      
+      <CollapsibleCodeBlock
+        title="L2 Node Configuration Example"
+        description="How L2 developers create nodes"
+        language="yaml"
+      >
+{`# Node created from llm_text element
+customer_service_ai:
+  type: llm_text                    # Element type (from L1)
+  element_id: customer_service_ai    # Auto-generated
+  name: "Customer Service AI"        # L2 custom name
+  description: "Handles support"     # L2 description
+  
+  # L2 can modify temperature (per hyperparameters)
+  temperature: 0.3                   # Lower for consistency
+  
+  # L2 can set wrapper_prompt
+  wrapper_prompt: |
+    You are a helpful customer service agent.
+    Be polite and professional.
+    User query: {prompt}
+    
+  # L2 adds custom tags to L1 base tags
+  tags: ["ai", "llm", "customer-service", "support"]
+  
+  # L2 organizational layer
+  layer: "customer-interaction"
+  
+  # L2 custom processing message
+  processing_message: "AI is preparing response..."`}
+      </CollapsibleCodeBlock>
+    </div>
+  </TabItem>
+  
+  <TabItem value="l3" label="L3: Runtime Inputs">
+    <div style={{ marginTop: '1rem' }}>
+      <h4>User Interaction</h4>
+      <p>L3 users provide inputs at runtime:</p>
+      
+      <CollapsibleCodeBlock
+        title="L3 Runtime Input Example"
+        description="How users interact with nodes"
+        language="json"
+      >
+{`{
+  "inputs": {
+    "customer_service_ai": {
+      "customer_service_ai:prompt": "How do I reset my password?"
+    }
+  }
+}`}
+      </CollapsibleCodeBlock>
+    </div>
+  </TabItem>
+</Tabs>
+
+## Common Element Patterns
+
+### Data Processing Pipeline
+
+<CollapsibleCodeBlock
+  title="Data Processing Pattern"
+  description="Common pattern for processing user data"
+  language="yaml"
+>
+{`# 1. Input Collection
+user_input:
+  type: chat_input
+  name: "User Query"
+  
+# 2. Data Enrichment  
+data_fetcher:
+  type: rest_api
+  name: "Fetch User Data"
+  url: "https://api.example.com/user/{user_id}"
+  
+# 3. Data Processing
+data_processor:
+  type: llm_structured
+  name: "Process Request"
+  output_schema:
+    action: string
+    parameters: json
+    
+# 4. Action Execution
+action_handler:
+  type: custom
+  name: "Execute Action"
+  
+# 5. Response Generation
+response_generator:
+  type: llm_text
+  name: "Generate Response"`}
+</CollapsibleCodeBlock>
+
+### Conditional Workflow
+
+<CollapsibleCodeBlock
+  title="Conditional Execution Pattern"
+  description="Pattern for branching logic"
+  language="yaml"
+>
+{`# 1. Analyze Input
+intent_analyzer:
+  type: llm_structured
+  output_schema:
+    intent: string
+    confidence: float
+    
+# 2. Route Based on Confidence
+confidence_router:
+  type: case
+  cases:
+    - high_confidence:
+        variable1: confidence
+        variable2: 0.8
+        compare: ">="
+        
+# 3A. High Confidence Path
+automated_handler:
+  type: custom
+  # Executes if confidence >= 0.8
+  
+# 3B. Low Confidence Path  
+human_review:
+  type: llm_text
+  wrapper_prompt: "Request human review for: {intent}"`}
+</CollapsibleCodeBlock>
+
+## Best Practices
+
+<Features>
+  <Feature title="Choose the Right Element" icon="/img/icons/success.svg">
+    Select elements that match your use case rather than using custom code
+  </Feature>
+  <Feature title="Respect Hyperparameters" icon="/img/icons/security.svg">
+    Only customize what's allowed by L1 hyperparameter definitions
+  </Feature>
+  <Feature title="Validate Early" icon="/img/icons/warning.svg">
+    Use validation elements early in flows to catch issues
+  </Feature>
+</Features>
+
+### Element Selection Guide
+
+1. **For User Input**: Use `chat_input` for text, `metadata` for context
+2. **For AI Generation**: Use `llm_text` for free-form, `llm_structured` for JSON
+3. **For Data Manipulation**: Use `selector` for extraction, `merger` for combination
+4. **For External Data**: Use `rest_api` for APIs, `datablock` for static data
+5. **For Complex Logic**: Use `custom` only when no standard element suffices
+
+<Callout type="warning" title="Security Note">
+Custom elements execute in a sandboxed environment with resource limits. Avoid using them for I/O operations or accessing external resources directly.
+</Callout>
+
+## Performance Considerations
+
+Different elements have different performance characteristics:
+
+<Card>
+  <CardHeader>
+    <CardTitle>Element Performance Guide</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <table>
+      <thead>
+        <tr>
+          <th>Element Category</th>
+          <th>Typical Latency</th>
+          <th>Resource Usage</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Flow Control</td>
+          <td>&lt; 10ms</td>
+          <td>Minimal</td>
+        </tr>
+        <tr>
+          <td>Input Elements</td>
+          <td>10-100ms</td>
+          <td>Low</td>
+        </tr>
+        <tr>
+          <td>Utility Elements</td>
+          <td>&lt; 50ms</td>
+          <td>Low</td>
+        </tr>
+        <tr>
+          <td>AI Elements</td>
+          <td>1-5 seconds</td>
+          <td>High</td>
+        </tr>
+        <tr>
+          <td>Blockchain Elements</td>
+          <td>100ms-2s</td>
+          <td>Medium</td>
+        </tr>
+        <tr>
+          <td>Custom Elements</td>
+          <td>Variable</td>
+          <td>Limited by config</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</Card>
+
+## Next Steps
+
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginTop: '1.5rem' }}>
+  <Card>
+    <CardHeader>
+      <CardTitle>Element Reference</CardTitle>
+      <CardDescription>
+        Detailed documentation for each element type
+      </CardDescription>
+    </CardHeader>
+    <div style={{ padding: '1rem', paddingTop: 0 }}>
+      <a href="/docs/hpc-neura-execution-engine/element-reference" style={{ textDecoration: 'none' }}>
+        View detailed reference →
+      </a>
+    </div>
+  </Card>
+  
+  <Card>
+    <CardHeader>
+      <CardTitle>Connections</CardTitle>
+      <CardDescription>
+        Learn how to connect elements effectively
+      </CardDescription>
+    </CardHeader>
+    <div style={{ padding: '1rem', paddingTop: 0 }}>
+      <a href="./connections" style={{ textDecoration: 'none' }}>
+        Master connections →
+      </a>
+    </div>
+  </Card>
+  
+  <Card>
+    <CardHeader>
+      <CardTitle>Building Flows</CardTitle>
+      <CardDescription>
+        Step-by-step guide to creating flows
+      </CardDescription>
+    </CardHeader>
+    <div style={{ padding: '1rem', paddingTop: 0 }}>
+      <a href="/docs/hpc-neura-execution-engine/building-flows" style={{ textDecoration: 'none' }}>
+        Start building →
+      </a>
+    </div>
+  </Card>
+</div>

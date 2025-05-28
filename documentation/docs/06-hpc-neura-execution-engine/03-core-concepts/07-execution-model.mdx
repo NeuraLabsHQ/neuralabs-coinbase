@@ -1,0 +1,565 @@
+---
+id: hpc-execution-model
+title: Execution Model
+sidebar_label: Execution Model
+sidebar_position: 7
+---
+
+import { Card, CardHeader, CardTitle, CardDescription } from '@site/src/components/Card';
+import { Callout } from '@site/src/components/Callout';
+import { Features, Feature } from '@site/src/components/Features';
+import { CollapsibleCodeBlock, InlineCodeCard } from '@site/src/components/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+# Execution Model
+
+The HPC Neura Execution Engine implements a sophisticated execution model that combines dependency resolution, parallel processing, and intelligent flow control. This page provides a deep dive into the core execution concepts and how they work together to create an efficient and flexible workflow engine.
+
+## Core Execution Concepts
+
+<Features>
+  <Feature title="Dependency Resolution" icon="/img/icons/network.svg">
+    Automatic ordering based on node dependencies
+  </Feature>
+  <Feature title="Parallel Execution" icon="/img/icons/hpc.svg">
+    Concurrent processing of independent nodes
+  </Feature>
+  <Feature title="Flow Control" icon="/img/icons/ai-workflow.svg">
+    Sophisticated routing with typed connections
+  </Feature>
+</Features>
+
+## The Two-Phase Execution Model
+
+The engine operates in two distinct phases that work together seamlessly:
+
+<Card>
+  <CardHeader>
+    <CardTitle>Execution Phases</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <table>
+      <thead>
+        <tr>
+          <th>Phase</th>
+          <th>Direction</th>
+          <th>Purpose</th>
+          <th>Triggered By</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Downward Execution</strong></td>
+          <td>Forward</td>
+          <td>Normal flow progression</td>
+          <td>Control connections</td>
+        </tr>
+        <tr>
+          <td><strong>Backtracking</strong></td>
+          <td>Backward</td>
+          <td>Resolve data dependencies</td>
+          <td>Missing required data</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</Card>
+
+## Downward Execution (Forward Flow)
+
+<Card>
+  <CardHeader>
+    <CardTitle>Normal Flow Progression</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <p>Downward execution is the primary execution mode where nodes trigger their downstream connections after completing their work.</p>
+    
+    <h4>Key Characteristics:</h4>
+    <ul>
+      <li>Follows <code>control</code> and <code>both</code> type connections</li>
+      <li>Respects the <code>downwards_execute</code> flag on each node</li>
+      <li>Enables parallel execution of independent branches</li>
+      <li>Can be conditionally disabled by flow control nodes</li>
+    </ul>
+    
+    <CollapsibleCodeBlock
+      title="Downward Execution Algorithm"
+      description="Core logic for forward flow execution"
+      language="python"
+    >
+{`async def execute_element(element, backtracking=False):
+    # Execute the element's logic
+    outputs = await element.execute(self, backtracking)
+    
+    # Mark as executed and cache outputs
+    element.executed = True
+    self.output_cache[element.id] = outputs
+    
+    # Forward execution phase
+    if not backtracking and element.downwards_execute:
+        for connection in element.connections:
+            # Only follow control flow connections
+            if connection.type in ["control", "both"]:
+                await self.execute_element(connection.target)`}
+    </CollapsibleCodeBlock>
+  </div>
+</Card>
+
+## Backtracking (Dependency Resolution)
+
+<Card>
+  <CardHeader>
+    <CardTitle>Automatic Dependency Resolution</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <p>Backtracking automatically executes upstream nodes when a node needs data that isn't available yet.</p>
+    
+    <h4>Key Characteristics:</h4>
+    <ul>
+      <li>Only executes nodes needed for data dependencies</li>
+      <li>Does NOT trigger downstream execution</li>
+      <li>Follows <code>data</code> and <code>both</code> type connections backward</li>
+      <li>Minimal execution - only what's required</li>
+    </ul>
+    
+    <CollapsibleCodeBlock
+      title="Backtracking Algorithm"
+      description="How dependencies are resolved"
+      language="python"
+    >
+{`async def execute_element(element, backtracking=False):
+    # Check dependencies first
+    for dependency in element.dependencies:
+        if not dependency.executed:
+            # Recursively execute missing dependencies
+            await self.execute_element(dependency, backtracking=True)
+    
+    # Now execute this element
+    outputs = await element.execute(self, backtracking)
+    
+    # In backtracking mode, we DON'T trigger downstream
+    if backtracking:
+        return outputs  # Stop here
+        
+    # Normal forward execution continues...`}
+    </CollapsibleCodeBlock>
+  </div>
+</Card>
+
+## Connection Types and Execution
+
+The type of connection determines how it affects execution:
+
+<Tabs>
+  <TabItem value="control" label="Control Connections" default>
+    <div style={{ marginTop: '1rem' }}>
+      <Card>
+        <CardHeader>
+          <CardTitle>Control Flow Only</CardTitle>
+        </CardHeader>
+        <div style={{ padding: '1rem' }}>
+          <p><strong>Purpose:</strong> Define execution order without data transfer</p>
+          <p><strong>Behavior:</strong></p>
+          <ul>
+            <li>Followed during downward execution</li>
+            <li>Ignored during backtracking</li>
+            <li>No data is transferred between nodes</li>
+          </ul>
+          
+          <CollapsibleCodeBlock
+            title="Control Connection Example"
+            language="yaml"
+          >
+{`# Initialize services in order, but no data exchange
+connections:
+  - from_id: db_init
+    to_id: cache_init
+    connection_type: control
+    
+  - from_id: cache_init
+    to_id: api_init
+    connection_type: control`}
+          </CollapsibleCodeBlock>
+        </div>
+      </Card>
+    </div>
+  </TabItem>
+  
+  <TabItem value="data" label="Data Connections">
+    <div style={{ marginTop: '1rem' }}>
+      <Card>
+        <CardHeader>
+          <CardTitle>Data Dependencies Only</CardTitle>
+        </CardHeader>
+        <div style={{ padding: '1rem' }}>
+          <p><strong>Purpose:</strong> Share data without triggering execution</p>
+          <p><strong>Behavior:</strong></p>
+          <ul>
+            <li>NOT followed during downward execution</li>
+            <li>Used for backtracking when data is needed</li>
+            <li>Transfers specific data between nodes</li>
+          </ul>
+          
+          <CollapsibleCodeBlock
+            title="Data Connection Example"
+            language="yaml"
+          >
+{`# Config loader provides data to multiple nodes
+connections:
+  - from_id: config_loader
+    to_id: api_handler
+    from_output: "config_loader:api_key"
+    to_input: "api_handler:auth"
+    connection_type: data
+    
+  - from_id: config_loader
+    to_id: db_handler
+    from_output: "config_loader:db_config"
+    to_input: "db_handler:connection"
+    connection_type: data`}
+          </CollapsibleCodeBlock>
+        </div>
+      </Card>
+    </div>
+  </TabItem>
+  
+  <TabItem value="both" label="Both (Traditional)">
+    <div style={{ marginTop: '1rem' }}>
+      <Card>
+        <CardHeader>
+          <CardTitle>Control and Data Flow</CardTitle>
+        </CardHeader>
+        <div style={{ padding: '1rem' }}>
+          <p><strong>Purpose:</strong> Traditional connection behavior (default)</p>
+          <p><strong>Behavior:</strong></p>
+          <ul>
+            <li>Followed during downward execution</li>
+            <li>Used for backtracking when needed</li>
+            <li>Transfers data and triggers execution</li>
+          </ul>
+          
+          <CollapsibleCodeBlock
+            title="Both Connection Example"
+            language="yaml"
+          >
+{`# Standard flow progression with data
+connections:
+  - from_id: text_processor
+    to_id: sentiment_analyzer
+    from_output: "text_processor:cleaned_text"
+    to_input: "sentiment_analyzer:text"
+    connection_type: both  # or omit for default`}
+          </CollapsibleCodeBlock>
+        </div>
+      </Card>
+    </div>
+  </TabItem>
+</Tabs>
+
+## Flow Control Mechanisms
+
+### Case Nodes and Path Selection
+
+<Card>
+  <CardHeader>
+    <CardTitle>Conditional Execution Control</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <p>Case nodes evaluate conditions and control which execution paths are active:</p>
+    
+    <CollapsibleCodeBlock
+      title="Case Node Execution Logic"
+      description="How case nodes control flow paths"
+      language="python"
+    >
+{`# Case node execution
+def execute_case_node(self, inputs):
+    # Evaluate conditions
+    results = evaluate_conditions(inputs)
+    
+    # Disable all downstream paths initially
+    for connection in self.connections:
+        connection.target.downwards_execute = False
+    
+    # Enable only the matching case path
+    for case_id, result in results.items():
+        if result:  # Case condition is true
+            matching_connection = self.get_connection_for_case(case_id)
+            if matching_connection:
+                matching_connection.target.downwards_execute = True
+                
+    return {"selected_case": selected_case_id}`}
+    </CollapsibleCodeBlock>
+  </div>
+</Card>
+
+### Flow Select Nodes
+
+<Card>
+  <CardHeader>
+    <CardTitle>Dynamic Path Selection</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <p>Flow select nodes choose one path from multiple options:</p>
+    
+    <ul>
+      <li>Disables all non-selected paths</li>
+      <li>Enables only the chosen path for execution</li>
+      <li>Can be controlled programmatically or by user input</li>
+    </ul>
+  </div>
+</Card>
+
+## Execution Optimization Strategies
+
+<Features>
+  <Feature title="Lazy Evaluation" icon="/img/icons/settings.svg">
+    Nodes execute only when outputs are needed
+  </Feature>
+  <Feature title="Parallel Processing" icon="/img/icons/hpc.svg">
+    Independent branches execute concurrently
+  </Feature>
+  <Feature title="Smart Caching" icon="/img/icons/database.svg">
+    Results cached to avoid re-execution
+  </Feature>
+</Features>
+
+### Execution Order Optimization
+
+The engine optimizes execution order to maximize parallelism:
+
+<CollapsibleCodeBlock
+  title="Parallel Execution Example"
+  description="How the engine identifies parallel opportunities"
+  language="yaml"
+>
+{`# These nodes can execute in parallel:
+nodes:
+  data_fetcher_1: { depends_on: [start] }
+  data_fetcher_2: { depends_on: [start] }
+  data_fetcher_3: { depends_on: [start] }
+  
+  # This node waits for all three
+  aggregator: { depends_on: [data_fetcher_1, data_fetcher_2, data_fetcher_3] }
+  
+# Execution timeline:
+# T0: start executes
+# T1: data_fetcher_1, data_fetcher_2, data_fetcher_3 (parallel)
+# T2: aggregator (after all fetchers complete)`}
+</CollapsibleCodeBlock>
+
+## Advanced Execution Patterns
+
+### Pattern 1: Shared Configuration
+
+<CollapsibleCodeBlock
+  title="Shared Configuration Pattern"
+  description="Multiple nodes sharing configuration without execution dependency"
+  language="yaml"
+>
+{`# Config loaded once, shared with many nodes
+nodes:
+  config_loader: { type: constants }
+  service_a: { type: rest_api }
+  service_b: { type: rest_api }
+  service_c: { type: rest_api }
+
+connections:
+  # Parallel service initialization
+  - from_id: start
+    to_id: config_loader
+    connection_type: control
+    
+  - from_id: start
+    to_id: service_a
+    connection_type: control
+    
+  - from_id: start
+    to_id: service_b
+    connection_type: control
+    
+  - from_id: start
+    to_id: service_c
+    connection_type: control
+    
+  # Config shared via data connections
+  - from_id: config_loader
+    to_id: service_a
+    from_output: "config_loader:api_config"
+    to_input: "service_a:config"
+    connection_type: data
+    
+  # Similar for service_b and service_c...`}
+</CollapsibleCodeBlock>
+
+### Pattern 2: Conditional Resource Loading
+
+<CollapsibleCodeBlock
+  title="Conditional Resource Pattern"
+  description="Load expensive resources only when needed"
+  language="yaml"
+>
+{`# ML model loaded only if needed
+nodes:
+  intent_classifier: { type: llm_structured }
+  router: { type: case }
+  
+  # Complex path - needs ML model
+  ml_loader: { type: custom }  # Expensive operation
+  ml_processor: { type: custom }
+  
+  # Simple path - no ML needed
+  rule_processor: { type: custom }
+
+connections:
+  # Router decides the path
+  - from_id: intent_classifier
+    to_id: router
+    connection_type: both
+    
+  # Complex path
+  - from_id: router
+    to_id: ml_loader
+    connection_type: control  # Only if complex case
+    
+  - from_id: ml_loader
+    to_id: ml_processor
+    connection_type: both
+    
+  # Simple path  
+  - from_id: router
+    to_id: rule_processor
+    connection_type: control  # Only if simple case
+    
+# If simple case: ml_loader never executes (expensive operation avoided)`}
+</CollapsibleCodeBlock>
+
+## Execution State Management
+
+<Card>
+  <CardHeader>
+    <CardTitle>Node Execution States</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <table>
+      <thead>
+        <tr>
+          <th>State</th>
+          <th>Description</th>
+          <th>Cached</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>pending</code></td>
+          <td>Not yet executed</td>
+          <td>No</td>
+        </tr>
+        <tr>
+          <td><code>executing</code></td>
+          <td>Currently running</td>
+          <td>No</td>
+        </tr>
+        <tr>
+          <td><code>completed</code></td>
+          <td>Successfully finished</td>
+          <td>Yes</td>
+        </tr>
+        <tr>
+          <td><code>failed</code></td>
+          <td>Execution error</td>
+          <td>No</td>
+        </tr>
+        <tr>
+          <td><code>skipped</code></td>
+          <td>Not on active path</td>
+          <td>No</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</Card>
+
+## Error Handling in Execution
+
+<Tabs>
+  <TabItem value="node" label="Node Failures" default>
+    <div style={{ marginTop: '1rem' }}>
+      <p>When a node fails:</p>
+      <ol>
+        <li>Execution stops for that branch</li>
+        <li>Error event is emitted</li>
+        <li>Downstream nodes are not executed</li>
+        <li>Parallel branches continue independently</li>
+      </ol>
+    </div>
+  </TabItem>
+  
+  <TabItem value="recovery" label="Recovery Strategies">
+    <div style={{ marginTop: '1rem' }}>
+      <p>Built-in recovery mechanisms:</p>
+      <ul>
+        <li><strong>Retry Logic:</strong> Configurable per node type</li>
+        <li><strong>Fallback Paths:</strong> Alternative execution routes</li>
+        <li><strong>Partial Results:</strong> Return what succeeded</li>
+        <li><strong>Error Handlers:</strong> Special error processing nodes</li>
+      </ul>
+    </div>
+  </TabItem>
+</Tabs>
+
+## Performance Considerations
+
+<Callout type="info" title="Execution Performance Tips">
+1. **Minimize Dependencies**: Fewer dependencies = more parallelism
+2. **Use Data Connections**: Avoid unnecessary execution chains
+3. **Cache Expensive Operations**: Let backtracking reuse results
+4. **Design for Parallelism**: Structure flows to maximize concurrent execution
+5. **Profile Execution**: Use event streams to identify bottlenecks
+</Callout>
+
+## Summary
+
+The HPC Neura Execution Engine's model provides:
+
+- **Intelligent Dependency Resolution**: Automatic handling of complex dependencies
+- **Flexible Flow Control**: Precise control over execution paths
+- **Optimal Performance**: Parallel execution and smart caching
+- **Clear Semantics**: Explicit connection types clarify intent
+- **Robust Error Handling**: Graceful failure management
+
+Understanding these execution concepts enables you to design efficient, maintainable, and performant workflows that leverage the full power of the engine.
+
+## Next Steps
+
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginTop: '1.5rem' }}>
+  <Card>
+    <CardHeader>
+      <CardTitle>Building Flows</CardTitle>
+      <CardDescription>
+        Apply these concepts to create flows
+      </CardDescription>
+    </CardHeader>
+    <div style={{ padding: '1rem', paddingTop: 0 }}>
+      <a href="/docs/hpc-neura-execution-engine/building-flows" style={{ textDecoration: 'none' }}>
+        Start building →
+      </a>
+    </div>
+  </Card>
+  
+  <Card>
+    <CardHeader>
+      <CardTitle>Performance Tuning</CardTitle>
+      <CardDescription>
+        Optimize your flows for production
+      </CardDescription>
+    </CardHeader>
+    <div style={{ padding: '1rem', paddingTop: 0 }}>
+      <a href="/docs/hpc-neura-execution-engine/performance" style={{ textDecoration: 'none' }}>
+        Learn optimization →
+      </a>
+    </div>
+  </Card>
+</div>

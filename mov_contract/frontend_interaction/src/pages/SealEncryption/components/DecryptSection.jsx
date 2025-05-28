@@ -1,9 +1,10 @@
-import { checkUserAccess, decryptData, fetchDecryptionKeys, storeEncryptedData, downloadFromWalrus, createTransaction } from '../../../utils/blockchain'
+import { checkUserAccess, decryptData, downloadFromWalrus, createTransaction } from '../../../utils/blockchain'
 import { fromHex, toHex } from '@mysten/sui/utils'
+import { Transaction } from '@mysten/sui/transactions'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 
-export function DecryptSection({ account, sealClient, sessionKey, userNFTs, config }) {
+export function DecryptSection({ account, sealClient, sessionKey, userNFTs, config, client }) {
   const [decryptForm, setDecryptForm] = useState({
     nftId: '',
     encryptedData: '',
@@ -27,9 +28,9 @@ export function DecryptSection({ account, sealClient, sessionKey, userNFTs, conf
     }
 
     // Check NFT access before decrypting
-    const access = await checkUserAccess(decryptForm.nftId, account.address)
-    if (access < 4) {
-      toast.error(`Insufficient access level (${access}/4). You need level 4+ to encrypt/decrypt files.`)
+    const accessResult = await checkUserAccess(decryptForm.nftId, account.address)
+    if (accessResult.level < 4) {
+      toast.error(`Insufficient access level (${accessResult.level}/4). You need level 4+ to encrypt/decrypt files.`)
       return
     }
 
@@ -59,35 +60,30 @@ export function DecryptSection({ account, sealClient, sessionKey, userNFTs, conf
       }
 
       // Create transaction for fetching keys
-      const tx = createTransaction()
-      
-      // First, store the encrypted data on-chain if needed
-      await storeEncryptedData({
-        tx,
-        packageId: config.PACKAGE_ID,
-        encryptionId: fromHex(encryptionId),
-        encryptedData,
-        nftId: decryptForm.nftId
-      })
+      const tx = new Transaction()
+      tx.setSender(account.address)
 
-      // Fetch decryption keys
-      await fetchDecryptionKeys({
-        ids: [encryptionId],
-        tx,
-        sessionKey,
-        threshold: 2, // Default threshold
-        client: sealClient
+      // Add the seal_approve call
+      tx.moveCall({
+        target: `${config.PACKAGE_ID}::access::seal_approve`,
+        arguments: [
+          tx.pure.vector('u8', fromHex(encryptionId)),
+          tx.object(decryptForm.nftId),
+          tx.object(config.ACCESS_REGISTRY_ID),
+        ],
       })
 
       // Get transaction bytes for decryption
-      const txBytes = await tx.build({ client: sealClient.suiClient })
+      if (!client) {
+        throw new Error('SUI client not available')
+      }
+      const txBytes = await tx.build({ client: client, onlyTransactionKind: true })
 
-      // Decrypt the data
-      const decrypted = await decryptData({
+      // Decrypt the data using the seal client directly
+      const decrypted = await decryptData(sealClient, {
         encryptedData,
         sessionKey,
-        txBytes,
-        client: sealClient
+        txBytes
       })
 
       // Convert decrypted data to blob for download

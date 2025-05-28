@@ -1,7 +1,6 @@
-import { ConnectButton, useCurrentAccount } from '@mysten/dapp-kit'
-import { useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
+import { ConnectButton, useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 
 // Import all page components from new structure
@@ -19,8 +18,8 @@ import InteractiveEncryptionJourneyV2 from './components/InteractiveEncryptionJo
 
 // Configuration based on deployment-config.json
 const CONFIG = {
-  PACKAGE_ID: import.meta.env.VITE_PACKAGE_ID || '0x31717ba3482c33f3bfe0bab05b3f509053a206b01e727c3184c0bb791d74c7fe',
-  REGISTRY_ID: import.meta.env.VITE_REGISTRY_ID || '0xd7092aa8c1614c522f42b42cc3410b1276083eea23e66ef83051c9716f8b9970',
+  PACKAGE_ID: import.meta.env.VITE_PACKAGE_ID || '0x040e550205820846970d5dcc1490911c85aacef73b819d66d9f76fd779219184',
+  REGISTRY_ID: import.meta.env.VITE_REGISTRY_ID || '0x8ef28e813a10aabf456a7f188ab60e08233fcf2c7a527436485e6ce007de651f',
   ACCESS_REGISTRY_ID: import.meta.env.VITE_ACCESS_REGISTRY_ID || '0xb01b33f8038a78532a946b3d9093616cf050f23f01fb3cfa94d19d2bfc7a2125',
   WALRUS_AGGREGATOR: 'https://aggregator.walrus-testnet.walrus.space',
   WALRUS_PUBLISHER: 'https://publisher.walrus-testnet.walrus.space',

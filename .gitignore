@@ -12,7 +12,8 @@ hpc-execution-node-backend/notebooks/flow_outputs/**
 
 
 prover-service/**
-!./prover-service/__placeholder__
+!prover-service/__placeholder__
+!prover-service/readme.md
 
 CLAUDE.local.md
 
