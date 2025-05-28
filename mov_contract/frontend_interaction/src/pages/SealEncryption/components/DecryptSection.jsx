@@ -43,7 +43,8 @@ export function DecryptSection({ account, sealClient, sessionKey, userNFTs, conf
       // If Walrus blob ID provided, fetch from Walrus
       if (decryptForm.walrusBlobId) {
         const walrusData = await downloadFromWalrus(decryptForm.walrusBlobId)
-        const parsed = JSON.parse(walrusData)
+        // const parsed = JSON.parse(walrusData)
+        const parsed = JSON.parse(new TextDecoder().decode(walrusData))
         encryptedData = fromHex(parsed.encryptedData)
         encryptionId = parsed.encryptionId
         fileName = parsed.fileName

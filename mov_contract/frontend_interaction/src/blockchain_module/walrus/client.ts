@@ -71,7 +71,7 @@ export async function downloadFromWalrus(
   blobId: string
 ): Promise<Uint8Array> {
   try {
-    const response = await fetch(`${aggregatorUrl}/v1/${blobId}`, {
+    const response = await fetch(`${aggregatorUrl}/v1/blobs/${blobId}`, {
       method: 'GET',
       headers: {
         'Accept': 'application/octet-stream',
@@ -86,7 +86,9 @@ export async function downloadFromWalrus(
     }
     
     const arrayBuffer = await response.arrayBuffer();
+    // const data_json   = new TextDecoder().decode(arrayBuffer)
     return new Uint8Array(arrayBuffer);
+    // return data_json;
   } catch (error) {
     console.error('Error downloading from Walrus:', error);
     throw new Error(`Failed to download data from Walrus: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -124,5 +126,5 @@ export async function checkBlobStatus(
 
 // Helper to create blob URL for direct access
 export function getBlobUrl(aggregatorUrl: string, blobId: string): string {
-  return `${aggregatorUrl}/v1/${blobId}`;
+  return `${aggregatorUrl}/v1/blobs/${blobId}`;
 }
