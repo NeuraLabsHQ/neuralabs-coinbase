@@ -19,6 +19,7 @@ export async function checkUserAccess(
     });
     
     if (!nftObject.data) {
+      console.log('NFT not found:', nftId);
       return { level: 0, permissions: [] };
     }
     
@@ -28,32 +29,83 @@ export async function checkUserAccess(
       return { level: 6, permissions: ['all'] }; // Owner has full access
     }
     
-    // Query the blockchain for access level using devInspectTransactionBlock
-    const tx = new Transaction();
-    tx.moveCall({
-      target: `${config.PACKAGE_ID}::access::get_access_level`,
-      arguments: [
-        tx.object(config.ACCESS_REGISTRY_ID),
-        tx.pure.id(nftId),
-        tx.pure.address(userAddress),
-      ],
+    // Get the AccessRegistry object
+    const registryObject = await client.getObject({
+      id: config.ACCESS_REGISTRY_ID,
+      options: { showContent: true },
     });
     
-    const result = await client.devInspectTransactionBlock({
-      transactionBlock: await tx.build({ client }),
-      sender: userAddress,
-    });
+    if (!registryObject.data?.content || registryObject.data.content.dataType !== 'moveObject') {
+      console.error('AccessRegistry not found or not a move object');
+      return { level: 0, permissions: [] };
+    }
     
-    // Extract access level from the result
-    if (result.results?.[0]?.returnValues?.[0]) {
-      const level = parseInt(result.results[0].returnValues[0][0] || '0');
+    // Cast fields to any to handle dynamic structure
+    const registryFields = registryObject.data.content.fields as any;
+    
+    // Get the permissions table ID from registry
+    const permissionsTableId = registryFields?.permissions?.fields?.id?.id;
+    if (!permissionsTableId) {
+      console.error('Permissions table ID not found in registry');
+      return { level: 0, permissions: [] };
+    }
+    
+    // Query for NFT-specific permissions table
+    try {
+      const nftPermissionsResult = await client.getDynamicFieldObject({
+        parentId: permissionsTableId,
+        name: {
+          type: '0x2::object::ID',
+          value: nftId,
+        },
+      });
+      
+      if (!nftPermissionsResult.data?.content || nftPermissionsResult.data.content.dataType !== 'moveObject') {
+        console.log('No permissions found for NFT:', nftId);
+        return { level: 0, permissions: [] };
+      }
+      
+      // Cast to any to handle dynamic structure
+      const nftPermFields = nftPermissionsResult.data.content.fields as any;
+      
+      // Get the user permissions table ID
+      const userPermissionsTableId = nftPermFields?.value?.fields?.id?.id;
+      if (!userPermissionsTableId) {
+        console.log('Invalid NFT permissions structure');
+        return { level: 0, permissions: [] };
+      }
+      
+      // Query for user's access level
+      const userAccessResult = await client.getDynamicFieldObject({
+        parentId: userPermissionsTableId,
+        name: {
+          type: 'address',
+          value: userAddress,
+        },
+      });
+      
+      if (!userAccessResult.data?.content || userAccessResult.data.content.dataType !== 'moveObject') {
+        console.log('No access found for user:', userAddress);
+        return { level: 0, permissions: [] };
+      }
+      
+      // Cast to any to handle dynamic structure
+      const userAccessFields = userAccessResult.data.content.fields as any;
+      
+      // Extract the access level - it should be directly in the value field
+      const level = parseInt(userAccessFields?.value) || 0;
+      console.log(`User ${userAddress} has level ${level} access to NFT ${nftId}`);
+      
       return {
         level,
         permissions: getPermissionsForLevel(level),
       };
+      
+    } catch (dynamicFieldError) {
+      console.log('Error querying dynamic fields:', dynamicFieldError);
+      return { level: 0, permissions: [] };
     }
     
-    return { level: 0, permissions: [] };
   } catch (error) {
     console.error('Error checking access:', error);
     return { level: 0, permissions: [] };
