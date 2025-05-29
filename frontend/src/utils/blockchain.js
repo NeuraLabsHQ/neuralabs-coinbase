@@ -181,9 +181,9 @@ export const downloadFromWalrus = async (blobId) => {
 import {
   getSuiBalance as _getSuiBalance,
   getWalBalance as _getWalBalance,
-  convertSuiToWal as _convertSuiToWal,
   formatBalance
 } from '../lib/blockchain_module/exchange/index.ts'
+import { convertSuiToWal as _convertSuiToWal } from '../lib/blockchain_module/exchange/convert-simple.js'
 
 // Wrap exchange functions to provide client
 export const getSUIBalance = async (address) => {
@@ -209,15 +209,17 @@ export const getWALBalance = async (address) => {
 export const convertSUIToWAL = async (params) => {
   const client = params.client || window.suiClient
   const signAndExecute = params.signAndExecute || window.signAndExecute
-  const config = params.config || window.config
   const currentAccount = params.currentAccount || window.currentAccount
   
-  if (!client || !signAndExecute || !config || !currentAccount) {
+  if (!client || !signAndExecute || !currentAccount) {
     throw new Error('Blockchain services not initialized')
   }
   
-  return _convertSuiToWal(client, config, currentAccount, signAndExecute, {
-    amount: params.amount,
+  // Convert amount to bigint (in MIST - 1 SUI = 10^9 MIST)
+  const amountInMist = BigInt(Math.floor(params.amount * 1e9))
+  
+  return _convertSuiToWal(client, currentAccount, signAndExecute, {
+    amount: amountInMist,
     exchangeConfig: params.exchangeConfig
   })
 }

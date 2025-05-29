@@ -49,7 +49,7 @@ function SUIToWALConverter() {
   // Exchange contract configuration
   const EXCHANGE_CONFIG = {
     PACKAGE_ID: '0x82593828ed3fcb8c6a235eac9abd0adbe9c5f9bbffa9b1e7a45cdd884481ef9f',
-    SHARED_OBJECT_ID: '0x83b454e524c71f30803f4d6c302a86fb6a39e96cdfb873c2d1e93bc1c26a3bc5',
+    SHARED_OBJECT_ID: '0x8d63209cf8589ce7aef8f262437163c67577ed09f3e636a9d8e0813843fb8bf1',
     INITIAL_SHARED_VERSION: '400185628'
   };
 
@@ -117,13 +117,16 @@ function SUIToWALConverter() {
     setIsConverting(true);
     
     try {
-      // Import the conversion wrapper function
-      const { convertSuiToWal } = await import('../exchange/convert-wrapper');
+      // Use the blockchain utility function directly
+      const { convertSUIToWAL } = await import('../../../utils/blockchain');
       
-      // Create the transaction
-      const result = await convertSuiToWal(client, null, account, signAndExecuteTransaction, {
+      const result = await convertSUIToWAL({
         amount,
-        exchangeConfig: EXCHANGE_CONFIG
+        senderAddress: account.address,
+        exchangeConfig: EXCHANGE_CONFIG,
+        client,
+        signAndExecute: signAndExecuteTransaction,
+        currentAccount: account
       });
 
       toast({
@@ -361,6 +364,17 @@ function SUIToWALConverter() {
             <Text fontSize="sm">• WAL tokens are used exclusively for Walrus storage fees</Text>
             <Text fontSize="sm">• Ensure you have sufficient SUI for gas fees</Text>
             <Text fontSize="sm">• Transactions are irreversible once confirmed</Text>
+            <Text fontSize="sm">• If this doesn't work, you can visit{" "}
+              <a 
+                href="https://stake-wal.wal.app/?network=testnet" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ color: '#3182ce', textDecoration: 'underline' }}
+              >
+                stake-wal.wal.app
+              </a>{" "}
+              to exchange SUI to WAL
+            </Text>
           </VStack>
         </CardBody>
       </Card>
