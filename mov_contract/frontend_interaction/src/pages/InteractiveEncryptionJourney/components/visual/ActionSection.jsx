@@ -13,15 +13,15 @@ const ActionSection = ({
   setCurrentStep,
   selectNFT,
   createSessionKey,
+  selectFile,
   mockEncrypt,
   mockUploadToWalrus,
   initializeSeal
 }) => {
-  const selectFile = (e) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files[0]
-    if (file && file.size <= 10 * 1024 * 1024) {
-      // This should be handled by the blockchain interactions hook
-      // For now, just update the journey data directly
+    if (file) {
+      selectFile(file)
     }
   }
 
@@ -103,7 +103,7 @@ const ActionSection = ({
             <h2>Select File</h2>
             <input 
               type="file"
-              onChange={selectFile}
+              onChange={handleFileSelect}
               className="file-input"
             />
             {journeyData.selectedFile && (
@@ -118,7 +118,7 @@ const ActionSection = ({
             <p>Protect your data with military-grade encryption</p>
             <button 
               className="action-button"
-              onClick={() => mockEncrypt(journeyData.selectedFile)}
+              onClick={() => mockEncrypt(journeyData.selectedFile, journeyData)}
               disabled={isProcessing}
             >
               {isProcessing ? 'Encrypting...' : 'Encrypt'}

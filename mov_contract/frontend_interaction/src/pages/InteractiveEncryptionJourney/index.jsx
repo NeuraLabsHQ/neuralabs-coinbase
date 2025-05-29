@@ -9,6 +9,7 @@ import JourneyHeader from './components/visual/JourneyHeader'
 import ProgressSection from './components/visual/ProgressSection'
 import AnimationSection from './components/visual/AnimationSection'
 import ActionSection from './components/visual/ActionSection'
+import CompletionSection from './components/visual/CompletionSection'
 import BackgroundEffects from './components/visual/BackgroundEffects'
 
 // Functional Components (Blockchain Integration)
@@ -37,6 +38,7 @@ const InteractiveEncryptionJourney = ({ config }) => {
     loadUserNFTs,
     selectNFT,
     createSessionKey,
+    selectFile,
     mockEncrypt,
     mockUploadToWalrus,
     initializeSeal
@@ -97,11 +99,18 @@ const InteractiveEncryptionJourney = ({ config }) => {
             setCurrentStep={setCurrentStep}
             selectNFT={selectNFT}
             createSessionKey={createSessionKey}
+            selectFile={selectFile}
             mockEncrypt={mockEncrypt}
             mockUploadToWalrus={mockUploadToWalrus}
             initializeSeal={initializeSeal}
           />
         </div>
+
+        {/* Completion Section - Shows after successful upload */}
+        <CompletionSection 
+          journeyData={journeyData}
+          config={config}
+        />
       </div>
 
       <BackgroundEffects />

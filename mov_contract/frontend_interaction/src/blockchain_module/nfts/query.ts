@@ -5,16 +5,16 @@ import { NeuralabsConfig, NFTData } from '../types';
 import { getObjectFields } from '../utils/helpers';
 
 export async function getUserNFTs(
-  userAddress: string,
   client: SuiClient,
-  config?: NeuralabsConfig
+  config: NeuralabsConfig,
+  userAddress: string
 ): Promise<NFTData[]> {
   try {
     const objects = await client.getOwnedObjects({
       owner: userAddress,
-      filter: config ? {
+      filter: {
         StructType: `${config.PACKAGE_ID}::nft::NeuraLabsNFT`,
-      } : undefined,
+      },
       options: {
         showContent: true,
         showDisplay: true,
