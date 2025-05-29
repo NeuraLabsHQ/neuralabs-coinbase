@@ -12,9 +12,9 @@ import SealEncryption from './pages/SealEncryption'
 import SUIToWALConverter from './pages/SUIToWALConverter'
 import WalrusStorage from './pages/WalrusStorage'
 
-// Import complex components that haven't been modularized yet
-import EncryptionJourney from './components/EncryptionJourney'
-import InteractiveEncryptionJourneyV2 from './components/InteractiveEncryptionJourneyV2'
+// Import modularized journey components from new structure
+import EncryptionJourney from './pages/EncryptionJourney'
+import InteractiveEncryptionJourney from './pages/InteractiveEncryptionJourney'
 
 // Configuration based on deployment-config.json
 const CONFIG = {
@@ -121,7 +121,7 @@ useEffect(() => {
               {activeTab === 'details' && <NFTDetails config={CONFIG} />}
               {activeTab === 'converter' && <SUIToWALConverter config={CONFIG} />}
               {activeTab === 'journey' && <EncryptionJourney config={CONFIG} />}
-              {activeTab === 'interactive' && <InteractiveEncryptionJourneyV2 config={CONFIG} />}
+              {activeTab === 'interactive' && <InteractiveEncryptionJourney config={CONFIG} />}
             </div>
           </>
         )}
