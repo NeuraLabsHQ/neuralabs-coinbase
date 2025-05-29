@@ -1,0 +1,75 @@
+type: random_generator
+element_id: null
+name: null
+node_description: Generates random values of different types
+description: null
+input_schema: {}
+output_schema:
+  random_data:
+    type: any
+    description: The generated random value
+    required: true
+parameter_schema_structure:
+  type:
+    type: string
+    enum:
+      - string
+      - int
+      - float
+  floating_point:
+    type: bool
+  min:
+    type: int
+  max:
+    type: int
+  decimal:
+    type: int
+  length:
+    type: int
+parameters:
+  type: string
+  floating_point: false
+  min: 0
+  max: 100
+  decimal: 2
+  length: 10
+processing_message: Generating random value...
+tags:
+  - utility
+  - random
+layer: null
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: fixed
+  parameters.type:
+    access: edit
+  parameters.floating_point:
+    access: edit
+  parameters.min:
+    access: edit
+  parameters.max:
+    access: edit
+  parameters.decimal:
+    access: edit
+  parameters.length:
+    access: edit
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit
+input: null
+output: null
+code: null
+flow_control: null

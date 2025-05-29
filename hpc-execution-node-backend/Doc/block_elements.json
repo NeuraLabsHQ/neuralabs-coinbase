@@ -1,0 +1,1421 @@
+{
+  "flow_control_elements": {
+    "start": {
+      "type": "start",
+      "element_id": null,
+      "name": null,
+      "node_description": "Entry point of a flow that receives initial inputs and passes them forward",
+      "description": null,
+      "input_schema": {}, 
+      "output_schema": {},
+      "parameter_schema_structure": {},
+      "parameters": {},
+      "processing_message": "Starting flow...",
+      "tags": ["flow-control", "required"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "fixed"
+        },
+        "output_schema": {
+          "access": "fixed"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": null,
+      "flow_control": null
+    },
+    "end": {
+      "type": "end",
+      "element_id": null,
+      "name": null,
+      "node_description": "Exit point of a flow that collects final outputs including text and optional blockchain transactions",
+      "description": null,
+      "input_schema": {
+        "text_input": {
+          "type": "string",
+          "description": "Final text output of the flow",
+          "required": true
+        },
+        "proposed_transaction": {
+          "type": "json",
+          "description": "Transaction data for blockchain interaction",
+          "required": false
+        }
+      },
+      "output_schema": {
+        "text_output": {
+          "type": "string",
+          "description": "Final text output",
+          "required": true
+        },
+        "proposed_transaction": {
+          "type": "json",
+          "description": "Final transaction payload",
+          "required": false
+        }
+      },
+      "parameter_schema_structure": {},
+      "parameters": {},
+      "processing_message": "Completing flow...",
+      "tags": ["flow-control", "required"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "fixed"
+        },
+        "output_schema": {
+          "access": "fixed"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": null,
+      "flow_control": null
+    },
+    "case": {
+      "type": "case",
+      "element_id": null,
+      "name": null,
+      "node_description": "Conditional branching element that evaluates conditions and controls downstream execution paths",
+      "description": null,
+      "input_schema": {
+        "variables": {
+          "type": "json",
+          "description": "Dictionary of values to compare",
+          "required": true
+        }
+      },
+      "output_schema": {
+        "result": {
+          "type": "json",
+          "description": "Dictionary of case IDs to boolean results",
+          "required": true
+        }
+      },
+      "parameter_schema_structure": {
+        "cases": {
+          "type": "list",
+          "description": "List of case configurations with conditions"
+        }
+      },
+      "parameters": {
+        "cases": []
+      },
+      "processing_message": "Evaluating conditions...",
+      "tags": ["flow-control", "conditional"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "fixed"
+        },
+        "output_schema": {
+          "access": "fixed"
+        },
+        "parameters.cases": {
+          "access": "edit"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": null,
+      "flow_control": {
+        "type": "case",
+        "enabled": true
+      }
+    },
+    "flow_select": {
+      "type": "flow_select",
+      "element_id": null,
+      "name": null,
+      "node_description": "Path selection element that chooses between multiple flow execution paths",
+      "description": null,
+      "input_schema": {},
+      "output_schema": {
+        "chosen_flow": {
+          "type": "string",
+          "description": "ID of the selected flow",
+          "required": true
+        }
+      },
+      "parameter_schema_structure": {
+        "flows_to_switch": {
+          "type": "list",
+          "description": "List of flow IDs representing possible paths"
+        }
+      },
+      "parameters": {
+        "flows_to_switch": []
+      },
+      "processing_message": "Selecting execution path...",
+      "tags": ["flow-control", "routing"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "fixed"
+        },
+        "output_schema": {
+          "access": "fixed"
+        },
+        "parameters.flows_to_switch": {
+          "access": "edit"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": null,
+      "flow_control": {
+        "type": "flow_select",
+        "enabled": true
+      }
+    }
+  },
+  "input_elements": {
+    "chat_input": {
+      "type": "chat_input",
+      "element_id": null,
+      "name": null,
+      "node_description": "Captures user text input for the flow",
+      "description": null,
+      "input_schema": {
+        "chat_input": {
+          "type": "string",
+          "description": "The input provided by the user",
+          "required": true
+        }
+      },
+      "output_schema": {
+        "chat_input": {
+          "type": "string",
+          "description": "The input provided by the user",
+          "required": true
+        }
+      },
+      "parameter_schema_structure": {},
+      "parameters": {},
+      "processing_message": "Waiting for user input...",
+      "tags": ["input", "user-interaction"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "fixed"
+        },
+        "output_schema": {
+          "access": "fixed"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": null,
+      "flow_control": null
+    },
+    "context_history": {
+      "type": "context_history",
+      "element_id": null,
+      "name": null,
+      "node_description": "Provides conversation history for context in AI conversations",
+      "description": null,
+      "input_schema": {
+        "context_history": {
+          "type": "list",
+          "description": "List of previous messages",
+          "required": false
+        }
+      },
+      "output_schema": {
+        "context_history": {
+          "type": "list",
+          "description": "List of previous messages",
+          "required": false
+        }
+      },
+      "parameter_schema_structure": {},
+      "parameters": {},
+      "processing_message": "Loading conversation history...",
+      "tags": ["input", "context"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "fixed"
+        },
+        "output_schema": {
+          "access": "fixed"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": null,
+      "flow_control": null
+    },
+    "datablock": {
+      "type": "datablock",
+      "element_id": null,
+      "name": null,
+      "node_description": "Provides constant data in JSON or CSV format to the flow",
+      "description": null,
+      "input_schema": {},
+      "output_schema": {
+        "data": {
+          "type": "any",
+          "description": "The processed data",
+          "required": true
+        }
+      },
+      "parameter_schema_structure": {
+        "data_type": {
+          "type": "string",
+          "enum": ["json", "csv"]
+        },
+        "data": {
+          "type": "any"
+        }
+      },
+      "parameters": {
+        "data_type": "json",
+        "data": null
+      },
+      "processing_message": "Loading data...",
+      "tags": ["input", "data"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "fixed"
+        },
+        "output_schema": {
+          "access": "fixed"
+        },
+        "parameters.data_type": {
+          "access": "edit"
+        },
+        "parameters.data": {
+          "access": "edit"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": null,
+      "flow_control": null
+    },
+    "rest_api": {
+      "type": "rest_api",
+      "element_id": null,
+      "name": null,
+      "node_description": "Makes HTTP requests to external APIs and returns the response",
+      "description": null,
+      "input_schema": {
+        "params": {
+          "type": "json",
+          "description": "Parameters or body for the request",
+          "required": true
+        }
+      },
+      "output_schema": {
+        "data": {
+          "type": "json",
+          "description": "The API response",
+          "required": true
+        }
+      },
+      "parameter_schema_structure": {
+        "url": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string",
+          "enum": ["GET", "POST", "PUT", "DELETE"]
+        },
+        "headers": {
+          "type": "json"
+        },
+        "api_key": {
+          "type": "string"
+        }
+      },
+      "parameters": {
+        "url": "",
+        "method": "GET",
+        "headers": {},
+        "api_key": ""
+      },
+      "processing_message": "Making API request...",
+      "tags": ["input", "external", "api"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "fixed"
+        },
+        "output_schema": {
+          "access": "fixed"
+        },
+        "parameters.url": {
+          "access": "edit"
+        },
+        "parameters.method": {
+          "access": "edit"
+        },
+        "parameters.headers": {
+          "access": "edit"
+        },
+        "parameters.api_key": {
+          "access": "hidden"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": null,
+      "flow_control": null
+    },
+    "metadata": {
+      "type": "metadata",
+      "element_id": null,
+      "name": null,
+      "node_description": "Provides user and environment metadata to the flow",
+      "description": null,
+      "input_schema": {},
+      "output_schema": {},
+      "parameter_schema_structure": {
+        "data": {
+          "type": "json"
+        }
+      },
+      "parameters": {
+        "data": {}
+      },
+      "processing_message": "Loading metadata...",
+      "tags": ["input", "context", "metadata"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "edit"
+        },
+        "output_schema": {
+          "access": "edit"
+        },
+        "parameters.data": {
+          "access": "edit"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": null,
+      "flow_control": null
+    },
+    "constants": {
+      "type": "constants",
+      "element_id": null,
+      "name": null,
+      "node_description": "Provides fixed values to the flow",
+      "description": null,
+      "input_schema": {},
+      "output_schema": {
+        "data": {
+          "type": "any",
+          "description": "The constant value",
+          "required": true
+        }
+      },
+      "parameter_schema_structure": {
+        "data_type": {
+          "type": "string",
+          "enum": ["string", "int", "float", "bool", "json", "list"]
+        },
+        "data": {
+          "type": "any"
+        }
+      },
+      "parameters": {
+        "data_type": "string",
+        "data": null
+      },
+      "processing_message": "Loading constants...",
+      "tags": ["input", "constants"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "fixed"
+        },
+        "output_schema": {
+          "access": "fixed"
+        },
+        "parameters.data_type": {
+          "access": "edit"
+        },
+        "parameters.data": {
+          "access": "edit"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": null,
+      "flow_control": null
+    }
+  },
+  "utility_elements": {
+    "selector": {
+      "type": "selector",
+      "element_id": null,
+      "name": null,
+      "node_description": "Extracts specific values from data structures based on keys",
+      "description": null,
+      "input_schema": {
+        "data": {
+          "type": "any",
+          "description": "The data to extract from",
+          "required": true
+        }
+      },
+      "output_schema": {
+        "value": {
+          "type": "any",
+          "description": "The extracted data",
+          "required": true
+        }
+      },
+      "parameter_schema_structure": {
+        "key": {
+          "type": "any",
+          "description": "Key(s) to select from the data (string or list)"
+        }
+      },
+      "parameters": {
+        "key": ""
+      },
+      "processing_message": "Extracting data...",
+      "tags": ["utility", "data-manipulation"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "fixed"
+        },
+        "output_schema": {
+          "access": "fixed"
+        },
+        "parameters.key": {
+          "access": "edit"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": null,
+      "flow_control": null
+    },
+    "merger": {
+      "type": "merger",
+      "element_id": null,
+      "name": null,
+      "node_description": "Combines multiple data inputs into a single output",
+      "description": null,
+      "input_schema": {
+        "data1": {
+          "type": "any",
+          "description": "First data input",
+          "required": true
+        },
+        "data2": {
+          "type": "any",
+          "description": "Second data input",
+          "required": true
+        }
+      },
+      "output_schema": {
+        "merged_data": {
+          "type": "any",
+          "description": "Combined data result",
+          "required": true
+        }
+      },
+      "parameter_schema_structure": {},
+      "parameters": {},
+      "processing_message": "Merging data...",
+      "tags": ["utility", "data-manipulation"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "fixed"
+        },
+        "output_schema": {
+          "access": "fixed"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": null,
+      "flow_control": null
+    },
+    "random_generator": {
+      "type": "random_generator",
+      "element_id": null,
+      "name": null,
+      "node_description": "Generates random values of different types",
+      "description": null,
+      "input_schema": {},
+      "output_schema": {
+        "random_data": {
+          "type": "any",
+          "description": "The generated random value",
+          "required": true
+        }
+      },
+      "parameter_schema_structure": {
+        "type": {
+          "type": "string",
+          "enum": ["string", "int", "float"]
+        },
+        "floating_point": {
+          "type": "bool"
+        },
+        "min": {
+          "type": "int"
+        },
+        "max": {
+          "type": "int"
+        },
+        "decimal": {
+          "type": "int"
+        },
+        "length": {
+          "type": "int"
+        }
+      },
+      "parameters": {
+        "type": "string",
+        "floating_point": false,
+        "min": 0,
+        "max": 100,
+        "decimal": 2,
+        "length": 10
+      },
+      "processing_message": "Generating random value...",
+      "tags": ["utility", "random"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "fixed"
+        },
+        "output_schema": {
+          "access": "fixed"
+        },
+        "parameters.type": {
+          "access": "edit"
+        },
+        "parameters.floating_point": {
+          "access": "edit"
+        },
+        "parameters.min": {
+          "access": "edit"
+        },
+        "parameters.max": {
+          "access": "edit"
+        },
+        "parameters.decimal": {
+          "access": "edit"
+        },
+        "parameters.length": {
+          "access": "edit"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": null,
+      "flow_control": null
+    },
+    "time": {
+      "type": "time",
+      "element_id": null,
+      "name": null,
+      "node_description": "Provides current time and date information",
+      "description": null,
+      "input_schema": {},
+      "output_schema": {
+        "time_data": {
+          "type": "any",
+          "description": "The current time/date",
+          "required": true
+        }
+      },
+      "parameter_schema_structure": {
+        "type": {
+          "type": "string",
+          "enum": ["string", "int", "float"]
+        },
+        "format": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        }
+      },
+      "parameters": {
+        "type": "string",
+        "format": "YYYY-MM-DD HH:MM:SS",
+        "timezone": "UTC"
+      },
+      "processing_message": "Getting current time...",
+      "tags": ["utility", "time"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "fixed"
+        },
+        "output_schema": {
+          "access": "fixed"
+        },
+        "parameters.type": {
+          "access": "edit"
+        },
+        "parameters.format": {
+          "access": "edit"
+        },
+        "parameters.timezone": {
+          "access": "edit"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": null,
+      "flow_control": null
+    }
+  },
+  "ai_elements": {
+    "llm_text": {
+      "type": "llm_text",
+      "element_id": null,
+      "name": null,
+      "node_description": "Generates free-form text using a language model",
+      "description": null,
+      "input_schema": {
+        "prompt": {
+          "type": "string",
+          "description": "The prompt for the LLM",
+          "required": true
+        },
+        "context": {
+          "type": "list",
+          "description": "Previous conversation context",
+          "required": false
+        },
+        "additional_data": {
+          "type": "json",
+          "description": "Additional data for the LLM",
+          "required": false
+        }
+      },
+      "output_schema": {
+        "llm_output": {
+          "type": "string",
+          "description": "Generated text response",
+          "required": true
+        }
+      },
+      "parameter_schema_structure": {
+        "model": {
+          "type": "string"
+        },
+        "temperature": {
+          "type": "float",
+          "min": 0.0,
+          "max": 1.0
+        },
+        "max_tokens": {
+          "type": "int"
+        },
+        "wrapper_prompt": {
+          "type": "string"
+        }
+      },
+      "parameters": {
+        "model": "llama-3.3-70b",
+        "temperature": 0.7,
+        "max_tokens": 1000,
+        "wrapper_prompt": ""
+      },
+      "processing_message": "AI is generating response...",
+      "tags": ["ai", "llm", "text-generation"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "fixed"
+        },
+        "output_schema": {
+          "access": "fixed"
+        },
+        "parameters.model": {
+          "access": "fixed"
+        },
+        "parameters.temperature": {
+          "access": "edit"
+        },
+        "parameters.max_tokens": {
+          "access": "edit"
+        },
+        "parameters.wrapper_prompt": {
+          "access": "edit"
+        },
+        "parameters.api_key": {
+          "access": "hidden"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": null,
+      "flow_control": null
+    },
+    "llm_structured": {
+      "type": "llm_structured",
+      "element_id": null,
+      "name": null,
+      "node_description": "Generates structured data according to a schema using a language model",
+      "description": null,
+      "input_schema": {
+        "prompt": {
+          "type": "string",
+          "description": "The prompt for the LLM",
+          "required": true
+        },
+        "context": {
+          "type": "list",
+          "description": "Previous conversation context",
+          "required": false
+        },
+        "additional_data": {
+          "type": "json",
+          "description": "Additional data for the LLM",
+          "required": false
+        }
+      },
+      "output_schema": {},
+      "parameter_schema_structure": {
+        "model": {
+          "type": "string"
+        },
+        "temperature": {
+          "type": "float",
+          "min": 0.0,
+          "max": 1.0
+        },
+        "max_tokens": {
+          "type": "int"
+        },
+        "wrapper_prompt": {
+          "type": "string"
+        },
+        "llm_hidden_prompt": {
+          "type": "string"
+        }
+      },
+      "parameters": {
+        "model": "llama-3.3-70b",
+        "temperature": 0.3,
+        "max_tokens": 1000,
+        "wrapper_prompt": "",
+        "llm_hidden_prompt": ""
+      },
+      "processing_message": "AI is generating structured response...",
+      "tags": ["ai", "llm", "structured-output"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "fixed"
+        },
+        "output_schema": {
+          "access": "edit"
+        },
+        "parameters.model": {
+          "access": "fixed"
+        },
+        "parameters.temperature": {
+          "access": "edit"
+        },
+        "parameters.max_tokens": {
+          "access": "edit"
+        },
+        "parameters.wrapper_prompt": {
+          "access": "edit"
+        },
+        "parameters.llm_hidden_prompt": {
+          "access": "hidden"
+        },
+        "parameters.api_key": {
+          "access": "hidden"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": null,
+      "flow_control": null
+    }
+  },
+  "blockchain_elements": {
+    "read_blockchain_data": {
+      "type": "read_blockchain_data",
+      "element_id": null,
+      "name": null,
+      "node_description": "Reads data from the blockchain by calling smart contract functions",
+      "description": null,
+      "input_schema": {},
+      "output_schema": {
+        "data": {
+          "type": "any",
+          "description": "The response from the blockchain function call",
+          "required": true
+        }
+      },
+      "parameter_schema_structure": {
+        "node_url": {
+          "type": "string"
+        },
+        "contract_address": {
+          "type": "string"
+        },
+        "function_name": {
+          "type": "string"
+        },
+        "function_args": {
+          "type": "list"
+        }
+      },
+      "parameters": {
+        "node_url": "",
+        "contract_address": "",
+        "function_name": "",
+        "function_args": []
+      },
+      "processing_message": "Reading blockchain data...",
+      "tags": ["blockchain", "read"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "edit"
+        },
+        "output_schema": {
+          "access": "fixed"
+        },
+        "parameters.node_url": {
+          "access": "edit"
+        },
+        "parameters.contract_address": {
+          "access": "edit"
+        },
+        "parameters.function_name": {
+          "access": "edit"
+        },
+        "parameters.function_args": {
+          "access": "edit"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": null,
+      "flow_control": null
+    },
+    "build_transaction_json": {
+      "type": "build_transaction_json",
+      "element_id": null,
+      "name": null,
+      "node_description": "Creates a transaction payload for blockchain interaction",
+      "description": null,
+      "input_schema": {},
+      "output_schema": {
+        "transaction_json": {
+          "type": "json",
+          "description": "The transaction payload",
+          "required": true
+        }
+      },
+      "parameter_schema_structure": {
+        "node_url": {
+          "type": "string"
+        },
+        "contract_address": {
+          "type": "string"
+        },
+        "function_name": {
+          "type": "string"
+        },
+        "function_args": {
+          "type": "list"
+        }
+      },
+      "parameters": {
+        "node_url": "",
+        "contract_address": "",
+        "function_name": "",
+        "function_args": []
+      },
+      "processing_message": "Building transaction...",
+      "tags": ["blockchain", "transaction"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "edit"
+        },
+        "output_schema": {
+          "access": "fixed"
+        },
+        "parameters.node_url": {
+          "access": "edit"
+        },
+        "parameters.contract_address": {
+          "access": "edit"
+        },
+        "parameters.function_name": {
+          "access": "edit"
+        },
+        "parameters.function_args": {
+          "access": "edit"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": null,
+      "flow_control": null
+    }
+  },
+  "custom_element": {
+    "custom": {
+      "type": "custom",
+      "element_id": null,
+      "name": null,
+      "node_description": "Executes custom Python code with security restrictions",
+      "description": null,
+      "input_schema": {},
+      "output_schema": {},
+      "parameter_schema_structure": {
+        "hyperparameters": {
+          "type": "json"
+        },
+        "constants": {
+          "type": "json"
+        }
+      },
+      "parameters": {
+        "hyperparameters": {},
+        "constants": {}
+      },
+      "processing_message": "Executing custom code...",
+      "tags": ["custom", "code"],
+      "layer": null,
+      "hyperparameters": {
+        "type": {
+          "access": "fixed"
+        },
+        "element_id": {
+          "access": "fixed"
+        },
+        "name": {
+          "access": "edit"
+        },
+        "description": {
+          "access": "edit"
+        },
+        "input_schema": {
+          "access": "edit"
+        },
+        "output_schema": {
+          "access": "edit"
+        },
+        "code": {
+          "access": "edit"
+        },
+        "parameters.hyperparameters": {
+          "access": "edit"
+        },
+        "parameters.constants": {
+          "access": "edit"
+        },
+        "processing_message": {
+          "access": "edit"
+        },
+        "tags": {
+          "access": "append"
+        },
+        "layer": {
+          "access": "edit"
+        }
+      },
+      "input": null,
+      "output": null,
+      "code": "",
+      "flow_control": null
+    }
+  }
+}
