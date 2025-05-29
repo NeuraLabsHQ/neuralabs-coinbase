@@ -1,16 +1,15 @@
 /* Completion Section Styles */
 .completion-section {
-  margin-top: 2rem;
-  padding: 0 1rem;
+  width: 100%;
 }
 
 .completion-card {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  border-radius: 16px;
-  padding: 2rem;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  backdrop-filter: none;
+  box-shadow: none;
 }
 
 .completion-header {
@@ -41,15 +40,10 @@
 }
 
 .completion-details {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
-}
-
-@media (min-width: 768px) {
-  .completion-details {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  width: 100%;
 }
 
 .detail-group {
@@ -58,6 +52,7 @@
   border-radius: 12px;
   padding: 1.5rem;
   transition: all 0.3s ease;
+  width: 100%;
 }
 
 .detail-group:hover {

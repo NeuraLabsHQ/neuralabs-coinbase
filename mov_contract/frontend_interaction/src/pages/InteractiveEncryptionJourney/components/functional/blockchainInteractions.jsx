@@ -186,6 +186,9 @@ export const useBlockchainInteractions = ({
       if (!journeyData.selectedNFT) {
         throw new Error('Please select an NFT first to use as encryption policy.')
       }
+
+      // Add 3-second delay to show the encryption animation
+      await new Promise(resolve => setTimeout(resolve, 3000))
       
       // Convert file to Uint8Array (similar to working EncryptSection)
       const arrayBuffer = await file.arrayBuffer()

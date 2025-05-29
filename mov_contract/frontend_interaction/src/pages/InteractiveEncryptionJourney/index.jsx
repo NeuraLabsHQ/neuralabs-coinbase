@@ -85,32 +85,40 @@ const InteractiveEncryptionJourney = ({ config }) => {
             renderStepIcon={renderStepIcon}
           />
 
-          <AnimationSection 
-            animationPhase={animationPhase}
-            renderAnimation={renderAnimation}
-          />
+          {/* Conditional layout based on completion status */}
+          {journeyData.walrusBlobId ? (
+            // Show completion details in combined center+right area when upload is complete
+            <div className="completion-area">
+              <CompletionSection 
+                journeyData={journeyData}
+                config={config}
+              />
+            </div>
+          ) : (
+            // Show normal animation and action sections during journey
+            <>
+              <AnimationSection 
+                animationPhase={animationPhase}
+                renderAnimation={renderAnimation}
+              />
 
-          <ActionSection 
-            currentStep={currentStep}
-            steps={INTERACTIVE_JOURNEY_STEPS}
-            journeyData={journeyData}
-            isProcessing={isProcessing}
-            account={account}
-            setCurrentStep={setCurrentStep}
-            selectNFT={selectNFT}
-            createSessionKey={createSessionKey}
-            selectFile={selectFile}
-            mockEncrypt={mockEncrypt}
-            mockUploadToWalrus={mockUploadToWalrus}
-            initializeSeal={initializeSeal}
-          />
+              <ActionSection 
+                currentStep={currentStep}
+                steps={INTERACTIVE_JOURNEY_STEPS}
+                journeyData={journeyData}
+                isProcessing={isProcessing}
+                account={account}
+                setCurrentStep={setCurrentStep}
+                selectNFT={selectNFT}
+                createSessionKey={createSessionKey}
+                selectFile={selectFile}
+                mockEncrypt={mockEncrypt}
+                mockUploadToWalrus={mockUploadToWalrus}
+                initializeSeal={initializeSeal}
+              />
+            </>
+          )}
         </div>
-
-        {/* Completion Section - Shows after successful upload */}
-        <CompletionSection 
-          journeyData={journeyData}
-          config={config}
-        />
       </div>
 
       <BackgroundEffects />

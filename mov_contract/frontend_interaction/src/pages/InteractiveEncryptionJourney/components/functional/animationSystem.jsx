@@ -733,7 +733,7 @@ export const useAnimationSystem = () => {
                         repeat: Infinity
                       }}
                     >
-                      🐋
+                      💾
                     </motion.div>
                   )
                 })}
@@ -752,7 +752,7 @@ export const useAnimationSystem = () => {
               animate={{ scale: 1, y: 0 }}
               transition={{ duration: 0.6, ease: "backOut" }}
             >
-              🐋 STORED ON WALRUS
+              💾 STORED ON WALRUS
             </motion.div>
           </motion.div>
         )
