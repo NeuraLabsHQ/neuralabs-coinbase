@@ -1,0 +1,61 @@
+type: build_transaction_json
+element_id: null
+name: null
+node_description: Creates a transaction payload for blockchain interaction
+description: null
+input_schema: {}
+output_schema:
+  transaction_json:
+    type: json
+    description: The transaction payload
+    required: true
+parameter_schema_structure:
+  node_url:
+    type: string
+  contract_address:
+    type: string
+  function_name:
+    type: string
+  function_args:
+    type: list
+parameters:
+  node_url: ""
+  contract_address: ""
+  function_name: ""
+  function_args: []
+processing_message: Building transaction...
+tags:
+  - blockchain
+  - transaction
+layer: null
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: edit
+  output_schema:
+    access: fixed
+  parameters.node_url:
+    access: edit
+  parameters.contract_address:
+    access: edit
+  parameters.function_name:
+    access: edit
+  parameters.function_args:
+    access: edit
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit
+input: null
+output: null
+code: null
+flow_control: null

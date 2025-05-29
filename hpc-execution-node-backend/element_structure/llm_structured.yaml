@@ -1,0 +1,79 @@
+type: llm_structured
+element_id: null
+name: null
+node_description: Generates structured data according to a schema using a language model
+description: null
+input_schema:
+  prompt:
+    type: string
+    description: The prompt for the LLM
+    required: true
+  context:
+    type: list
+    description: Previous conversation context
+    required: false
+  additional_data:
+    type: json
+    description: Additional data for the LLM
+    required: false
+output_schema: {}
+parameter_schema_structure:
+  model:
+    type: string
+  temperature:
+    type: float
+    min: 0.0
+    max: 1.0
+  max_tokens:
+    type: int
+  wrapper_prompt:
+    type: string
+  llm_hidden_prompt:
+    type: string
+parameters:
+  model: llama-3.3-70b
+  temperature: 0.3
+  max_tokens: 1000
+  wrapper_prompt: ""
+  llm_hidden_prompt: ""
+processing_message: AI is generating structured response...
+tags:
+  - ai
+  - llm
+  - structured-output
+layer: null
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: edit
+  parameters.model:
+    access: fixed
+  parameters.temperature:
+    access: edit
+  parameters.max_tokens:
+    access: edit
+  parameters.wrapper_prompt:
+    access: edit
+  parameters.llm_hidden_prompt:
+    access: hidden
+  parameters.api_key:
+    access: hidden
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit
+input: null
+output: null
+code: null
+flow_control: null
