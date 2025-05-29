@@ -84,7 +84,10 @@ services:
       - "6379:6379"
     volumes:
       - ./database/data/redis_data:/data
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes"]
+    # This ${REDIS_PASSWORD} is evaluated by docker-compose, NOT inside the container
+    # command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes"]
+    # Use sh -c to evaluate the variable inside the container
+    command: sh -c 'redis-server --requirepass "$$REDIS_PASSWORD" --appendonly yes'
     networks:
       - neuralabs_sui_network
     restart: unless-stopped
