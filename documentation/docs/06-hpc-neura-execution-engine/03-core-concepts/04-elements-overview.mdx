@@ -26,7 +26,142 @@ This page provides a deep dive into element structure and properties. For an ove
 Every element consists of multiple properties that define its behavior, constraints, and customization options. Understanding these properties is crucial for both L1 developers creating elements and L2 developers using them.
 
 <Tabs>
-  <TabItem value="structure" label="Element Structure" default>
+  <TabItem value="table" label="Element Table" default>
+    <Card>
+      <CardHeader>
+        <CardTitle>Element Components Reference</CardTitle>
+        <CardDescription>Complete list of all element properties and their descriptions</CardDescription>
+      </CardHeader>
+      <div style={{ padding: '1rem' }}>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Type</th>
+              <th>Description</th>
+              <th>Defined By</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>type</code></td>
+              <td>string</td>
+              <td>Element category identifier (e.g., llm_text, selector, case, custom)</td>
+              <td>L1 Developer</td>
+            </tr>
+            <tr>
+              <td><code>element_id</code></td>
+              <td>string</td>
+              <td>Unique identifier for the node instance in a flow</td>
+              <td>Auto-generated</td>
+            </tr>
+            <tr>
+              <td><code>name</code></td>
+              <td>string</td>
+              <td>Human-readable name for the node instance</td>
+              <td>L2 Developer</td>
+            </tr>
+            <tr>
+              <td><code>node_description</code></td>
+              <td>string</td>
+              <td>Base description of what the element type does</td>
+              <td>L1 Developer</td>
+            </tr>
+            <tr>
+              <td><code>description</code></td>
+              <td>string</td>
+              <td>Custom description for the specific node instance</td>
+              <td>L2 Developer</td>
+            </tr>
+            <tr>
+              <td><code>input_schema</code></td>
+              <td>object</td>
+              <td>Defines expected input structure with types, requirements, and constraints</td>
+              <td>L1 Developer</td>
+            </tr>
+            <tr>
+              <td><code>output_schema</code></td>
+              <td>object</td>
+              <td>Defines the structure of data produced by the element</td>
+              <td>L1 Developer</td>
+            </tr>
+            <tr>
+              <td><code>parameter_schema_structure</code></td>
+              <td>object</td>
+              <td>Defines valid parameter configurations and their constraints</td>
+              <td>L1 Developer</td>
+            </tr>
+            <tr>
+              <td><code>parameters</code></td>
+              <td>object</td>
+              <td>Actual configuration values for the element</td>
+              <td>L1/L2 Developer</td>
+            </tr>
+            <tr>
+              <td><code>processing_message</code></td>
+              <td>string</td>
+              <td>Message displayed during node execution</td>
+              <td>L1/L2 Developer</td>
+            </tr>
+            <tr>
+              <td><code>tags</code></td>
+              <td>array</td>
+              <td>Organizational tags for categorization and search</td>
+              <td>L1/L2 Developer</td>
+            </tr>
+            <tr>
+              <td><code>layer</code></td>
+              <td>string</td>
+              <td>Logical grouping layer for visual organization</td>
+              <td>L2 Developer</td>
+            </tr>
+            <tr>
+              <td><code>code</code></td>
+              <td>string</td>
+              <td>Python code for custom logic (custom elements only)</td>
+              <td>L1/L2 Developer</td>
+            </tr>
+            <tr>
+              <td><code>flow_control</code></td>
+              <td>object</td>
+              <td>Branching logic configuration (case/flow_select elements only)</td>
+              <td>L1/L2 Developer</td>
+            </tr>
+            <tr>
+              <td><code>hyperparameters</code></td>
+              <td>object</td>
+              <td>Access control configuration for each property</td>
+              <td>L1 Developer</td>
+            </tr>
+            <tr>
+              <td><code>input</code></td>
+              <td>object</td>
+              <td>Runtime input values provided during execution</td>
+              <td>L3 User/L4 Runtime</td>
+            </tr>
+            <tr>
+              <td><code>output</code></td>
+              <td>object</td>
+              <td>Runtime output values produced after execution</td>
+              <td>L4 Runtime</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <Callout type="info" style={{ marginTop: '1.5rem' }}>
+          <strong>Access Levels in Hyperparameters:</strong>
+          <ul style={{ marginTop: '0.5rem', marginBottom: 0 }}>
+            <li><code>fixed</code> - Cannot be modified by L2 developers</li>
+            <li><code>edit</code> - Full control for L2 developers</li>
+            <li><code>append</code> - L2 can add but not remove (e.g., tags)</li>
+            <li><code>hidden</code> - Present but not visible to L2/L3 users</li>
+          </ul>
+        </Callout>
+      </div>
+    </Card>
+  </TabItem>
+  
+  <TabItem value="structure" label="Element Structure">
     <Card>
       <CardHeader>
         <CardTitle>Complete Element Structure</CardTitle>
