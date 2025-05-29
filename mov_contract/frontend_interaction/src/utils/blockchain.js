@@ -177,12 +177,50 @@ export const downloadFromWalrus = async (blobId) => {
   return _downloadFromWalrus(config.WALRUS_AGGREGATOR, blobId)
 }
 
-// Re-export exchange functions
-export {
-  getSuiBalance as getSUIBalance,
-  getWalBalance as getWALBalance,
-  convertSuiToWal as convertSUIToWAL
+// Import exchange functions
+import {
+  getSuiBalance as _getSuiBalance,
+  getWalBalance as _getWalBalance,
+  convertSuiToWal as _convertSuiToWal,
+  formatBalance
 } from '../blockchain_module/exchange/index.ts'
+
+// Wrap exchange functions to provide client
+export const getSUIBalance = async (address) => {
+  const client = window.suiClient
+  if (!client) {
+    throw new Error('SUI client not initialized')
+  }
+  const balance = await _getSuiBalance(client, address)
+  // Return formatted balance string for backward compatibility
+  return formatBalance(balance.totalBalance, 9)
+}
+
+export const getWALBalance = async (address) => {
+  const client = window.suiClient
+  if (!client) {
+    throw new Error('SUI client not initialized')
+  }
+  const balance = await _getWalBalance(client, address)
+  // Return formatted balance string for backward compatibility
+  return formatBalance(balance.totalBalance, 9)
+}
+
+export const convertSUIToWAL = async (params) => {
+  const client = params.client || window.suiClient
+  const signAndExecute = params.signAndExecute || window.signAndExecute
+  const config = params.config || window.config
+  const currentAccount = params.currentAccount || window.currentAccount
+  
+  if (!client || !signAndExecute || !config || !currentAccount) {
+    throw new Error('Blockchain services not initialized')
+  }
+  
+  return _convertSuiToWal(client, config, currentAccount, signAndExecute, {
+    amount: params.amount,
+    exchangeConfig: params.exchangeConfig
+  })
+}
 
 // Re-export transaction proposer functions
 export { createTransaction } from '../blockchain_module/transaction-proposer/index.ts'
