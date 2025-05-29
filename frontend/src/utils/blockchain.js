@@ -5,16 +5,16 @@
 import { useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
 
 // Re-export contract functions
-export { getContractInfo } from '../blockchain_module/contracts/index.ts'
+export { getContractInfo } from '../lib/blockchain_module/contracts/index.ts'
 
 // Re-export NFT functions with wrappers
 export { 
   getUserNFTs, 
   getTotalNFTCount 
-} from '../blockchain_module/nfts/index.ts'
+} from '../lib/blockchain_module/nfts/index.ts'
 
 // Import NFT creation function
-import { mintNFT as _mintNFT } from '../blockchain_module/nfts/index.ts'
+import { mintNFT as _mintNFT } from '../lib/blockchain_module/nfts/index.ts'
 
 // Wrap mintNFT to handle the client and signAndExecute properly
 export const mintNFT = async (client, config, currentAccount, signAndExecute, params) => {
@@ -28,7 +28,7 @@ import {
   checkUserAccess as _checkUserAccess,
   getUserAccessCaps as _getUserAccessCaps,
   createAccessCap as _createAccessCap
-} from '../blockchain_module/access-management/index.ts'
+} from '../lib/blockchain_module/access-management/index.ts'
 
 // Wrap access functions
 export const grantAccessToUser = async (params) => {
@@ -92,7 +92,7 @@ import {
   decryptData as _decryptData,
   storeEncryptedData as _storeEncryptedData,
   SessionKey
-} from '../blockchain_module/seal-encryption/index.ts'
+} from '../lib/blockchain_module/seal-encryption/index.ts'
 
 // Wrap Seal functions
 export const initializeSealClient = (suiClient) => {
@@ -142,7 +142,7 @@ export const fetchDecryptionKeys = async ({ ids, tx, sessionKey, threshold, clie
 import {
   uploadToWalrus as _uploadToWalrus,
   downloadFromWalrus as _downloadFromWalrus
-} from '../blockchain_module/walrus/index.ts'
+} from '../lib/blockchain_module/walrus/index.ts'
 
 // Wrap Walrus functions with proper configuration
 export const uploadToWalrus = async (data) => {
@@ -183,7 +183,7 @@ import {
   getWalBalance as _getWalBalance,
   convertSuiToWal as _convertSuiToWal,
   formatBalance
-} from '../blockchain_module/exchange/index.ts'
+} from '../lib/blockchain_module/exchange/index.ts'
 
 // Wrap exchange functions to provide client
 export const getSUIBalance = async (address) => {
@@ -196,12 +196,12 @@ export const getSUIBalance = async (address) => {
   return formatBalance(balance.totalBalance, 9)
 }
 
-export const getWALBalance = async (address, walCoinType) => {
+export const getWALBalance = async (address) => {
   const client = window.suiClient
   if (!client) {
     throw new Error('SUI client not initialized')
   }
-  const balance = await _getWalBalance(client, address, walCoinType)
+  const balance = await _getWalBalance(client, address)
   // Return formatted balance string for backward compatibility
   return formatBalance(balance.totalBalance, 9)
 }
@@ -216,21 +216,17 @@ export const convertSUIToWAL = async (params) => {
     throw new Error('Blockchain services not initialized')
   }
   
-  // Convert amount to bigint (assuming it's in SUI units)
-  const amountInMist = BigInt(Math.floor(params.amount * 1000000000)) // Convert SUI to MIST (9 decimals)
-  
-  return _convertSuiToWal(client, currentAccount, signAndExecute, {
-    amount: amountInMist,
-    slippageTolerance: params.slippageTolerance || 0.5,
+  return _convertSuiToWal(client, config, currentAccount, signAndExecute, {
+    amount: params.amount,
     exchangeConfig: params.exchangeConfig
   })
 }
 
 // Re-export transaction proposer functions
-export { createTransaction } from '../blockchain_module/transaction-proposer/index.ts'
+export { createTransaction } from '../lib/blockchain_module/transaction-proposer/index.ts'
 
 // Re-export constants
-export { ACCESS_LEVELS } from '../blockchain_module/utils/constants.ts'
+export { ACCESS_LEVELS } from '../lib/blockchain_module/utils/constants.ts'
 
 // Set up global references for easy access
 if (typeof window !== 'undefined') {

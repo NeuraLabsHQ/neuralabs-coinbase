@@ -28,7 +28,7 @@ function SUIToWALConverter({ config }) {
   // Exchange contract configuration (from the transaction sample)
   const EXCHANGE_CONFIG = {
     PACKAGE_ID: '0x82593828ed3fcb8c6a235eac9abd0adbe9c5f9bbffa9b1e7a45cdd884481ef9f',
-    SHARED_OBJECT_ID: '0x83b454e524c71f30803f4d6c302a86fb6a39e96cdfb873c2d1e93bc1c26a3bc5',
+    SHARED_OBJECT_ID: '0x8d63209cf8589ce7aef8f262437163c67577ed09f3e636a9d8e0813843fb8bf1',
     INITIAL_SHARED_VERSION: '400185628'
   }
 
