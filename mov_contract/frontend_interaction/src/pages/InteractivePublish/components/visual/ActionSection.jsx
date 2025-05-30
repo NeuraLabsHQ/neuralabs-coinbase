@@ -29,27 +29,39 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
       journeyData.nftName = nftName
       journeyData.nftDescription = nftDescription
     } else if (step.id === 'signature') {
-      // Special handling for Digital Signature - sign after session key creation
+      // Create session key first
       onAction()
       
+      // Then prompt for signature after a short delay
       setTimeout(() => {
         if (journeyData.sessionKeyObject && journeyData.sessionKeyMessage) {
+          toast.loading('Please sign the message in your wallet...')
           signPersonalMessage(
             {
               message: journeyData.sessionKeyMessage,
             },
             {
               onSuccess: async (result) => {
-                await journeyData.sessionKeyObject.setPersonalMessageSignature(result.signature)
-                toast.success('Digital signature created successfully!')
+                try {
+                  await journeyData.sessionKeyObject.setPersonalMessageSignature(result.signature)
+                  toast.success('Digital signature created successfully!')
+                  // Update the display after successful signing
+                  journeyData.sessionKey = `sk_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 9)}`
+                } catch (error) {
+                  toast.error('Failed to set signature')
+                }
               },
               onError: (error) => {
-                toast.error(`Failed to sign: ${error.message}`)
+                if (error.message?.includes('rejected')) {
+                  toast.error('Signature rejected by user')
+                } else {
+                  toast.error(`Failed to sign: ${error.message}`)
+                }
               },
             }
           )
         }
-      }, 100)
+      }, 500)
       return
     }
     onAction()
@@ -82,7 +94,7 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
         return (
           <div className="action-content">
             {journeyData.walletConnected ? (
-              <div className="status-info">
+              <div className="status-message status-success">
                 <div className="detail-item">
                   <span className="detail-label">Connected Wallet</span>
                   <span className="detail-value">{journeyData.walletAddress?.slice(0, 10)}...{journeyData.walletAddress?.slice(-8)}</span>
@@ -99,7 +111,7 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
           <div className="action-content">
             {journeyData.suiBalance !== null && journeyData.walBalance !== null ? (
               <div className="balance-info">
-                <div className="status-info">
+                <div className="status-message status-success">
                   <div className="detail-item">
                     <span className="detail-label">SUI Balance</span>
                     <span className="detail-value">{(Number(journeyData.suiBalance) / 1e9).toFixed(4)} SUI</span>
@@ -120,7 +132,7 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
         return (
           <div className="action-content">
             {journeyData.nftId ? (
-              <div className="status-info">
+              <div className="status-message status-success">
                 <div className="detail-item">
                   <span className="detail-label">NFT Created</span>
                   <span className="detail-value">{journeyData.nftId.slice(0, 12)}...</span>
@@ -157,7 +169,7 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
         return (
           <div className="action-content">
             {journeyData.accessCapId ? (
-              <div className="status-info">
+              <div className="status-message status-success">
                 <div className="detail-item">
                   <span className="detail-label">Access Capability</span>
                   <span className="detail-value">Created successfully</span>
@@ -173,7 +185,7 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
         return (
           <div className="action-content">
             {journeyData.completedSteps?.includes(4) ? (
-              <div className="status-info">
+              <div className="status-message status-success">
                 <div className="detail-item">
                   <span className="detail-label">Access Granted</span>
                   <span className="detail-value">Level 6 permissions</span>
@@ -189,7 +201,7 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
         return (
           <div className="action-content">
             {journeyData.accessLevel !== null ? (
-              <div className="status-info">
+              <div className="status-message status-success">
                 <div className="detail-item">
                   <span className="detail-label">Access Level</span>
                   <span className="detail-value">
@@ -209,7 +221,7 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
         return (
           <div className="action-content">
             {journeyData.sealClient ? (
-              <div className="status-info">
+              <div className="status-message status-success">
                 <div className="detail-item">
                   <span className="detail-label">Seal Protocol</span>
                   <span className="detail-value">3-of-5 threshold ready</span>
@@ -225,7 +237,7 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
         return (
           <div className="action-content">
             {journeyData.selectedFile ? (
-              <div className="status-info">
+              <div className="status-message status-success">
                 <div className="detail-item">
                   <span className="detail-label">Selected File</span>
                   <span className="detail-value">{journeyData.selectedFile.name}</span>
@@ -265,7 +277,7 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
         return (
           <div className="action-content">
             {journeyData.sessionKey ? (
-              <div className="status-info">
+              <div className="status-message status-success">
                 <div className="detail-item">
                   <span className="detail-label">Session Key</span>
                   <span className="detail-value">{journeyData.sessionKey.slice(0, 16)}...{journeyData.sessionKey.slice(-8)}</span>
@@ -281,7 +293,7 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
         return (
           <div className="action-content">
             {journeyData.encryptedData ? (
-              <div className="status-info">
+              <div className="status-message status-success">
                 <div className="detail-item">
                   <span className="detail-label">Encryption</span>
                   <span className="detail-value">File encrypted successfully</span>
@@ -297,7 +309,7 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
         return (
           <div className="action-content">
             {journeyData.walrusBlobId ? (
-              <div className="status-info">
+              <div className="status-message status-success">
                 <div className="detail-item">
                   <span className="detail-label">Storage</span>
                   <span className="detail-value">Published to Walrus</span>

@@ -8,6 +8,7 @@ import { motion } from 'framer-motion'
 // Import animation components from Interactive Encryption Journey
 import WalletConnectedAnimation from '../../../InteractiveEncryptionJourney/components/animations/WalletConnectedAnimation'
 import NFTCreationAnimation from '../../../InteractiveEncryptionJourney/components/animations/NFTCreationAnimation'
+import NFTScanAnimation from '../../../InteractiveEncryptionJourney/components/animations/NFTScanAnimation'
 import AccessCapabilityAnimation from '../../../InteractiveEncryptionJourney/components/animations/AccessCapabilityAnimation'
 import GrantAccessAnimation from '../../../InteractiveEncryptionJourney/components/animations/GrantAccessAnimation'
 import AccessVerificationAnimation from '../../../InteractiveEncryptionJourney/components/animations/AccessVerificationAnimation'
@@ -114,7 +115,7 @@ export const useAnimationSystem = () => {
         
 
       case 'nft-creating':
-        return <NFTCreationAnimation />
+        return <NFTScanAnimation />
 
       case 'access-cap-creating':
         return <AccessCapabilityAnimation />

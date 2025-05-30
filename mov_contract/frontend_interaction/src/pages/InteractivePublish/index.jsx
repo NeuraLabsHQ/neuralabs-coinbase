@@ -99,6 +99,9 @@ const InteractivePublish = ({ config }) => {
     }
     setAnimationPhase(animationPhases[step.action] || 'processing')
     
+    // Add 3-second delay for animations
+    await new Promise(resolve => setTimeout(resolve, 3000))
+    
     try {
       const result = await action(journeyData, updateJourneyData, config)
       console.log('Action result:', result)
