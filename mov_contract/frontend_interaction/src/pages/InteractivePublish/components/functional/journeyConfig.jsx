@@ -81,10 +81,10 @@ export const INTERACTIVE_PUBLISH_STEPS = [
   {
     id: 'signature',
     title: 'Digital Signature',
-    subtitle: 'Elliptic curve cryptography',
+    subtitle: 'Shamir\'s secret sharing',
     icon: 'signature',
-    completed: (data) => !!data.sessionKey,
-    detail: (data) => data.sessionKey ? `${data.sessionKey.slice(0, 16)}...${data.sessionKey.slice(-8)}` : '',
+    completed: (data) => !!data.sessionKey && (data.sessionKeySigned || data.signatureCompleted),
+    detail: (data) => data.sessionKey && data.sessionKeySigned ? 'Threshold signature created' : data.sessionKey ? 'Awaiting signature...' : '',
     action: 'createSessionKey',
   },
   {

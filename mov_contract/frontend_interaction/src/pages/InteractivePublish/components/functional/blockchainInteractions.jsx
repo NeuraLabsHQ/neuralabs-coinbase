@@ -399,19 +399,31 @@ export const journeyActions = {
       // Get the personal message that needs to be signed
       const messageBytes = sessionKey.getPersonalMessage();
       console.log('Session key created, needs signature for message:', messageBytes);
+      console.log('Session key object:', sessionKey);
+      console.log('Message type:', typeof messageBytes);
+      console.log('Message value:', messageBytes);
       
-      // Store both the session key object and a display string
-      // The actual signing will happen in the UI component
+      // Store the session key temporarily
       const displayString = `sk_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 9)}`;
       
+      // Store session key data immediately
       updateState({
         sessionKey: displayString,
-        sessionKeyObject: sessionKey, // Store the actual object for encryption
-        sessionKeyMessage: messageBytes, // Store the message to be signed
+        sessionKeyObject: sessionKey,
+        sessionKeyMessage: messageBytes,
+        sessionKeyNeedsSignature: true, // Flag to indicate signature is needed
         loading: false,
       });
       
-      return { success: true };
+      console.log('Session key stored, signature needed');
+      
+      // Return success but indicate signature is still needed
+      return { 
+        success: true, 
+        needsSignature: true,
+        sessionKey: sessionKey,
+        message: messageBytes
+      };
     } catch (error) {
       console.error('Error creating session key:', error);
       updateState({ error: error.message, loading: false });

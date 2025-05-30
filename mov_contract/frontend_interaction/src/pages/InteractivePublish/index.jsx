@@ -108,18 +108,36 @@ const InteractivePublish = ({ config }) => {
       
       if (result.success) {
         console.log('Action succeeded for step:', currentStep)
-        markStepComplete(currentStep)
         
-        // Update completed steps in journeyData
-        const newCompletedSteps = [...(journeyData.completedSteps || []), currentStep]
-        updateJourneyData({ completedSteps: newCompletedSteps })
-        
-        setAnimationPhase('completed')
-        
-        // Don't auto-advance - wait for user to click continue
-        setTimeout(() => {
-          setAnimationPhase('step-completed')
-        }, 1500)
+        // Special handling for signature step
+        if (step.action === 'createSessionKey' && result.needsSignature) {
+          console.log('Session key created, now requesting signature...')
+          
+          // Trigger the signature request
+          setTimeout(() => {
+            const signButton = document.getElementById('trigger-signature-btn')
+            if (signButton) {
+              signButton.click()
+            }
+          }, 500)
+          
+          // Don't mark as complete yet - wait for signature
+          setAnimationPhase('awaiting-signature')
+        } else {
+          // Normal completion flow
+          markStepComplete(currentStep)
+          
+          // Update completed steps in journeyData
+          const newCompletedSteps = [...(journeyData.completedSteps || []), currentStep]
+          updateJourneyData({ completedSteps: newCompletedSteps })
+          
+          setAnimationPhase('completed')
+          
+          // Don't auto-advance - wait for user to click continue
+          setTimeout(() => {
+            setAnimationPhase('step-completed')
+          }, 1500)
+        }
       } else {
         console.log('Action failed with result:', result)
         setAnimationPhase('idle')
@@ -204,6 +222,7 @@ const InteractivePublish = ({ config }) => {
                 animationPhase={animationPhase}
                 onAction={handleStepAction}
                 onContinue={handleContinueToNext}
+                setAnimationPhase={setAnimationPhase}
               />
             </div>
           )}

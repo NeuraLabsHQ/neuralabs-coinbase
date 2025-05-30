@@ -36,6 +36,7 @@ import WalrusIcon from '../../../InteractiveEncryptionJourney/components/animati
 import EllipticCurveAnimation from '../../../InteractiveEncryptionJourney/components/animations/EllipticCurveAnimation.svg'
 import WalrusUploadAnimation from '../../../InteractiveEncryptionJourney/components/animations/WalrusUploadAnimation.svg'
 import NetworkIdleAnimation from '../../../InteractiveEncryptionJourney/components/animations/NetworkIdleAnimation.svg'
+import SecretShare from '../../../InteractiveEncryptionJourney/components/animations/SecretShare.svg'
 
 // Helper component for simple badge animations
 const AnimationBadge = ({ children, className = "" }) => (
@@ -147,11 +148,16 @@ export const useAnimationSystem = () => {
       case 'signing':
         return (
           <motion.div className="animation-scene">
-            <div className="elliptic-curve-container">
-              <img src={EllipticCurveAnimation} alt="Elliptic Curve Animation" width="300" height="300" />
-              <motion.div className="curve-labels">
-                <span className="curve-equation">y² = x³ + ax + b (mod p)</span>
-                <span className="signature-text">ECDSA Signature Generation</span>
+            <div className="shamir-secret-container">
+              <img src={SecretShare} alt="Shamir's Secret Sharing" width="300" height="300" />
+              <motion.div 
+                className="secret-labels"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <span className="secret-equation">Shamir's Secret Sharing</span>
+                <span className="signature-text">Creating 3-of-5 Threshold Signature</span>
               </motion.div>
             </div>
           </motion.div>

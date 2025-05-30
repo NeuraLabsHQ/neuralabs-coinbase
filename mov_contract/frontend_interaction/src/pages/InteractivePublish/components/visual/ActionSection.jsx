@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useSignPersonalMessage } from '@mysten/dapp-kit'
 import toast from 'react-hot-toast'
@@ -8,13 +8,79 @@ import { INTERACTIVE_PUBLISH_STEPS } from '../functional/journeyConfig'
  * Action Section Component
  * Handles user interactions for each step
  */
-const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase, onAction, onContinue }) => {
+const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase, onAction, onContinue, setAnimationPhase }) => {
   const [nftName, setNftName] = useState('')
   const [nftDescription, setNftDescription] = useState('')
   const [selectedFile, setSelectedFile] = useState(null)
   const { mutate: signPersonalMessage } = useSignPersonalMessage()
+  const [isSignatureTriggered, setIsSignatureTriggered] = useState(false)
   
   const step = INTERACTIVE_PUBLISH_STEPS[currentStep]
+  
+  // Effect to handle signature when session key is ready
+  useEffect(() => {
+    if (step.id === 'signature' && 
+        journeyData.sessionKeyNeedsSignature && 
+        journeyData.sessionKeyObject && 
+        journeyData.sessionKeyMessage &&
+        !isSignatureTriggered &&
+        animationPhase === 'awaiting-signature') {
+      
+      console.log('Session key ready, triggering signature...');
+      setIsSignatureTriggered(true);
+      
+      // Show loading toast
+      const loadingToast = toast.loading('Please sign the message in your wallet to enable Shamir\'s Secret Sharing...');
+      
+      // Trigger the wallet signature popup
+      signPersonalMessage(
+        {
+          message: journeyData.sessionKeyMessage,
+        },
+        {
+          onSuccess: async (result) => {
+            try {
+              toast.dismiss(loadingToast);
+              console.log('Signature received:', result.signature);
+              
+              // Set the signature on the session key object
+              await journeyData.sessionKeyObject.setPersonalMessageSignature(result.signature);
+              
+              // Update journey data to indicate signature is complete
+              journeyData.sessionKeySigned = true;
+              journeyData.signatureCompleted = true;
+              journeyData.sessionKeyNeedsSignature = false;
+              
+              toast.success('Digital signature created! Shamir\'s Secret Sharing activated.');
+              
+              // Trigger completion
+              setAnimationPhase('completed');
+              
+              // Mark step as complete after a short delay
+              setTimeout(() => {
+                setAnimationPhase('step-completed');
+              }, 1500);
+            } catch (error) {
+              console.error('Error setting signature:', error);
+              toast.error('Failed to set signature on session key');
+              setIsSignatureTriggered(false); // Allow retry
+            }
+          },
+          onError: (error) => {
+            toast.dismiss(loadingToast);
+            console.error('Signature error:', error);
+            
+            if (error.message?.includes('rejected') || error.message?.includes('cancel')) {
+              toast.error('Signature cancelled. Please click the button to try again.');
+            } else {
+              toast.error(`Signature failed: ${error.message || 'Unknown error'}`);
+            }
+            setIsSignatureTriggered(false); // Allow retry
+          },
+        }
+      );
+    }
+  }, [step.id, journeyData, animationPhase, isSignatureTriggered, signPersonalMessage, setAnimationPhase]);
   
   const handleFileSelect = (e) => {
     const file = e.target.files[0]
@@ -24,47 +90,21 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
     }
   }
   
-  const handleAction = () => {
+  const handleAction = async () => {
     if (step.id === 'mint') {
       journeyData.nftName = nftName
       journeyData.nftDescription = nftDescription
-    } else if (step.id === 'signature') {
-      // Create session key first
       onAction()
-      
-      // Then prompt for signature after a short delay
-      setTimeout(() => {
-        if (journeyData.sessionKeyObject && journeyData.sessionKeyMessage) {
-          toast.loading('Please sign the message in your wallet...')
-          signPersonalMessage(
-            {
-              message: journeyData.sessionKeyMessage,
-            },
-            {
-              onSuccess: async (result) => {
-                try {
-                  await journeyData.sessionKeyObject.setPersonalMessageSignature(result.signature)
-                  toast.success('Digital signature created successfully!')
-                  // Update the display after successful signing
-                  journeyData.sessionKey = `sk_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 9)}`
-                } catch (error) {
-                  toast.error('Failed to set signature')
-                }
-              },
-              onError: (error) => {
-                if (error.message?.includes('rejected')) {
-                  toast.error('Signature rejected by user')
-                } else {
-                  toast.error(`Failed to sign: ${error.message}`)
-                }
-              },
-            }
-          )
-        }
-      }, 500)
-      return
+    } else if (step.id === 'signature') {
+      // For signature step, we need different behavior
+      // Just trigger the action and let the parent handle it
+      console.log('Digital signature step - triggering action');
+      onAction();
+      return;
+    } else {
+      // For all other steps, just call the action
+      onAction()
     }
-    onAction()
   }
   
   const getActionButtonText = () => {
@@ -76,7 +116,10 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
       case 'grant': return 'Grant Access'
       case 'verify': return 'Verify Access'
       case 'seal': return 'Initialize Seal'
-      case 'signature': return 'Create Session Key'
+      case 'signature': 
+        if (animationPhase === 'awaiting-signature') return 'Waiting for Signature...'
+        if (isSignatureTriggered) return 'Check Your Wallet'
+        return 'Create Session Key'
       case 'file': return 'Continue with Selected File'
       case 'encrypt': return 'Encrypt File'
       case 'walrus': return 'Store on Walrus'
