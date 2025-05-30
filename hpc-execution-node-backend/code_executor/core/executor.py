@@ -6,6 +6,7 @@ from uuid import uuid4
 import time
 
 from .element_base import ElementBase
+from .schema import ConnectionType, Connection
 from utils.logger import logger
 from services.streaming import WebSocketStreamManager
 
@@ -13,16 +14,21 @@ class FlowExecutor:
     """Main class for executing flows."""
     
     def __init__(self, elements: Dict[str, ElementBase], 
-                 start_element_id: str, 
+                 start_element_id: str,
+                 connections: List[Connection] = None,
                  stream_manager: Optional[WebSocketStreamManager] = None,
                  config: Dict[str, Any] = None):
         self.elements = elements
         self.start_element_id = start_element_id
+        self.connections = connections or []
         self.output_cache = {}  # Cache for element outputs
         self.execution_order = []  # Tracks execution order
         self.stream_manager = stream_manager
         self.config = config or {}
         self.flow_id = str(uuid4())
+        
+        # Setup connections between elements
+        self._setup_connections()
         
     async def execute_flow(self, initial_inputs: Dict[str, Dict[str, Any]] = None) -> Dict[str, Any]:
         """Execute the entire flow starting from the start element."""
@@ -133,32 +139,18 @@ class FlowExecutor:
             })
             
 
+            # Handle data connections
+            await self._transfer_data(element, outputs)
             
-            for output_mapping in element.output_map:
-                if (output_mapping["dependent_element"] in element.connections 
-                    and output_mapping["output_variable"] in outputs 
-                    and output_mapping["input_variable"] in output_mapping["dependent_element"].input_schema):
-                    
-                    output_mapping["dependent_element"].set_input(
-                        output_mapping["input_variable"], outputs[output_mapping["output_variable"]])
-                    
-                   
-            
-            # for conn in element.connections:
-            #     for output_name, output_value in outputs.items():
-            #         # if output_name in conn.input_schema:
-            #         #     conn.set_input(output_name, output_value)
-            #         if output_name in conn.input_map:
-            #             for input_name in conn.input_map[output_name]:
-            #                 conn.set_input(input_name, output_value)
-
             # If not in backtracking mode and downwards execution is allowed,
-            # continue with downstream elements
-
+            # continue with downstream elements (control flow)
             if not backtracking and element.downwards_execute:
-                for conn in element.connections:
-                    # Execute connected element
-                    await self._execute_element(conn)
+                # Get control flow connections for this element
+                control_connections = self._get_control_connections(element_id)
+                for conn_id in control_connections:
+                    if conn_id in self.elements:
+                        # Execute connected element
+                        await self._execute_element(self.elements[conn_id])
             
             
 
@@ -188,3 +180,71 @@ class FlowExecutor:
             }
             await self.stream_manager.send_message(json.dumps(event))
             logger.debug(f"Streamed event: {event_type}")
+    
+    def _setup_connections(self):
+        """Setup connections between elements based on connection definitions."""
+        for conn in self.connections:
+            from_element = self.elements.get(conn.from_id)
+            to_element = self.elements.get(conn.to_id)
+            
+            if not from_element or not to_element:
+                logger.warning(f"Connection references non-existent element: {conn.from_id} -> {conn.to_id}")
+                continue
+            
+            # Setup control flow connections
+            if conn.connection_type in [ConnectionType.CONTROL, ConnectionType.BOTH]:
+                from_element.connect(to_element)
+            
+            # Setup data mappings
+            if conn.connection_type in [ConnectionType.DATA, ConnectionType.BOTH]:
+                if conn.from_output and conn.to_input:
+                    # Parse the variable references
+                    from_parts = conn.from_output.split(":")
+                    to_parts = conn.to_input.split(":")
+                    
+                    if len(from_parts) == 2 and len(to_parts) == 2:
+                        from_elem_id, from_var = from_parts
+                        to_elem_id, to_var = to_parts
+                        
+                        # Map the output to input
+                        if from_elem_id == conn.from_id and to_elem_id == conn.to_id:
+                            from_element.map_output_to_input(to_element, from_var, to_var)
+    
+    def _get_control_connections(self, element_id: str) -> List[str]:
+        """Get elements connected via control flow from the given element."""
+        connected_elements = []
+        for conn in self.connections:
+            if (conn.from_id == element_id and 
+                conn.connection_type in [ConnectionType.CONTROL, ConnectionType.BOTH]):
+                connected_elements.append(conn.to_id)
+        return connected_elements
+    
+    async def _transfer_data(self, element: ElementBase, outputs: Dict[str, Any]):
+        """Transfer data from element outputs to connected element inputs."""
+        # Use the existing output_map mechanism
+        for output_mapping in element.output_map:
+            if (output_mapping["dependent_element"] in element.connections 
+                and output_mapping["output_variable"] in outputs 
+                and output_mapping["input_variable"] in output_mapping["dependent_element"].input_schema):
+                
+                output_mapping["dependent_element"].set_input(
+                    output_mapping["input_variable"], outputs[output_mapping["output_variable"]])
+        
+        # Also check for data connections in the connections list
+        element_id = element.element_id
+        for conn in self.connections:
+            if (conn.from_id == element_id and 
+                conn.connection_type in [ConnectionType.DATA, ConnectionType.BOTH]):
+                
+                to_element = self.elements.get(conn.to_id)
+                if to_element and conn.from_output and conn.to_input:
+                    # Parse variable references
+                    from_parts = conn.from_output.split(":")
+                    to_parts = conn.to_input.split(":")
+                    
+                    if len(from_parts) == 2 and len(to_parts) == 2:
+                        _, from_var = from_parts
+                        _, to_var = to_parts
+                        
+                        if from_var in outputs:
+                            to_element.set_input(to_var, outputs[from_var])

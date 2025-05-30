@@ -4,38 +4,43 @@ import json
 import asyncio
 import websockets
 import time
-
-
 import sys
 from typing import Dict, Any, List, Optional
 from datetime import datetime
-
-
+import uuid
 
 import nest_asyncio
 nest_asyncio.apply()  # This allows asyncio.run() inside Jupyter
 
 # Load the YAML flow file
-yaml_file_path = "./execution_flows/simple-ai-flow.yaml"  # Update this to your file location
+yaml_file_path = "../code_executor/simple_ai_flow.yaml"  # Update this to your file location
 print(f"Loading flow from {yaml_file_path}...")
 
 with open(yaml_file_path, 'r') as file:
     yaml_data = yaml.safe_load(file)
 
-flow_id = yaml_data.get("flow_id", "flow-" + yaml_file_path.split("/")[-1].split(".")[0])
+# Extract flow_definition from the new structure
+flow_definition = yaml_data.get("flow_definition", {})
+metadata = yaml_data.get("metadata", {})
+
+# Generate flow ID
+flow_id = metadata.get("flow_name", "flow-" + yaml_file_path.split("/")[-1].split(".")[0]).replace(" ", "-").lower()
 print(f"Flow ID: {flow_id}")
 
-websocket_url = "ws://localhost:8000/ws/flow/" + flow_id
-print(f"WebSocket URL: {websocket_url}")
+# Prepare the flow data in the format expected by the backend
+flow_data = {
+    "flow_id": flow_id,
+    "flow_definition": flow_definition,
+    "initial_inputs": {
+        "start_node": {
+            "prompt": "What is artificial intelligence and how does it work?",
+            "context_history": ["Previous conversation about machine learning", "Discussion about neural networks"]
+        }
+    }
+}
 
-import asyncio
-import websockets
-import json
-import yaml
-import sys
-from typing import Dict, Any, List, Optional
-from datetime import datetime
-import uuid
+websocket_url = "ws://localhost:8000/ws/execute/" + flow_id
+print(f"WebSocket URL: {websocket_url}")
 
 class Element:
     """
@@ -150,9 +155,9 @@ class FlowManager:
     
     def _initialize_elements(self):
         """Initialize Element instances from flow definition."""
-        elements_config = self.flow_definition.get('elements', {})
-        for element_id, config in elements_config.items():
-            # Extract processing_message from config, default to "Processing {name}"
+        nodes_config = self.flow_definition.get('nodes', {})
+        for element_id, config in nodes_config.items():
+            # Extract processing_message from config
             element_name = config.get('name', element_id)
             processing_message = config.get('processing_message', f"Processing {element_name}")
             
@@ -183,13 +188,8 @@ class FlowManager:
         }
         
         # Print formatted JSON (replace with actual streaming to frontend)
-        # print(json.dumps(event, indent=2))
         print(json.dumps(event))
-        
         print()  # Add separator line
-        
-        # In real implementation, this would be:
-        # await websocket.send(json.dumps(event))
     
     def handle_flow_started(self, data: Dict[str, Any]):
         """Handle flow started event."""
@@ -251,12 +251,12 @@ class FlowManager:
             if element_id not in self.execution_order:
                 self.execution_order.append(element_id)
             
-            # Stream element start event with processing_message instead of description
+            # Stream element start event with processing_message
             self.stream_json_event("element_started", {
                 "element_id": element_id,
                 "element_name": element.element_name,
                 "element_type": element.element_type,
-                "description": element.processing_message,  # Use processing_message for frontend
+                "description": element.processing_message,
                 "backtracking": element.backtracking
             })
     
@@ -298,6 +298,17 @@ class FlowManager:
                 "backtracking": element.backtracking
             })
     
+    def handle_processing(self, data: Dict[str, Any]):
+        """Handle processing message event."""
+        element_id = data.get('element_id')
+        message = data.get('message', '')
+        
+        # Stream processing event
+        self.stream_json_event("processing", {
+            "element_id": element_id,
+            "message": message
+        })
+    
     def handle_llm_chunk(self, data: Dict[str, Any]):
         """Handle LLM chunk event."""
         element_id = data.get('element_id')
@@ -309,16 +320,13 @@ class FlowManager:
         # Add chunk to element (for reference only)
         if element_id in self.elements:
             self.elements[element_id].add_llm_chunk(content)
-        
-        # # Stream chunk to frontend with minimal payload
-        # self.stream_json_event("llm_chunk", {
-        #     "element_id": element_id,
-        #     "content": content
-        # })
     
     def handle_final_output(self, data: Dict[str, Any]):
         """Handle final output event."""
         self.final_output = data
+        
+        # Add newline after LLM output
+        print("\n")
         
         # Stream final output event
         self.stream_json_event("final_output", {
@@ -367,6 +375,8 @@ class FlowManager:
             self.handle_element_completed(data)
         elif event_type == 'element_error':
             self.handle_element_error(data)
+        elif event_type == 'processing':
+            self.handle_processing(data)
         elif event_type == 'llm_chunk':
             self.handle_llm_chunk(data)
         elif event_type == 'final_output':
@@ -479,4 +489,6 @@ async def execute_flow_from_dict(flow_data: Dict[str, Any], websocket_url: Optio
         return {}
 
 
-elements = asyncio.run(execute_flow_from_dict(yaml_data))
+# Execute the flow
+print("\nStarting flow execution...\n")
+elements = asyncio.run(execute_flow_from_dict(flow_data, websocket_url))

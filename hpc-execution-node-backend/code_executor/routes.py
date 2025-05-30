@@ -7,33 +7,10 @@ from typing import Optional, Dict, Any, List
 
 from config import settings
 from core.executor import FlowExecutor
+from core.schema import Connection as ConnectionSchema, ConnectionType, FlowDefinition, NodeDefinition
 from services.streaming import WebSocketStreamManager, DirectResponseStreamManager, SSEStreamManager
 from utils.logger import logger
 from elements import element_registry  # Import from app.py
-
-class ElementDefinition(BaseModel):
-    type: str
-    element_id: str
-    name: str
-    description: str
-    input_schema: dict
-    output_schema: dict
-    
-    class Config:
-        extra = "allow"
-
-class Connection(BaseModel):
-    from_id: str
-    to_id: str
-    from_output: str | None = None
-    to_input: str | None = None
-
-class FlowDefinition(BaseModel):
-    flow_id: str
-    elements: dict[str, ElementDefinition]
-    connections: list[Connection]
-    start_element_id: str
-    metadata: dict | None = None
 
 class ExecuteFlowRequest(BaseModel):
     flow_id: str
@@ -124,8 +101,37 @@ async def execute_flow_websocket(websocket: WebSocket, flow_id: str, flow_defini
         initial_inputs  = json.loads(initial_inputs_str) if initial_inputs_str else None
         config          = json.loads(config_str) if config_str else None
         
-        # Create flow definition model
-        flow_def = FlowDefinition(**flow_definition)
+        # Create flow definition model - handle both old and new formats
+        logger.info(f"Received flow_definition type: {type(flow_definition)}")
+        logger.info(f"Received flow_definition keys: {list(flow_definition.keys()) if isinstance(flow_definition, dict) else 'not a dict'}")
+        
+        # Preprocess flow definition to ensure compatibility
+        processed_flow = flow_definition.copy()
+        
+        # If nodes exist, preprocess them
+        if "nodes" in processed_flow:
+            for node_id, node_data in processed_flow["nodes"].items():
+                # Ensure node data has all required fields
+                if not isinstance(node_data, dict):
+                    continue
+                    
+                # Don't add element_id and name to node_data anymore
+                # We'll handle these separately in setup_flow_executor
+                    
+                # Ensure input_schema and output_schema are present
+                if "input_schema" not in node_data:
+                    node_data["input_schema"] = {}
+                if "output_schema" not in node_data:
+                    node_data["output_schema"] = {}
+                    
+        # Create flow definition
+        try:
+            flow_def = FlowDefinition(**processed_flow)
+            logger.info("Successfully created FlowDefinition")
+        except Exception as e:
+            logger.error(f"Failed to create FlowDefinition: {str(e)}")
+            logger.error(f"Processed flow data: {json.dumps(processed_flow, indent=2)}")
+            raise
         
         # Create a direct WebSocket stream manager
         stream_manager = DirectResponseStreamManager(websocket)
@@ -154,8 +160,12 @@ async def setup_flow_executor(flow_def: FlowDefinition, stream_manager, user_con
     """Setup the flow executor with elements and connections."""
     # Create element instances
     elements = {}
-    for elem_id, elem_data in flow_def.elements.items():
-        elem_type = elem_data.type
+    nodes = flow_def.nodes or flow_def.elements
+    if not nodes:
+        raise HTTPException(status_code=400, detail="No nodes/elements found in flow definition")
+    
+    for elem_id, node_data in nodes.items():
+        elem_type = node_data.type
         if elem_type not in element_registry:
             raise HTTPException(status_code=400, detail=f"Unknown element type: {elem_type}")
         
@@ -163,34 +173,79 @@ async def setup_flow_executor(flow_def: FlowDefinition, stream_manager, user_con
         ElementClass = element_registry[elem_type]
         
         # Extract common parameters
+        # Use the node's name if available, otherwise use description or elem_id
+        element_name = getattr(node_data, 'name', None) or node_data.description or elem_id
+        
         common_params = {
             "element_id": elem_id,
-            "name": elem_data.name,
-            "description": elem_data.description,
-            "input_schema": elem_data.input_schema,
-            "output_schema": elem_data.output_schema,
+            "name": element_name,
+            "description": node_data.description or "",
+            "input_schema": node_data.input_schema or {},
+            "output_schema": node_data.output_schema or {},
         }
         
+        # Add new structure parameters if available
+        if hasattr(node_data, 'node_description'):
+            common_params["node_description"] = node_data.node_description
+        if hasattr(node_data, 'processing_message'):
+            common_params["processing_message"] = node_data.processing_message
+        if hasattr(node_data, 'tags'):
+            common_params["tags"] = node_data.tags
+        if hasattr(node_data, 'layer'):
+            common_params["layer"] = node_data.layer
+        if hasattr(node_data, 'parameters'):
+            common_params["parameters"] = node_data.parameters
+        
         # Extract additional parameters specific to the element type
-        additional_params = {k: v for k, v in elem_data.dict().items() 
-                           if k not in ["type", "element_id", "name", "description", "input_schema", "output_schema"]}
+        # Make sure to exclude all common params to avoid duplicates
+        additional_params = {k: v for k, v in node_data.dict().items() 
+                           if k not in ["type", "node_description", "description", "processing_message", 
+                                      "tags", "layer", "parameters", "input_schema", "output_schema",
+                                      "element_id", "name"]}  # Exclude element_id and name
+        
+        # Handle parameters for specific element types
+        if elem_type == "llm_text" and hasattr(node_data, 'parameters'):
+            params = node_data.parameters or {}
+            additional_params.update({
+                "model": params.get("model"),
+                "temperature": params.get("temperature", 0.65),
+                "max_tokens": params.get("max_tokens", 1000),
+                "wrapper_prompt": params.get("wrapper_prompt", "")
+            })
+        
+        # Log the params for debugging
+        logger.info(f"Creating element {elem_id} of type {elem_type}")
+        logger.info(f"Common params keys: {list(common_params.keys())}")
+        logger.info(f"Additional params keys: {list(additional_params.keys())}")
+        
+        # Check for duplicate keys
+        duplicate_keys = set(common_params.keys()) & set(additional_params.keys())
+        if duplicate_keys:
+            logger.warning(f"Duplicate keys found: {duplicate_keys}")
         
         # Create the element instance
-        elements[elem_id] = ElementClass(**common_params, **additional_params)
+        try:
+            # Merge params, with common_params taking precedence
+            all_params = {**additional_params, **common_params}
+            logger.info(f"All params keys: {list(all_params.keys())}")
+            elements[elem_id] = ElementClass(**all_params)
+        except Exception as e:
+            logger.error(f"Failed to create element {elem_id}: {str(e)}")
+            logger.error(f"ElementClass: {ElementClass}")
+            logger.error(f"All params: {all_params}")
+            raise
     
-    # Set up connections between elements
+    # Convert connections to schema objects
+    connections = []
     for conn in flow_def.connections:
-        from_id = conn.from_id
-        to_id = conn.to_id
-        if from_id in elements and to_id in elements:
-            elements[from_id].connect(elements[to_id])
-            
-            # If specific input/output ports are specified, set up the mapping
-            if conn.from_output and conn.to_input:
-                # This would require additional logic in your ElementBase class
-                # For example: elements[from_id].map_output_to_input(conn.from_output, elements[to_id], conn.to_input)
-                
-                elements[from_id].map_output_to_input(elements[to_id], conn.from_output, conn.to_input)
+        connection = ConnectionSchema(
+            from_id=conn.from_id,
+            to_id=conn.to_id,
+            connection_type=ConnectionType(conn.connection_type) if hasattr(conn, 'connection_type') else ConnectionType.BOTH,
+            from_output=conn.from_output,
+            to_input=conn.to_input
+        )
+        connections.append(connection)
 
     
     # Merge configuration
@@ -202,9 +257,14 @@ async def setup_flow_executor(flow_def: FlowDefinition, stream_manager, user_con
         config.update(user_config)
     
     # Create the flow executor
+    start_element = flow_def.start_element or flow_def.start_element_id
+    if not start_element:
+        raise HTTPException(status_code=400, detail="No start element specified in flow definition")
+    
     executor = FlowExecutor(
         elements=elements,
-        start_element_id=flow_def.start_element_id,
+        start_element_id=start_element,
+        connections=connections,
         stream_manager=stream_manager,
         config=config
     )
