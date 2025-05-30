@@ -32,17 +32,42 @@ import {
 
 // Wrap access functions
 export const grantAccessToUser = async (params) => {
+  console.log('grantAccessToUser called with params:', params);
+  
   const client = params.client || window.suiClient
   const signAndExecute = params.signAndExecute || window.signAndExecute
   const config = params.config || window.config
   const currentAccount = params.currentAccount || window.currentAccount
   
-  return _grantAccess(client, config, currentAccount, signAndExecute, {
+  if (!client) {
+    throw new Error('SUI client not initialized');
+  }
+  if (!signAndExecute) {
+    throw new Error('signAndExecute function not available');
+  }
+  if (!config) {
+    throw new Error('Config not available');
+  }
+  if (!currentAccount) {
+    throw new Error('Current account not available');
+  }
+  
+  console.log('Calling _grantAccess with:', {
     nftId: params.nftId,
     recipientAddress: params.userAddress,
     accessLevel: params.accessLevel,
     accessCapId: params.accessCapId
-  })
+  });
+  
+  const result = await _grantAccess(client, config, currentAccount, signAndExecute, {
+    nftId: params.nftId,
+    recipientAddress: params.userAddress,
+    accessLevel: params.accessLevel,
+    accessCapId: params.accessCapId
+  });
+  
+  console.log('_grantAccess result:', result);
+  return result;
 }
 
 export const revokeUserAccess = async (params) => {
@@ -145,9 +170,9 @@ import {
 } from '../blockchain_module/walrus/index.ts'
 
 // Wrap Walrus functions with proper configuration
-export const uploadToWalrus = async (data) => {
-  const config = window.config
-  if (!config || !config.WALRUS_PUBLISHER) {
+export const uploadToWalrus = async (data, config = null) => {
+  const finalConfig = config || window.config
+  if (!finalConfig || !finalConfig.WALRUS_PUBLISHER) {
     throw new Error('Walrus publisher URL not configured')
   }
   
@@ -162,7 +187,7 @@ export const uploadToWalrus = async (data) => {
   }
   
   // Call with proper parameters: publisherUrl first, then data
-  const result = await _uploadToWalrus(config.WALRUS_PUBLISHER, uploadData)
+  const result = await _uploadToWalrus(finalConfig.WALRUS_PUBLISHER, uploadData)
   
   // Return just the blob ID for backward compatibility
   return result.blobId
@@ -198,10 +223,16 @@ export const getSUIBalance = async (address) => {
 
 export const getWALBalance = async (address, walCoinType) => {
   const client = window.suiClient
+  const config = window.config
   if (!client) {
     throw new Error('SUI client not initialized')
   }
-  const balance = await _getWalBalance(client, address, walCoinType)
+  // Use provided walCoinType or default to config
+  const coinType = walCoinType || config?.WAL_TOKEN_TYPE
+  if (!coinType) {
+    throw new Error('WAL token type not provided or configured')
+  }
+  const balance = await _getWalBalance(client, address, coinType)
   // Return formatted balance string for backward compatibility
   return formatBalance(balance.totalBalance, 9)
 }
@@ -219,11 +250,107 @@ export const convertSUIToWAL = async (params) => {
   // Convert amount to bigint (assuming it's in SUI units)
   const amountInMist = BigInt(Math.floor(params.amount * 1000000000)) // Convert SUI to MIST (9 decimals)
   
+  // Use exchange config from params or default to window.config
+  const exchangeConfig = params.exchangeConfig || {
+    PACKAGE_ID: config.EXCHANGE_PACKAGE_ID,
+    SHARED_OBJECT_ID: config.EXCHANGE_SHARED_OBJECT_ID,
+    INITIAL_SHARED_VERSION: config.EXCHANGE_INITIAL_SHARED_VERSION
+  }
+  
   return _convertSuiToWal(client, currentAccount, signAndExecute, {
     amount: amountInMist,
     slippageTolerance: params.slippageTolerance || 0.5,
-    exchangeConfig: params.exchangeConfig
+    exchangeConfig: exchangeConfig
   })
+}
+
+// Add missing wrapper functions for Interactive Publish
+export const getSuiBalance = async (address) => {
+  const client = window.suiClient
+  if (!client) {
+    throw new Error('SUI client not initialized')
+  }
+  const balance = await _getSuiBalance(client, address)
+  return balance.totalBalance
+}
+
+export const getWalBalance = async (address) => {
+  const client = window.suiClient
+  const config = window.config
+  if (!client) {
+    throw new Error('SUI client not initialized')
+  }
+  if (!config || !config.WAL_TOKEN_TYPE) {
+    throw new Error('WAL token type not configured')
+  }
+  const balance = await _getWalBalance(client, address, config.WAL_TOKEN_TYPE)
+  return balance.totalBalance
+}
+
+export const encryptDataWithSeal = async (sealClient, data, sessionKey, config = null) => {
+  const finalConfig = config || window.config
+  
+  console.log('encryptDataWithSeal called with:');
+  console.log('- sealClient:', !!sealClient);
+  console.log('- data length:', data?.length);
+  console.log('- sessionKey:', !!sessionKey);
+  console.log('- config parameter:', !!config);
+  console.log('- window.config:', !!window.config);
+  console.log('- finalConfig:', !!finalConfig);
+  
+  if (!finalConfig) {
+    console.error('No config available. window.config:', window.config);
+    throw new Error('Config not available for encryption. Please ensure the application is properly initialized.')
+  }
+  
+  if (!finalConfig.PACKAGE_ID) {
+    console.error('PACKAGE_ID not found in config:', finalConfig);
+    throw new Error('PACKAGE_ID not found in configuration')
+  }
+  
+  console.log('Using PACKAGE_ID:', finalConfig.PACKAGE_ID);
+  
+  // Use the encryptData function with proper parameters
+  return _encryptData(sealClient, {
+    data: data,
+    packageId: finalConfig.PACKAGE_ID,
+    policyId: finalConfig.PACKAGE_ID, // Using package ID as policy ID for now
+    threshold: 2
+  })
+}
+
+export const storeToWalrus = async (blob, config = null) => {
+  const finalConfig = config || window.config
+  
+  console.log('storeToWalrus called with:');
+  console.log('- blob:', !!blob);
+  console.log('- config parameter:', !!config);
+  console.log('- window.config:', !!window.config);
+  console.log('- finalConfig:', !!finalConfig);
+  
+  if (!finalConfig) {
+    console.error('No config available. window.config:', window.config);
+    throw new Error('Config not available for Walrus storage. Please ensure the application is properly initialized.')
+  }
+  
+  if (!finalConfig.WALRUS_PUBLISHER) {
+    console.error('WALRUS_PUBLISHER not found in config:', finalConfig);
+    throw new Error('Walrus publisher URL not configured')
+  }
+  
+  if (!finalConfig.WALRUS_AGGREGATOR) {
+    console.error('WALRUS_AGGREGATOR not found in config:', finalConfig);
+    throw new Error('Walrus aggregator URL not configured')
+  }
+  
+  console.log('Using WALRUS_PUBLISHER:', finalConfig.WALRUS_PUBLISHER);
+  console.log('Using WALRUS_AGGREGATOR:', finalConfig.WALRUS_AGGREGATOR);
+  
+  const result = await _uploadToWalrus(finalConfig.WALRUS_PUBLISHER, blob)
+  return {
+    url: `${finalConfig.WALRUS_AGGREGATOR}/v1/${result.blobId}`,
+    blobId: result.blobId
+  }
 }
 
 // Re-export transaction proposer functions

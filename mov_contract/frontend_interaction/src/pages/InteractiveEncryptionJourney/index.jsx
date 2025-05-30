@@ -67,8 +67,17 @@ const InteractiveEncryptionJourney = ({ config }) => {
   // Auto-advance steps based on completion status
   useEffect(() => {
     const nextStep = INTERACTIVE_JOURNEY_STEPS.findIndex(step => !step.completed(journeyData))
+    console.log('Interactive Journey auto-advance check:');
+    console.log('- Current step:', currentStep);
+    console.log('- Next uncompleted step:', nextStep);
+    console.log('- Journey data keys:', Object.keys(journeyData));
+    console.log('- Walrus blob ID:', journeyData.walrusBlobId);
+    
     if (nextStep !== -1 && nextStep !== currentStep) {
+      console.log('Auto-advancing from step', currentStep, 'to step', nextStep);
       setCurrentStep(nextStep)
+    } else if (nextStep === -1) {
+      console.log('All steps completed! Should show completion section.');
     }
   }, [journeyData, currentStep, setCurrentStep])
 

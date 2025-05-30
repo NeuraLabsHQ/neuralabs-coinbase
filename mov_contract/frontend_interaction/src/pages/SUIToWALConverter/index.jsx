@@ -25,15 +25,15 @@ function SUIToWALConverter({ config }) {
   const [isConverting, setIsConverting] = useState(false)
   const [exchangeRate] = useState('1:1') // Default rate
 
-  // Exchange contract configuration (from the transaction sample)
+  // Exchange contract configuration from config
   const EXCHANGE_CONFIG = {
-    PACKAGE_ID: '0x82593828ed3fcb8c6a235eac9abd0adbe9c5f9bbffa9b1e7a45cdd884481ef9f',
-    SHARED_OBJECT_ID: '0x8d63209cf8589ce7aef8f262437163c67577ed09f3e636a9d8e0813843fb8bf1',
-    INITIAL_SHARED_VERSION: '400185628'
+    PACKAGE_ID: config.EXCHANGE_PACKAGE_ID,
+    SHARED_OBJECT_ID: config.EXCHANGE_SHARED_OBJECT_ID,
+    INITIAL_SHARED_VERSION: config.EXCHANGE_INITIAL_SHARED_VERSION
   }
 
-  // WAL Token configuration  
-  const WAL_TOKEN_TYPE = '0x8270feb7375eee355e64fdb69c50abb6b5f9393a722883c1cf45f8e26048810a::wal::WAL'
+  // WAL Token configuration from config
+  const WAL_TOKEN_TYPE = config.WAL_TOKEN_TYPE
 
   // Load balances
   const loadBalances = async () => {
