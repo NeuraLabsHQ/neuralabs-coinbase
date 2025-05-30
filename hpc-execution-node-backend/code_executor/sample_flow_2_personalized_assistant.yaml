@@ -1,0 +1,311 @@
+# Sample Flow 2: Personalized Assistant using Metadata + Constants + LLM
+flow_definition:
+  nodes:
+    user_context:
+      type: metadata
+      node_description: "Provides access to execution context automatically"
+      description: "Load user information and session context"
+      processing_message: "Loading your profile..."
+      tags: ["context", "user-data", "personalization"]
+      layer: 3
+      parameters:
+        include_all: true
+        data_filter: ["user_id", "user_name", "session_count", "environment"]
+        custom_fields:
+          app_version: "2.1.0"
+          feature_flags:
+            - "premium_features"
+            - "beta_access"
+      input_schema: {}
+      output_schema:
+        user_id:
+          type: string
+          description: "Unique user identifier"
+          required: false
+        user_name:
+          type: string
+          description: "User's display name"
+          required: false
+        session_count:
+          type: int
+          description: "Number of user sessions"
+          required: false
+        environment:
+          type: string
+          description: "Current environment"
+          required: false
+        app_version:
+          type: string
+          description: "Application version"
+          required: false
+        feature_flags:
+          type: list
+          description: "Available feature flags"
+          required: false
+    
+    app_config:
+      type: constants
+      node_description: "Completely customizable key-value storage"
+      description: "Application configuration and settings"
+      processing_message: "Loading app configuration..."
+      tags: ["configuration", "settings", "app-config"]
+      layer: 3
+      parameters:
+        app_name: "NeuraLabs AI Assistant"
+        max_response_length: 500
+        default_personality: "friendly and helpful"
+        supported_languages: ["en", "es", "fr", "de"]
+        feature_limits:
+          free_tier:
+            daily_requests: 50
+            max_tokens: 1000
+          premium_tier:
+            daily_requests: 1000
+            max_tokens: 5000
+        greeting_templates:
+          new_user: "Welcome to NeuraLabs! I'm here to help you get started."
+          returning_user: "Welcome back! How can I assist you today?"
+          premium_user: "Hello! As a premium member, you have access to advanced features."
+      input_schema: {}
+      output_schema:
+        app_name:
+          type: string
+          description: "Application name"
+          required: true
+        max_response_length:
+          type: int
+          description: "Maximum response length"
+          required: true
+        default_personality:
+          type: string
+          description: "AI personality setting"
+          required: true
+        supported_languages:
+          type: list
+          description: "Supported language codes"
+          required: true
+        feature_limits:
+          type: json
+          description: "Feature limits by tier"
+          required: true
+        greeting_templates:
+          type: json
+          description: "Greeting message templates"
+          required: true
+    
+    chat_input:
+      type: chat_input
+      node_description: "Captures user text input as the primary interface"
+      description: "User's message or question"
+      processing_message: "Processing your message..."
+      tags: ["input", "user-interaction"]
+      layer: 3
+      parameters:
+        placeholder: "Ask me anything..."
+        max_length: 1000
+        required: true
+      input_schema: {}
+      output_schema:
+        chat_input:
+          type: string
+          description: "User's input message"
+          required: true
+    
+    personalized_assistant:
+      type: llm_text
+      node_description: "Generates text using Large Language Models"
+      description: "Generate personalized AI response"
+      processing_message: "Crafting your personalized response..."
+      tags: ["ai", "personalization", "assistant"]
+      layer: 3
+      parameters:
+        model: null
+        temperature: 0.8
+        max_tokens: 500
+        wrapper_prompt: |
+          You are {app_name}, a {default_personality} AI assistant.
+          
+          User Context:
+          - Name: {user_name}
+          - Session Count: {session_count}
+          - Environment: {environment}
+          - App Version: {app_version}
+          
+          App Settings:
+          - Max Response Length: {max_response_length} characters
+          - Supported Languages: {supported_languages}
+          
+          User Message: {prompt}
+          
+          Provide a personalized response that:
+          1. Acknowledges the user by name if available
+          2. Takes into account their session history
+          3. Stays within the response length limit
+          4. Maintains the configured personality
+          5. Addresses their specific question or request
+      input_schema:
+        prompt:
+          type: string
+          description: "User's message"
+          required: true
+        user_name:
+          type: string
+          description: "User's name for personalization"
+          required: false
+        session_count:
+          type: int
+          description: "Session count for context"
+          required: false
+        environment:
+          type: string
+          description: "Environment context"
+          required: false
+        app_version:
+          type: string
+          description: "App version"
+          required: false
+        app_name:
+          type: string
+          description: "Application name"
+          required: false
+        default_personality:
+          type: string
+          description: "AI personality"
+          required: false
+        max_response_length:
+          type: int
+          description: "Response length limit"
+          required: false
+        supported_languages:
+          type: list
+          description: "Supported languages"
+          required: false
+        additional_data:
+          type: json
+          description: "Additional context"
+          required: false
+          default: {}
+      output_schema:
+        llm_output:
+          type: string
+          description: "Personalized AI response"
+          required: true
+    
+    end_node:
+      type: end
+      node_description: "Terminal point of the flow execution"
+      description: "Finalize personalized response"
+      processing_message: "Finalizing your response..."
+      tags: ["flow-control", "exit-point"]
+      layer: 3
+      input_schema:
+        text_input:
+          type: string
+          description: "Final response text"
+          required: true
+        proposed_transaction:
+          type: json
+          description: "Optional transaction data"
+          required: false
+          default: null
+      output_schema:
+        text_output:
+          type: string
+          description: "Final personalized response"
+          required: true
+        proposed_transaction:
+          type: json
+          description: "Optional transaction data"
+          required: false
+  
+  connections:
+    # Control flow: all sources -> assistant -> end
+    - from_id: user_context
+      to_id: personalized_assistant
+      connection_type: control
+    
+    - from_id: app_config
+      to_id: chat_input
+      connection_type: control
+    
+    - from_id: chat_input
+      to_id: personalized_assistant
+      connection_type: control
+    
+    - from_id: personalized_assistant
+      to_id: end_node
+      connection_type: control
+    
+    # Data flow connections - user context to assistant
+    - from_id: user_context
+      to_id: personalized_assistant
+      connection_type: data
+      from_output: "user_context:user_name"
+      to_input: "personalized_assistant:user_name"
+    
+    - from_id: user_context
+      to_id: personalized_assistant
+      connection_type: data
+      from_output: "user_context:session_count"
+      to_input: "personalized_assistant:session_count"
+    
+    - from_id: user_context
+      to_id: personalized_assistant
+      connection_type: data
+      from_output: "user_context:environment"
+      to_input: "personalized_assistant:environment"
+    
+    - from_id: user_context
+      to_id: personalized_assistant
+      connection_type: data
+      from_output: "user_context:app_version"
+      to_input: "personalized_assistant:app_version"
+    
+    # Data flow connections - app config to assistant
+    - from_id: app_config
+      to_id: personalized_assistant
+      connection_type: data
+      from_output: "app_config:app_name"
+      to_input: "personalized_assistant:app_name"
+    
+    - from_id: app_config
+      to_id: personalized_assistant
+      connection_type: data
+      from_output: "app_config:default_personality"
+      to_input: "personalized_assistant:default_personality"
+    
+    - from_id: app_config
+      to_id: personalized_assistant
+      connection_type: data
+      from_output: "app_config:max_response_length"
+      to_input: "personalized_assistant:max_response_length"
+    
+    - from_id: app_config
+      to_id: personalized_assistant
+      connection_type: data
+      from_output: "app_config:supported_languages"
+      to_input: "personalized_assistant:supported_languages"
+    
+    # Data flow connections - chat input to assistant
+    - from_id: chat_input
+      to_id: personalized_assistant
+      connection_type: data
+      from_output: "chat_input:chat_input"
+      to_input: "personalized_assistant:prompt"
+    
+    # Data flow connections - assistant to end
+    - from_id: personalized_assistant
+      to_id: end_node
+      connection_type: data
+      from_output: "personalized_assistant:llm_output"
+      to_input: "end_node:text_input"
+  
+  start_element: user_context
+
+# Metadata
+metadata:
+  flow_name: "Personalized AI Assistant"
+  version: "1.0.0"
+  description: "Personalized AI responses using user context and app configuration"
+  author: "NeuraLabs"
+  tags: ["personalization", "context-aware", "configuration"]

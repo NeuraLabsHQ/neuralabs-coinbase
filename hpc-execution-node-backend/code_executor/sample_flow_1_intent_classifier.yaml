@@ -1,0 +1,235 @@
+# Sample Flow 1: Intent Classification using Chat Input + LLM Structured
+flow_definition:
+  nodes:
+    chat_input:
+      type: chat_input
+      node_description: "Captures user text input as the primary interface"
+      description: "Capture customer support query"
+      processing_message: "Capturing your query..."
+      tags: ["input", "user-interaction", "chat"]
+      layer: 3
+      parameters:
+        placeholder: "Please describe your issue or question..."
+        max_length: 500
+        min_length: 5
+        required: true
+      input_schema: {}
+      output_schema:
+        chat_input:
+          type: string
+          description: "Customer's query or question"
+          required: true
+    
+    intent_classifier:
+      type: llm_structured
+      node_description: "Generates structured data according to defined schemas"
+      description: "Classify customer intent and extract entities"
+      processing_message: "Analyzing your request..."
+      tags: ["ai", "structured-output", "classification"]
+      layer: 3
+      parameters:
+        model: null  # Use default
+        temperature: 0.2  # Low temperature for consistent classification
+        max_tokens: 500
+        wrapper_prompt: |
+          You are a customer support intent classifier. Analyze this customer query: {prompt}
+          
+          Classify the primary intent and extract relevant entities.
+        llm_hidden_prompt: |
+          Based on the customer query, determine:
+          1. Primary intent from the allowed categories
+          2. Confidence level (0.0 to 1.0)
+          3. Any specific entities mentioned
+          4. Urgency level
+          5. Brief explanation of the classification
+      input_schema:
+        prompt:
+          type: string
+          description: "Customer query to classify"
+          required: true
+        context:
+          type: list
+          description: "Previous conversation context"
+          required: false
+          default: []
+        additional_data:
+          type: json
+          description: "Additional metadata"
+          required: false
+          default: {}
+      output_schema:
+        primary_intent:
+          type: string
+          description: "Primary customer intent"
+          required: true
+          enum: ["purchase", "support", "refund", "inquiry", "complaint", "compliment"]
+        confidence:
+          type: float
+          description: "Confidence score (0.0 to 1.0)"
+          required: true
+          minimum: 0.0
+          maximum: 1.0
+        urgency:
+          type: string
+          description: "Urgency level of the request"
+          required: true
+          enum: ["low", "medium", "high", "critical"]
+        entities:
+          type: json
+          description: "Extracted entities (product names, order IDs, etc.)"
+          required: false
+        explanation:
+          type: string
+          description: "Brief explanation of the classification"
+          required: true
+        structured_output:
+          type: string
+          description: "Full structured output as JSON"
+          required: true
+    
+    response_generator:
+      type: llm_text
+      node_description: "Generates text using Large Language Models"
+      description: "Generate appropriate response based on intent"
+      processing_message: "Crafting response..."
+      tags: ["ai", "text-generation", "response"]
+      layer: 3
+      parameters:
+        model: null
+        temperature: 0.7
+        max_tokens: 300
+        wrapper_prompt: |
+          Based on the customer intent classification, generate an appropriate response.
+          
+          Customer Query: {prompt}
+          Intent: {primary_intent}
+          Urgency: {urgency}
+          Confidence: {confidence}
+          Entities: {entities}
+          
+          Generate a helpful and professional response that addresses their {primary_intent} request.
+      input_schema:
+        prompt:
+          type: string
+          description: "Original customer query"
+          required: true
+        primary_intent:
+          type: string
+          description: "Classified intent"
+          required: true
+        urgency:
+          type: string
+          description: "Urgency level"
+          required: true
+        confidence:
+          type: float
+          description: "Classification confidence"
+          required: true
+        entities:
+          type: json
+          description: "Extracted entities"
+          required: false
+        additional_data:
+          type: json
+          description: "Additional context"
+          required: false
+          default: {}
+      output_schema:
+        llm_output:
+          type: string
+          description: "Generated customer response"
+          required: true
+    
+    end_node:
+      type: end
+      node_description: "Terminal point of the flow execution"
+      description: "Finalize customer support response"
+      processing_message: "Finalizing response..."
+      tags: ["flow-control", "exit-point"]
+      layer: 3
+      input_schema:
+        text_input:
+          type: string
+          description: "Final response text"
+          required: true
+        proposed_transaction:
+          type: json
+          description: "Optional transaction data"
+          required: false
+          default: null
+      output_schema:
+        text_output:
+          type: string
+          description: "Final customer support response"
+          required: true
+        proposed_transaction:
+          type: json
+          description: "Optional transaction data"
+          required: false
+  
+  connections:
+    # Control flow: chat_input -> intent_classifier -> response_generator -> end_node
+    - from_id: chat_input
+      to_id: intent_classifier
+      connection_type: control
+    
+    - from_id: intent_classifier
+      to_id: response_generator
+      connection_type: control
+    
+    - from_id: response_generator
+      to_id: end_node
+      connection_type: control
+    
+    # Data flow connections
+    - from_id: chat_input
+      to_id: intent_classifier
+      connection_type: data
+      from_output: "chat_input:chat_input"
+      to_input: "intent_classifier:prompt"
+    
+    - from_id: chat_input
+      to_id: response_generator
+      connection_type: data
+      from_output: "chat_input:chat_input"
+      to_input: "response_generator:prompt"
+    
+    - from_id: intent_classifier
+      to_id: response_generator
+      connection_type: data
+      from_output: "intent_classifier:primary_intent"
+      to_input: "response_generator:primary_intent"
+    
+    - from_id: intent_classifier
+      to_id: response_generator
+      connection_type: data
+      from_output: "intent_classifier:urgency"
+      to_input: "response_generator:urgency"
+    
+    - from_id: intent_classifier
+      to_id: response_generator
+      connection_type: data
+      from_output: "intent_classifier:confidence"
+      to_input: "response_generator:confidence"
+    
+    - from_id: intent_classifier
+      to_id: response_generator
+      connection_type: data
+      from_output: "intent_classifier:entities"
+      to_input: "response_generator:entities"
+    
+    - from_id: response_generator
+      to_id: end_node
+      connection_type: data
+      from_output: "response_generator:llm_output"
+      to_input: "end_node:text_input"
+  
+  start_element: chat_input
+
+# Metadata
+metadata:
+  flow_name: "Customer Support Intent Classifier"
+  version: "1.0.0"
+  description: "Classifies customer support queries and generates appropriate responses"
+  author: "NeuraLabs"
+  tags: ["customer-support", "intent-classification", "structured-ai"]

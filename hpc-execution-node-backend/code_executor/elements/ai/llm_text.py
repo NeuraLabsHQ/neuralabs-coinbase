@@ -246,13 +246,21 @@ class LLMText(ElementBase):
         if wrapper_prompt:
             # Use the wrapper prompt template if provided
             try:
-                formatted_prompt = wrapper_prompt.format(
-                    prompt=prompt,
-                    context=context_str,
-                    additional_data=additional_data_str
-                )
+                # Create substitution dictionary with all inputs plus standard variables
+                substitution_vars = {
+                    "prompt": prompt,
+                    "context": context_str,
+                    "additional_data": additional_data_str
+                }
+                
+                # Add all inputs as substitution variables
+                for key, value in self.inputs.items():
+                    if key not in substitution_vars:  # Don't override standard variables
+                        substitution_vars[key] = value
+                
+                formatted_prompt = wrapper_prompt.format(**substitution_vars)
             except KeyError as e:
-                logger.warning(f"Error formatting wrapper prompt: {str(e)}. Using default formatting.")
+                logger.warning(f"Error formatting wrapper prompt: {str(e)}. Missing variable in inputs. Using default formatting.")
                 formatted_prompt = self._default_format(prompt, context_str, additional_data_str)
         else:
             # Default formatting if no wrapper is provided
