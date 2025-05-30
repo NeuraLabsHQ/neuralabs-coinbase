@@ -38,17 +38,10 @@ const InteractivePublish = ({ config }) => {
   const [animationPhase, setAnimationPhase] = useState('idle')
   
   // Animation system
-  const { canvasRef, renderStepIcon } = useAnimationSystem()
-  
-  // Set canvas ref
-  useEffect(() => {
-    if (canvasRef.current) {
-      const canvas = document.querySelector('.animation-canvas')
-      if (canvas && canvasRef.current !== canvas) {
-        canvasRef.current = canvas
-      }
-    }
-  }, [currentStep])
+  const {
+    renderStepIcon,
+    renderAnimation
+  } = useAnimationSystem()
   
   // Update account in journey data
   useEffect(() => {
@@ -60,6 +53,23 @@ const InteractivePublish = ({ config }) => {
       })
     }
   }, [account])
+  
+  // Auto-advance steps based on completion status
+  useEffect(() => {
+    const nextStep = INTERACTIVE_PUBLISH_STEPS.findIndex(step => !step.completed(journeyData))
+    console.log('Interactive Publish auto-advance check:');
+    console.log('- Current step:', currentStep);
+    console.log('- Next uncompleted step:', nextStep);
+    console.log('- Journey data keys:', Object.keys(journeyData));
+    console.log('- Walrus blob ID:', journeyData.walrusBlobId);
+    
+    if (nextStep !== -1 && nextStep !== currentStep) {
+      console.log('Auto-advancing from step', currentStep, 'to step', nextStep);
+      setCurrentStepState(nextStep)
+    } else if (nextStep === -1) {
+      console.log('All steps completed! Should show completion section.');
+    }
+  }, [journeyData, currentStep])
   
   // Handle step actions
   const handleStepAction = async () => {
@@ -90,25 +100,24 @@ const InteractivePublish = ({ config }) => {
         markStepComplete(currentStep)
         
         // Update completed steps in journeyData
-        const newCompletedSteps = [...journeyData.completedSteps, currentStep]
+        const newCompletedSteps = [...(journeyData.completedSteps || []), currentStep]
         updateJourneyData({ completedSteps: newCompletedSteps })
         
-        // Auto-advance to next step
+        setAnimationPhase('completed')
+        
+        // Auto-advance happens via useEffect above
         setTimeout(() => {
-          console.log('Auto-advancing from step', currentStep, 'to', currentStep + 1)
-          if (currentStep < INTERACTIVE_PUBLISH_STEPS.length - 1) {
-            setCurrentStepState(currentStep + 1)
-            setCurrentStep(currentStep + 1)  // Update the state manager's current step too
-            setAnimationPhase('idle')
-          }
-        }, 1500)  // Increased delay to ensure state updates complete
+          setAnimationPhase('idle')
+        }, 1500)
       } else {
         console.log('Action failed with result:', result)
+        setAnimationPhase('idle')
       }
     } catch (error) {
       console.error('Error in handleStepAction:', error)
       toast.error(error.message || 'An error occurred')
       setError(error.message)
+      setAnimationPhase('idle')
     } finally {
       setProcessingState(false)
     }
@@ -119,52 +128,76 @@ const InteractivePublish = ({ config }) => {
     setCurrentStepState(0)
     setAnimationPhase('idle')
   }
-  
-  // Check if journey is complete
-  const isComplete = currentStep === INTERACTIVE_PUBLISH_STEPS.length - 1 && 
-                    journeyData.walrusUrl
-  
+
   return (
     <div className="journey-v2">
-      <BackgroundEffects />
-      
       <div className="journey-container">
         <JourneyHeader />
-        
-        {!isComplete ? (
-          <div className="journey-main">
-            {/* Progress Section */}
-            <ProgressSection
-              steps={INTERACTIVE_PUBLISH_STEPS}
-              currentStep={currentStep}
-              journeyData={journeyData}
-              renderStepIcon={renderStepIcon}
-            />
-            
-            {/* Animation Section */}
-            <AnimationSection
-              currentStep={currentStep}
-              isProcessing={isProcessing}
-              animationPhase={animationPhase}
-            />
-            
-            {/* Action Section */}
-            <ActionSection
-              currentStep={currentStep}
-              journeyData={journeyData}
-              isProcessing={isProcessing}
-              onAction={handleStepAction}
-            />
-          </div>
-        ) : (
-          <div className="journey-main">
-            <CompletionSection
-              journeyData={journeyData}
-              onNewJourney={handleNewJourney}
-            />
-          </div>
-        )}
+
+        <div className="journey-main">
+          <ProgressSection 
+            steps={INTERACTIVE_PUBLISH_STEPS}
+            currentStep={currentStep}
+            journeyData={journeyData}
+            renderStepIcon={renderStepIcon}
+          />
+
+          {/* Conditional layout based on completion status */}
+          {journeyData.walrusBlobId ? (
+            // Show completion details when upload is complete
+            <div className="completion-area">
+              <CompletionSection 
+                journeyData={journeyData}
+                config={config}
+                onNewJourney={handleNewJourney}
+              />
+            </div>
+          ) : (
+            // Show vertical stack: text + animation + action
+            <div className="journey-right-stack">
+              {/* Text Content Section */}
+              <div className="text-section">
+                <motion.h2
+                  key={currentStep}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.5 }}
+                  className="step-title"
+                >
+                  {INTERACTIVE_PUBLISH_STEPS[currentStep].title}
+                </motion.h2>
+                
+                <motion.p
+                  key={`${currentStep}-subtitle`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="step-subtitle"
+                >
+                  {INTERACTIVE_PUBLISH_STEPS[currentStep].subtitle}
+                </motion.p>
+              </div>
+
+              {/* Animation Section */}
+              <AnimationSection 
+                animationPhase={animationPhase}
+                renderAnimation={renderAnimation}
+              />
+
+              {/* Action Section */}
+              <ActionSection 
+                currentStep={currentStep}
+                journeyData={journeyData}
+                isProcessing={isProcessing}
+                onAction={handleStepAction}
+              />
+            </div>
+          )}
+        </div>
       </div>
+
+      <BackgroundEffects />
     </div>
   )
 }
