@@ -15,6 +15,7 @@ import WalrusStorage from './pages/WalrusStorage'
 // Import modularized journey component from new structure
 import InteractiveEncryptionJourney from './pages/InteractiveEncryptionJourney'
 import InteractivePublish from './pages/InteractivePublish'
+import AnimationTester from './pages/AnimationTester'
 
 // Configuration based on deployment-config.json
 const CONFIG = {
@@ -61,7 +62,8 @@ useEffect(() => {
     { id: 'details', label: 'NFT Details', icon: '🔍' },
     { id: 'converter', label: 'SUI ↔ WAL', icon: '💱' },
     { id: 'interactive', label: 'Interactive Journey', icon: '✨' },
-    { id: 'publish', label: 'Interactive Publish', icon: '📤' }
+    { id: 'publish', label: 'Interactive Publish', icon: '📤' },
+    { id: 'animations', label: 'Animation Tester', icon: '🎬' }
   ]
 
   return (
@@ -118,7 +120,7 @@ useEffect(() => {
             </div>
 
             {/* Tab Content */}
-            <div className={activeTab === 'interactive' || activeTab === 'publish' ? '' : 'bg-white rounded-lg shadow p-6'}>
+            <div className={activeTab === 'interactive' || activeTab === 'publish' || activeTab === 'animations' ? '' : 'bg-white rounded-lg shadow p-6'}>
               {activeTab === 'info' && <ContractInfo config={CONFIG} />}
               {activeTab === 'nft' && <NFTManager config={CONFIG} />}
               {activeTab === 'access' && <AccessControl config={CONFIG} />}
@@ -128,6 +130,7 @@ useEffect(() => {
               {activeTab === 'converter' && <SUIToWALConverter config={CONFIG} />}
               {activeTab === 'interactive' && <InteractiveEncryptionJourney config={CONFIG} />}
               {activeTab === 'publish' && <InteractivePublish config={CONFIG} />}
+              {activeTab === 'animations' && <AnimationTester />}
             </div>
           </>
         )}
