@@ -14,12 +14,12 @@ import VerificationBadge from '../InteractiveEncryptionJourney/components/animat
 import EllipticCurveAnimation from '../InteractiveEncryptionJourney/components/animations/EllipticCurveAnimation.svg'
 import WalrusUploadAnimation from '../InteractiveEncryptionJourney/components/animations/WalrusUploadAnimation.svg'
 import NetworkIdleAnimation from '../InteractiveEncryptionJourney/components/animations/NetworkIdleAnimation.svg'
+import BalanceCheckAnimation from '../InteractiveEncryptionJourney/components/animations/BalanceCheckAnimation.svg'
 
 // Import all JSX animations
 import NFTScanAnimation from '../InteractiveEncryptionJourney/components/animations/NFTScanAnimation'
 import DataCubeAnimation from '../InteractiveEncryptionJourney/components/animations/DataCubeAnimation'
 import WalletConnectedAnimation from '../InteractiveEncryptionJourney/components/animations/WalletConnectedAnimation'
-import BalanceCheckAnimation from '../InteractiveEncryptionJourney/components/animations/BalanceCheckAnimation'
 import NFTCreationAnimation from '../InteractiveEncryptionJourney/components/animations/NFTCreationAnimation'
 import AccessCapabilityAnimation from '../InteractiveEncryptionJourney/components/animations/AccessCapabilityAnimation'
 import GrantAccessAnimation from '../InteractiveEncryptionJourney/components/animations/GrantAccessAnimation'
@@ -41,6 +41,8 @@ const AnimationTester = () => {
     { name: 'EllipticCurveAnimation.svg', component: EllipticCurveAnimation, type: 'svg' },
     { name: 'WalrusUploadAnimation.svg', component: WalrusUploadAnimation, type: 'svg' },
     { name: 'NetworkIdleAnimation.svg', component: NetworkIdleAnimation, type: 'svg' },
+    { name: 'BalanceCheckAnimation.svg', component: BalanceCheckAnimation, type: 'svg' },
+
   ]
 
   // JSX animations list
@@ -48,7 +50,6 @@ const AnimationTester = () => {
     { name: 'NFTScanAnimation.jsx', component: NFTScanAnimation, type: 'jsx' },
     { name: 'DataCubeAnimation.jsx', component: DataCubeAnimation, type: 'jsx' },
     { name: 'WalletConnectedAnimation.jsx', component: WalletConnectedAnimation, type: 'jsx' },
-    { name: 'BalanceCheckAnimation.jsx', component: BalanceCheckAnimation, type: 'jsx' },
     { name: 'NFTCreationAnimation.jsx', component: NFTCreationAnimation, type: 'jsx' },
     { name: 'AccessCapabilityAnimation.jsx', component: AccessCapabilityAnimation, type: 'jsx' },
     { name: 'GrantAccessAnimation.jsx', component: GrantAccessAnimation, type: 'jsx' },
