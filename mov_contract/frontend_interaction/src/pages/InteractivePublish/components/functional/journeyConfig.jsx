@@ -48,7 +48,7 @@ export const INTERACTIVE_PUBLISH_STEPS = [
     title: 'Grant Access',
     subtitle: 'Setting ownership permissions',
     icon: 'shield',
-    completed: (data) => data.completedSteps.includes(4),
+    completed: (data) => data.completedSteps && data.completedSteps.includes(4),
     detail: (data) => 'Level 6 access granted',
     action: 'grantSelfAccess',
   },
@@ -58,7 +58,15 @@ export const INTERACTIVE_PUBLISH_STEPS = [
     subtitle: 'Confirming permissions',
     icon: 'check',
     completed: (data) => data.accessLevel !== null,
-    detail: (data) => data.accessLevel ? `Access Level: ${data.accessLevel}` : '',
+    detail: (data) => {
+      if (data.accessLevel) {
+        if (typeof data.accessLevel === 'object') {
+          return `Access Level: ${data.accessLevel.level || 'Unknown'}`;
+        }
+        return `Access Level: ${data.accessLevel}`;
+      }
+      return '';
+    },
     action: 'verifyAccess',
   },
   {
@@ -102,8 +110,8 @@ export const INTERACTIVE_PUBLISH_STEPS = [
     title: 'Decentralized Storage',
     subtitle: 'Publishing to network',
     icon: 'walrus',
-    completed: (data) => !!data.walrusUrl,
-    detail: (data) => data.walrusUrl ? `Published successfully` : '',
+    completed: (data) => !!data.walrusBlobId,
+    detail: (data) => data.walrusBlobId ? `Published successfully` : '',
     action: 'storeFile',
   }
 ];

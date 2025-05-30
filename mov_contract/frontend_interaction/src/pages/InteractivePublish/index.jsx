@@ -54,22 +54,15 @@ const InteractivePublish = ({ config }) => {
     }
   }, [account])
   
-  // Auto-advance steps based on completion status
-  useEffect(() => {
-    const nextStep = INTERACTIVE_PUBLISH_STEPS.findIndex(step => !step.completed(journeyData))
-    console.log('Interactive Publish auto-advance check:');
-    console.log('- Current step:', currentStep);
-    console.log('- Next uncompleted step:', nextStep);
-    console.log('- Journey data keys:', Object.keys(journeyData));
-    console.log('- Walrus blob ID:', journeyData.walrusBlobId);
-    
-    if (nextStep !== -1 && nextStep !== currentStep) {
-      console.log('Auto-advancing from step', currentStep, 'to step', nextStep);
+  // Only advance to next step when user explicitly continues
+  const handleContinueToNext = () => {
+    const nextStep = currentStep + 1
+    if (nextStep < INTERACTIVE_PUBLISH_STEPS.length) {
+      console.log('User advancing from step', currentStep, 'to step', nextStep)
       setCurrentStepState(nextStep)
-    } else if (nextStep === -1) {
-      console.log('All steps completed! Should show completion section.');
+      setAnimationPhase('idle')
     }
-  }, [journeyData, currentStep])
+  }
   
   // Handle step actions
   const handleStepAction = async () => {
@@ -89,14 +82,29 @@ const InteractivePublish = ({ config }) => {
     
     console.log('Executing action:', step.action)
     setProcessingState(true)
-    setAnimationPhase('processing')
+    
+    // Set step-specific animation phase
+    const animationPhases = {
+      'connectWallet': 'wallet-connecting',
+      'checkBalances': 'balance-checking', 
+      'mintNFT': 'nft-creating',
+      'createAccessCap': 'access-cap-creating',
+      'grantSelfAccess': 'grant-access',
+      'verifyAccess': 'access-verifying',
+      'initializeSeal': 'seal-initializing',
+      'createSessionKey': 'signing',
+      'selectFile': 'file-selecting',
+      'encryptFile': 'encrypting',
+      'storeFile': 'uploading'
+    }
+    setAnimationPhase(animationPhases[step.action] || 'processing')
     
     try {
       const result = await action(journeyData, updateJourneyData, config)
       console.log('Action result:', result)
       
       if (result.success) {
-        console.log('Action succeeded, marking step complete:', currentStep)
+        console.log('Action succeeded for step:', currentStep)
         markStepComplete(currentStep)
         
         // Update completed steps in journeyData
@@ -105,9 +113,9 @@ const InteractivePublish = ({ config }) => {
         
         setAnimationPhase('completed')
         
-        // Auto-advance happens via useEffect above
+        // Don't auto-advance - wait for user to click continue
         setTimeout(() => {
-          setAnimationPhase('idle')
+          setAnimationPhase('step-completed')
         }, 1500)
       } else {
         console.log('Action failed with result:', result)
@@ -143,7 +151,7 @@ const InteractivePublish = ({ config }) => {
           />
 
           {/* Conditional layout based on completion status */}
-          {journeyData.walrusBlobId ? (
+          {journeyData.walrusBlobId && currentStep >= INTERACTIVE_PUBLISH_STEPS.length - 1 ? (
             // Show completion details when upload is complete
             <div className="completion-area">
               <CompletionSection 
@@ -190,7 +198,9 @@ const InteractivePublish = ({ config }) => {
                 currentStep={currentStep}
                 journeyData={journeyData}
                 isProcessing={isProcessing}
+                animationPhase={animationPhase}
                 onAction={handleStepAction}
+                onContinue={handleContinueToNext}
               />
             </div>
           )}
