@@ -733,7 +733,7 @@ export const useAnimationSystem = () => {
                         repeat: Infinity
                       }}
                     >
-                      💾
+                      
                     </motion.div>
                   )
                 })}
