@@ -472,58 +472,6 @@
   background: var(--journey-card-bg);
 }
 
-/* Buttons */
-.action-button {
-  padding: 14px 28px;
-  background: var(--journey-primary-color);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  letter-spacing: 0.5px;
-  min-width: 200px;
-}
-
-.action-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(81, 144, 255, 0.3);
-}
-
-.action-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.action-button.processing {
-  background: transparent;
-  border: 2px solid var(--journey-primary-color);
-  color: var(--journey-primary-color);
-}
-
-/* Continue Button */
-.continue-button {
-  padding: 14px 28px;
-  background: var(--journey-primary-color);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  letter-spacing: 0.5px;
-  min-width: 200px;
-}
-
-
-
-.continue-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);;
-}
 
 /* Completion Section */
 .completion-section {
@@ -1064,14 +1012,22 @@
 }
 
 .continue-button {
-  background: var(--journey-primary-color);
-  color: white;
+  background: var(--journey-card-bg);
+    border: 1px solid var(--journey-border);
+
+  color: var(--journey-text);
   margin-top: 12px;
 }
 
+
+
 .continue-button:hover {
   opacity: 0.9;
+  background: var(--journey-hover-bg);
+  border-color: rgba(34, 197, 94, 0.645);
+  color: rgba(34, 197, 94, 0.645);
   transform: translateY(-1px);
+
 }
 
 .continue-button:active {
