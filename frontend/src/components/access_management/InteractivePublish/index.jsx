@@ -5,7 +5,6 @@ import toast from 'react-hot-toast'
 import './styles/themed-index.css'
 
 // Visual Components
-import JourneyHeader from './components/visual/JourneyHeader'
 import ProgressSection from './components/visual/ProgressSection'
 import AnimationSection from './components/visual/AnimationSection'
 import ActionSection from './components/visual/ActionSection'
@@ -17,6 +16,17 @@ import { useJourneyState } from './components/functional/journeyState'
 import { journeyActions } from './components/functional/blockchainInteractions'
 import { useAnimationSystem } from './components/functional/animationSystem'
 import { INTERACTIVE_PUBLISH_STEPS } from './components/functional/journeyConfig'
+import { 
+  getFlowId, 
+  setFlowId, 
+  saveJourneyData, 
+  loadJourneyData, 
+  saveCurrentStep, 
+  loadCurrentStep, 
+  clearFlowData, 
+  hasFlowData, 
+  getFlowSummary 
+} from './components/functional/sessionStorage'
 
 const InteractivePublish = ({ agentData, onComplete }) => {
   const account = useCurrentAccount()
@@ -45,9 +55,11 @@ const InteractivePublish = ({ agentData, onComplete }) => {
     canProceed,
   } = useJourneyState()
   
+  const [flowId, setFlowIdState] = useState(() => getFlowId())
   const [currentStep, setCurrentStepState] = useState(0)
   const [isProcessing, setProcessingState] = useState(false)
   const [animationPhase, setAnimationPhase] = useState('idle')
+  const [incompletePrerequisites, setIncompletePrerequisites] = useState([])
   
   // Animation system
   const {
@@ -66,6 +78,38 @@ const InteractivePublish = ({ agentData, onComplete }) => {
     }
   }, [suiClient, account, signAndExecuteTransaction, config])
 
+  // Load saved data on component mount
+  useEffect(() => {
+    if (hasFlowData(flowId)) {
+      console.log('Loading saved journey data for flow:', flowId)
+      const savedJourneyData = loadJourneyData(flowId)
+      const savedCurrentStep = loadCurrentStep(flowId)
+      
+      if (savedJourneyData) {
+        // Merge saved data with current account/agent data
+        updateJourneyData({
+          ...savedJourneyData,
+          // Always update with current account/agent info
+          walletConnected: !!account,
+          walletAddress: account?.address,
+          account,
+          agentData,
+          agentId: agentData?.id,
+          flowId
+        })
+      }
+      
+      if (savedCurrentStep !== undefined) {
+        setCurrentStepState(savedCurrentStep)
+      }
+      
+      console.log('Loaded flow summary:', getFlowSummary(flowId))
+    } else {
+      // No saved data, start fresh
+      console.log('No saved data found, starting fresh journey')
+    }
+  }, [flowId])
+  
   // Update account and agent data in journey data
   useEffect(() => {
     if (account) {
@@ -74,19 +118,64 @@ const InteractivePublish = ({ agentData, onComplete }) => {
         walletAddress: account.address,
         account,
         agentData,
-        agentId: agentData?.id
+        agentId: agentData?.id,
+        flowId
       })
     }
-  }, [account, agentData])
+  }, [account, agentData, flowId])
+  
+  // Save journey data whenever it changes
+  useEffect(() => {
+    if (journeyData && Object.keys(journeyData).length > 0) {
+      saveJourneyData(flowId, journeyData)
+    }
+  }, [journeyData, flowId])
+  
+  // Save current step whenever it changes
+  useEffect(() => {
+    saveCurrentStep(flowId, currentStep)
+  }, [currentStep, flowId])
+  
+  // Handle step navigation (from progress clicks or continue button)
+  const handleStepNavigation = (targetStep, incompleteSteps = null) => {
+    if (incompleteSteps && incompleteSteps.length > 0) {
+      // Show prerequisite warning
+      setIncompletePrerequisites(incompleteSteps)
+      setAnimationPhase('action-content')
+    } else {
+      // Navigate to step
+      console.log('Navigating from step', currentStep, 'to step', targetStep)
+      setCurrentStepState(targetStep)
+      setAnimationPhase('idle')
+      setIncompletePrerequisites([])
+    }
+  }
   
   // Only advance to next step when user explicitly continues
   const handleContinueToNext = () => {
     const nextStep = currentStep + 1
     if (nextStep < INTERACTIVE_PUBLISH_STEPS.length) {
-      console.log('User advancing from step', currentStep, 'to step', nextStep)
-      setCurrentStepState(nextStep)
-      setAnimationPhase('idle')
+      handleStepNavigation(nextStep)
     }
+  }
+  
+  // Removed handleShowActionContent as content is now always visible
+  
+  // Handle action from content (for mint step with form data)
+  const handleActionFromContent = (formData = {}) => {
+    if (formData.nftName && formData.nftDescription) {
+      // Update journey data with form data
+      updateJourneyData({
+        nftName: formData.nftName,
+        nftDescription: formData.nftDescription
+      })
+    }
+    
+    // Go back to animation and trigger action
+    setAnimationPhase('idle')
+    setTimeout(() => {
+      handleStepAction()
+    }, 100)
   }
   
   // Handle step actions
@@ -187,23 +276,41 @@ const InteractivePublish = ({ agentData, onComplete }) => {
     }
   }
   
-  const handleNewJourney = () => {
+  // Reset progress and start new journey
+  const handleResetProgress = () => {
+    console.log('Resetting journey progress')
+    
+    // Clear session storage for current flow
+    clearFlowData(flowId)
+    
+    // Generate new flow ID
+    const newFlowId = setFlowId()
+    setFlowIdState(newFlowId)
+    
+    // Reset all state
     resetJourney()
     setCurrentStepState(0)
     setAnimationPhase('idle')
+    setIncompletePrerequisites([])
+    
+    console.log('Started new journey with flow ID:', newFlowId)
+  }
+  
+  const handleNewJourney = () => {
+    handleResetProgress()
   }
 
   return (
     <div className="journey-v2">
       <div className="journey-container">
-        <JourneyHeader />
-
         <div className="journey-main">
           <ProgressSection 
             steps={INTERACTIVE_PUBLISH_STEPS}
             currentStep={currentStep}
             journeyData={journeyData}
             renderStepIcon={renderStepIcon}
+            onStepClick={handleStepNavigation}
+            onResetProgress={handleResetProgress}
           />
 
           {/* Conditional layout based on completion status */}
@@ -246,7 +353,11 @@ const InteractivePublish = ({ agentData, onComplete }) => {
               {/* Animation Section */}
               <AnimationSection 
                 animationPhase={animationPhase}
-                renderAnimation={renderAnimation}
+                renderAnimation={(phase) => renderAnimation(phase, currentStep)}
+                currentStep={currentStep}
+                journeyData={journeyData}
+                incompletePrerequisites={incompletePrerequisites}
+                handleActionFromContent={handleActionFromContent}
               />
 
               {/* Action Section */}

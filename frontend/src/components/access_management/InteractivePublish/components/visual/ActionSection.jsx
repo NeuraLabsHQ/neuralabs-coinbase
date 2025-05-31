@@ -6,11 +6,9 @@ import { INTERACTIVE_PUBLISH_STEPS } from '../functional/journeyConfig'
 
 /**
  * Action Section Component
- * Handles user interactions for each step
+ * Handles user interactions for each step (buttons only, content moved to AnimationSection)
  */
 const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase, onAction, onContinue, setAnimationPhase }) => {
-  const [nftName, setNftName] = useState('')
-  const [nftDescription, setNftDescription] = useState('')
   const { mutate: signPersonalMessage } = useSignPersonalMessage()
   const [isSignatureTriggered, setIsSignatureTriggered] = useState(false)
   
@@ -81,13 +79,8 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
     }
   }, [step.id, journeyData, animationPhase, isSignatureTriggered, signPersonalMessage, setAnimationPhase]);
   
-  
   const handleAction = async () => {
-    if (step.id === 'mint') {
-      journeyData.nftName = nftName
-      journeyData.nftDescription = nftDescription
-      onAction()
-    } else if (step.id === 'signature') {
+    if (step.id === 'signature') {
       // For signature step, we need different behavior
       // Just trigger the action and let the parent handle it
       console.log('Digital signature step - triggering action');
@@ -98,6 +91,8 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
       onAction()
     }
   }
+  
+  // Removed handleShowActionContent as content is now always visible in AnimationSection
   
   const getActionButtonText = () => {
     switch (step.id) {
@@ -122,234 +117,9 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
   const isStepCompleted = () => {
     return step.completed(journeyData)
   }
-
-  const renderContent = () => {
-    switch (step.id) {
-      case 'wallet':
-        return (
-          <div className="action-content">
-            {journeyData.walletConnected ? (
-              <div className="status-message status-success">
-                <div className="detail-item">
-                  <span className="detail-label">Connected Wallet</span>
-                  <span className="detail-value">{journeyData.walletAddress?.slice(0, 10)}...{journeyData.walletAddress?.slice(-8)}</span>
-                </div>
-              </div>
-            ) : (
-              <p>Connect your SUI wallet to begin the publishing journey</p>
-            )}
-          </div>
-        )
-        
-      case 'balances':
-        return (
-          <div className="action-content">
-            {journeyData.suiBalance !== null && journeyData.walBalance !== null ? (
-              <div className="balance-info">
-                <div className="status-message status-success">
-                  <div className="detail-item">
-                    <span className="detail-label">SUI Balance</span>
-                    <span className="detail-value">{(Number(journeyData.suiBalance) / 1e9).toFixed(4)} SUI</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">WAL Balance</span>
-                    <span className="detail-value">{(Number(journeyData.walBalance) / 1e9).toFixed(4)} WAL</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <p>Check your token balances before proceeding</p>
-            )}
-          </div>
-        )
-        
-      case 'mint':
-        return (
-          <div className="action-content">
-            {journeyData.nftId ? (
-              <div className="status-message status-success">
-                <div className="detail-item">
-                  <span className="detail-label">NFT Created</span>
-                  <span className="detail-value">{journeyData.nftId.slice(0, 12)}...</span>
-                </div>
-              </div>
-            ) : (
-              <form className="action-form" onSubmit={(e) => { e.preventDefault(); handleAction(); }}>
-                <div className="form-group">
-                  <label>NFT Name</label>
-                  <input
-                    type="text"
-                    value={nftName}
-                    onChange={(e) => setNftName(e.target.value)}
-                    placeholder="Enter NFT name"
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>NFT Description</label>
-                  <textarea
-                    value={nftDescription}
-                    onChange={(e) => setNftDescription(e.target.value)}
-                    placeholder="Enter NFT description"
-                    rows={3}
-                    required
-                  />
-                </div>
-              </form>
-            )}
-          </div>
-        )
-        
-      case 'accessCap':
-        return (
-          <div className="action-content">
-            {journeyData.accessCapId ? (
-              <div className="status-message status-success">
-                <div className="detail-item">
-                  <span className="detail-label">Access Capability</span>
-                  <span className="detail-value">Created successfully</span>
-                </div>
-              </div>
-            ) : (
-              <p>Create access capability for your NFT</p>
-            )}
-          </div>
-        )
-
-      case 'grant':
-        return (
-          <div className="action-content">
-            {journeyData.completedSteps?.includes(4) ? (
-              <div className="status-message status-success">
-                <div className="detail-item">
-                  <span className="detail-label">Access Granted</span>
-                  <span className="detail-value">Level 6 permissions</span>
-                </div>
-              </div>
-            ) : (
-              <p>Grant yourself access to the NFT</p>
-            )}
-          </div>
-        )
-
-      case 'verify':
-        return (
-          <div className="action-content">
-            {journeyData.accessLevel !== null ? (
-              <div className="status-message status-success">
-                <div className="detail-item">
-                  <span className="detail-label">Access Level</span>
-                  <span className="detail-value">
-                    {typeof journeyData.accessLevel === 'object' 
-                      ? journeyData.accessLevel.level || JSON.stringify(journeyData.accessLevel)
-                      : journeyData.accessLevel}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <p>Verify your access permissions</p>
-            )}
-          </div>
-        )
-
-      case 'seal':
-        return (
-          <div className="action-content">
-            {journeyData.sealClient ? (
-              <div className="status-message status-success">
-                <div className="detail-item">
-                  <span className="detail-label">Seal Protocol</span>
-                  <span className="detail-value">3-of-5 threshold ready</span>
-                </div>
-              </div>
-            ) : (
-              <p>Initialize Seal protocol for secure encryption</p>
-            )}
-          </div>
-        )
-        
-      case 'file':
-        return (
-          <div className="action-content">
-            {journeyData.selectedFile ? (
-              <div className="status-message status-success">
-                <div className="detail-item">
-                  <span className="detail-label">Workflow</span>
-                  <span className="detail-value">{journeyData.selectedFile.name}</span>
-                </div>
-              </div>
-            ) : (
-              <div className="workflow-fetch">
-                <p>Click below to prepare your agent's workflow for blockchain publishing</p>
-              </div>
-            )}
-          </div>
-        )
-        
-      case 'signature':
-        return (
-          <div className="action-content">
-            {journeyData.sessionKey ? (
-              <div className="status-message status-success">
-                <div className="detail-item">
-                  <span className="detail-label">Session Key</span>
-                  <span className="detail-value">{journeyData.sessionKey.slice(0, 16)}...{journeyData.sessionKey.slice(-8)}</span>
-                </div>
-              </div>
-            ) : (
-              <p>Create digital signature for encryption</p>
-            )}
-          </div>
-        )
-
-      case 'encrypt':
-        return (
-          <div className="action-content">
-            {journeyData.encryptedData ? (
-              <div className="status-message status-success">
-                <div className="detail-item">
-                  <span className="detail-label">Encryption</span>
-                  <span className="detail-value">File encrypted successfully</span>
-                </div>
-              </div>
-            ) : (
-              <p>Encrypt your file using AES-256</p>
-            )}
-          </div>
-        )
-
-      case 'walrus':
-        return (
-          <div className="action-content">
-            {journeyData.walrusBlobId ? (
-              <div className="status-message status-success">
-                <div className="detail-item">
-                  <span className="detail-label">Storage</span>
-                  <span className="detail-value">Published to Walrus</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Blob ID</span>
-                  <span className="detail-value">{journeyData.walrusBlobId.slice(0, 12)}...</span>
-                </div>
-              </div>
-            ) : (
-              <p>Store encrypted file on Walrus network</p>
-            )}
-          </div>
-        )
-        
-      default:
-        return (
-          <div className="action-content">
-            <p>{step.subtitle}</p>
-          </div>
-        )
-    }
-  }
   
   const isDisabled = () => {
     if (isProcessing) return true
-    if (step.id === 'mint' && (!nftName || !nftDescription)) return true
     if (step.id === 'file' && !journeyData.selectedFile) return true
     return false
   }
@@ -364,8 +134,6 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
   
   return (
     <div className="action-section">
-      {renderContent()}
-      
       <div className="button-container">
         {shouldShowActionButton() && (
           <motion.button

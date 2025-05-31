@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion'
+import { getAppThemeColors } from '../../../../utils/svgThemeUtils'
 
-const NFTCreationAnimation = () => {
+const NFTCreationAnimation = ({ colorMode = 'light' }) => {
+  const themeColors = getAppThemeColors(colorMode)
   return (
     <motion.div className="animation-scene">
       <div className="nft-creation-container">
@@ -15,8 +17,8 @@ const NFTCreationAnimation = () => {
             {/* Forge base */}
             <motion.rect 
               x="20" y="80" width="80" height="30" rx="5"
-              fill="rgba(139, 69, 19, 0.8)" 
-              stroke="#8b4513" 
+              fill={`${themeColors.border}CC`} 
+              stroke={themeColors.border} 
               strokeWidth="2"
               initial={{ scaleY: 0 }}
               animate={{ scaleY: 1 }}
@@ -30,7 +32,7 @@ const NFTCreationAnimation = () => {
                 cx={40 + i * 8}
                 cy={75}
                 r="3"
-                fill={i % 2 === 0 ? "#ff6b35" : "#f7931e"}
+                fill={i % 2 === 0 ? themeColors.error : themeColors.warning}
                 initial={{ y: 0, opacity: 0 }}
                 animate={{ 
                   y: [-10, -30, -10],
@@ -59,8 +61,8 @@ const NFTCreationAnimation = () => {
             {/* NFT frame */}
             <motion.path
               d="M20 15 L80 15 L85 25 L85 75 L80 85 L20 85 L15 75 L15 25 Z"
-              fill="linear-gradient(135deg, #667eea, #764ba2)"
-              stroke="white"
+              fill={`linear-gradient(135deg, ${themeColors.primary}, ${themeColors.success})`}
+              stroke={themeColors.text}
               strokeWidth="3"
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
@@ -71,7 +73,7 @@ const NFTCreationAnimation = () => {
             <motion.circle 
               cx="50" cy="50" r="20"
               fill="none"
-              stroke="rgba(255,255,255,0.6)"
+              stroke={`${themeColors.text}99`}
               strokeWidth="2"
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
@@ -80,7 +82,7 @@ const NFTCreationAnimation = () => {
             
             <motion.path
               d="M35 35 L65 65 M65 35 L35 65"
-              stroke="rgba(255,255,255,0.8)"
+              stroke={`${themeColors.text}CC`}
               strokeWidth="3"
               strokeLinecap="round"
               initial={{ pathLength: 0 }}
@@ -93,7 +95,7 @@ const NFTCreationAnimation = () => {
               x="50" y="95"
               textAnchor="middle"
               fontSize="8"
-              fill="white"
+              fill={themeColors.text}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 2.8 }}

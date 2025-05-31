@@ -87,22 +87,39 @@ export const useAnimationSystem = () => {
         }}
         transition={{ duration: 0.8 }}
       >
-        <img src={IconSrc} alt={`${iconType} Icon`} width="100" height="100" style={svgStyles} />
+        <img src={IconSrc} alt={`${iconType} Icon`} style={svgStyles} />
       </motion.div>
     )
   }
 
-  const renderAnimation = (animationPhase) => {
+  const renderAnimation = (animationPhase, currentStep = null) => {
+    // Map step indices to their default animations
+    const getDefaultStepAnimation = (stepIndex) => {
+      const stepAnimations = {
+        0: 'wallet-connecting',    // wallet step
+        1: 'balance-checking',     // balances step  
+        2: 'nft-creating',         // mint step
+        3: 'access-cap-creating',  // accessCap step
+        4: 'grant-access',         // grant step
+        5: 'access-verifying',     // verify step
+        6: 'seal-initializing',    // seal step
+        7: 'signing',              // signature step
+        8: 'file-selecting',       // file step
+        9: 'encrypting',           // encrypt step
+        10: 'uploading'            // walrus step
+      }
+      return stepAnimations[stepIndex] || 'wallet-connecting'
+    }
+
     switch(animationPhase) {
       case 'wallet-connecting':
-        return <WalletConnectedAnimation />
+        return <WalletConnectedAnimation colorMode={colorMode} />
 
       case 'balance-checking':
-        // return <BalanceCheckAnimation />
         return (
           <motion.div className="animation-scene">
             <div className="seal-init-container">
-              <img src={BalanceCheckAnimation} alt="Balance Check" width="200" height="200" style={svgStyles} />
+              <img src={BalanceCheckAnimation} alt="Balance Check" style={svgStyles} />
               <motion.div 
                 className="seal-text"
                 initial={{ opacity: 0 }}
@@ -116,25 +133,23 @@ export const useAnimationSystem = () => {
           </motion.div>
         )
 
-        
-
       case 'nft-creating':
-        return <NFTScanAnimation />
+        return <NFTScanAnimation colorMode={colorMode} />
 
       case 'access-cap-creating':
-        return <AccessCapabilityAnimation />
+        return <AccessCapabilityAnimation colorMode={colorMode} />
 
       case 'grant-access':
-        return <GrantAccessAnimation />
+        return <GrantAccessAnimation colorMode={colorMode} />
 
       case 'access-verifying':
-        return <AccessVerificationAnimation />
+        return <AccessVerificationAnimation colorMode={colorMode} />
 
       case 'seal-initializing':
         return (
           <motion.div className="animation-scene">
             <div className="seal-init-container">
-              <img src={SealIcon} alt="Seal Protocol" width="200" height="200" style={svgStyles} />
+              <img src={SealIcon} alt="Seal Protocol" style={svgStyles} />
               <motion.div 
                 className="seal-text"
                 initial={{ opacity: 0 }}
@@ -152,7 +167,7 @@ export const useAnimationSystem = () => {
         return (
           <motion.div className="animation-scene">
             <div className="shamir-secret-container">
-              <img src={SecretShare} alt="Shamir's Secret Sharing" width="300" height="300" style={svgStyles} />
+              <img src={SecretShare} alt="Shamir's Secret Sharing" style={svgStyles} />
               <motion.div 
                 className="secret-labels"
                 initial={{ opacity: 0 }}
@@ -167,10 +182,10 @@ export const useAnimationSystem = () => {
         )
 
       case 'file-selecting':
-          return (
+        return (
           <motion.div className="animation-scene">
             <div className="seal-init-container">
-              <img src={FileIcon} alt="Select File" width="200" height="200" style={svgStyles} />
+              <img src={FileIcon} alt="Select File" style={svgStyles} />
               <motion.div 
                 className="seal-text"
                 initial={{ opacity: 0 }}
@@ -183,15 +198,14 @@ export const useAnimationSystem = () => {
           </motion.div>
         )
 
-
       case 'encrypting':
-        return <DataCubeAnimation />
+        return <DataCubeAnimation colorMode={colorMode} />
 
       case 'uploading':
         return (
           <motion.div className="animation-scene">
             <div className="walrus-upload">
-              <img src={WalrusUploadAnimation} alt="Walrus Upload Animation" width="400" height="400" style={svgStyles} />
+              <img src={WalrusUploadAnimation} alt="Walrus Upload Animation" style={svgStyles} />
             </div>
             <motion.div className="upload-text">Publishing to Walrus Network...</motion.div>
           </motion.div>
@@ -206,7 +220,7 @@ export const useAnimationSystem = () => {
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               >
-                <svg viewBox="0 0 100 100" width="100" height="100">
+                <svg viewBox="0 0 100 100" style={{ width: '80px', height: '80px' }}>
                   <motion.circle
                     cx="50" cy="50" r="40"
                     fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="4"
@@ -229,8 +243,8 @@ export const useAnimationSystem = () => {
       case 'completed':
         return <AnimationBadge className="success-badge">✅ COMPLETED</AnimationBadge>
 
-      case 'idle':
-      default:
+      case 'step-completed':
+        // Show NetworkIdle when step is completed and waiting for user to continue
         return (
           <motion.div className="animation-scene">
             <motion.div 
@@ -239,11 +253,23 @@ export const useAnimationSystem = () => {
               animate={{ opacity: 1 }}
             >
               <div className="network-animation">
-                <img src={NetworkIdleAnimation} alt="Network Idle Animation" width="400" height="400" style={svgStyles} />
+                <img src={NetworkIdleAnimation} alt="Network Idle Animation" style={svgStyles} />
               </div>
             </motion.div>
           </motion.div>
         )
+
+      case 'default':
+      case 'idle':
+      default:
+        // Show step-specific animation when idle instead of NetworkIdle
+        if (currentStep !== null) {
+          const stepAnimation = getDefaultStepAnimation(currentStep)
+          return renderAnimation(stepAnimation, null) // Recursive call but with null currentStep to avoid infinite loop
+        }
+        
+        // Fallback to first step animation if no currentStep provided
+        return <WalletConnectedAnimation colorMode={colorMode} />
     }
   }
 

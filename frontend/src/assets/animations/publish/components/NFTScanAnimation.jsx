@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion'
+import { getAppThemeColors } from '../../../../utils/svgThemeUtils'
 
-const NFTScanAnimation = () => {
+const NFTScanAnimation = ({ colorMode = 'light' }) => {
+  const themeColors = getAppThemeColors(colorMode)
   return (
     <motion.div className="animation-scene">
       <div className="nft-scan-container">

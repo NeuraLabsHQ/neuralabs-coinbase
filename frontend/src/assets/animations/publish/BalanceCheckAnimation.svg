@@ -1,15 +1,15 @@
-<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+<svg width="600" height="600" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <!-- Gradients -->
     <linearGradient id="walletGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#3a3a3a;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#1a1a1a;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#c5c5c5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e5e5e5;stop-opacity:1" />
     </linearGradient>
     
     <linearGradient id="scanGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0" />
-      <stop offset="50%" style="stop-color:#ffffff;stop-opacity:0.8" />
-      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+      <stop offset="0%" style="stop-color:#000000;stop-opacity:0" />
+      <stop offset="50%" style="stop-color:#000000;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#000000;stop-opacity:0" />
     </linearGradient>
     
     <!-- Filters -->
@@ -26,19 +26,14 @@
     </filter>
   </defs>
   
-  <!-- Background -->
-  <rect width="400" height="400" fill="#0a0a0a"/>
-  
   <!-- Static wallet -->
   <g transform="translate(200, 200)">
     <!-- Wallet shape -->
-    <rect x="-80" y="-60" width="160" height="120" rx="10" fill="url(#walletGradient)" stroke="#555" stroke-width="2" filter="url(#shadow)"/>
+    <rect x="-80" y="-60" width="160" height="120" rx="10" fill="url(#walletGradient)" stroke="#aaa" stroke-width="2" filter="url(#shadow)"/>
     
     <!-- Wallet details -->
-    <rect x="-60" y="-40" width="120" height="80" rx="5" fill="#0a0a0a" opacity="0.5"/>
-    <circle cx="50" cy="-30" r="15" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
-    
-
+    <rect x="-60" y="-40" width="120" height="80" rx="5" fill="#f5f5f5" opacity="0.8"/>
+    <circle cx="50" cy="-30" r="15" fill="#d5d5d5" stroke="#bbb" stroke-width="1"/>
   </g>
   
   <!-- Scanning animations -->
@@ -56,15 +51,14 @@
     </rect>
     
     <!-- Pulse rings -->
-    <circle cx="0" cy="0" r="0" fill="none" stroke="#fff" stroke-width="2" opacity="0" filter="url(#glow)">
+    <circle cx="0" cy="0" r="0" fill="none" stroke="#000" stroke-width="2" opacity="0" filter="url(#glow)">
       <animate attributeName="r" values="0;150" dur="2s" begin="0s" repeatCount="indefinite"/>
       <animate attributeName="stroke-opacity" values="0.6;0" dur="2s" begin="0s" repeatCount="indefinite"/>
     </circle>
     
-    <circle cx="0" cy="0" r="0" fill="none" stroke="#fff" stroke-width="2" opacity="0" filter="url(#glow)">
+    <circle cx="0" cy="0" r="0" fill="none" stroke="#000" stroke-width="2" opacity="0" filter="url(#glow)">
       <animate attributeName="r" values="0;150" dur="2s" begin="1s" repeatCount="indefinite"/>
       <animate attributeName="stroke-opacity" values="0.6;0" dur="2s" begin="1s" repeatCount="indefinite"/>
     </circle>
-    
   </g>
 </svg>

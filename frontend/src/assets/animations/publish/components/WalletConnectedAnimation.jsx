@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion'
+import { getAppThemeColors } from '../../../../utils/svgThemeUtils'
 
-const WalletConnectedAnimation = () => {
+const WalletConnectedAnimation = ({ colorMode = 'light' }) => {
+  const themeColors = getAppThemeColors(colorMode)
   return (
     <motion.div className="animation-scene">
       <div className="wallet-connection-container">
@@ -14,14 +16,14 @@ const WalletConnectedAnimation = () => {
           <svg viewBox="0 0 120 80" width="120" height="80">
             <motion.rect 
               x="10" y="20" width="100" height="60" rx="8"
-              fill="none" stroke="white" strokeWidth="3"
+              fill="none" stroke={themeColors.text} strokeWidth="3"
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
               transition={{ duration: 1.5, delay: 0.3 }}
             />
             <motion.circle 
               cx="85" cy="50" r="8"
-              fill="white"
+              fill={themeColors.text}
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 1, duration: 0.5 }}
@@ -97,11 +99,11 @@ const WalletConnectedAnimation = () => {
           transition={{ delay: 2, duration: 0.6, ease: "backOut" }}
         >
           <svg viewBox="0 0 60 60" width="60" height="60">
-            <circle cx="30" cy="30" r="25" fill="rgba(34, 197, 94, 0.2)" stroke="#22c55e" strokeWidth="3"/>
+            <circle cx="30" cy="30" r="25" fill={`${themeColors.success}33`} stroke={themeColors.success} strokeWidth="3"/>
             <motion.path
               d="M18 30 L26 38 L42 22"
               fill="none"
-              stroke="#22c55e"
+              stroke={themeColors.success}
               strokeWidth="4"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -120,7 +122,6 @@ const WalletConnectedAnimation = () => {
         transition={{ delay: 2.5 }}
       >
         <span className="main-text">Wallet Connected</span>
-        <span className="sub-text">Secure connection established</span>
       </motion.div>
     </motion.div>
   )

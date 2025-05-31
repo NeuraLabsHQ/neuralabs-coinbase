@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion'
+import { getAppThemeColors } from '../../../../utils/svgThemeUtils'
 
-const AccessVerificationAnimation = () => {
+const AccessVerificationAnimation = ({ colorMode = 'light' }) => {
+  const themeColors = getAppThemeColors(colorMode)
   return (
     <motion.div className="animation-scene">
       <div className="access-verification-container">
@@ -46,9 +48,9 @@ const AccessVerificationAnimation = () => {
             className="card-content"
             animate={{ 
               boxShadow: [
-                '0 0 20px rgba(52, 152, 219, 0.3)',
-                '0 0 40px rgba(52, 152, 219, 0.6)',
-                '0 0 20px rgba(52, 152, 219, 0.3)'
+                `0 0 20px ${themeColors.primary}4D`,
+                `0 0 40px ${themeColors.primary}99`,
+                `0 0 20px ${themeColors.primary}4D`
               ]
             }}
             transition={{ duration: 2, repeat: Infinity }}
@@ -86,9 +88,9 @@ const AccessVerificationAnimation = () => {
                     <motion.div 
                       className={`perm-status ${perm.status}`}
                       animate={perm.status === 'granted' ? {
-                        backgroundColor: ['#27ae60', '#2ecc71', '#27ae60']
+                        backgroundColor: [themeColors.success, `${themeColors.success}CC`, themeColors.success]
                       } : {
-                        backgroundColor: ['#c0392b', '#e74c3c', '#c0392b']
+                        backgroundColor: [themeColors.error, `${themeColors.error}CC`, themeColors.error]
                       }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
@@ -164,7 +166,7 @@ const AccessVerificationAnimation = () => {
               <circle 
                 cx="40" cy="40" r="35" 
                 fill="none" 
-                stroke="rgba(52, 152, 219, 0.3)" 
+                stroke={`${themeColors.primary}4D`} 
                 strokeWidth="2"
               />
               
@@ -174,7 +176,7 @@ const AccessVerificationAnimation = () => {
                   key={i}
                   d="M 40 5 A 35 35 0 0 1 65 20"
                   fill="none"
-                  stroke="#3498db"
+                  stroke={themeColors.primary}
                   strokeWidth="3"
                   strokeLinecap="round"
                   transform={`rotate(${rotation} 40 40)`}
@@ -192,7 +194,7 @@ const AccessVerificationAnimation = () => {
               {/* Center dot */}
               <motion.circle 
                 cx="40" cy="40" r="8" 
-                fill="#3498db"
+                fill={themeColors.primary}
                 animate={{ 
                   scale: [1, 1.3, 1],
                   opacity: [0.7, 1, 0.7]
@@ -217,9 +219,9 @@ const AccessVerificationAnimation = () => {
             className="result-badge verified"
             animate={{ 
               boxShadow: [
-                '0 0 20px rgba(46, 204, 113, 0.3)',
-                '0 0 40px rgba(46, 204, 113, 0.6)',
-                '0 0 20px rgba(46, 204, 113, 0.3)'
+                `0 0 20px ${themeColors.success}4D`,
+                `0 0 40px ${themeColors.success}99`,
+                `0 0 20px ${themeColors.success}4D`
               ]
             }}
             transition={{ duration: 2, repeat: Infinity }}

@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion'
+import { getAppThemeColors } from '../../../../utils/svgThemeUtils'
 
-const GrantAccessAnimation = () => {
+const GrantAccessAnimation = ({ colorMode = 'light' }) => {
+  const themeColors = getAppThemeColors(colorMode)
   return (
     <motion.div className="animation-scene">
       <div className="grant-access-container">
@@ -15,9 +17,9 @@ const GrantAccessAnimation = () => {
             className="owner-avatar"
             animate={{ 
               boxShadow: [
-                '0 0 20px rgba(251, 191, 36, 0.3)',
-                '0 0 40px rgba(251, 191, 36, 0.6)',
-                '0 0 20px rgba(251, 191, 36, 0.3)'
+                `0 0 20px ${themeColors.warning}4D`,
+                `0 0 40px ${themeColors.warning}99`,
+                `0 0 20px ${themeColors.warning}4D`
               ]
             }}
             transition={{ duration: 2, repeat: Infinity }}
@@ -45,10 +47,10 @@ const GrantAccessAnimation = () => {
             }}
           >
             <svg viewBox="0 0 40 20" width="40" height="20">
-              <rect x="5" y="8" width="25" height="4" rx="2" fill="#e74c3c"/>
-              <circle cx="10" cy="10" r="6" fill="#c0392b" stroke="#a93226" strokeWidth="1"/>
-              <circle cx="10" cy="10" r="2" fill="#a93226"/>
-              <path d="M30 8 L32 8 L32 6 L35 6 L35 14 L32 14 L32 12 L30 12" fill="#c0392b"/>
+              <rect x="5" y="8" width="25" height="4" rx="2" fill={themeColors.error}/>
+              <circle cx="10" cy="10" r="6" fill={themeColors.error} stroke={themeColors.border} strokeWidth="1"/>
+              <circle cx="10" cy="10" r="2" fill={themeColors.border}/>
+              <path d="M30 8 L32 8 L32 6 L35 6 L35 14 L32 14 L32 12 L30 12" fill={themeColors.error}/>
             </svg>
           </motion.div>
 
@@ -99,9 +101,9 @@ const GrantAccessAnimation = () => {
             animate={{ 
               scale: [1, 1.1, 1],
               boxShadow: [
-                '0 0 10px rgba(52, 152, 219, 0.3)',
-                '0 0 30px rgba(52, 152, 219, 0.7)',
-                '0 0 10px rgba(52, 152, 219, 0.3)'
+                `0 0 10px ${themeColors.primary}4D`,
+                `0 0 30px ${themeColors.primary}B3`,
+                `0 0 10px ${themeColors.primary}4D`
               ]
             }}
             transition={{ 
@@ -123,9 +125,9 @@ const GrantAccessAnimation = () => {
           transition={{ delay: 2, duration: 0.8 }}
         >
           {[
-            { level: 'READ', color: '#27ae60', delay: 2.5 },
-            { level: 'write', color: '#f39c12', delay: 2.7 },
-            { level: 'admin', color: '#e74c3c', delay: 2.9 }
+            { level: 'READ', color: themeColors.success, delay: 2.5 },
+            { level: 'write', color: themeColors.warning, delay: 2.7 },
+            { level: 'admin', color: themeColors.error, delay: 2.9 }
           ].map((perm, index) => (
             <motion.div
               key={perm.level}
@@ -177,7 +179,7 @@ const GrantAccessAnimation = () => {
                   rx="20"
                   ry="12"
                   fill="none"
-                  stroke="#95a5a6"
+                  stroke={themeColors.border}
                   strokeWidth="3"
                   initial={{ pathLength: 0 }}
                   animate={{ pathLength: 1 }}
@@ -192,7 +194,7 @@ const GrantAccessAnimation = () => {
                   rx="12"
                   ry="20"
                   fill="none"
-                  stroke="#95a5a6"
+                  stroke={themeColors.border}
                   strokeWidth="3"
                   initial={{ pathLength: 0 }}
                   animate={{ pathLength: 1 }}
@@ -228,14 +230,14 @@ const GrantAccessAnimation = () => {
             <svg viewBox="0 0 60 60" width="60" height="60">
               <circle 
                 cx="30" cy="30" r="25" 
-                fill="rgba(46, 204, 113, 0.2)" 
-                stroke="#2ecc71" 
+                fill={`${themeColors.success}33`} 
+                stroke={themeColors.success} 
                 strokeWidth="3"
               />
               <motion.path
                 d="M18 30 L26 38 L42 22"
                 fill="none"
-                stroke="#2ecc71"
+                stroke={themeColors.success}
                 strokeWidth="4"
                 strokeLinecap="round"
                 strokeLinejoin="round"

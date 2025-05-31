@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion'
+import { getAppThemeColors } from '../../../../utils/svgThemeUtils'
 
-const DataCubeAnimation = () => {
+const DataCubeAnimation = ({ colorMode = 'light' }) => {
+  const themeColors = getAppThemeColors(colorMode)
   return (
     <motion.div className="animation-scene">
       <div className="encryption-container">
@@ -39,8 +41,8 @@ const DataCubeAnimation = () => {
           transition={{ delay: 1.5, duration: 0.5 }}
         >
           <svg viewBox="0 0 100 100" width="100" height="100">
-            <rect x="25" y="45" width="50" height="35" rx="5" fill="white" fillOpacity="0.9"/>
-            <path d="M35 45 V35 Q35 25 50 25 Q65 25 65 35 V45" fill="none" stroke="white" strokeWidth="4"/>
+            <rect x="25" y="45" width="50" height="35" rx="5" fill={themeColors.text} fillOpacity="0.9"/>
+            <path d="M35 45 V35 Q35 25 50 25 Q65 25 65 35 V45" fill="none" stroke={themeColors.text} strokeWidth="4"/>
           </svg>
         </motion.div>
       </div>

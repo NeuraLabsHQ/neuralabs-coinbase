@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion'
+import { getAppThemeColors } from '../../../../utils/svgThemeUtils'
 
-const AccessCapabilityAnimation = () => {
+const AccessCapabilityAnimation = ({ colorMode = 'light' }) => {
+  const themeColors = getAppThemeColors(colorMode)
   return (
     <motion.div className="animation-scene">
       <div className="access-capability-container">
@@ -15,8 +17,8 @@ const AccessCapabilityAnimation = () => {
             {/* Key shaft */}
             <motion.rect 
               x="10" y="25" width="70" height="10" rx="5"
-              fill="linear-gradient(90deg, #c0392b, #e74c3c)"
-              stroke="#a93226" 
+              fill={`linear-gradient(90deg, ${themeColors.error}, ${themeColors.primary})`}
+              stroke={themeColors.border} 
               strokeWidth="2"
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
@@ -26,8 +28,8 @@ const AccessCapabilityAnimation = () => {
             {/* Key head */}
             <motion.circle 
               cx="25" cy="30" r="15"
-              fill="linear-gradient(135deg, #c0392b, #e74c3c)"
-              stroke="#a93226" 
+              fill={`linear-gradient(135deg, ${themeColors.error}, ${themeColors.primary})`}
+              stroke={themeColors.border} 
               strokeWidth="2"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -37,14 +39,14 @@ const AccessCapabilityAnimation = () => {
             {/* Key teeth */}
             <motion.path
               d="M80 25 L85 25 L85 20 L90 20 L90 35 L85 35 L85 30 L80 30"
-              fill="#c0392b"
+              fill={themeColors.error}
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
               transition={{ delay: 1, duration: 0.5 }}
             />
             
             {/* Key hole in center */}
-            <circle cx="25" cy="30" r="5" fill="#a93226"/>
+            <circle cx="25" cy="30" r="5" fill={themeColors.border}/>
           </svg>
         </motion.div>
 
@@ -80,9 +82,9 @@ const AccessCapabilityAnimation = () => {
                   className="node-core"
                   animate={{
                     boxShadow: [
-                      '0 0 10px rgba(52, 152, 219, 0.3)',
-                      '0 0 20px rgba(52, 152, 219, 0.6)',
-                      '0 0 10px rgba(52, 152, 219, 0.3)'
+                      `0 0 10px ${themeColors.primary}30`,
+                      `0 0 20px ${themeColors.primary}60`,
+                      `0 0 10px ${themeColors.primary}30`
                     ]
                   }}
                   transition={{
@@ -107,7 +109,7 @@ const AccessCapabilityAnimation = () => {
                 key={`h-${row}`}
                 x1="120" y1={120 + row * 75}
                 x2="280" y2={120 + row * 75}
-                stroke="rgba(52, 152, 219, 0.4)"
+                stroke={`${themeColors.primary}66`}
                 strokeWidth="2"
                 strokeDasharray="5,5"
                 initial={{ pathLength: 0 }}
@@ -122,7 +124,7 @@ const AccessCapabilityAnimation = () => {
                 key={`v-${col}`}
                 x1={120 + col * 80} y1="120"
                 x2={120 + col * 80} y2="270"
-                stroke="rgba(52, 152, 219, 0.4)"
+                stroke={`${themeColors.primary}66`}
                 strokeWidth="2"
                 strokeDasharray="5,5"
                 initial={{ pathLength: 0 }}
@@ -176,20 +178,20 @@ const AccessCapabilityAnimation = () => {
               <circle 
                 cx="30" cy="30" r="25" 
                 fill="none" 
-                stroke="rgba(46, 204, 113, 0.3)" 
+                stroke={`${themeColors.success}4D`} 
                 strokeWidth="2"
               />
               <motion.circle 
                 cx="30" cy="30" r="25" 
                 fill="none" 
-                stroke="#2ecc71" 
+                stroke={themeColors.success} 
                 strokeWidth="3"
                 strokeDasharray="157"
                 strokeDashoffset="157"
                 animate={{ strokeDashoffset: 0 }}
                 transition={{ duration: 2, ease: "easeInOut" }}
               />
-              <text x="30" y="35" textAnchor="middle" fontSize="12" fill="#2ecc71">
+              <text x="30" y="35" textAnchor="middle" fontSize="12" fill={themeColors.success}>
                 CAP
               </text>
             </svg>
