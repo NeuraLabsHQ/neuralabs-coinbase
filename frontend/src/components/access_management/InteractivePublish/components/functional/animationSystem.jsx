@@ -75,7 +75,10 @@ export const useAnimationSystem = () => {
     
     const IconSrc = iconMap[iconType]
     
-    if (!IconSrc) return null
+    if (!IconSrc) {
+      console.warn('No icon found for iconType:', iconType)
+      return null
+    }
     
     return (
       <motion.div
@@ -87,7 +90,11 @@ export const useAnimationSystem = () => {
         }}
         transition={{ duration: 0.8 }}
       >
-        <img src={IconSrc} alt={`${iconType} Icon`} style={svgStyles} />
+        <img 
+          src={IconSrc} 
+          alt={`${iconType} Icon`} 
+          style={svgStyles}
+        />
       </motion.div>
     )
   }
