@@ -1,46 +1,58 @@
-type: llm_structured
-element_id: null
-name: null
-node_description: Generates structured data according to a schema using a language model
-description: null
+type: read_blockchain_data
+element_id: null  # Auto-generated at L2
+name: null  # Set by L2
+node_description: Reads data from blockchain networks including contract states, balances, and transaction history
+description: null  # Customizable by L2
 input_schema:
-  prompt:
+  query_type:
     type: string
-    description: The prompt for the LLM
+    description: Type of blockchain query to perform
+    enum: ["balance", "object", "transaction", "events", "contract_call"]
     required: true
-  context:
-    type: list
-    description: Previous conversation context
+  address:
+    type: string
+    description: Wallet address or object ID to query
     required: false
-  additional_data:
+  parameters:
     type: json
-    description: Additional data for the LLM
+    description: Additional parameters specific to query type
     required: false
-output_schema: {}
-parameter_schema_structure:
-  model:
+output_schema:
+  data:
+    type: json
+    description: Query result data
+    required: true
+  success:
+    type: bool
+    description: Whether the query succeeded
+    required: true
+  error:
     type: string
-  temperature:
-    type: float
-    min: 0.0
-    max: 1.0
-  max_tokens:
-    type: int
-  wrapper_prompt:
+    description: Error message if query failed
+    required: false
+  metadata:
+    type: json
+    description: Additional metadata about the query
+    required: false
+  parameter_schema_structure:
+  node_url:
     type: string
-  llm_hidden_prompt:
+    description: RPC endpoint URL
+  network:
     type: string
+    enum: ["mainnet", "testnet", "devnet"]
+  api_key:
+    type: string
+    description: API key for RPC provider
 parameters:
-  model: llama-3.3-70b
-  temperature: 0.3
-  max_tokens: 1000
-  wrapper_prompt: ""
-  llm_hidden_prompt: ""
-processing_message: AI is generating structured response...
+  node_url: "https://fullnode.mainnet.sui.io"
+  network: "mainnet"
+  api_key: ""
+processing_message: Reading blockchain data...
 tags:
-  - ai
-  - llm
-  - structured-output
+- blockchain
+- sui
+- read-only
 layer: null
 hyperparameters:
   type:
@@ -54,17 +66,11 @@ hyperparameters:
   input_schema:
     access: fixed
   output_schema:
-    access: edit
-  parameters.model:
     access: fixed
-  parameters.temperature:
+  parameters.node_url:
     access: edit
-  parameters.max_tokens:
+  parameters.network:
     access: edit
-  parameters.wrapper_prompt:
-    access: edit
-  parameters.llm_hidden_prompt:
-    access: hidden
   parameters.api_key:
     access: hidden
   processing_message:
@@ -73,7 +79,3 @@ hyperparameters:
     access: append
   layer:
     access: edit
-input: null
-output: null
-code: null
-flow_control: null

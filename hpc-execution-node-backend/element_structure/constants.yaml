@@ -1,0 +1,38 @@
+type: constants
+element_id: null  # Auto-generated at L2
+name: null  # Set by L2
+node_description: Provides static key-value pairs for configuration and settings
+description: null  # Customizable by L2
+input_schema: {}  # No inputs - values are pre-defined
+output_schema: {}  # Dynamic based on defined constants
+parameter_schema_structure:
+# Dynamic - any key-value pairs allowed
+# L2 developers define their own constants
+parameters: {}  # Set by L2 - can be any key-value pairs
+processing_message: Loading constants...
+tags:
+- input
+- configuration
+- static-data
+layer: null  # Set by L2
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: edit  # L2 can define output schema
+  parameters:
+    access: edit  # L2 defines all constants
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit

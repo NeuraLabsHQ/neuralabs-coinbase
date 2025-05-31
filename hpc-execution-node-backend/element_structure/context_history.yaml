@@ -1,0 +1,64 @@
+type: context_history
+element_id: null  # Auto-generated at L2
+name: null  # Set by L2
+node_description: Provides access to conversation history and previous interactions
+description: null  # Customizable by L2
+input_schema: {}  # No inputs - retrieves from session
+output_schema:
+  history:
+    type: list
+    description: Array of previous conversation messages
+    required: true
+parameter_schema_structure:
+  max_messages:
+    type: int
+    description: Maximum number of messages to retrieve
+  include_system:
+    type: bool
+    description: Whether to include system messages
+  format:
+    type: string
+    enum: ["full", "text_only", "structured"]
+    description: Output format for messages
+  filter_by_role:
+    type: string
+    enum: ["all", "user", "assistant", "system"]
+    description: Filter messages by role
+parameters:
+  max_messages: 10
+  include_system: false
+  format: "full"
+  filter_by_role: "all"
+processing_message: Loading conversation history...
+tags:
+- input
+- context
+- history
+layer: null  # Set by L2
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: fixed
+  parameters.max_messages:
+    access: edit
+  parameters.include_system:
+    access: edit
+  parameters.format:
+    access: edit
+  parameters.filter_by_role:
+    access: edit
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit
