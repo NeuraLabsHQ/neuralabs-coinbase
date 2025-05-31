@@ -16,6 +16,7 @@ import { useJourneyState } from './components/functional/journeyState'
 import { journeyActions } from './components/functional/blockchainInteractions'
 import { useAnimationSystem } from './components/functional/animationSystem'
 import { INTERACTIVE_PUBLISH_STEPS } from './components/functional/journeyConfig'
+import { renderActionContent, renderPrerequisiteWarning } from './components/functional/actionContent'
 import { 
   getFlowId, 
   setFlowId, 
@@ -60,6 +61,10 @@ const InteractivePublish = ({ agentData, onComplete }) => {
   const [isProcessing, setProcessingState] = useState(false)
   const [animationPhase, setAnimationPhase] = useState('idle')
   const [incompletePrerequisites, setIncompletePrerequisites] = useState([])
+  
+  // NFT form state
+  const [nftName, setNftName] = useState('')
+  const [nftDescription, setNftDescription] = useState('')
   
   // Animation system
   const {
@@ -162,12 +167,12 @@ const InteractivePublish = ({ agentData, onComplete }) => {
   // Removed handleShowActionContent as content is now always visible
   
   // Handle action from content (for mint step with form data)
-  const handleActionFromContent = (formData = {}) => {
-    if (formData.nftName && formData.nftDescription) {
+  const handleActionFromContent = () => {
+    if (nftName && nftDescription) {
       // Update journey data with form data
       updateJourneyData({
-        nftName: formData.nftName,
-        nftDescription: formData.nftDescription
+        nftName: nftName,
+        nftDescription: nftDescription
       })
     }
     
@@ -324,7 +329,7 @@ const InteractivePublish = ({ agentData, onComplete }) => {
               />
             </div>
           ) : (
-            // Show vertical stack: text + animation + action
+            // Show vertical stack: text + animation + action content + action
             <div className="journey-right-stack">
               {/* Text Content Section */}
               <div className="text-section">
@@ -354,11 +359,15 @@ const InteractivePublish = ({ agentData, onComplete }) => {
               <AnimationSection 
                 animationPhase={animationPhase}
                 renderAnimation={(phase) => renderAnimation(phase, currentStep)}
-                currentStep={currentStep}
-                journeyData={journeyData}
-                incompletePrerequisites={incompletePrerequisites}
-                handleActionFromContent={handleActionFromContent}
               />
+
+              {/* Action Content Area */}
+              <div className="action-content-area">
+                {incompletePrerequisites && incompletePrerequisites.length > 0 ? 
+                  renderPrerequisiteWarning(incompletePrerequisites) :
+                  renderActionContent(currentStep, journeyData, nftName, nftDescription, setNftName, setNftDescription, handleActionFromContent)
+                }
+              </div>
 
               {/* Action Section */}
               <ActionSection 

@@ -47,6 +47,7 @@
 /* Interactive Publish Journey - Premium Graphics */
 .journey-v2 {
   min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
   background: var(--journey-bg);
   color: var(--journey-text);
   position: relative;
@@ -68,7 +69,7 @@
   z-index: 0;
 }
 
-.grid-pattern {
+/* .grid-pattern {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -77,7 +78,7 @@
     linear-gradient(90deg, var(--journey-grid-color) 1px, transparent 1px);
   background-size: 50px 50px;
   animation: gridMove 20s linear infinite;
-}
+} */
 
 @keyframes gridMove {
   0% { transform: translate(0, 0); }
@@ -131,12 +132,13 @@
 .journey-container {
   position: relative;
   z-index: 1;
-  max-width: 1600px;
+  max-width: min(1600px, 95vw); /* Responsive max-width */
   width: 100%;
-  padding: 40px;
+  padding: clamp(20px, 4vw, 40px);
   display: flex;
   align-items: center;
   justify-content: center;
+  margin: 0 auto;
 }
 
 /* Header */
@@ -163,24 +165,25 @@
 /* Main Layout */
 .journey-main {
   display: flex;
-  gap: 40px;
+  gap: clamp(20px, 3vw, 40px);
   width: 100%;
-  height: 80vh; /* Set specific height for calculation */
-  /* overflow: hidden; */
+  height: calc(100vh - 200px); /* Account for container padding */
+  min-height: 600px; /* Minimum usable height */
+  /* max-height: 900px; */
+   /* Maximum height for very large screens */
 }
 
 /* Progress Section */
 .progress-section {
-  flex: 0 0 320px;
+  flex: 0 0 min(320px, 30vw); /* Responsive width with max */
   background: var(--journey-card-bg);
   border: 1px solid var(--journey-card-border);
   border-radius: 24px;
-  padding: 30px;
+  padding: clamp(20px, 3vw, 30px);
   backdrop-filter: blur(20px);
-  height: fit-content;
   overflow-y: auto;
-  height : 100%;
-  /* max-height: calc(100vh - 200px); */
+  height: 100%;
+  min-width: 280px; /* Minimum width before wrapping */
 }
 
 .progress-section h2 {
@@ -265,35 +268,41 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  overflow: hidden;
+  gap: clamp(8px, 1.5vw, 16px); /* Reduced gaps */
+  overflow: visible; /* Changed from hidden to visible */
+  height: 100%;
+  min-height: 0; /* Important for flex children */
 }
 
 /* Text Section (Top) */
 .text-section {
-  height: 140px; /* Fixed height */
+  flex: 0 1 auto; /* Allow shrinking */
+  min-height: 60px; /* Reduced minimum */
+  max-height: 25%; /* Percentage based instead of fixed */
   /* background: var(--journey-card-bg);
   border: 1px solid var(--journey-card-border); */
   border-radius: 24px;
-  padding: 30px 40px;
+  padding: clamp(12px, 2vw, 20px) clamp(20px, 4vw, 40px);
   backdrop-filter: blur(20px);
   text-align: center;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  overflow: hidden; /* Hide text overflow */
 }
 
 .step-title {
-  font-size: 2.5rem;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
   font-weight: 700;
-  margin: 0 0 20px;
+  margin: 0 0 clamp(10px, 2vw, 20px);
   background: linear-gradient(135deg, var(--journey-gradient-text-start) 0%, var(--journey-gradient-text-end) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  line-height: 1.2;
 }
 
 .step-subtitle {
-  font-size: 1.1rem;
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
   color: var(--journey-text-secondary);
   max-width: 500px;
   margin: 0 auto;
@@ -302,18 +311,19 @@
 
 /* Animation Section (Middle) */
 .animation-section {
-  background: var(--journey-card-bg);
+  /* background: var(--journey-card-bg);
   border: 1px solid var(--journey-card-border);
-  border-radius: 24px;
-  padding: 40px;
-  min-height: 300px;
+  border-radius: 24px; */
+  /* dont use radius and border */
+  padding: clamp(16px, 3vw, 16px);
+  min-height: 0; /* Allow it to shrink */
   display: flex;
   align-items: center;
   justify-content: center;
   backdrop-filter: blur(20px);
   position: relative;
-  overflow: hidden;
-  flex: 1;
+  overflow: auto; /* Allow scrolling if needed */
+  flex: 1 1 auto; /* Grow and shrink as needed */
 }
 
 .animation-scene {
@@ -323,7 +333,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 40px;
+  gap: clamp(16px, 3vw, 32px); /* Responsive gap */
 }
 
 /* Processing Animation */
@@ -331,22 +341,25 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 30px;
+  gap: clamp(16px, 3vw, 30px);
 }
 
 .processing-spinner {
-  width: 100px;
-  height: 100px;
+  width: clamp(60px, 15vw, 100px);
+  height: clamp(60px, 15vw, 100px);
 }
 
 .processing-spinner svg {
   stroke: var(--journey-primary-color);
+  width: 100%;
+  height: 100%;
 }
 
 .processing-text {
   color: var(--journey-text-secondary);
-  font-size: 1.1rem;
-  letter-spacing: 1px;
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  letter-spacing: 0.5px;
+  text-align: center;
 }
 
 /* Success Badge */
@@ -363,15 +376,18 @@
 
 /* Action Section (Bottom) */
 .action-section {
-  height: 120px; /* Fixed height */
+  flex: 0 1 auto; /* Allow shrinking */
+  min-height: 60px; /* Reduced minimum */
+  max-height: 20%; /* Percentage based */
   /* background: var(--journey-card-bg);
   border: 1px solid var(--journey-card-border); */
   border-radius: 24px;
-  padding: 20px 40px;
+  padding: clamp(12px, 1.5vw, 16px) clamp(20px, 4vw, 40px);
   backdrop-filter: blur(20px);
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden; /* Hide button overflow */
 }
 
 .button-container {
@@ -490,7 +506,7 @@
 /* Continue Button */
 .continue-button {
   padding: 14px 28px;
-  background: var(--journey-success-color);
+  background: var(--journey-primary-color);
   color: white;
   border: none;
   border-radius: 12px;
@@ -499,18 +515,14 @@
   cursor: pointer;
   transition: all 0.3s ease;
   letter-spacing: 0.5px;
-  animation: pulse 2s infinite;
+  min-width: 200px;
 }
 
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
-}
+
 
 .continue-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);;
 }
 
 /* Completion Section */
@@ -518,43 +530,45 @@
   background: var(--journey-card-bg);
   border: 1px solid var(--journey-card-border);
   border-radius: 24px;
-  padding: 60px;
+  padding: clamp(30px, 6vw, 60px);
   text-align: center;
-  max-width: 800px;
+  max-width: min(800px, 95%);
   margin: 0 auto;
+  width: 100%;
 }
 
 .completion-icon {
-  font-size: 5rem;
-  margin-bottom: 30px;
+  font-size: clamp(3rem, 8vw, 5rem);
+  margin-bottom: clamp(20px, 3vw, 30px);
 }
 
 .completion-section h2 {
-  font-size: 3rem;
-  margin: 0 0 20px;
+  font-size: clamp(2rem, 5vw, 3rem);
+  margin: 0 0 clamp(12px, 2vw, 20px);
   background: linear-gradient(135deg, var(--journey-gradient-text-start) 0%, var(--journey-gradient-text-end) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  line-height: 1.2;
 }
 
 .completion-section p {
-  font-size: 1.25rem;
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
   color: var(--journey-text-secondary);
-  margin: 0 0 40px;
+  margin: 0 0 clamp(24px, 4vw, 40px);
 }
 
 .journey-details {
   background: var(--journey-hover-bg);
   border-radius: 16px;
-  padding: 30px;
-  margin: 40px 0;
+  padding: clamp(20px, 4vw, 30px);
+  margin: clamp(24px, 4vw, 40px) 0;
   text-align: left;
 }
 
 .detail-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+  gap: clamp(12px, 2vw, 20px);
 }
 
 /* File Upload */
@@ -571,8 +585,8 @@
 
 /* Wallet Connected Animation */
 .wallet-icon {
-  width: 200px;
-  height: 200px;
+  width: clamp(120px, 25vw, 200px);
+  height: clamp(120px, 25vw, 200px);
   margin: 0 auto;
 }
 
@@ -581,24 +595,27 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 30px;
+  gap: clamp(16px, 3vw, 30px);
+  width: 100%;
+  max-width: 100%;
 }
 
 .seal-text {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: clamp(6px, 1vw, 10px);
+  text-align: center;
 }
 
 .main-text {
-  font-size: 1.25rem;
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
   font-weight: 600;
   color: var(--journey-text);
 }
 
 .sub-text {
-  font-size: 1rem;
+  font-size: clamp(0.875rem, 2vw, 1rem);
   color: var(--journey-text-secondary);
 }
 
@@ -607,39 +624,43 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 30px;
+  gap: clamp(16px, 3vw, 30px);
+  width: 100%;
 }
 
 .secret-labels {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: clamp(6px, 1vw, 10px);
+  text-align: center;
 }
 
 .secret-equation {
-  font-size: 1.5rem;
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
   font-weight: 700;
   color: var(--journey-text);
   font-family: 'Monaco', 'Courier New', monospace;
+  text-align: center;
+  word-break: break-word;
 }
 
 .signature-text {
-  font-size: 1rem;
+  font-size: clamp(0.875rem, 2vw, 1rem);
   color: var(--journey-text-secondary);
 }
 
 /* Walrus Upload */
 .walrus-upload {
   width: 100%;
-  max-width: 400px;
+  max-width: min(400px, 90%);
   margin: 0 auto;
 }
 
 .upload-text {
   color: var(--journey-text-secondary);
-  font-size: 1.1rem;
-  margin-top: 20px;
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  margin-top: clamp(12px, 2vw, 20px);
 }
 
 /* Network Animation */
@@ -667,41 +688,136 @@
 
 /* Responsive */
 @media (max-width: 1200px) {
-  .journey-v2 {
-    align-items: flex-start;
-    padding-top: 40px;
-  }
-  
   .journey-main {
-    flex-direction: column;
+    height: calc(100vh - 60px);
+    min-height: 500px;
   }
   
   .progress-section {
-    flex: none;
-    max-height: none;
+    flex: 0 0 min(300px, 35vw);
   }
   
-  .step-title {
-    font-size: 2rem;
+  .animation-section {
+    min-height: 180px;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 968px) {
   .journey-v2 {
     align-items: flex-start;
     padding-top: 20px;
   }
   
-  .journey-container {
-    padding: 20px;
+  .journey-main {
+    flex-direction: column;
+    height: auto;
+    min-height: auto;
+    max-height: none;
   }
   
-  .step-title {
-    font-size: 1.5rem;
+  .progress-section {
+    flex: none;
+    width: 100%;
+    max-height: 300px;
+    min-width: auto;
+    order: 2; /* Move progress to bottom on mobile */
+  }
+  
+  .journey-right-stack {
+    order: 1;
+    min-height: 500px;
+  }
+  
+  /* Adjust text sizes for mobile */
+  .text-section {
+    min-height: 50px;
+    max-height: 30%;
+    padding: 12px 16px;
+  }
+  
+  .animation-section {
+    min-height: 200px;
+    padding: 16px;
+  }
+  
+  .action-section {
+    min-height: 50px;
+    max-height: 25%;
+    padding: 10px 16px;
+  }
+  
+  .action-content-area {
+    min-height: 60px;
+    max-height: 150px;
+    /* padding: 12px 16px; */
+  }
+  
+  /* Animation specific adjustments */
+  .wallet-icon {
+    width: min(150px, 40vw);
+    height: min(150px, 40vw);
+  }
+  
+  .processing-spinner {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+@media (max-width: 640px) {
+  .journey-container {
+    padding: 12px;
+  }
+  
+  .journey-main {
+    gap: 12px;
+  }
+  
+  .progress-section {
+    border-radius: 16px;
+    padding: 16px;
+  }
+  
+  .progress-steps {
+    gap: 12px;
+  }
+  
+  .progress-step {
+    padding: 12px;
+  }
+  
+  .step-icon-svg {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .step-info h3 {
+    font-size: 0.9rem;
+  }
+  
+  .step-info p {
+    font-size: 0.8rem;
+  }
+  
+  .text-section,
+  .animation-section,
+  .action-section {
+    border-radius: 16px;
   }
   
   .completion-section {
-    padding: 40px 20px;
+    padding: 30px 16px;
+    border-radius: 16px;
+  }
+  
+  .completion-section h2 {
+    font-size: 2rem;
+  }
+  
+  .action-button,
+  .continue-button {
+    height: 44px;
+    font-size: 0.95rem;
   }
 }
 
@@ -713,25 +829,8 @@
   justify-content: center;
 }
 
-/* New Layout: Animation Section Container */
-.animation-section-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-}
-
-.animation-area {
-  flex: 1; /* Takes remaining height after other areas */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  position: relative;
-}
-
 /* Contain all animation content */
-.animation-area > *,
+.animation-section > *,
 .animation-scene,
 .animation-scene > *,
 .animation-badge,
@@ -754,16 +853,43 @@
   justify-content: center;
   max-width: 100%;
   max-height: 100%;
+  padding: clamp(10px, 2vw, 20px);
 }
 
 /* Images and SVGs within animations */
-.animation-area img,
-.animation-area svg {
-  max-width: 100%;
-  max-height: 100%;
+.animation-section img,
+.animation-section svg {
+  max-width: min(100%, 400px); /* Cap maximum size */
+  max-height: min(100%, 300px);
   width: auto;
   height: auto;
   object-fit: contain;
+}
+
+/* Specific size constraints for different animations */
+.wallet-icon img,
+.wallet-icon svg {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.processing-spinner svg {
+  max-width: clamp(60px, 15vw, 100px);
+  max-height: clamp(60px, 15vw, 100px);
+}
+
+.network-animation img,
+.network-animation svg {
+  max-width: min(100%, 350px);
+}
+
+/* Ensure animations don't overflow on small screens */
+@media (max-width: 640px) {
+  .animation-section img,
+  .animation-section svg {
+    max-width: 90%;
+    max-height: 250px;
+  }
 }
 
 /* Animation text elements */
@@ -777,19 +903,20 @@
 }
 
 .action-content-area {
-  height: 200px; /* Fixed height instead of flex */
-  /* background: var(--journey-card-bg); */
-  /* border: 1px solid var(--journey-card-border); */
-  border-radius: 12px;
-  padding: 16px 40px;
-  margin-top: 16px;
+  flex: 0 1 auto; /* Allow shrinking but not growing */
+  min-height: 100px;
+  max-height: 25%; /* Percentage based */
+  /* background: var(--journey-card-bg);
+  border: 1px solid var(--journey-card-border); */
+  /* border-radius: 24px; */
+  padding: 0 clamp(20px, 4vw, 40px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   overflow-y: auto; /* Allow scrolling if content exceeds height */
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-start;
+  flex-direction: column;
   width: 100%;
-
 }
 
 [data-theme="dark"] .action-content-area,
@@ -898,10 +1025,10 @@
 .action-button,
 .continue-button {
   width: 100%;
-  height: 50px;
+  height: clamp(40px, 5vh, 50px); /* Responsive height */
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: clamp(0.9rem, 1.5vw, 1rem);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -978,26 +1105,27 @@
 
 /* Form Group Styling */
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: clamp(12px, 2vw, 16px);
+  width: 100%;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: clamp(4px, 1vw, 6px);
   font-weight: 600;
   color: var(--journey-text);
-  font-size: 0.9rem;
+  font-size: clamp(0.85rem, 1.5vw, 0.9rem);
 }
 
 .form-group input,
 .form-group textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: clamp(8px, 1.5vw, 10px) clamp(10px, 2vw, 12px);
   border: 1px solid var(--journey-border);
   border-radius: 6px;
   background: var(--journey-card-bg);
   color: var(--journey-text);
-  font-size: 0.95rem;
+  font-size: clamp(0.9rem, 1.8vw, 0.95rem);
   transition: all 0.2s ease;
 }
 
@@ -1010,7 +1138,7 @@
 
 .form-group textarea {
   resize: vertical;
-  min-height: 70px;
+  min-height: clamp(60px, 10vw, 70px);
 }
 
 /* Animation Enhancements */
