@@ -261,7 +261,7 @@ const BlocksPanel = ({
                   display: 'none',
                 },
                 '-ms-overflow-style': 'none',
-                'scrollbar-width': 'none',
+                scrollbarWidth: 'none',
               }}
             >
               <Flex position="relative">

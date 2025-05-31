@@ -4,36 +4,36 @@ name: null  # Set by L2
 node_description: Extracts specific values from data structures using path-based selection
 description: null  # Customizable by L2
 input_schema:
-data:
-  type: any
-  description: The data structure to select from
-  required: true
+  data:
+    type: any
+    description: The data structure to select from
+    required: true
 output_schema:
-selected_value:
-  type: any
-  description: The extracted value
-  required: true
-found:
-  type: bool
-  description: Whether the path was found
-  required: false
-path_used:
-  type: string
-  description: The path that was used
-  required: false
-parameter_schema_structure:
-key:
-  type: string
-  description: Path to the desired value (dot notation)
-default_value:
-  type: any
-  description: Value to return if path not found
-multiple_paths:
-  type: list
-  description: List of paths to try in order
-error_on_missing:
-  type: bool
-  description: Throw error if path not found
+  selected_value:
+    type: any
+    description: The extracted value
+    required: true
+  found:
+    type: bool
+    description: Whether the path was found
+    required: false
+  path_used:
+    type: string
+    description: The path that was used
+    required: false
+parameter_schema_structure: 
+  key:
+    type: string
+    description: Path to the desired value (dot notation)
+  default_value:
+    type: any
+    description: Value to return if path not found
+  multiple_paths:
+    type: list
+    description: List of paths to try in order
+  error_on_missing:
+    type: bool
+    description: Throw error if path not found
 parameters:
   key: ""
   default_value: null

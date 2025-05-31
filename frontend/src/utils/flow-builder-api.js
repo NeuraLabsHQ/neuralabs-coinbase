@@ -31,8 +31,9 @@ class FlowBuilderAPI {
         const errorText = await response.text();
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
-
+      // console.log('response', response); 
       const result = await response.json();
+      console.log('Fetched blockssssss:', result);
       return result;
     } catch (error) {
       console.error('Error fetching blocks:', error);
@@ -198,6 +199,19 @@ class FlowBuilderAPI {
 
   // Transform API block data to match the expected nodeType format
   transformBlockToNodeType(block) {
+    // Get access info for common fields from hyperparameters
+    const hyperParams = block.hyper_parameters || {};
+    const descriptionAccess = hyperParams['description']?.access || 'fixed';
+    const nameAccess = hyperParams['name']?.access || 'fixed';
+    const processingMessageAccess = hyperParams['processing_message']?.access || 'fixed';
+    const tagsAccess = hyperParams['tags']?.access || 'fixed';
+    const inputSchemaAccess = hyperParams['input_schema']?.access || 'fixed';
+    const outputSchemaAccess = hyperParams['output_schema']?.access || 'fixed';
+    const parameters = block.parameters || {};
+    const parameterSchema = block.parameter_schema_structure || {};
+    
+    console.log('Transforming block:', block.type, 'with parameters:', parameters);
+    
     return {
       name: block.type,
       description: block.element_description,
@@ -206,9 +220,26 @@ class FlowBuilderAPI {
       color: this.getCategoryColor(block.category),
       inputs: this.transformSchema(block.input_schema),
       outputs: this.transformSchema(block.output_schema),
-      hyperparameters: this.transformHyperParameters(block.hyper_parameters),
+      // Transform parameters (what users actually configure)
+      parameters: this.transformParameters(
+        parameterSchema,
+        parameters,
+        hyperParams
+      ),
+      processingMessage: block.processing_message || 'Processing...',
+      tags: block.tags || [],
+      // Access control info for UI fields
+      fieldAccess: {
+        description: descriptionAccess,
+        name: nameAccess,
+        processingMessage: processingMessageAccess,
+        tags: tagsAccess,
+        inputSchema: inputSchemaAccess,
+        outputSchema: outputSchemaAccess
+      },
       // Additional fields from the original block data
       id: block.id,
+      type: block.type,
       createdAt: block.created_at,
       updatedAt: block.updated_at
     };
@@ -218,28 +249,74 @@ class FlowBuilderAPI {
   transformSchema(schema) {
     if (!schema) return [];
     
-    return Object.entries(schema).map(([key, config]) => ({
-      name: key,
-      type: config.type || 'string',
-      required: config.required || false,
-      description: config.description || '',
-      default: config.default,
-      ...config
-    }));
+    return Object.entries(schema).map(([key, config]) => {
+      // Handle case where config might be null or not an object
+      if (!config || typeof config !== 'object') {
+        return {
+          name: key,
+          type: 'string',
+          required: false,
+          description: '',
+          default: ''
+        };
+      }
+      
+      return {
+        name: key,
+        type: config.type || 'string',
+        required: config.required || false,
+        description: config.description || '',
+        default: config.default,
+        ...config
+      };
+    });
   }
 
-  // Transform hyperparameters to match expected format
-  transformHyperParameters(hyperParams) {
-    if (!hyperParams) return [];
+  // Transform parameters to match expected format with access control from hyperparameters
+  transformParameters(parameterSchema, parameters, hyperParams) {
+    // Handle null/undefined or non-object schemas
+    if (!parameterSchema || typeof parameterSchema !== 'object') {
+      return [];
+    }
     
-    return Object.entries(hyperParams).map(([key, config]) => ({
-      name: key,
-      type: config.type || 'string',
-      required: config.required || false,
-      description: config.description || '',
-      default: config.default,
-      ...config
-    }));
+    // If parameterSchema is empty object, return empty array (no parameters for this block)
+    if (Object.keys(parameterSchema).length === 0) {
+      return [];
+    }
+    
+    // Create array of parameter configurations that users will see
+    const parameterArray = [];
+    
+    // Process each parameter from schema
+    Object.entries(parameterSchema).forEach(([key, schema]) => {
+      // Skip if schema is not an object
+      if (!schema || typeof schema !== 'object') {
+        return;
+      }
+      
+      // Get access control for this parameter from hyperparameters
+      const paramAccessKey = `parameters.${key}`;
+      const accessInfo = hyperParams?.[paramAccessKey] || { access: 'fixed' };
+      const access = accessInfo.access || 'fixed';
+      
+      parameterArray.push({
+        name: key,
+        type: schema.type || 'string',
+        required: schema.required || false,
+        description: schema.description || '',
+        default: schema.default,
+        value: parameters?.[key] !== undefined ? parameters[key] : schema.default,
+        access: access,
+        editable: access === 'edit', // Only 'edit' access makes it editable
+        appendable: access === 'append', // For tags and lists
+        min: schema.min,
+        max: schema.max,
+        enum: schema.enum,
+        ...schema
+      });
+    });
+    
+    return parameterArray;
   }
 
   // Get color based on category

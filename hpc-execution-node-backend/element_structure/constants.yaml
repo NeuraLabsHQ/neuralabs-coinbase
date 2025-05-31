@@ -5,7 +5,7 @@ node_description: Provides static key-value pairs for configuration and settings
 description: null  # Customizable by L2
 input_schema: {}  # No inputs - values are pre-defined
 output_schema: {}  # Dynamic based on defined constants
-parameter_schema_structure:
+parameter_schema_structure: {}
 # Dynamic - any key-value pairs allowed
 # L2 developers define their own constants
 parameters: {}  # Set by L2 - can be any key-value pairs

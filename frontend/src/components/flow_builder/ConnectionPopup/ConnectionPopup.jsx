@@ -32,11 +32,13 @@ const ConnectionPopup = ({
   onSave,
   onDelete,
   existingMappings = [],
-  allEdges = []
+  allEdges = [],
+  connectionType: existingConnectionType = 'both'
 }) => {
   const [mappings, setMappings] = useState([]);
   const [isValid, setIsValid] = useState(false);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
+  const [connectionType, setConnectionType] = useState(existingConnectionType);
   
   const bgColor = useColorModeValue('white', 'gray.900');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
@@ -202,7 +204,7 @@ const ConnectionPopup = ({
   const handleSave = () => {
     // Filter out empty mappings - if all mappings are empty, pass an empty array
     const validMappings = mappings.filter(m => m.fromOutput && m.toInput);
-    onSave(validMappings);
+    onSave(validMappings, connectionType);
     onClose();
   };
 
@@ -270,9 +272,23 @@ const ConnectionPopup = ({
         transition="border-color 0.2s"
       >
         <ModalHeader borderBottom="1px solid" borderColor={borderColor} color={textColor}>
-          <HStack justify="space-between">
+          <HStack justify="space-between" width="100%">
             <Text>Connection: {sourceNode.name} → {targetNode.name}</Text>
-            <HStack>
+            <HStack spacing={4}>
+              <HStack>
+                <Text fontSize="sm" color={mutedTextColor}>Type:</Text>
+                <Select
+                  size="sm"
+                  value={connectionType}
+                  onChange={(e) => setConnectionType(e.target.value)}
+                  width="120px"
+                  bg={inputBg}
+                >
+                  <option value="both">Control & Data</option>
+                  <option value="control">Control Only</option>
+                  <option value="data">Data Only</option>
+                </Select>
+              </HStack>
               {onDelete && (
                 <Button
                   size="sm"
@@ -288,6 +304,14 @@ const ConnectionPopup = ({
         </ModalHeader>
 
         <ModalBody py={6}>
+          {connectionType === 'control' ? (
+            <Box p={4} bg={headerBg} borderRadius="md" textAlign="center">
+              <Text color={textColor}>Control connections don't require data mappings.</Text>
+              <Text fontSize="sm" color={mutedTextColor} mt={2}>
+                This connection will only control the execution flow between nodes.
+              </Text>
+            </Box>
+          ) : (
           <TableContainer>
             <Table variant="unstyled" size="sm">
               <Thead>
@@ -416,6 +440,7 @@ const ConnectionPopup = ({
               </Tbody>
             </Table>
           </TableContainer>
+          )}
         </ModalBody>
 
         <ModalFooter borderTop="1px solid" borderColor={borderColor}>

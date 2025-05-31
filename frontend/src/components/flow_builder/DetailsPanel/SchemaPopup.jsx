@@ -33,7 +33,8 @@ const SchemaPopup = ({
   isEditable = false,
   isCustomBlock = false,
   onSave,
-  nodeType
+  nodeType,
+  fieldAccess = {}
 }) => {
   const [localSchema, setLocalSchema] = useState(schema);
   
@@ -53,7 +54,7 @@ const SchemaPopup = ({
 
   const handleValueChange = (index, value) => {
     const updated = [...localSchema];
-    updated[index] = { ...updated[index], value };
+    updated[index] = { ...updated[index], default: value };
     setLocalSchema(updated);
   };
 
@@ -61,7 +62,7 @@ const SchemaPopup = ({
     const newRow = {
       name: '',
       type: 'string',
-      value: '',
+      default: '',
       required: false,
       description: ''
     };
@@ -93,6 +94,7 @@ const SchemaPopup = ({
       'boolean': 'purple',
       'object': 'orange',
       'array': 'teal',
+      'json': 'cyan',
       'any': 'gray'
     };
     return colors[type] || 'gray';
@@ -125,16 +127,16 @@ const SchemaPopup = ({
                 <Tr>
                   <Th color={mutedTextColor} width="25%" fontSize="xs" textTransform="uppercase">Name</Th>
                   <Th color={mutedTextColor} width="15%" fontSize="xs" textTransform="uppercase">Type</Th>
-                  <Th color={mutedTextColor} width="35%" fontSize="xs" textTransform="uppercase">Value</Th>
-                  {isCustomBlock && <Th color={mutedTextColor} width="20%" fontSize="xs" textTransform="uppercase">Description</Th>}
-                  {isCustomBlock && <Th color={mutedTextColor} width="5%"></Th>}
+                  <Th color={mutedTextColor} width="35%" fontSize="xs" textTransform="uppercase">{isEditable || isCustomBlock ? 'Default Value' : 'Value'}</Th>
+                  {(isEditable || isCustomBlock) && <Th color={mutedTextColor} width="20%" fontSize="xs" textTransform="uppercase">Description</Th>}
+                  {(isEditable || isCustomBlock) && <Th color={mutedTextColor} width="5%"></Th>}
                 </Tr>
               </Thead>
               <Tbody>
                 {localSchema.map((field, index) => (
                   <Tr key={index}>
                     <Td>
-                      {isCustomBlock ? (
+                      {(isEditable || isCustomBlock) ? (
                         <Input
                           value={field.name}
                           onChange={(e) => handleUpdateRow(index, 'name', e.target.value)}
@@ -147,7 +149,7 @@ const SchemaPopup = ({
                       )}
                     </Td>
                     <Td>
-                      {isCustomBlock ? (
+                      {(isEditable || isCustomBlock) ? (
                         <Select
                           value={field.type}
                           onChange={(e) => handleUpdateRow(index, 'type', e.target.value)}
@@ -160,6 +162,7 @@ const SchemaPopup = ({
                           <option value="boolean">Boolean</option>
                           <option value="object">Object</option>
                           <option value="array">Array</option>
+                          <option value="json">JSON</option>
                           <option value="any">Any</option>
                         </Select>
                       ) : (
@@ -169,16 +172,21 @@ const SchemaPopup = ({
                       )}
                     </Td>
                     <Td>
-                      <Input
-                        value={field.value || ''}
-                        onChange={(e) => handleValueChange(index, e.target.value)}
-                        size="sm"
-                        bg={inputBg}
-                        isReadOnly={!isEditable && !isCustomBlock}
-                        placeholder="Value"
-                      />
+                      {(isEditable || isCustomBlock) ? (
+                        <Input
+                          value={field.default || ''}
+                          onChange={(e) => handleValueChange(index, e.target.value)}
+                          size="sm"
+                          bg={inputBg}
+                          placeholder="Default Value"
+                        />
+                      ) : (
+                        <Text fontSize="sm" color={field.default ? textColor : mutedTextColor}>
+                          {field.default || 'No default'}
+                        </Text>
+                      )}
                     </Td>
-                    {isCustomBlock && (
+                    {(isEditable || isCustomBlock) && (
                       <Td>
                         <Input
                           value={field.description || ''}
@@ -189,7 +197,7 @@ const SchemaPopup = ({
                         />
                       </Td>
                     )}
-                    {isCustomBlock && (
+                    {(isEditable || isCustomBlock) && (
                       <Td>
                         <IconButton
                           icon={<FiTrash2 />}
@@ -207,7 +215,7 @@ const SchemaPopup = ({
             </Table>
           </TableContainer>
           
-          {isCustomBlock && (
+          {(isEditable || isCustomBlock) && (
             <Box mt={4}>
               <Button
                 leftIcon={<FiPlus />}
@@ -224,7 +232,7 @@ const SchemaPopup = ({
           {localSchema.length === 0 && (
             <Box textAlign="center" py={8}>
               <Text color={mutedTextColor}>
-                {isCustomBlock ? 'No properties defined. Click "Add New Property" to start.' : 'No schema defined.'}
+                {(isEditable || isCustomBlock) ? 'No properties defined. Click "Add New Property" to start.' : 'No schema defined.'}
               </Text>
             </Box>
           )}

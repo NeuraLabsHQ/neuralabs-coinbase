@@ -35,15 +35,15 @@ output_schema:
     description: Additional metadata about the query
     required: false
   parameter_schema_structure:
-  node_url:
-    type: string
-    description: RPC endpoint URL
-  network:
-    type: string
-    enum: ["mainnet", "testnet", "devnet"]
-  api_key:
-    type: string
-    description: API key for RPC provider
+    node_url:
+      type: string
+      description: RPC endpoint URL
+    network:
+      type: string
+      enum: ["mainnet", "testnet", "devnet"]
+    api_key:
+      type: string
+      description: API key for RPC provider
 parameters:
   node_url: "https://fullnode.mainnet.sui.io"
   network: "mainnet"

@@ -16,12 +16,20 @@ async def get_all_flowbuilder_blocks() -> List[Dict[str, Any]]:
     """
     pg_conn = PostgresConnection()
     query = """
-        SELECT id, type, element_description, input_schema, output_schema, 
-               hyper_parameters, icon, category, created_at, updated_at
+        SELECT id, type, node_description as element_description, 
+               COALESCE(input_schema, '{}'::jsonb) as input_schema, 
+               COALESCE(output_schema, '{}'::jsonb) as output_schema, 
+               COALESCE(hyperparameters, '{}'::jsonb) as hyper_parameters, 
+               COALESCE(parameter_schema_structure, '{}'::jsonb) as parameter_schema_structure, 
+               COALESCE(parameters, '{}'::jsonb) as parameters,
+               processing_message, 
+               COALESCE(tags, '[]'::jsonb) as tags, 
+               icon, category, created_at, updated_at
         FROM flowbuilder_blocks
         ORDER BY category, type
     """
     result = await pg_conn.execute_query(query)
+    # print(result)  # Debugging line to check the result
     return result
 
 
@@ -37,8 +45,15 @@ async def get_flowbuilder_blocks_by_category(category: str) -> List[Dict[str, An
     """
     pg_conn = PostgresConnection()
     query = """
-        SELECT id, type, element_description, input_schema, output_schema, 
-               hyper_parameters, icon, category, created_at, updated_at
+        SELECT id, type, node_description as element_description, 
+               COALESCE(input_schema, '{}'::jsonb) as input_schema, 
+               COALESCE(output_schema, '{}'::jsonb) as output_schema, 
+               COALESCE(hyperparameters, '{}'::jsonb) as hyper_parameters, 
+               COALESCE(parameter_schema_structure, '{}'::jsonb) as parameter_schema_structure, 
+               COALESCE(parameters, '{}'::jsonb) as parameters,
+               processing_message, 
+               COALESCE(tags, '[]'::jsonb) as tags, 
+               icon, category, created_at, updated_at
         FROM flowbuilder_blocks
         WHERE category = %s
         ORDER BY type
@@ -59,8 +74,15 @@ async def get_flowbuilder_block_by_type(block_type: str) -> Optional[Dict[str, A
     """
     pg_conn = PostgresConnection()
     query = """
-        SELECT id, type, element_description, input_schema, output_schema, 
-               hyper_parameters, icon, category, created_at, updated_at
+        SELECT id, type, node_description as element_description, 
+               COALESCE(input_schema, '{}'::jsonb) as input_schema, 
+               COALESCE(output_schema, '{}'::jsonb) as output_schema, 
+               COALESCE(hyperparameters, '{}'::jsonb) as hyper_parameters, 
+               COALESCE(parameter_schema_structure, '{}'::jsonb) as parameter_schema_structure, 
+               COALESCE(parameters, '{}'::jsonb) as parameters,
+               processing_message, 
+               COALESCE(tags, '[]'::jsonb) as tags, 
+               icon, category, created_at, updated_at
         FROM flowbuilder_blocks
         WHERE type = %s
     """
@@ -101,10 +123,17 @@ async def search_flowbuilder_blocks(search_term: str) -> List[Dict[str, Any]]:
     """
     pg_conn = PostgresConnection()
     query = """
-        SELECT id, type, element_description, input_schema, output_schema, 
-               hyper_parameters, icon, category, created_at, updated_at
+        SELECT id, type, node_description as element_description, 
+               COALESCE(input_schema, '{}'::jsonb) as input_schema, 
+               COALESCE(output_schema, '{}'::jsonb) as output_schema, 
+               COALESCE(hyperparameters, '{}'::jsonb) as hyper_parameters, 
+               COALESCE(parameter_schema_structure, '{}'::jsonb) as parameter_schema_structure, 
+               COALESCE(parameters, '{}'::jsonb) as parameters,
+               processing_message, 
+               COALESCE(tags, '[]'::jsonb) as tags, 
+               icon, category, created_at, updated_at
         FROM flowbuilder_blocks
-        WHERE type ILIKE %s OR element_description ILIKE %s
+        WHERE type ILIKE %s OR node_description ILIKE %s
         ORDER BY category, type
     """
     search_pattern = f"%{search_term}%"

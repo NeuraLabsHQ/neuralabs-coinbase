@@ -5,10 +5,10 @@ node_description: Stores and provides static data for use in flows
 description: null  # Customizable by L2
 input_schema: {}  # No inputs - data is embedded
 output_schema:
-data:
-  type: any
-  description: The stored data in specified format
-  required: true
+  data:
+    type: any
+    description: The stored data in specified format
+    required: true
 parameter_schema_structure:
   data:
     type: any

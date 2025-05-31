@@ -23,6 +23,7 @@ import {
   Alert,
   AlertIcon,
   Select,
+  Badge,
   useColorModeValue,
   useDisclosure,
   Divider,
@@ -81,6 +82,9 @@ const DetailsPanel = ({
     }
   }, [viewOnlyMode]);
 
+  // Determine if node is custom
+  const isCustomBlock = selectedNode?.type === 'custom-script' || selectedNode?.type === 'Custom';
+
   useEffect(() => {
     
     if (selectedNode) {
@@ -96,11 +100,13 @@ const DetailsPanel = ({
         description: selectedNode.description || '',
         input_schema: selectedNode.inputs || [],
         output_schema: selectedNode.outputs || [],
-        hyperparameters: selectedNode.hyperparameters || [],
-        processing_message: selectedNode.processing_message || 'Processing...',
+        parameters: selectedNode.parameters || [], // User-configurable parameters
+        hyperparameters: selectedNode.hyperparameters || [], // Legacy support
+        processing_message: selectedNode.processing_message || selectedNode.processingMessage || 'Processing...',
         tags: selectedNode.tags || [],
         layer: selectedNode.layer || 0,
-        isCustom: selectedNode.type === 'custom-script' || selectedNode.type === 'Custom'
+        isCustom: selectedNode.type === 'custom-script' || selectedNode.type === 'Custom',
+        fieldAccess: selectedNode.fieldAccess || {} // Access control for fields
       });
     }
   }, [selectedNode]);
@@ -192,8 +198,22 @@ const DetailsPanel = ({
   };
 
   const handleSaveHyperparameters = (newParams) => {
-    onUpdateNode(selectedNode.id, { hyperparameters: newParams });
-    setNodeData(prev => ({ ...prev, hyperparameters: newParams }));
+    // Convert array format back to object format for storage
+    const parametersObject = {};
+    if (Array.isArray(newParams)) {
+      newParams.forEach(param => {
+        if (param.name && param.value !== undefined) {
+          parametersObject[param.name] = param.value;
+        }
+      });
+    }
+    
+    // Update both array format (for display) and object format (for storage)
+    onUpdateNode(selectedNode.id, { 
+      parameters: newParams,  // Keep array format for UI
+      parametersObject: parametersObject  // Store object format
+    });
+    setNodeData(prev => ({ ...prev, parameters: newParams }));
   };
   
   const getTypeColor = () => {
@@ -380,16 +400,16 @@ const DetailsPanel = ({
                     px={3}
                     bg={clickableBg}
                     borderRadius="md"
-                    cursor="pointer"
-                    onClick={onDescOpen}
-                    _hover={{ bg: clickableHoverBg }}
+                    cursor={nodeData.fieldAccess?.description === 'edit' || isCustomBlock ? "pointer" : "default"}
+                    onClick={nodeData.fieldAccess?.description === 'edit' || isCustomBlock ? onDescOpen : undefined}
+                    _hover={nodeData.fieldAccess?.description === 'edit' || isCustomBlock ? { bg: clickableHoverBg } : {}}
                     transition="background 0.2s"
                   >
                     <HStack justify="space-between">
                       <Text fontSize="sm" noOfLines={1} color={textColor}>
                         {nodeData.description || 'Click to view description'}
                       </Text>
-                      <FiEdit2 size={14} color={mutedTextColor} />
+                      {(nodeData.fieldAccess?.description === 'edit' || isCustomBlock) && <FiEdit2 size={14} color={mutedTextColor} />}
                     </HStack>
                   </Box>
                 </FormControl>
@@ -444,10 +464,10 @@ const DetailsPanel = ({
                   </Box>
                 </FormControl>
                 
-                {/* Hyperparameters Field */}
+                {/* Parameters Field */}
                 <FormControl>
                   <FormLabel fontSize="sm" fontWeight="medium" color={textColor} display="flex" alignItems="center">
-                    <FiSettings style={{ marginRight: '8px' }} /> Hyperparameters
+                    <FiSettings style={{ marginRight: '8px' }} /> Parameters
                   </FormLabel>
                   <Box
                     py={3}
@@ -461,7 +481,7 @@ const DetailsPanel = ({
                   >
                     <HStack justify="space-between">
                       <Text fontSize="sm" color={textColor}>
-                        {nodeData.hyperparameters.length} parameter{nodeData.hyperparameters.length !== 1 ? 's' : ''} defined
+                        {(nodeData.parameters || nodeData.hyperparameters || []).length} parameter{(nodeData.parameters || nodeData.hyperparameters || []).length !== 1 ? 's' : ''} defined
                       </Text>
                       <FiSettings size={16} color={mutedTextColor} />
                     </HStack>
@@ -504,16 +524,16 @@ const DetailsPanel = ({
                     px={3}
                     bg={clickableBg}
                     borderRadius="md"
-                    cursor="pointer"
-                    onClick={onProcessingMsgOpen}
-                    _hover={{ bg: clickableHoverBg }}
+                    cursor={nodeData.fieldAccess?.processingMessage === 'edit' ? "pointer" : "default"}
+                    onClick={nodeData.fieldAccess?.processingMessage === 'edit' ? onProcessingMsgOpen : undefined}
+                    _hover={nodeData.fieldAccess?.processingMessage === 'edit' ? { bg: clickableHoverBg } : {}}
                     transition="background 0.2s"
                   >
                     <HStack justify="space-between">
                       <Text fontSize="sm" noOfLines={1} color={textColor}>
                         {nodeData.processing_message || 'Processing...'}
                       </Text>
-                      <FiEdit2 size={14} color={mutedTextColor} />
+                      {nodeData.fieldAccess?.processingMessage === 'edit' && <FiEdit2 size={14} color={mutedTextColor} />}
                     </HStack>
                   </Box>
                 </FormControl>
@@ -674,12 +694,12 @@ const DetailsPanel = ({
                   </Box>
                 )}
 
-                {/* Hyperparameters Preview */}
-                {nodeData.hyperparameters && nodeData.hyperparameters.length > 0 && (
+                {/* Parameters Preview */}
+                {(nodeData.parameters || nodeData.hyperparameters) && (nodeData.parameters || nodeData.hyperparameters).length > 0 && (
                   <Box>
-                    <Text fontSize="sm" fontWeight="medium" color={mutedTextColor} mb={2}>Hyperparameters</Text>
+                    <Text fontSize="sm" fontWeight="medium" color={mutedTextColor} mb={2}>Parameters</Text>
                     <VStack spacing={2} align="stretch">
-                      {nodeData.hyperparameters.map((param, index) => (
+                      {(nodeData.parameters || nodeData.hyperparameters).map((param, index) => (
                         <Box key={index} p={2} bg={formBgColor} borderRadius="md">
                           <HStack justify="space-between">
                             <Text fontSize="sm" fontWeight="medium">{param.name}</Text>
@@ -688,8 +708,13 @@ const DetailsPanel = ({
                           {param.description && (
                             <Text fontSize="xs" color={mutedTextColor} mt={1}>{param.description}</Text>
                           )}
-                          {param.default !== undefined && (
+                          {param.value !== undefined ? (
+                            <Text fontSize="xs" color={mutedTextColor}>Current: {String(param.value)}</Text>
+                          ) : param.default !== undefined && (
                             <Text fontSize="xs" color={mutedTextColor}>Default: {String(param.default)}</Text>
+                          )}
+                          {param.editable && (
+                            <Badge size="xs" colorScheme="green" mt={1}>Editable</Badge>
                           )}
                         </Box>
                       ))}
@@ -748,7 +773,7 @@ const DetailsPanel = ({
         onClose={onInputClose}
         title="Input Schema"
         schema={nodeData.input_schema}
-        isEditable={false}
+        isEditable={nodeData.fieldAccess?.inputSchema === 'edit' || nodeData.isCustom}
         isCustomBlock={nodeData.isCustom}
         onSave={handleSaveInputSchema}
         nodeType={nodeData.type}
@@ -759,7 +784,7 @@ const DetailsPanel = ({
         onClose={onOutputClose}
         title="Output Schema"
         schema={nodeData.output_schema}
-        isEditable={false}
+        isEditable={nodeData.fieldAccess?.outputSchema === 'edit' || nodeData.isCustom}
         isCustomBlock={nodeData.isCustom}
         onSave={handleSaveOutputSchema}
         nodeType={nodeData.type}
@@ -768,12 +793,13 @@ const DetailsPanel = ({
       <SchemaPopup
         isOpen={isParamsOpen}
         onClose={onParamsClose}
-        title="Hyperparameters"
-        schema={nodeData.hyperparameters}
+        title="Parameters"
+        schema={nodeData.parameters || nodeData.hyperparameters || []}
         isEditable={true}
         isCustomBlock={nodeData.isCustom}
         onSave={handleSaveHyperparameters}
         nodeType={nodeData.type}
+        fieldAccess={nodeData.fieldAccess}
       />
 
       <ConnectionsListPopup

@@ -121,8 +121,13 @@ const FlowBuilder = ({ agentId, agentData }) => {
             inputs: node.inputs || [],
             outputs: node.outputs || [],
             hyperparameters: node.hyperparameters || [],
+            parameters: Array.isArray(node.parameters) && node.parameters.length > 0 && node.parameters[0].name 
+              ? node.parameters 
+              : [],
             description: node.description || '',
             processing_message: node.processing_message || '',
+            processingMessage: node.processingMessage || node.processing_message || '',
+            fieldAccess: node.fieldAccess || {},
             layer: node.layer || 0,
             tags: Array.isArray(node.tags) ? node.tags : [],
             code: node.code || '',
@@ -172,14 +177,16 @@ const FlowBuilder = ({ agentId, agentData }) => {
     );
     
     // Define inputs and outputs based on the node type
-    let inputs = [], outputs = [], hyperparameters = [], description = '', processing_message = '';
+    let inputs = [], outputs = [], hyperparameters = [], parameters = [], description = '', processing_message = '', fieldAccess = {};
     
     if (typeof template === 'object') {
       inputs = template.inputs || [];
       outputs = template.outputs || [];
       hyperparameters = template.hyperparameters || [];
+      parameters = template.parameters || [];
       description = template.description || '';
       processing_message = template.processing_message || 'Processing...';
+      fieldAccess = template.fieldAccess || {};
     } else if (nodeTypes[nodeType]) {
       // Get inputs/outputs from nodeTypes data fetched from API
       const nodeTypeData = nodeTypes[nodeType];
@@ -188,8 +195,13 @@ const FlowBuilder = ({ agentId, agentData }) => {
       inputs = nodeTypeData.inputs || [];
       outputs = nodeTypeData.outputs || [];
       hyperparameters = nodeTypeData.hyperparameters || [];
+      // Make sure parameters is a valid array, not an array with empty items
+      parameters = Array.isArray(nodeTypeData.parameters) && nodeTypeData.parameters.length > 0 && nodeTypeData.parameters[0].name 
+        ? nodeTypeData.parameters 
+        : [];
       description = nodeTypeData.description || '';
-      processing_message = nodeTypeData.processing_message || 'Processing...';
+      processing_message = nodeTypeData.processingMessage || nodeTypeData.processing_message || 'Processing...';
+      fieldAccess = nodeTypeData.fieldAccess || {};
     } else {
       // Fallback for any missing node types
       if (nodeType === 'start') {
@@ -236,8 +248,11 @@ module.exports = processData;`;
       inputs,
       outputs,
       hyperparameters,
+      parameters,
       description,
       processing_message,
+      processingMessage: processing_message,
+      fieldAccess,
       layer: 0, // Default layer
       templateId: typeof template === 'object' ? template.id : null,
       code: initialCode, // Add code property for custom script nodes

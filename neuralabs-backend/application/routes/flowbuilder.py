@@ -39,6 +39,10 @@ class FlowbuilderBlock(BaseModel):
     input_schema: Dict[str, Any]
     output_schema: Dict[str, Any]
     hyper_parameters: Dict[str, Any]
+    parameter_schema_structure: Dict[str, Any]
+    parameters: Dict[str, Any]
+    processing_message: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
     icon: str
     category: str
     created_at: str
@@ -61,8 +65,12 @@ async def get_all_blocks():
     """
     try:
         blocks = await get_all_flowbuilder_blocks()
+        
+        # print(blocks)  # Debugging line to check the result
         # Format datetime objects
         formatted_blocks = format_datetime(blocks)
+        
+        print(formatted_blocks)  # Debugging line to check the formatted result
         return formatted_blocks
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching blocks: {str(e)}")
