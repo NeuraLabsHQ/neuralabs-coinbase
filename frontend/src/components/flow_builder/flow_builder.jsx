@@ -120,12 +120,11 @@ const FlowBuilder = ({ agentId, agentData }) => {
             y: node.y || Math.random() * 300,
             inputs: node.inputs || [],
             outputs: node.outputs || [],
-            hyperparameters: node.hyperparameters || [],
-            parameters: Array.isArray(node.parameters) && node.parameters.length > 0 && node.parameters[0].name 
-              ? node.parameters 
-              : [],
+            parameters: node.parameters || [], // Array format for UI
+            parametersObject: node.parametersObject || {}, // Object format for storage
+            hyperparameters: node.hyperparameters || [], // Legacy support
             description: node.description || '',
-            processing_message: node.processing_message || '',
+            processing_message: node.processing_message || node.processingMessage || '',
             processingMessage: node.processingMessage || node.processing_message || '',
             fieldAccess: node.fieldAccess || {},
             layer: node.layer || 0,
@@ -899,7 +898,16 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
   };
 
   const exportFlowJSON = () => {
-    exportFlowAsJSON(nodes, edges)
+    // Prepare metadata for export
+    const metadata = {
+      name: agentData?.name || "Flow",
+      version: agentData?.version || "1.0.0",
+      description: agentData?.description || "Flow exported from Neuralabs",
+      author: agentData?.author || "NeuraLabs",
+      tags: agentData?.tags || ["exported"]
+    };
+    
+    exportFlowAsJSON(nodes, edges, metadata)
       .then(({ url, filename }) => {
         // Create download link
         const link = document.createElement('a');
@@ -978,19 +986,22 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
     }
 
     try {
-      // Prepare workflow data in the same format as export
+      // Prepare workflow data in the same format as JSON export
       const workflowData = {
         nodes: nodes.map(node => ({
           id: node.id,
           type: node.type,
           name: node.name,
-          x: node.x,
-          y: node.y,
+          x: node.x || 0,
+          y: node.y || 0,
           inputs: node.inputs || [],
           outputs: node.outputs || [],
-          hyperparameters: node.hyperparameters || [],
+          parameters: node.parameters || [], // Array format for UI
+          parametersObject: node.parametersObject || {}, // Object format for storage
+          hyperparameters: node.hyperparameters || [], // Legacy support
           description: node.description || '',
-          processing_message: node.processing_message || '',
+          processing_message: node.processing_message || node.processingMessage || '',
+          processingMessage: node.processing_message || node.processingMessage || '', // Support both formats
           layer: node.layer || 0,
           tags: Array.isArray(node.tags) ? node.tags : [],
           code: node.code || '',

@@ -54,7 +54,13 @@ const SchemaPopup = ({
 
   const handleValueChange = (index, value) => {
     const updated = [...localSchema];
-    updated[index] = { ...updated[index], default: value };
+    if (title === "Parameters") {
+      // For parameters, update the 'value' field
+      updated[index] = { ...updated[index], value: value };
+    } else {
+      // For other schemas, update the 'default' field
+      updated[index] = { ...updated[index], default: value };
+    }
     setLocalSchema(updated);
   };
 
@@ -63,8 +69,10 @@ const SchemaPopup = ({
       name: '',
       type: 'string',
       default: '',
+      value: title === "Parameters" ? '' : undefined,
       required: false,
-      description: ''
+      description: '',
+      editable: title === "Parameters" ? true : false
     };
     setLocalSchema([...localSchema, newRow]);
   };
@@ -127,7 +135,7 @@ const SchemaPopup = ({
                 <Tr>
                   <Th color={mutedTextColor} width="25%" fontSize="xs" textTransform="uppercase">Name</Th>
                   <Th color={mutedTextColor} width="15%" fontSize="xs" textTransform="uppercase">Type</Th>
-                  <Th color={mutedTextColor} width="35%" fontSize="xs" textTransform="uppercase">{isEditable || isCustomBlock ? 'Default Value' : 'Value'}</Th>
+                  <Th color={mutedTextColor} width="35%" fontSize="xs" textTransform="uppercase">{title === "Parameters" ? 'Value' : ((isEditable || isCustomBlock) ? 'Default Value' : 'Value')}</Th>
                   {(isEditable || isCustomBlock) && <Th color={mutedTextColor} width="20%" fontSize="xs" textTransform="uppercase">Description</Th>}
                   {(isEditable || isCustomBlock) && <Th color={mutedTextColor} width="5%"></Th>}
                 </Tr>
@@ -174,15 +182,15 @@ const SchemaPopup = ({
                     <Td>
                       {(isEditable || isCustomBlock) ? (
                         <Input
-                          value={field.default || ''}
+                          value={title === "Parameters" ? (field.value || field.default || '') : (field.default || '')}
                           onChange={(e) => handleValueChange(index, e.target.value)}
                           size="sm"
                           bg={inputBg}
-                          placeholder="Default Value"
+                          placeholder={title === "Parameters" ? "Value" : "Default Value"}
                         />
                       ) : (
-                        <Text fontSize="sm" color={field.default ? textColor : mutedTextColor}>
-                          {field.default || 'No default'}
+                        <Text fontSize="sm" color={(field.value || field.default) ? textColor : mutedTextColor}>
+                          {title === "Parameters" ? (field.value || field.default || 'No value') : (field.default || 'No default')}
                         </Text>
                       )}
                     </Td>
