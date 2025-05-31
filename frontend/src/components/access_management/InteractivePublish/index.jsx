@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useCurrentAccount } from '@mysten/dapp-kit'
+import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import './styles/themed-index.css'
@@ -20,11 +20,17 @@ import { INTERACTIVE_PUBLISH_STEPS } from './components/functional/journeyConfig
 
 const InteractivePublish = ({ agentData, onComplete }) => {
   const account = useCurrentAccount()
+  const suiClient = useSuiClient()
+  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction()
   
   // Create config from environment
   const config = {
     walrusApiUrl: import.meta.env.VITE_WALRUS_API_URL || 'https://walrus-testnet.walrus.space',
-    network: import.meta.env.VITE_SUI_NETWORK || 'testnet'
+    network: import.meta.env.VITE_SUI_NETWORK || 'testnet',
+    PACKAGE_ID: import.meta.env.VITE_PACKAGE_ID || '0x0',
+    ACCESS_REGISTRY_ID: import.meta.env.VITE_ACCESS_REGISTRY_ID || '0x0',
+    WALRUS_PUBLISHER: import.meta.env.VITE_WALRUS_PUBLISHER || 'https://publisher.walrus-testnet.walrus.space',
+    WALRUS_AGGREGATOR: import.meta.env.VITE_WALRUS_AGGREGATOR || 'https://aggregator.walrus-testnet.walrus.space'
   }
   
   // Core state management
@@ -49,6 +55,17 @@ const InteractivePublish = ({ agentData, onComplete }) => {
     renderAnimation
   } = useAnimationSystem()
   
+  // Initialize global blockchain references
+  useEffect(() => {
+    if (suiClient && account && signAndExecuteTransaction) {
+      // Set global references for blockchain.js
+      window.suiClient = suiClient
+      window.signAndExecute = signAndExecuteTransaction
+      window.config = config
+      window.currentAccount = account
+    }
+  }, [suiClient, account, signAndExecuteTransaction, config])
+
   // Update account and agent data in journey data
   useEffect(() => {
     if (account) {

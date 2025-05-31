@@ -350,7 +350,7 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
   const isDisabled = () => {
     if (isProcessing) return true
     if (step.id === 'mint' && (!nftName || !nftDescription)) return true
-    if (step.id === 'file' && !selectedFile && !journeyData.selectedFile) return true
+    if (step.id === 'file' && !journeyData.selectedFile) return true
     return false
   }
   

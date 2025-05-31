@@ -29,7 +29,7 @@ export async function grantAccess(
     arguments: [
       tx.object(config.ACCESS_REGISTRY_ID),
       tx.object(params.accessCapId),
-      tx.pure.id(params.nftId),
+      tx.object(params.nftId),
       tx.pure.address(params.recipientAddress),
       tx.pure.u8(params.accessLevel),
     ]
@@ -71,7 +71,7 @@ export async function revokeAccess(
     arguments: [
       tx.object(config.ACCESS_REGISTRY_ID),
       tx.object(params.accessCapId),
-      tx.pure.id(params.nftId),
+      tx.object(params.nftId),
       tx.pure.address(params.userAddress),
     ]
   });
