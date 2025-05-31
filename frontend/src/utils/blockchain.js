@@ -201,7 +201,9 @@ export const getWALBalance = async (address) => {
   if (!client) {
     throw new Error('SUI client not initialized')
   }
-  const balance = await _getWalBalance(client, address)
+  // Use the same WAL token type as the converter
+  const walTokenType = '0x8270feb7375eee355e64fdb69c50abb6b5f9393a722883c1cf45f8e26048810a::wal::WAL'
+  const balance = await _getWalBalance(client, address, walTokenType)
   // Return formatted balance string for backward compatibility
   return formatBalance(balance.totalBalance, 9)
 }

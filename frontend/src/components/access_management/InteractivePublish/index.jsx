@@ -29,7 +29,11 @@ import {
   getFlowSummary 
 } from './components/functional/sessionStorage'
 
-const InteractivePublish = ({ agentData, onComplete }) => {
+const InteractivePublish = ({ agentData, agentId, onComplete }) => {
+  // Debug logging for agentData and agentId
+  console.log('InteractivePublish - agentData received:', agentData);
+  console.log('InteractivePublish - agentId received:', agentId);
+  
   const account = useCurrentAccount()
   const suiClient = useSuiClient()
   const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction()
@@ -63,7 +67,7 @@ const InteractivePublish = ({ agentData, onComplete }) => {
   const [incompletePrerequisites, setIncompletePrerequisites] = useState([])
   
   // NFT form state
-  const [nftName, setNftName] = useState('')
+  const [versionNumber, setVersionNumber] = useState('')
   const [nftDescription, setNftDescription] = useState('')
   
   // Animation system
@@ -117,17 +121,23 @@ const InteractivePublish = ({ agentData, onComplete }) => {
   
   // Update account and agent data in journey data
   useEffect(() => {
+    // Always update agentData, regardless of account status
+    const updateData = {
+      agentData,
+      agentId: agentId || agentData?.id, // Use URL agentId first, fallback to agentData.id
+      flowId
+    };
+    
+    // Add account data if wallet is connected
     if (account) {
-      updateJourneyData({ 
-        walletConnected: true, 
-        walletAddress: account.address,
-        account,
-        agentData,
-        agentId: agentData?.id,
-        flowId
-      })
+      updateData.walletConnected = true;
+      updateData.walletAddress = account.address;
+      updateData.account = account;
     }
-  }, [account, agentData, flowId])
+    
+    console.log('Updating journey data with:', updateData);
+    updateJourneyData(updateData);
+  }, [account, agentData, agentId, flowId])
   
   // Save journey data whenever it changes
   useEffect(() => {
@@ -168,10 +178,15 @@ const InteractivePublish = ({ agentData, onComplete }) => {
   
   // Handle action from content (for mint step with form data)
   const handleActionFromContent = () => {
-    if (nftName && nftDescription) {
+    if (versionNumber && nftDescription) {
+      // Construct full NFT name with neuralabs prefix
+      const currentAgentId = agentId || agentData?.id || journeyData.agentId || 'unknown'
+      const fullNftName = `neuralabs:${currentAgentId}:${versionNumber}`
+      
       // Update journey data with form data
       updateJourneyData({
-        nftName: nftName,
+        nftName: fullNftName,
+        versionNumber: versionNumber,
         nftDescription: nftDescription
       })
     }
@@ -365,7 +380,7 @@ const InteractivePublish = ({ agentData, onComplete }) => {
               <div className="action-content-area">
                 {incompletePrerequisites && incompletePrerequisites.length > 0 ? 
                   renderPrerequisiteWarning(incompletePrerequisites) :
-                  renderActionContent(currentStep, journeyData, nftName, nftDescription, setNftName, setNftDescription, handleActionFromContent)
+                  renderActionContent(currentStep, journeyData, versionNumber, nftDescription, setVersionNumber, setNftDescription, handleActionFromContent)
                 }
               </div>
 

@@ -5,7 +5,7 @@ import { INTERACTIVE_PUBLISH_STEPS } from './journeyConfig'
  * Action Content Component
  * Renders the content for each step
  */
-export const renderActionContent = (currentStep, journeyData, nftName, nftDescription, setNftName, setNftDescription, handleAction) => {
+export const renderActionContent = (currentStep, journeyData, versionNumber, nftDescription, setVersionNumber, setNftDescription, handleAction) => {
   const step = INTERACTIVE_PUBLISH_STEPS[currentStep]
 
   switch (step.id) {
@@ -33,11 +33,11 @@ export const renderActionContent = (currentStep, journeyData, nftName, nftDescri
               <div className="status-message status-success">
                 <div className="detail-item">
                   <span className="detail-label">SUI Balance</span>
-                  <span className="detail-value">{(Number(journeyData.suiBalance) / 1e9).toFixed(4)} SUI</span>
+                  <span className="detail-value">{journeyData.suiBalance} SUI</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">WAL Balance</span>
-                  <span className="detail-value">{(Number(journeyData.walBalance) / 1e9).toFixed(4)} WAL</span>
+                  <span className="detail-value">{journeyData.walBalance} WAL</span>
                 </div>
               </div>
             </div>
@@ -54,27 +54,36 @@ export const renderActionContent = (currentStep, journeyData, nftName, nftDescri
             <div className="status-message status-success">
               <div className="detail-item">
                 <span className="detail-label">NFT Created</span>
-                <span className="detail-value">{journeyData.nftId.slice(0, 12)}...</span>
+                <span className="detail-value">v{journeyData.versionNumber || 'unknown'}</span>
               </div>
             </div>
           ) : (
             <form className="action-form" onSubmit={(e) => { e.preventDefault(); handleAction(); }}>
               <div className="form-group">
-                <label>NFT Name</label>
-                <input
-                  type="text"
-                  value={nftName}
-                  onChange={(e) => setNftName(e.target.value)}
-                  placeholder="Enter NFT name"
-                  required
-                />
+                <label>Version Number</label>
+                <div className="composite-input">
+                  <span className="input-prefix">neuralabs:{(() => {
+                    // Get the agent ID and show only first 6 characters
+                    const agentId = journeyData.agentId || 
+                                   journeyData.agentData?.id || 
+                                   'unknown';
+                    return agentId !== 'unknown' ? agentId.slice(0, 6) : agentId;
+                  })()}XX:</span>
+                  <input
+                    type="text"
+                    value={versionNumber}
+                    onChange={(e) => setVersionNumber(e.target.value)}
+                    placeholder="1.0.0"
+                    required
+                  />
+                </div>
               </div>
               <div className="form-group">
-                <label>NFT Description</label>
+                <label>Version Description</label>
                 <textarea
                   value={nftDescription}
                   onChange={(e) => setNftDescription(e.target.value)}
-                  placeholder="Enter NFT description"
+                  placeholder="Describe what's new in this version"
                   rows={3}
                   required
                 />

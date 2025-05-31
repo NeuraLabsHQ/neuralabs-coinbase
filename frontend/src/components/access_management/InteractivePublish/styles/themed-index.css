@@ -1097,6 +1097,50 @@
   min-height: clamp(60px, 10vw, 70px);
 }
 
+/* Composite Input for Version Number with Prefix */
+.composite-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--journey-border);
+  border-radius: 6px;
+  background: var(--journey-card-bg);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.composite-input:focus-within {
+  border-color: var(--journey-primary-color);
+  box-shadow: 0 0 0 2px rgba(81, 144, 255, 0.1);
+}
+
+.input-prefix {
+  background: var(--journey-hover-bg);
+  color: var(--journey-text-secondary);
+  padding: clamp(8px, 1.5vw, 10px) clamp(10px, 2vw, 12px);
+  font-size: clamp(0.9rem, 1.8vw, 0.95rem);
+  font-weight: 500;
+  border-right: 1px solid var(--journey-border);
+  white-space: nowrap;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.composite-input input {
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  margin: 0;
+  flex: 1;
+  min-width: 0; /* Allow shrinking below content size */
+}
+
+.composite-input input:focus {
+  outline: none;
+  border: none !important;
+  box-shadow: none !important;
+}
+
 /* Animation Enhancements */
 @keyframes slideInFromLeft {
   from {

@@ -3,7 +3,7 @@ import { Box, useColorModeValue } from '@chakra-ui/react';
 import InteractivePublish from '../InteractivePublish';
 import colors from '../../../color';
 
-const InteractivePublishPage = ({ agentData, onComplete }) => {
+const InteractivePublishPage = ({ agentData, agentId, onComplete }) => {
   const bgColor = useColorModeValue(
     colors.accessManagement.mainContent.bg.light,
     colors.accessManagement.mainContent.bg.dark
@@ -25,7 +25,8 @@ const InteractivePublishPage = ({ agentData, onComplete }) => {
       position="relative"
     >
       <InteractivePublish 
-        agentData={agentData} 
+        agentData={agentData}
+        agentId={agentId}
         onComplete={handleComplete}
       />
     </Box>
