@@ -216,7 +216,18 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true }) => {
     if (typeof output === 'string') {
       return output;
     } else if (Array.isArray(output)) {
-      return output.join(', ');
+      // Check if it's an array of message objects (context history)
+      if (output.length > 0 && typeof output[0] === 'object' && 'role' in output[0] && 'content' in output[0]) {
+        // Format conversation history nicely
+        return output.map((msg, index) => 
+          `${msg.role}: ${msg.content}`
+        ).join('\n');
+      } else {
+        // For simple arrays, join with commas
+        return output.map(item => 
+          typeof item === 'object' ? JSON.stringify(item) : String(item)
+        ).join(', ');
+      }
     } else if (typeof output === 'object') {
       return JSON.stringify(output, null, 2);
     }

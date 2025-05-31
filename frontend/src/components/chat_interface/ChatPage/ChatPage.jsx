@@ -141,14 +141,27 @@ const ChatPage = () => {
     ws.onopen = () => {
       console.log('✅ WebSocket connected to NeuraLabs backend');
       
-      // Send initial data to NeuraLabs backend
+      // Get conversation history for this chat (excluding the current message)
+      const conversationHistory = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp,
+        metadata: {
+          message_id: msg.id,
+          model: msg.model || null
+        }
+      }));
+      
+      // Send initial data to NeuraLabs backend with conversation history
       const initialData = {
         user_id: walletAddress || 'anonymous', // Use actual wallet address
         message: userMessage,
-        agent_id: agentId
+        agent_id: agentId,
+        conversation_history: conversationHistory
       };
       
       console.log('📤 Sending initial data to NeuraLabs backend:', initialData);
+      console.log('📋 Conversation history length:', conversationHistory.length);
       ws.send(JSON.stringify(initialData));
     };
 
@@ -260,7 +273,16 @@ const ChatPage = () => {
       const finalText = data.text_output || messageBuffer;
       console.log('Final output for message:', messageId, 'using buffer:', finalText.substring(0, 100) + '...');
       
-      const answerMatch = finalText.match(/<answer>([\s\S]*?)<\/answer>/);
+      // First check for </think> tag and extract content after it
+      let processedContent = finalText;
+      const thinkEndMatch = finalText.match(/<\/think>\s*([\s\S]*)/);
+      if (thinkEndMatch) {
+        processedContent = thinkEndMatch[1].trim();
+        console.log('Extracted content after </think>:', processedContent);
+      }
+      
+      // Then check for answer tags in the processed content
+      const answerMatch = processedContent.match(/<answer>([\s\S]*?)<\/answer>/);
       
       if (answerMatch) {
         const answerContent = answerMatch[1].trim();
@@ -274,12 +296,12 @@ const ChatPage = () => {
           parentMessageId: messageId // Link to the user message
         };
         setMessages(prev => [...prev, assistantMessage]);
-      } else if (finalText) {
-        // If no answer tags, use the entire text
+      } else if (processedContent) {
+        // If no answer tags, use the processed text (after </think> if present)
         const assistantMessage = {
           id: Date.now().toString(),
           role: 'assistant',
-          content: finalText,
+          content: processedContent,
           timestamp: new Date(),
           parentMessageId: messageId // Link to the user message
         };

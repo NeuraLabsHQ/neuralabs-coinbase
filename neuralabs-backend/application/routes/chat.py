@@ -218,7 +218,7 @@ def map_node_type_to_element_type(node_type: str) -> str:
         'start': 'start', 'Start': 'start',
         'end': 'end', 'End': 'end',
         'ChatInput': 'chat_input', 'chat_input': 'chat_input',
-        'ContextHistory': 'context_history', 'context_history': 'context_history',
+        'ContextHistory': 'context_history', 'context_history': 'context_history', 'contexthistory': 'context_history',
         'Datablock': 'datablock', 'datablock': 'datablock',
         'Constants': 'constants', 'constants': 'constants',
         'RestAPI': 'rest_api', 'rest_api': 'rest_api',
@@ -397,6 +397,10 @@ async def websocket_execute_flow(websocket: WebSocket, agent_id: str, token: Opt
                     }))
                     return
             
+            # Extract conversation history if provided
+            conversation_history = initial_data.get('conversation_history', [])
+            logger.info(f"💬 Received conversation history with {len(conversation_history)} messages")
+            
             # Log the agent_id from the URL and message for debugging
             logger.info(f"🤖 Agent ID from URL: {agent_id}")
             if 'agent_id' in initial_data:
@@ -428,6 +432,15 @@ async def websocket_execute_flow(websocket: WebSocket, agent_id: str, token: Opt
             if 'flow_definition' in workflow_data:
                 hpc_flow_definition = workflow_data['flow_definition']
                 logger.info("✅ Using flow_definition from workflow data")
+                
+                # Fix node types in flow_definition format
+                if 'nodes' in hpc_flow_definition:
+                    for node_id, node_data in hpc_flow_definition['nodes'].items():
+                        if 'type' in node_data:
+                            frontend_type = node_data['type']
+                            hpc_type = map_node_type_to_element_type(frontend_type)
+                            node_data['type'] = hpc_type
+                            logger.info(f"🔄 Converted node type: {frontend_type} -> {hpc_type}")
             elif 'nodes' in workflow_data and 'edges' in workflow_data:
                 # Frontend format: convert to expected structure
                 nodes_dict = {}
@@ -492,6 +505,14 @@ async def websocket_execute_flow(websocket: WebSocket, agent_id: str, token: Opt
                         user_message = initial_data.get('message', 'Hello')
                         initial_inputs[node_id] = {'chat_input': user_message}
                         logger.info(f"💬 Created initial input for chat_input node {node_id}: {user_message}")
+                        break
+                
+                # Also look for context_history nodes and provide conversation history
+                for node_id, node in hpc_flow_definition.get('nodes', {}).items():
+                    node_type = node.get('type', '').lower()
+                    if node_type in ['context_history', 'contexthistory']:
+                        initial_inputs[node_id] = {'context_history': conversation_history}
+                        logger.info(f"📚 Created initial input for context_history node {node_id}: {len(conversation_history)} messages")
                         break
                 
                 logger.info(f"📥 Final initial_inputs: {initial_inputs}")

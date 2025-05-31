@@ -228,10 +228,24 @@ class LLMText(ElementBase):
         
         return self.outputs
     
-    def _format_prompt(self, prompt: str, context: List[str], additional_data: Dict[str, Any], wrapper_prompt: str) -> str:
+    def _format_prompt(self, prompt: str, context: List[Any], additional_data: Dict[str, Any], wrapper_prompt: str) -> str:
         """Format the prompt with wrapper, context, and additional data."""
         # Format context as string
-        context_str = "\n".join(context) if context else ""
+        if context:
+            # Handle both list of strings and list of message dictionaries
+            if isinstance(context[0], dict):
+                # Format conversation history from context_history element
+                context_parts = []
+                for msg in context:
+                    role = msg.get('role', 'unknown')
+                    content = msg.get('content', '')
+                    context_parts.append(f"{role}: {content}")
+                context_str = "\n".join(context_parts)
+            else:
+                # Simple list of strings
+                context_str = "\n".join(str(item) for item in context)
+        else:
+            context_str = ""
         
         # Format additional data as JSON string
         additional_data_str = ""
@@ -246,19 +260,29 @@ class LLMText(ElementBase):
         if wrapper_prompt:
             # Use the wrapper prompt template if provided
             try:
-                # Create substitution dictionary with all inputs plus standard variables
-                substitution_vars = {
-                    "prompt": prompt,
-                    "context": context_str,
-                    "additional_data": additional_data_str
-                }
-                
-                # Add all inputs as substitution variables
-                for key, value in self.inputs.items():
-                    if key not in substitution_vars:  # Don't override standard variables
-                        substitution_vars[key] = value
-                
-                formatted_prompt = wrapper_prompt.format(**substitution_vars)
+                # Check if wrapper_prompt contains any placeholders
+                if '{' in wrapper_prompt and '}' in wrapper_prompt:
+                    # Create substitution dictionary with all inputs plus standard variables
+                    substitution_vars = {
+                        "prompt": prompt,
+                        "context": context_str,
+                        "additional_data": additional_data_str
+                    }
+                    
+                    # Add all inputs as substitution variables
+                    for key, value in self.inputs.items():
+                        if key not in substitution_vars:  # Don't override standard variables
+                            substitution_vars[key] = value
+                    
+                    formatted_prompt = wrapper_prompt.format(**substitution_vars)
+                else:
+                    # If no placeholders, append the user prompt to the wrapper prompt
+                    if wrapper_prompt and prompt:
+                        formatted_prompt = f"{wrapper_prompt}\n\nUser: {prompt}"
+                    elif prompt:
+                        formatted_prompt = prompt
+                    else:
+                        formatted_prompt = wrapper_prompt
             except KeyError as e:
                 logger.warning(f"Error formatting wrapper prompt: {str(e)}. Missing variable in inputs. Using default formatting.")
                 formatted_prompt = self._default_format(prompt, context_str, additional_data_str)

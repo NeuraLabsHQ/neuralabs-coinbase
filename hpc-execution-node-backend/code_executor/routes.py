@@ -117,6 +117,12 @@ async def execute_flow_websocket(websocket: WebSocket, flow_id: str, flow_defini
                     
                 # Don't add element_id and name to node_data anymore
                 # We'll handle these separately in setup_flow_executor
+                
+                # Fix tags field - convert empty dict to empty list
+                if "tags" in node_data and isinstance(node_data["tags"], dict) and not node_data["tags"]:
+                    node_data["tags"] = []
+                elif "tags" not in node_data:
+                    node_data["tags"] = []
                     
                 # Ensure input_schema and output_schema are present
                 if "input_schema" not in node_data:
