@@ -1,12 +1,21 @@
 import { Flex, useColorMode, useDisclosure } from '@chakra-ui/react';
 import { useEffect, useState, useRef } from 'react';
-import simpleAiFlow from '../../../utils/simple-ai-flow.json';
+import { useCurrentAccount } from '@mysten/dapp-kit';
+import { useZkLogin } from '../../../contexts/ZkLoginContext';
 import useUiColors from '../../../utils/uiColors';
 import ChatHistoryPanel from '../ChatHistoryPanel/ChatHistoryPanel';
 import ChatInterface from '../ChatInterface';
 
 const ChatPage = () => {
   const colors = useUiColors();
+  
+  // Wallet context
+  const currentAccount = useCurrentAccount();
+  const { isAuthenticated: isZkLoggedIn, zkLoginAddress } = useZkLogin();
+  
+  // Get wallet address from either dapp-kit or zkLogin
+  const walletAddress = currentAccount?.address || zkLoginAddress || null;
+  
   const [chats, setChats] = useState([]);
   const [selectedChatId, setSelectedChatId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -34,7 +43,7 @@ const ChatPage = () => {
   const messageStreamBuffers = useRef({});
 
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: false });
-  const { colorMode, toggleColorMode } = useColorMode();
+  const { toggleColorMode } = useColorMode();
   
   useEffect(() => {
     const initialChats = [
@@ -58,11 +67,11 @@ const ChatPage = () => {
     };
   }, []);
 
-  const connectToBackend = (flowId, flowDefinition, initialInputs, messageId) => {
-    console.log('Connecting to backend with flow:', flowId);
-    console.log('Flow definition:', flowDefinition);
-    console.log('Initial inputs:', initialInputs);
+  const connectToBackend = (agentId, userMessage, messageId) => {
+    console.log('Connecting to NeuraLabs backend with agent:', agentId);
+    console.log('User message:', userMessage);
     console.log('Message ID:', messageId);
+    console.log('Wallet address:', walletAddress);
     
     // Set active message ID
     setActiveMessageId(messageId);
@@ -118,10 +127,10 @@ const ChatPage = () => {
       }));
     }, 1000);
 
-    // Connect to WebSocket using environment variable
-    const baseUrl = import.meta.env.VITE_WEBSOCKET_URL || 'http://localhost:8000';
-    const wsUrl = baseUrl.replace('http://', 'ws://').replace('https://', 'wss://') + `/ws/execute/${flowId}`;
-    console.log('Attempting WebSocket connection to:', wsUrl);
+    // Connect to NeuraLabs backend WebSocket (port 8001)
+    const backendUrl = import.meta.env.REACT_APP_API_URL || 'http://localhost:8001';
+    const wsUrl = backendUrl.replace('http://', 'ws://').replace('https://', 'wss://') + `/api/chat/execute/${agentId}`;
+    console.log('Attempting WebSocket connection to NeuraLabs backend:', wsUrl);
     
     const ws = new WebSocket(wsUrl);
     websocketRef.current = ws;
@@ -130,25 +139,30 @@ const ChatPage = () => {
     ws.messageId = messageId;
 
     ws.onopen = () => {
-      console.log('✅ WebSocket connected to backend');
+      console.log('✅ WebSocket connected to NeuraLabs backend');
+      
+      // Send initial data to NeuraLabs backend
+      const initialData = {
+        user_id: walletAddress || 'anonymous', // Use actual wallet address
+        message: userMessage,
+        agent_id: agentId
+      };
+      
+      console.log('📤 Sending initial data to NeuraLabs backend:', initialData);
+      ws.send(JSON.stringify(initialData));
     };
 
     ws.onmessage = (event) => {
       console.log('📨 WebSocket message received:', event.data);
       const message = JSON.parse(event.data);
       
-      if (message.status === 'ready') {
-        console.log('→ Sending flow definition');
-        ws.send(JSON.stringify(flowDefinition));
-      } else if (message.status === 'received_flow') {
-        console.log('→ Sending initial inputs');
-        ws.send(JSON.stringify(initialInputs));
-      } else if (message.status === 'received_inputs') {
-        console.log('→ Sending config (null)');
-        ws.send('null');
-      } else if (message.type) {
+      // NeuraLabs backend forwards HPC execution events directly
+      if (message.type) {
         console.log('→ Handling execution event:', message.type, 'for message:', messageId);
         handleExecutionEvent(message, messageId);
+      } else if (message.status || message.error) {
+        console.log('→ NeuraLabs backend status:', message);
+        // Handle backend status messages if needed
       }
     };
 
@@ -167,7 +181,7 @@ const ChatPage = () => {
       const errorMessage = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: 'Sorry, I couldn\'t connect to the backend server. Please make sure the HPC execution backend is running on port 8000.',
+        content: 'Sorry, I couldn\'t connect to the NeuraLabs backend. Please make sure the NeuraLabs backend is running on port 8001.',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -175,9 +189,9 @@ const ChatPage = () => {
 
     ws.onclose = (event) => {
       console.log('🔌 WebSocket closed:', event.code, event.reason);
-      // If connection was not established properly, it might be because backend is not running
+      // If connection was not established properly, it might be because NeuraLabs backend is not running
       if (event.code === 1006) {
-        console.error('WebSocket connection failed. Is the backend running on port 8000?');
+        console.error('WebSocket connection failed. Is the NeuraLabs backend running on port 8001?');
       }
     };
   };
@@ -313,27 +327,16 @@ const ChatPage = () => {
     console.log('🚀 simulateThinking called with query:', query);
     console.log('📋 Message ID for thinking:', messageId);
     
-    // Use the imported flow definition
-    const flowDefinition = simpleAiFlow.flow_definition;
+    // Get agentId from URL params (if available)
+    const currentPath = window.location.pathname;
+    const agentIdMatch = currentPath.match(/\/chat\/([^\/]+)/);
+    const agentId = agentIdMatch ? agentIdMatch[1] : 'default-agent';
     
-    // Create initial inputs with the current query and conversation history
-    const initialInputs = {
-      chat_input: {
-        chat_input: query
-      },
-      context_history: {
-        context_history: messages
-          .filter(m => m.role !== 'system')
-          .slice(-5) // Keep last 5 messages for context
-          .map(m => `${m.role}: ${m.content}`)
-      }
-    };
-
-    console.log('📋 Flow ID:', simpleAiFlow.flow_id);
+    console.log('📋 Agent ID:', agentId);
     console.log('📋 Messages for context:', messages.length);
     
-    // Connect to backend with message ID
-    connectToBackend(simpleAiFlow.flow_id, flowDefinition, initialInputs, messageId);
+    // Connect to NeuraLabs backend with agent ID and user message
+    connectToBackend(agentId, query, messageId);
   };
 
 

@@ -197,11 +197,15 @@ async def setup_flow_executor(flow_def: FlowDefinition, stream_manager, user_con
             common_params["parameters"] = node_data.parameters
         
         # Extract additional parameters specific to the element type
-        # Make sure to exclude all common params to avoid duplicates
+        # Make sure to exclude all common params and frontend-specific fields to avoid duplicates
+        frontend_fields = ["type", "node_description", "description", "processing_message", 
+                          "tags", "layer", "parameters", "input_schema", "output_schema",
+                          "element_id", "name", "processingMessage", "parametersObject", 
+                          "hyperparameters", "position", "original_id", "x", "y", 
+                          "inputs", "outputs", "code", "metadata", "templateId", 
+                          "parameter_schema_structure", "id"]
         additional_params = {k: v for k, v in node_data.dict().items() 
-                           if k not in ["type", "node_description", "description", "processing_message", 
-                                      "tags", "layer", "parameters", "input_schema", "output_schema",
-                                      "element_id", "name"]}  # Exclude element_id and name
+                           if k not in frontend_fields}
         
         # Handle parameters for specific element types
         if elem_type == "llm_text" and hasattr(node_data, 'parameters'):

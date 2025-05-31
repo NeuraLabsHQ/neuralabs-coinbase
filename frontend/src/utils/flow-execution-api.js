@@ -2,6 +2,7 @@
  * WebSocket API for streaming flow execution
  * Connects to NeuraLabs backend which acts as intermediary to HPC execution engine
  */
+import { useState, useEffect } from 'react';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 const WS_BASE_URL = API_BASE_URL.replace('http', 'ws');
@@ -305,5 +306,3 @@ export const useFlowExecution = (agentId) => {
   };
 };
 
-// Import useState and useEffect if they're not already imported
-import { useState, useEffect } from 'react';

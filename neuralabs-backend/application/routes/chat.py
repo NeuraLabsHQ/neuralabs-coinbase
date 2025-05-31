@@ -9,7 +9,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import Dict, Any, Optional
 import logging
 from ..modules.database.postgresconn import PostgresConnection
-from ..modules.authentication.jwt.token import decode_jwt_token
+from ..modules.authentication.jwt.token import JWTHandler
 
 router = APIRouter()
 
@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Configuration for HPC execution engine
-HPC_WEBSOCKET_URL = "ws://localhost:8001/ws/execute/{flow_id}"
+HPC_WEBSOCKET_URL = "ws://localhost:8000/ws/execute/{flow_id}"
 
 class ConnectionManager:
     """Manages WebSocket connections"""
@@ -52,7 +52,7 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-async def get_workflow_from_db(agent_id: str, user_id: str) -> Optional[Dict[str, Any]]:
+async def get_workflow_from_db(agent_id: str) -> Optional[Dict[str, Any]]:
     """
     Retrieve workflow data from database for the given agent and user
     Checks both unpublished and published tables based on publication status
@@ -62,47 +62,50 @@ async def get_workflow_from_db(agent_id: str, user_id: str) -> Optional[Dict[str
         
         # First, get the agent info to check publication status
         agent_query = """
-            SELECT agent_id, owner, published
-            FROM agents 
-            WHERE agent_id = %s AND owner = %s
+            SELECT agent_id, owner, status
+            FROM agent
+            WHERE agent_id = %s
         """
         
-        agent_result = await pg_conn.execute_query(agent_query, (agent_id, user_id))
+        agent_result = await pg_conn.execute_query(agent_query, (agent_id,))
         
         if not agent_result or len(agent_result) == 0:
-            logger.warning(f"No agent found for agent_id {agent_id} and user {user_id}")
+            logger.warning(f"No agent found for agent_id {agent_id}")
             return None
         
         agent_info = agent_result[0]
-        is_published = agent_info.get('published', False)
+        agent_status = agent_info.get('status', 'Not Published')
+        is_published = agent_status == 'Active'
+        
+        logger.info(f"Agent {agent_id} status: {agent_status}, is_published: {is_published}")
         
         # Query the appropriate table based on publication status
         if is_published:
-            # Query published table
+            # Query published_agent table
             workflow_query = """
                 SELECT workflow
-                FROM published 
-                WHERE agent_id = %s AND owner = %s
+                FROM published_agent 
+                WHERE agent_id = %s
             """
-            logger.info(f"Querying published table for agent {agent_id}")
+            logger.info(f"Querying published_agent table for agent {agent_id}")
         else:
-            # Query unpublished table
+            # Query unpublished_agent table
             workflow_query = """
                 SELECT workflow
-                FROM unpublished 
-                WHERE agent_id = %s AND owner = %s
+                FROM unpublished_agent 
+                WHERE agent_id = %s
             """
-            logger.info(f"Querying unpublished table for agent {agent_id}")
+            logger.info(f"Querying unpublished_agent table for agent {agent_id}")
         
-        workflow_result = await pg_conn.execute_query(workflow_query, (agent_id, user_id))
+        workflow_result = await pg_conn.execute_query(workflow_query, (agent_id,))
         
         if workflow_result and len(workflow_result) > 0:
             workflow_data = workflow_result[0].get('workflow')
             if workflow_data:
-                logger.info(f"Found workflow for agent {agent_id} in {'published' if is_published else 'unpublished'} table")
+                logger.info(f"Found workflow for agent {agent_id} in {'published_agent' if is_published else 'unpublished_agent'} table")
                 return workflow_data
         
-        logger.warning(f"No workflow found for agent {agent_id} and user {user_id} in {'published' if is_published else 'unpublished'} table")
+        logger.warning(f"No workflow found for agent {agent_id} in {'published_agent' if is_published else 'unpublished_agent'} table")
         return None
         
     except Exception as e:
@@ -261,7 +264,9 @@ async def connect_to_hpc_engine(flow_id: str, flow_definition: Dict[str, Any], i
     Connect to HPC execution engine WebSocket and handle streaming
     """
     hpc_url = HPC_WEBSOCKET_URL.format(flow_id=flow_id)
-    logger.info(f"Connecting to HPC engine at: {hpc_url}")
+    logger.info(f"🔗 Connecting to HPC engine at: {hpc_url}")
+    logger.info(f"📋 Flow definition being sent: {json.dumps(flow_definition, indent=2)}")
+    logger.info(f"📥 Initial inputs: {json.dumps(initial_inputs, indent=2)}")
     
     try:
         async with websockets.connect(hpc_url) as hpc_websocket:
@@ -269,48 +274,59 @@ async def connect_to_hpc_engine(flow_id: str, flow_definition: Dict[str, Any], i
             
             # HPC WebSocket handshake
             ready_msg = await hpc_websocket.recv()
-            logger.info(f"HPC ready: {ready_msg}")
+            logger.info(f"✅ HPC ready: {ready_msg}")
             
             # Send flow definition
+            logger.info("📤 Sending flow definition to HPC...")
             await hpc_websocket.send(json.dumps(flow_definition))
             ack1 = await hpc_websocket.recv()
-            logger.info(f"HPC ack1: {ack1}")
+            logger.info(f"📨 HPC flow definition ack: {ack1}")
             
             # Send initial inputs
+            logger.info("📤 Sending initial inputs to HPC...")
             await hpc_websocket.send(json.dumps(initial_inputs))
             ack2 = await hpc_websocket.recv()
-            logger.info(f"HPC ack2: {ack2}")
+            logger.info(f"📨 HPC initial inputs ack: {ack2}")
             
             # Send config (null for now)
+            logger.info("📤 Sending config to HPC...")
             await hpc_websocket.send("null")
             ack3 = await hpc_websocket.recv()
-            logger.info(f"HPC ack3: {ack3}")
+            logger.info(f"📨 HPC config ack: {ack3}")
+            
+            logger.info("🚀 Starting to stream events from HPC...")
             
             # Stream events from HPC to frontend
             async for message in hpc_websocket:
                 try:
                     event = json.loads(message)
+                    logger.info(f"📨 HPC event: {event.get('type', 'unknown')} - {event}")
+                    
                     # Forward the event to frontend
                     await manager.send_to_frontend(flow_id, event)
                     
                     # Check if flow is complete
                     if event.get('type') in ['flow_completed', 'flow_error']:
-                        logger.info(f"Flow {flow_id} finished with type: {event.get('type')}")
+                        logger.info(f"🏁 Flow {flow_id} finished with type: {event.get('type')}")
+                        if event.get('type') == 'flow_error':
+                            logger.error(f"❌ HPC Flow Error: {event.get('data', {}).get('error', 'Unknown error')}")
                         break
                         
                 except json.JSONDecodeError as e:
-                    logger.error(f"Error parsing HPC message: {e}")
+                    logger.error(f"❌ Error parsing HPC message: {e} - Raw message: {message}")
                 except Exception as e:
-                    logger.error(f"Error forwarding message: {e}")
+                    logger.error(f"❌ Error forwarding message: {e}")
                     
-    except websockets.exceptions.ConnectionClosed:
-        logger.info(f"HPC connection closed for flow {flow_id}")
+    except websockets.exceptions.ConnectionClosed as e:
+        logger.error(f"🔌 HPC connection closed for flow {flow_id}: {e}")
         await manager.send_to_frontend(flow_id, {
             'type': 'flow_error',
             'data': {'error': 'Connection to execution engine lost'}
         })
     except Exception as e:
-        logger.error(f"Error in HPC connection: {e}")
+        logger.error(f"❌ Error in HPC connection for flow {flow_id}: {e}")
+        import traceback
+        logger.error(f"📋 HPC connection traceback: {traceback.format_exc()}")
         await manager.send_to_frontend(flow_id, {
             'type': 'flow_error',
             'data': {'error': f'Execution engine error: {str(e)}'}
@@ -333,6 +349,9 @@ async def websocket_execute_flow(websocket: WebSocket, agent_id: str, token: Opt
     """
     flow_id = f"flow_{agent_id}_{int(asyncio.get_event_loop().time() * 1000)}"
     
+    logger.info(f"🌐 NEW WEBSOCKET CONNECTION: agent_id={agent_id}, flow_id={flow_id}")
+    logger.info(f"🔑 Authentication token present: {bool(token)}")
+    
     await manager.connect(websocket, flow_id)
     
     try:
@@ -340,8 +359,16 @@ async def websocket_execute_flow(websocket: WebSocket, agent_id: str, token: Opt
         user_id = None
         if token:
             try:
-                payload = decode_jwt_token(token)
-                user_id = payload.get('user_id')
+                jwt_handler = JWTHandler()
+                payload = jwt_handler.verify_token(token)
+                if payload:
+                    user_id = payload.get('user_id')
+                else:
+                    await websocket.send_text(json.dumps({
+                        'type': 'error',
+                        'data': {'error': 'Invalid authentication token'}
+                    }))
+                    return
             except Exception as e:
                 await websocket.send_text(json.dumps({
                     'type': 'error',
@@ -350,19 +377,32 @@ async def websocket_execute_flow(websocket: WebSocket, agent_id: str, token: Opt
                 return
         
         # Wait for initial message with auth or input data
+        logger.info("📥 Waiting for initial message from frontend...")
         initial_message = await websocket.receive_text()
+        logger.info(f"📨 Received initial message: {initial_message[:200]}...")
+        
         try:
             initial_data = json.loads(initial_message)
+            logger.info(f"📋 Parsed initial data keys: {list(initial_data.keys())}")
             
             # Extract user_id from message if not from token
             if not user_id:
                 user_id = initial_data.get('user_id')
+                logger.info(f"👤 User ID from message: {user_id}")
                 if not user_id:
+                    logger.error("❌ No user authentication provided")
                     await websocket.send_text(json.dumps({
                         'type': 'error',
                         'data': {'error': 'User authentication required'}
                     }))
                     return
+            
+            # Log the agent_id from the URL and message for debugging
+            logger.info(f"🤖 Agent ID from URL: {agent_id}")
+            if 'agent_id' in initial_data:
+                logger.info(f"🤖 Agent ID from message: {initial_data['agent_id']}")
+                # Use agent_id from message if provided, otherwise use URL param
+                agent_id = initial_data.get('agent_id', agent_id)
             
             # Get workflow from database
             await websocket.send_text(json.dumps({
@@ -370,7 +410,7 @@ async def websocket_execute_flow(websocket: WebSocket, agent_id: str, token: Opt
                 'data': {'message': 'Retrieving workflow...'}
             }))
             
-            workflow_data = await get_workflow_from_db(agent_id, user_id)
+            workflow_data = await get_workflow_from_db(agent_id)
             if not workflow_data:
                 await websocket.send_text(json.dumps({
                     'type': 'error',
@@ -378,24 +418,88 @@ async def websocket_execute_flow(websocket: WebSocket, agent_id: str, token: Opt
                 }))
                 return
             
-            # Convert workflow format
+            # Use workflow format directly (no conversion needed)
             await websocket.send_text(json.dumps({
                 'type': 'status',
-                'data': {'message': 'Converting workflow format...'}
+                'data': {'message': 'Preparing workflow for execution...'}
             }))
             
-            hpc_flow_definition = convert_frontend_workflow_to_hpc_format(workflow_data)
+            # Send the workflow data directly to HPC executor (it now handles frontend format)
+            if 'flow_definition' in workflow_data:
+                hpc_flow_definition = workflow_data['flow_definition']
+                logger.info("✅ Using flow_definition from workflow data")
+            elif 'nodes' in workflow_data and 'edges' in workflow_data:
+                # Frontend format: convert to expected structure
+                nodes_dict = {}
+                start_element = None
+                
+                # Convert nodes list to dict and fix parameters format
+                for node in workflow_data.get('nodes', []):
+                    node_id = node.get('id', '')
+                    node_copy = node.copy()
+                    
+                    # Convert node type to HPC format (lowercase)
+                    frontend_type = node_copy.get('type', '')
+                    hpc_type = map_node_type_to_element_type(frontend_type)
+                    node_copy['type'] = hpc_type
+                    
+                    # Convert parameters from list to dict if needed
+                    if 'parametersObject' in node_copy and node_copy['parametersObject']:
+                        # Use parametersObject which is already in the correct format
+                        node_copy['parameters'] = node_copy['parametersObject']
+                    elif 'parameters' in node_copy and isinstance(node_copy['parameters'], list):
+                        # Convert parameters list to dict
+                        params_dict = {}
+                        for param in node_copy['parameters']:
+                            if param.get('name') and 'value' in param:
+                                params_dict[param['name']] = param['value']
+                        node_copy['parameters'] = params_dict
+                    elif not isinstance(node_copy.get('parameters'), dict):
+                        # Ensure parameters is always a dict
+                        node_copy['parameters'] = {}
+                    
+                    nodes_dict[node_id] = node_copy
+                    
+                    # Find start node
+                    if node.get('type', '').lower() in ['start'] and not start_element:
+                        start_element = node_id
+                
+                hpc_flow_definition = {
+                    'nodes': nodes_dict,
+                    'connections': workflow_data.get('edges', []),
+                    'start_element': start_element or (list(nodes_dict.keys())[0] if nodes_dict else '')
+                }
+                logger.info("✅ Converted frontend workflow format")
+            else:
+                logger.error("❌ Unknown workflow format")
+                await websocket.send_text(json.dumps({
+                    'type': 'error',
+                    'data': {'error': 'Invalid workflow format'}
+                }))
+                return
             
             # Extract initial inputs from message or use default for chat_input
             initial_inputs = initial_data.get('initial_inputs', {})
             
             # If no initial inputs provided, create default for chat_input nodes
             if not initial_inputs:
-                for element_id, element in hpc_flow_definition.get('nodes', {}).items():
-                    if element.get('type') == 'chat_input':
+                # Look for chat_input nodes in the flow
+                logger.info(f"🔍 Looking for chat_input nodes in flow. Available nodes: {list(hpc_flow_definition.get('nodes', {}).keys())}")
+                for node_id, node in hpc_flow_definition.get('nodes', {}).items():
+                    node_type = node.get('type', '').lower()
+                    logger.info(f"🔍 Checking node {node_id} of type '{node_type}'")
+                    if node_type in ['chat_input', 'chatinput']:
                         user_message = initial_data.get('message', 'Hello')
-                        initial_inputs[element_id] = {'chat_input': user_message}
+                        initial_inputs[node_id] = {'chat_input': user_message}
+                        logger.info(f"💬 Created initial input for chat_input node {node_id}: {user_message}")
                         break
+                
+                logger.info(f"📥 Final initial_inputs: {initial_inputs}")
+            
+            # Debug: Log the flow structure to understand the data connections
+            logger.info(f"🔗 Flow connections:")
+            for conn in hpc_flow_definition.get('connections', []):
+                logger.info(f"   {conn.get('from_id')} -> {conn.get('to_id')} (type: {conn.get('connection_type')}, from_output: {conn.get('from_output')}, to_input: {conn.get('to_input')})")
             
             # Connect to HPC execution engine
             await websocket.send_text(json.dumps({
