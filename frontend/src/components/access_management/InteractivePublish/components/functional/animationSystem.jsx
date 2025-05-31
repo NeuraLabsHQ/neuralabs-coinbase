@@ -34,6 +34,8 @@ import WalrusIcon from '../../../../../assets/animations/publish/WalrusIcon.svg'
 
 // Import specific animations
 import EllipticCurveAnimation from '../../../../../assets/animations/publish/EllipticCurveAnimation.svg'
+import EllipticCurveAnimation2 from '../../../../../assets/animations/publish/EllepticCurveAnimation2.svg'
+
 import WalrusUploadAnimation from '../../../../../assets/animations/publish/WalrusUploadAnimation.svg'
 import NetworkIdleAnimation from '../../../../../assets/animations/publish/NetworkIdleAnimation.svg'
 import SecretShare from '../../../../../assets/animations/publish/SecretShare.svg'
@@ -174,7 +176,7 @@ export const useAnimationSystem = () => {
         return (
           <motion.div className="animation-scene">
             <div className="shamir-secret-container">
-              <img src={SecretShare} alt="Shamir's Secret Sharing" style={svgStyles} />
+              <img src={EllipticCurveAnimation2} alt="Shamir's Secret Sharing" style={svgStyles} />
               <motion.div 
                 className="secret-labels"
                 initial={{ opacity: 0 }}
