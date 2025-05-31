@@ -497,9 +497,17 @@ async def websocket_execute_flow(websocket: WebSocket, agent_id: str, token: Opt
                 logger.info(f"📥 Final initial_inputs: {initial_inputs}")
             
             # Debug: Log the flow structure to understand the data connections
+            logger.info(f"🔗 Flow nodes:")
+            for node_id, node in hpc_flow_definition.get('nodes', {}).items():
+                logger.info(f"   Node {node_id}: type={node.get('type')}")
+            
             logger.info(f"🔗 Flow connections:")
             for conn in hpc_flow_definition.get('connections', []):
                 logger.info(f"   {conn.get('from_id')} -> {conn.get('to_id')} (type: {conn.get('connection_type')}, from_output: {conn.get('from_output')}, to_input: {conn.get('to_input')})")
+            
+            logger.info(f"🔗 Initial inputs node IDs:")
+            for input_node_id in initial_inputs.keys():
+                logger.info(f"   Input for: {input_node_id}")
             
             # Connect to HPC execution engine
             await websocket.send_text(json.dumps({

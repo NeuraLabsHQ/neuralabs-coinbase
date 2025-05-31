@@ -221,6 +221,9 @@ class FlowExecutor:
     
     async def _transfer_data(self, element: ElementBase, outputs: Dict[str, Any]):
         """Transfer data from element outputs to connected element inputs."""
+        element_id = element.element_id
+        logger.info(f"🔗 _transfer_data called for element {element_id} with outputs: {outputs}")
+        
         # Use the existing output_map mechanism
         for output_mapping in element.output_map:
             if (output_mapping["dependent_element"] in element.connections 
@@ -229,22 +232,38 @@ class FlowExecutor:
                 
                 output_mapping["dependent_element"].set_input(
                     output_mapping["input_variable"], outputs[output_mapping["output_variable"]])
+                logger.info(f"🔗 Used output_map to transfer {output_mapping['output_variable']} -> {output_mapping['input_variable']}")
         
         # Also check for data connections in the connections list
-        element_id = element.element_id
+        logger.info(f"🔗 Checking {len(self.connections)} connections for data transfer from {element_id}")
         for conn in self.connections:
+            logger.info(f"🔗 Connection: {conn.from_id} -> {conn.to_id}, type: {conn.connection_type}, from_output: {conn.from_output}, to_input: {conn.to_input}")
+            
             if (conn.from_id == element_id and 
                 conn.connection_type in [ConnectionType.DATA, ConnectionType.BOTH]):
                 
                 to_element = self.elements.get(conn.to_id)
+                logger.info(f"🔗 Found data connection from {element_id} to {conn.to_id}, to_element exists: {to_element is not None}")
+                
                 if to_element and conn.from_output and conn.to_input:
                     # Parse variable references
                     from_parts = conn.from_output.split(":")
                     to_parts = conn.to_input.split(":")
                     
+                    logger.info(f"🔗 Parsing connection: from_parts={from_parts}, to_parts={to_parts}")
+                    
                     if len(from_parts) == 2 and len(to_parts) == 2:
                         _, from_var = from_parts
                         _, to_var = to_parts
                         
+                        logger.info(f"🔗 Looking for {from_var} in outputs {list(outputs.keys())}")
+                        
                         if from_var in outputs:
+                            logger.info(f"🔗 ✅ Transferring data: {from_var}='{outputs[from_var]}' -> {to_var} on element {conn.to_id}")
                             to_element.set_input(to_var, outputs[from_var])
+                        else:
+                            logger.warning(f"🔗 ❌ Output variable {from_var} not found in outputs {list(outputs.keys())}")
+                    else:
+                        logger.warning(f"🔗 ❌ Invalid connection format: from_output={conn.from_output}, to_input={conn.to_input}")
+                else:
+                    logger.warning(f"🔗 ❌ Cannot transfer data: to_element={to_element is not None}, from_output={conn.from_output}, to_input={conn.to_input}")
