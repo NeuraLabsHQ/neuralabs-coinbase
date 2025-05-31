@@ -1,298 +1,269 @@
+import React from 'react'
 import { motion } from 'framer-motion'
-import { getAppThemeColors } from '../../../../utils/svgThemeUtils'
 
-const GrantAccessAnimation = ({ colorMode = 'light' }) => {
-  const themeColors = getAppThemeColors(colorMode)
+const AccessCapabilityAnimation = ({ colorMode = 'light' }) => {
+  const theme = {
+    light: {
+      primary: '#000000',
+      secondary: '#666666',
+      tertiary: '#999999',
+      level4 : '#aaaaaa',
+      bg: 'transparent',
+      glow: 'rgba(0, 0, 0, 0.1)',
+      accent: '#333333',
+    },
+    dark: {
+      primary: '#ffffff',
+      secondary: '#cccccc',
+      tertiary: '#888888',
+      level4 : '#555555',
+      bg: 'transparent',
+      glow: 'rgba(255, 255, 255, 0.1)',
+      accent: '#dddddd',
+    }
+  }
+
+  const colors = colorMode === "dark" ? theme.dark : theme.light
+
+  // Position people in a circle with access levels
+  const peoplePositions = [
+    { angle: -Math.PI/2, level: 6, role: 'Admin' },     // top - highest access
+    { angle: -Math.PI/6, level: 5, role: 'Manager' },   // top right
+    { angle: Math.PI/6, level: 4, role: 'Lead' },       // bottom right
+    { angle: Math.PI/2, level: 3, role: 'User' },       // bottom
+    { angle: 5*Math.PI/6, level: 2, role: 'Guest' },    // bottom left
+    { angle: -5*Math.PI/6, level: 1, role: 'Visitor' }, // top left
+  ]
+
   return (
-    <motion.div className="animation-scene">
-      <div className="grant-access-container">
-        {/* Owner entity */}
-        <motion.div 
-          className="owner-entity"
-          initial={{ x: -100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.8 }}
+    <div style={{
+      width: '100%',
+      height: '100%',
+      backgroundColor: colors.bg,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Expanding security zones background */}
+      {[1, 2, 3, 4, 5, 6].map((level) => (
+        <motion.div
+          key={level}
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ 
+            scale: level * 12,
+            opacity: [0, 0.15, 0]
+          }}
+          transition={{ 
+            duration: 4,
+            delay: level * 0.3,
+            repeat: Infinity,
+            repeatDelay: 4,
+            ease: "easeOut"
+          }}
+          style={{
+            position: 'absolute',
+            width: '1px',
+            height: '1px',
+            border: `3px solid ${level === 6 ? colors.accent : colors.tertiary}`,
+            borderRadius: '50%',
+            pointerEvents: 'none'
+          }}
+        />
+      ))}
+
+      {/* Outer security perimeter */}
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+        style={{
+          position: 'absolute',
+          width: '80%',
+          height: '80%',
+          border: `2px solid ${colors.tertiary}`,
+          borderRadius: '50%',
+          opacity: 0.3
+        }}
+      />
+
+      {/* Inner security zone */}
+      <motion.div
+        animate={{ rotate: -360 }}
+        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+        style={{
+          position: 'absolute',
+          width: '55%',
+          height: '55%',
+          border: `2px solid ${colors.accent}`,
+          borderRadius: '50%',
+          opacity: 0.4
+        }}
+      />
+
+      {/* Central authority/security controller */}
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 1.2, type: "spring", damping: 12 }}
+        style={{
+          position: 'absolute',
+          zIndex: 10
+        }}
+      >
+        {/* Authority circle */}
+        <motion.div
+          style={{
+            width: '55px',
+            height: '55px',
+            borderRadius: '50%',
+            backgroundColor: colors.accent,
+            border: `3px solid ${colors.primary}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: `0 0 20px ${colors.glow}`
+          }}
         >
-          <motion.div 
-            className="owner-avatar"
-            animate={{ 
-              boxShadow: [
-                `0 0 20px ${themeColors.warning}4D`,
-                `0 0 40px ${themeColors.warning}99`,
-                `0 0 20px ${themeColors.warning}4D`
-              ]
-            }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            👑
-          </motion.div>
-          <span className="entity-label">Owner</span>
-        </motion.div>
-
-        {/* Permission key transfer */}
-        <motion.div className="permission-transfer">
-          {/* Key */}
-          <motion.div 
-            className="transferring-key"
-            initial={{ x: -50, rotate: 0 }}
-            animate={{ 
-              x: 150,
-              rotate: [0, 360, 720],
-              scale: [1, 1.2, 1]
-            }}
-            transition={{ 
-              duration: 2.5,
-              delay: 1,
-              ease: "easeInOut"
-            }}
-          >
-            <svg viewBox="0 0 40 20" width="40" height="20">
-              <rect x="5" y="8" width="25" height="4" rx="2" fill={themeColors.error}/>
-              <circle cx="10" cy="10" r="6" fill={themeColors.error} stroke={themeColors.border} strokeWidth="1"/>
-              <circle cx="10" cy="10" r="2" fill={themeColors.border}/>
-              <path d="M30 8 L32 8 L32 6 L35 6 L35 14 L32 14 L32 12 L30 12" fill={themeColors.error}/>
-            </svg>
-          </motion.div>
-
-          {/* Transfer beam */}
-          <motion.div 
-            className="transfer-beam"
-            initial={{ scaleX: 0, opacity: 0 }}
-            animate={{ scaleX: 1, opacity: [0, 1, 0] }}
-            transition={{ 
-              duration: 2,
-              delay: 1.2,
-              ease: "easeInOut"
-            }}
-          />
-
-          {/* Permission particles */}
-          {[...Array(8)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="permission-particle"
-              initial={{ x: 0, y: 0, opacity: 0 }}
-              animate={{ 
-                x: 150 + (Math.random() - 0.5) * 20,
-                y: (Math.random() - 0.5) * 30,
-                opacity: [0, 1, 0]
-              }}
-              transition={{ 
-                duration: 1.5,
-                delay: 1.5 + i * 0.1,
-                ease: "easeOut"
-              }}
-            >
-              ⭐
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Grantee entity */}
-        <motion.div 
-          className="grantee-entity"
-          initial={{ x: 100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-        >
-          <motion.div 
-            className="grantee-avatar"
-            initial={{ scale: 1 }}
-            animate={{ 
-              scale: [1, 1.1, 1],
-              boxShadow: [
-                `0 0 10px ${themeColors.primary}4D`,
-                `0 0 30px ${themeColors.primary}B3`,
-                `0 0 10px ${themeColors.primary}4D`
-              ]
-            }}
-            transition={{ 
-              duration: 2, 
-              repeat: Infinity,
-              delay: 3
-            }}
-          >
-            👤
-          </motion.div>
-          <span className="entity-label">Grantee</span>
-        </motion.div>
-
-        {/* Permission levels visualization */}
-        <motion.div 
-          className="permission-levels"
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 2, duration: 0.8 }}
-        >
-          {[
-            { level: 'READ', color: themeColors.success, delay: 2.5 },
-            { level: 'write', color: themeColors.warning, delay: 2.7 },
-            { level: 'admin', color: themeColors.error, delay: 2.9 }
-          ].map((perm, index) => (
-            <motion.div
-              key={perm.level}
-              className="permission-level"
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ 
-                delay: perm.delay,
-                type: "spring",
-                stiffness: 200
-              }}
-            >
-              <motion.div 
-                className="level-badge"
-                style={{ backgroundColor: perm.color }}
-                animate={{ 
-                  boxShadow: [
-                    `0 0 10px ${perm.color}30`,
-                    `0 0 20px ${perm.color}60`,
-                    `0 0 10px ${perm.color}30`
-                  ]
-                }}
-                transition={{ 
-                  duration: 2,
-                  repeat: Infinity,
-                  delay: perm.delay + 0.5
-                }}
-              >
-                {perm.level.toUpperCase()}
-              </motion.div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Ownership chain */}
-        <motion.div 
-          className="ownership-chain"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 3.5 }}
-        >
-          <svg viewBox="0 0 300 100" width="100%" height="100">
-            {/* Chain links */}
-            {[0, 1, 2, 3].map((link) => (
-              <motion.g key={link}>
-                <motion.ellipse
-                  cx={50 + link * 60}
-                  cy="50"
-                  rx="20"
-                  ry="12"
-                  fill="none"
-                  stroke={themeColors.border}
-                  strokeWidth="3"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ 
-                    delay: 3.5 + link * 0.2,
-                    duration: 0.5
-                  }}
-                />
-                <motion.ellipse
-                  cx={50 + link * 60}
-                  cy="50"
-                  rx="12"
-                  ry="20"
-                  fill="none"
-                  stroke={themeColors.border}
-                  strokeWidth="3"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ 
-                    delay: 3.7 + link * 0.2,
-                    duration: 0.5
-                  }}
-                />
-              </motion.g>
-            ))}
+          {/* Security/Lock icon instead of key */}
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect x="6" y="10" width="12" height="10" rx="1" stroke={colors.level4} strokeWidth="2" fill="none"/>
+            <path d="M8 10V6a4 4 0 0 1 8 0v4" stroke={colors.level4} strokeWidth="2" fill="none"/>
+            <circle cx="12" cy="15" r="1" fill={colors.level4}/>
           </svg>
         </motion.div>
+        
+        {/* Security pulse */}
+        <motion.div
+          animate={{
+            scale: [1, 2, 1],
+            opacity: [0.6, 0, 0.6]
+          }}
+          transition={{
+            duration: 2.5,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '55px',
+            height: '55px',
+            borderRadius: '50%',
+            backgroundColor: colors.accent,
+            opacity: 0.3
+          }}
+        />
+      </motion.div>
 
-        {/* Success confirmation */}
-        <motion.div 
-          className="grant-success"
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 4.5, duration: 0.6, ease: "backOut" }}
-        >
-          <motion.div 
-            className="success-ring"
-            animate={{ 
-              scale: [1, 1.2, 1],
-              rotate: 360
-            }}
+      {/* Users with different access levels */}
+      {peoplePositions.map((person, index) => {
+        const radius = 38 // percentage
+        const x = Math.cos(person.angle) * radius
+        const y = Math.sin(person.angle) * radius
+        
+        // Color coding based on access level
+        const getAccessColor = (level) => {
+          if (level >= 5) return colors.accent
+          if (level >= 3) return colors.secondary
+          return colors.tertiary
+        }
+        
+        return (
+          <motion.div
+            key={index}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
             transition={{ 
-              duration: 3,
-              repeat: Infinity,
-              ease: "linear"
+              delay: 1.5 + index * 0.2,
+              type: "spring",
+              stiffness: 120
+            }}
+            style={{
+              position: 'absolute',
+              left: `${50 + x}%`,
+              top: `${50 + y}%`,
+              transform: 'translate(-50%, -50%)',
+              textAlign: 'center'
             }}
           >
-            <svg viewBox="0 0 60 60" width="60" height="60">
-              <circle 
-                cx="30" cy="30" r="25" 
-                fill={`${themeColors.success}33`} 
-                stroke={themeColors.success} 
-                strokeWidth="3"
-              />
-              <motion.path
-                d="M18 30 L26 38 L42 22"
-                fill="none"
-                stroke={themeColors.success}
-                strokeWidth="4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ delay: 4.7, duration: 0.5 }}
-              />
-            </svg>
-          </motion.div>
-        </motion.div>
+            {/* User circle - much more visible */}
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              style={{
+                width: '70px',
+                height: '70px',
+                borderRadius: '50%',
+                backgroundColor: person.level >= 5 ? getAccessColor(person.level) : colors.bg,
+                border: `3px solid ${getAccessColor(person.level)}`,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '18px',
+                fontWeight: '600',
+                color: person.level >= 5 ? colors.level4 : getAccessColor(person.level),
+                boxShadow: `0 2px 10px ${colors.glow}`,
+                cursor: 'pointer'
+              }}
+            >
+              {/* Access level number - much more prominent */}
+              <div style={{ fontSize: '20px', fontWeight: '700' }}>
+                {person.level}
+              </div>
+            </motion.div>
+            
+            {/* Role label */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 2 + index * 0.1 }}
+              style={{
+                marginTop: '8px',
+                fontSize: '11px',
+                fontWeight: '500',
+                color: colors.secondary,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}
+            >
+              {person.role}
+            </motion.div>
+            
 
-        {/* Access granted particles */}
-        <motion.div className="granted-particles">
-          {[...Array(12)].map((_, i) => {
-            const angle = (i * 30) * Math.PI / 180
-            return (
-              <motion.div
-                key={i}
-                className="granted-particle"
-                style={{
-                  position: 'absolute',
-                  left: '50%',
-                  top: '50%',
-                }}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ 
-                  scale: [0, 1, 0],
-                  opacity: [0, 1, 0],
-                  x: Math.cos(angle) * 100,
-                  y: Math.sin(angle) * 100
-                }}
-                transition={{ 
-                  duration: 2,
-                  delay: 5 + i * 0.1,
-                  ease: "easeOut"
-                }}
-              >
-                🎉
-              </motion.div>
-            )
-          })}
-        </motion.div>
-      </div>
-      
-      <motion.div 
-        className="grant-text"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 5.5 }}
+          </motion.div>
+        )
+      })}
+
+      {/* Security scanning effect */}
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+        style={{
+          position: 'absolute',
+          width: '90%',
+          height: '90%',
+          pointerEvents: 'none'
+        }}
       >
-        <span className="main-text">Grant Access</span>
-        <span className="sub-text">Setting ownership permissions</span>
+        <div style={{
+          position: 'absolute',
+          top: '0%',
+          left: '50%',
+          width: '2px',
+          height: '45%',
+          background: `linear-gradient(to bottom, ${colors.accent}, transparent)`,
+          transformOrigin: 'bottom center',
+          opacity: 0.6
+        }} />
       </motion.div>
-    </motion.div>
+
+
+    </div>
   )
 }
 
-export default GrantAccessAnimation
+export default AccessCapabilityAnimation

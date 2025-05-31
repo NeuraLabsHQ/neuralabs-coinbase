@@ -1,244 +1,343 @@
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { getAppThemeColors } from '../../../../utils/svgThemeUtils'
 
-const AccessCapabilityAnimation = ({ colorMode = 'light' }) => {
-  const themeColors = getAppThemeColors(colorMode)
+const NFTLockingAnimation = ({ colorMode = 'light' }) => {
+  const [isLocked, setIsLocked] = useState(false)
+
+  const theme = {
+    light: {
+      primary: '#000000',
+      secondary: '#666666',
+      tertiary: '#999999',
+      bg: 'transparent',
+      cardBg: '#ffffff',
+      cardBorder: '#e0e0e0',
+      glow: 'rgba(0, 0, 0, 0.1)',
+      accent: '#333333',
+    },
+    dark: {
+      primary: '#ffffff',
+      secondary: '#cccccc',
+      tertiary: '#888888',
+      bg: 'transparent',
+      cardBg: '#1a1a1a',
+      cardBorder: '#333333',
+      glow: 'rgba(255, 255, 255, 0.1)',
+      accent: '#dddddd',
+    }
+  }
+
+  const colors = colorMode === "dark" ? theme.dark : theme.light
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLocked(true)
+    }, 3000)
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
-    <motion.div className="animation-scene">
-      <div className="access-capability-container">
-        {/* Central key forge */}
-        <motion.div 
-          className="key-forge"
-          initial={{ scale: 0, rotate: -90 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ duration: 1.2, ease: "backOut" }}
-        >
-          <svg viewBox="0 0 120 60" width="120" height="60">
-            {/* Key shaft */}
-            <motion.rect 
-              x="10" y="25" width="70" height="10" rx="5"
-              fill={`linear-gradient(90deg, ${themeColors.error}, ${themeColors.primary})`}
-              stroke={themeColors.border} 
-              strokeWidth="2"
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-            />
-            
-            {/* Key head */}
-            <motion.circle 
-              cx="25" cy="30" r="15"
-              fill={`linear-gradient(135deg, ${themeColors.error}, ${themeColors.primary})`}
-              stroke={themeColors.border} 
-              strokeWidth="2"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-            />
-            
-            {/* Key teeth */}
-            <motion.path
-              d="M80 25 L85 25 L85 20 L90 20 L90 35 L85 35 L85 30 L80 30"
-              fill={themeColors.error}
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ delay: 1, duration: 0.5 }}
-            />
-            
-            {/* Key hole in center */}
-            <circle cx="25" cy="30" r="5" fill={themeColors.border}/>
-          </svg>
-        </motion.div>
+    <div style={{
+      width: '100%',
+      height: '100%',
+      backgroundColor: colors.bg,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      
+      {/* Main NFT Card */}
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ duration: 1, type: "spring", damping: 15 }}
+        style={{
+          position: 'relative',
+          zIndex: 2
+        }}
+      >
+        <div style={{
+          width: '300px',
+          height: '400px',
+          backgroundColor: colors.cardBg,
+          border: `2px solid ${colors.cardBorder}`,
+          borderRadius: '16px',
+          padding: '20px',
+          boxShadow: `0 8px 32px ${colors.glow}`,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          
+          {/* NFT Header */}
+          <div style={{
+            fontSize: '12px',
+            fontWeight: '600',
+            color: colors.secondary,
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            marginBottom: '20px'
+          }}>
+            AI Neura NFT #001
+          </div>
 
-        {/* Permission matrix */}
-        <motion.div className="permission-matrix">
-          {[...Array(9)].map((_, i) => {
-            const row = Math.floor(i / 3)
-            const col = i % 3
-            return (
+          {/* AI Brain Image Container */}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.5, duration: 0.8, type: "spring" }}
+            style={{
+              width: '200px',
+              height: '200px',
+              backgroundColor: colors.cardBorder,
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '20px',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+          >
+            {/* AI Brain SVG */}
+            <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+              {/* Brain outline */}
+              <path 
+                d="M30 40c0-10 8-18 18-18s18 8 18 18c5-8 15-12 24-8s12 15 8 24c8 5 12 15 8 24s-15 12-24 8c0 10-8 18-18 18s-18-8-18-18c-5 8-15 12-24 8s-12-15-8-24c-8-5-12-15-8-24s15-12 24-8z" 
+                stroke={colors.primary} 
+                strokeWidth="2" 
+                fill="none"
+              />
+              
+              {/* Neural network nodes */}
+              <circle cx="45" cy="45" r="3" fill={colors.primary} />
+              <circle cx="75" cy="45" r="3" fill={colors.primary} />
+              <circle cx="60" cy="60" r="3" fill={colors.primary} />
+              <circle cx="40" cy="75" r="3" fill={colors.primary} />
+              <circle cx="80" cy="75" r="3" fill={colors.primary} />
+              
+              {/* Neural connections */}
+              <line x1="45" y1="45" x2="75" y2="45" stroke={colors.secondary} strokeWidth="1" />
+              <line x1="45" y1="45" x2="60" y2="60" stroke={colors.secondary} strokeWidth="1" />
+              <line x1="75" y1="45" x2="60" y2="60" stroke={colors.secondary} strokeWidth="1" />
+              <line x1="60" y1="60" x2="40" y2="75" stroke={colors.secondary} strokeWidth="1" />
+              <line x1="60" y1="60" x2="80" y2="75" stroke={colors.secondary} strokeWidth="1" />
+            </svg>
+
+            {/* Animated neural pulses */}
+            {[...Array(5)].map((_, i) => (
               <motion.div
                 key={i}
-                className="permission-node"
-                style={{
-                  position: 'absolute',
-                  left: `${30 + col * 40}%`,
-                  top: `${40 + row * 25}%`,
-                }}
-                initial={{ 
-                  scale: 0,
-                  opacity: 0
-                }}
+                initial={{ scale: 0, opacity: 0 }}
                 animate={{ 
-                  scale: 1,
-                  opacity: 1
+                  scale: [0, 1.5, 0],
+                  opacity: [0, 0.6, 0]
                 }}
                 transition={{ 
-                  delay: 1.5 + i * 0.1,
-                  duration: 0.5,
-                  ease: "backOut"
+                  duration: 2,
+                  delay: i * 0.4,
+                  repeat: Infinity,
+                  repeatDelay: 2
                 }}
-              >
-                <motion.div 
-                  className="node-core"
-                  animate={{
-                    boxShadow: [
-                      `0 0 10px ${themeColors.primary}30`,
-                      `0 0 20px ${themeColors.primary}60`,
-                      `0 0 10px ${themeColors.primary}30`
-                    ]
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                >
-                  {i === 4 ? '🔑' : '🔒'}
-                </motion.div>
-              </motion.div>
-            )
-          })}
-        </motion.div>
-
-        {/* Connection lines */}
-        <motion.div className="connection-lines">
-          <svg viewBox="0 0 400 300" width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
-            {/* Horizontal lines */}
-            {[0, 1, 2].map((row) => (
-              <motion.line
-                key={`h-${row}`}
-                x1="120" y1={120 + row * 75}
-                x2="280" y2={120 + row * 75}
-                stroke={`${themeColors.primary}66`}
-                strokeWidth="2"
-                strokeDasharray="5,5"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ delay: 2.5 + row * 0.2, duration: 0.8 }}
+                style={{
+                  position: 'absolute',
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  backgroundColor: colors.accent,
+                  left: `${30 + (i * 15)}%`,
+                  top: `${40 + (i % 2) * 20}%`
+                }}
               />
             ))}
-            
-            {/* Vertical lines */}
-            {[0, 1, 2].map((col) => (
-              <motion.line
-                key={`v-${col}`}
-                x1={120 + col * 80} y1="120"
-                x2={120 + col * 80} y2="270"
-                stroke={`${themeColors.primary}66`}
-                strokeWidth="2"
-                strokeDasharray="5,5"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ delay: 3 + col * 0.2, duration: 0.8 }}
-              />
-            ))}
-          </svg>
-        </motion.div>
+          </motion.div>
 
-        {/* Access levels */}
-        <motion.div 
-          className="access-levels"
-          initial={{ x: -100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ delay: 3.5, duration: 0.8 }}
-        >
-          {['READ', 'WRITE', 'ADMIN'].map((level, index) => (
-            <motion.div
-              key={level}
-              className="access-level"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ 
-                delay: 3.7 + index * 0.2,
-                type: "spring",
-                stiffness: 200
-              }}
-            >
-              <div className={`level-indicator level-${index + 1}`}>
-                {index + 1}
-              </div>
-              <span>{level}</span>
-            </motion.div>
-          ))}
-        </motion.div>
+          {/* NFT Details */}
+          <div style={{
+            textAlign: 'center',
+            color: colors.primary
+          }}>
+            <div style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>
+              Neural Network Core
+            </div>
+            <div style={{ fontSize: '12px', color: colors.secondary }}>
+              Artificial Intelligence Asset
+            </div>
+          </div>
 
-        {/* System initialization */}
-        <motion.div 
-          className="system-init"
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 4.5, duration: 0.6 }}
-        >
-          <motion.div 
-            className="init-circle"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          {/* Security Status */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isLocked ? 1 : 0.75 }}
+            style={{
+              position: 'absolute',
+              bottom: '20px',
+              fontSize: '10px',
+              color: colors.secondary,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}
           >
-            <svg viewBox="0 0 60 60" width="60" height="60">
-              <circle 
-                cx="30" cy="30" r="25" 
-                fill="none" 
-                stroke={`${themeColors.success}4D`} 
-                strokeWidth="2"
-              />
-              <motion.circle 
-                cx="30" cy="30" r="25" 
-                fill="none" 
-                stroke={themeColors.success} 
-                strokeWidth="3"
-                strokeDasharray="157"
-                strokeDashoffset="157"
-                animate={{ strokeDashoffset: 0 }}
-                transition={{ duration: 2, ease: "easeInOut" }}
-              />
-              <text x="30" y="35" textAnchor="middle" fontSize="12" fill={themeColors.success}>
-                CAP
-              </text>
+            {isLocked ? 'SECURED' : 'PROCESSING...'}
+          </motion.div>
+        </div>
+      </motion.div>
+
+      {/* Security Lock Card */}
+      <motion.div
+        initial={{ y: -500, opacity: 0, rotateX: -45 }}
+        animate={isLocked ? { 
+          y: 0, 
+          opacity: 1, 
+          rotateX: 0,
+          transition: { 
+            duration: 2, 
+            type: "spring", 
+            damping: 15,
+            bounce: 0.2
+          }
+        } : {}}
+        style={{
+          position: 'absolute',
+          zIndex: 5,
+          transformStyle: 'preserve-3d'
+        }}
+      >
+        <div style={{
+          width: '300px',
+          height: '400px',
+          backgroundColor: colorMode === 'dark' ? 'rgba(26, 26, 26, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+          border: `3px solid ${colors.primary}`,
+          borderRadius: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: `0 12px 40px ${colors.glow}`,
+          position: 'relative'
+        }}>
+          
+          {/* Lock Icon */}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={isLocked ? { scale: 1 } : {}}
+            transition={{ delay: 1.2, duration: 0.8, type: "spring" }}
+            style={{
+              backgroundColor: colors.cardBg,
+              padding: '20px',
+              borderRadius: '12px',
+              border: `2px solid ${colors.primary}`,
+              marginBottom: '20px'
+            }}
+          >
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+              <rect x="6" y="10" width="12" height="10" rx="1" stroke={colors.primary} strokeWidth="2" fill="none"/>
+              <path d="M8 10V6a4 4 0 0 1 8 0v4" stroke={colors.primary} strokeWidth="2" fill="none"/>
+              <circle cx="12" cy="15" r="1.5" fill={colors.primary}/>
             </svg>
           </motion.div>
-        </motion.div>
 
-        {/* Security particles */}
-        <motion.div className="security-particles">
-          {[...Array(20)].map((_, i) => (
+          {/* Security Text */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isLocked ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 1.5, duration: 1 }}
+            style={{
+              textAlign: 'center',
+              backgroundColor: colors.cardBg,
+              padding: '16px 24px',
+              borderRadius: '8px',
+              border: `2px solid ${colors.primary}`
+            }}
+          >
+            <div style={{
+              fontSize: '16px',
+              fontWeight: '700',
+              color: colors.primary,
+              textTransform: 'uppercase',
+              letterSpacing: '1px'
+            }}>
+              ACCESS PROTECTED
+            </div>
+            <div style={{
+              fontSize: '11px',
+              color: colors.secondary,
+              marginTop: '4px'
+            }}>
+              Digital Asset Secured
+            </div>
+          </motion.div>
+
+          {/* Lock animation pulse */}
+          <motion.div
+            animate={isLocked ? {
+              scale: [1, 1.2, 1],
+              opacity: [0.5, 0, 0.5]
+            } : {}}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 2.5
+            }}
+            style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              border: `2px solid ${colors.accent}`,
+              borderRadius: '12px',
+              pointerEvents: 'none'
+            }}
+          />
+        </div>
+      </motion.div>
+
+      {/* Security scanning lines */}
+      {isLocked && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2.8, duration: 0.8 }}
+          style={{
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none'
+          }}
+        >
+          {[...Array(3)].map((_, i) => (
             <motion.div
               key={i}
-              className="security-particle"
+              animate={{
+                x: ['-100%', '100%']
+              }}
+              transition={{
+                duration: 4,
+                delay: i * 0.8,
+                repeat: Infinity,
+                repeatDelay: 3,
+                ease: "linear"
+              }}
               style={{
                 position: 'absolute',
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
+                top: `${30 + i * 15}%`,
+                width: '2px',
+                height: '1px',
+                background: `linear-gradient(to right, transparent, ${colors.accent}, transparent)`,
+                opacity: 0.6
               }}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ 
-                scale: [0, 1, 0],
-                opacity: [0, 0.6, 0],
-                y: [-20, -40, -60]
-              }}
-              transition={{ 
-                duration: 3,
-                delay: 2 + Math.random() * 3,
-                repeat: Infinity,
-                ease: "easeOut"
-              }}
-            >
-              🔐
-            </motion.div>
+            />
           ))}
         </motion.div>
-      </div>
-      
-      <motion.div 
-        className="capability-text"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 5 }}
-      >
-        <span className="main-text">Access Capability</span>
-        <span className="sub-text">Creating permission system</span>
-      </motion.div>
-    </motion.div>
+      )}
+
+    </div>
   )
 }
 
-export default AccessCapabilityAnimation
+export default NFTLockingAnimation
