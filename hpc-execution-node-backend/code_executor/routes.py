@@ -213,6 +213,12 @@ async def setup_flow_executor(flow_def: FlowDefinition, stream_manager, user_con
                 "wrapper_prompt": params.get("wrapper_prompt", "")
             })
         
+        # Handle custom element code extraction
+        if elem_type == "custom" and hasattr(node_data, 'parameters'):
+            params = node_data.parameters or {}
+            if 'code' in params:
+                additional_params['code'] = params['code']
+        
         # Log the params for debugging
         logger.info(f"Creating element {elem_id} of type {elem_type}")
         logger.info(f"Common params keys: {list(common_params.keys())}")

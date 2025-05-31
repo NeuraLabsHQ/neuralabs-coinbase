@@ -1,0 +1,817 @@
+# Sample Flow 8: Webhook Data Processor without Custom Blocks
+flow_definition:
+  nodes:
+    webhook_data:
+      type: constants
+      node_description: "Provides static values that remain constant during flow execution"
+      description: "Simulated webhook payload"
+      processing_message: "Loading webhook data..."
+      tags: ["input", "static-data", "webhook"]
+      layer: 3
+      parameters:
+        event_type: "order.created"
+        timestamp: "2024-01-15T10:30:00Z"
+        webhook_id: "wh_12345"
+        signature: "sha256=abcdef123456"
+        payload:
+          order_id: "ORD-2024-001"
+          customer:
+            id: "CUST-789"
+            email: "customer@example.com"
+            name: "John Doe"
+          items:
+            - product_id: "PROD-001"
+              name: "Premium Widget"
+              quantity: 2
+              price: 49.99
+            - product_id: "PROD-002"
+              name: "Standard Gadget"
+              quantity: 1
+              price: 29.99
+          total: 129.97
+          currency: "USD"
+          status: "pending"
+      input_schema: {}
+      output_schema:
+        event_type:
+          type: string
+          description: "Webhook event type"
+          required: true
+        timestamp:
+          type: string
+          description: "Event timestamp"
+          required: true
+        webhook_id:
+          type: string
+          description: "Webhook identifier"
+          required: true
+        signature:
+          type: string
+          description: "Webhook signature"
+          required: true
+        payload:
+          type: json
+          description: "Webhook payload data"
+          required: true
+    
+    customer_selector:
+      type: selector
+      node_description: "Extracts specific values from data structures using path-based selection"
+      description: "Extract customer information"
+      processing_message: "Extracting customer data..."
+      tags: ["utility", "data-extraction"]
+      layer: 3
+      parameters:
+        key: "customer"
+        default_value: {}
+        multiple_paths: []
+        error_on_missing: false
+      input_schema:
+        data:
+          type: any
+          description: "The data structure to select from"
+          required: true
+      output_schema:
+        selected_value:
+          type: any
+          description: "The extracted value"
+          required: true
+        found:
+          type: bool
+          description: "Whether the path was found"
+          required: false
+        path_used:
+          type: string
+          description: "The path that was used"
+          required: false
+    
+    order_total_selector:
+      type: selector
+      node_description: "Extracts specific values from data structures using path-based selection"
+      description: "Extract order total with fallback"
+      processing_message: "Getting order total..."
+      tags: ["utility", "data-extraction"]
+      layer: 3
+      parameters:
+        key: "total"
+        default_value: 0.0
+        multiple_paths: ["total", "amount", "order_total"]
+        error_on_missing: false
+      input_schema:
+        data:
+          type: any
+          description: "The data structure to select from"
+          required: true
+      output_schema:
+        selected_value:
+          type: any
+          description: "The extracted value"
+          required: true
+        found:
+          type: bool
+          description: "Whether the path was found"
+          required: false
+        path_used:
+          type: string
+          description: "The path that was used"
+          required: false
+    
+    items_selector:
+      type: selector
+      node_description: "Extracts specific values from data structures using path-based selection"
+      description: "Extract order items array"
+      processing_message: "Extracting order items..."
+      tags: ["utility", "data-extraction"]
+      layer: 3
+      parameters:
+        key: "items"
+        default_value: []
+        multiple_paths: ["items", "line_items", "products"]
+        error_on_missing: false
+      input_schema:
+        data:
+          type: any
+          description: "The data structure to select from"
+          required: true
+      output_schema:
+        selected_value:
+          type: any
+          description: "The extracted value"
+          required: true
+        found:
+          type: bool
+          description: "Whether the path was found"
+          required: false
+        path_used:
+          type: string
+          description: "The path that was used"
+          required: false
+    
+    customer_name_selector:
+      type: selector
+      node_description: "Extracts specific values from data structures using path-based selection"
+      description: "Extract customer name"
+      processing_message: "Getting customer name..."
+      tags: ["utility", "data-extraction"]
+      layer: 3
+      parameters:
+        key: "name"
+        default_value: "Unknown Customer"
+        multiple_paths: []
+        error_on_missing: false
+      input_schema:
+        data:
+          type: any
+          description: "The data structure to select from"
+          required: true
+      output_schema:
+        selected_value:
+          type: any
+          description: "The extracted value"
+          required: true
+        found:
+          type: bool
+          description: "Whether the path was found"
+          required: false
+        path_used:
+          type: string
+          description: "The path that was used"
+          required: false
+    
+    customer_email_selector:
+      type: selector
+      node_description: "Extracts specific values from data structures using path-based selection"
+      description: "Extract customer email"
+      processing_message: "Getting customer email..."
+      tags: ["utility", "data-extraction"]
+      layer: 3
+      parameters:
+        key: "email"
+        default_value: "no-email@example.com"
+        multiple_paths: []
+        error_on_missing: false
+      input_schema:
+        data:
+          type: any
+          description: "The data structure to select from"
+          required: true
+      output_schema:
+        selected_value:
+          type: any
+          description: "The extracted value"
+          required: true
+        found:
+          type: bool
+          description: "Whether the path was found"
+          required: false
+        path_used:
+          type: string
+          description: "The path that was used"
+          required: false
+    
+    first_item_selector:
+      type: selector
+      node_description: "Extracts specific values from data structures using path-based selection"
+      description: "Extract first item name"
+      processing_message: "Getting first item..."
+      tags: ["utility", "data-extraction"]
+      layer: 3
+      parameters:
+        key: "[0].name"
+        default_value: "No items"
+        multiple_paths: []
+        error_on_missing: false
+      input_schema:
+        data:
+          type: any
+          description: "The data structure to select from"
+          required: true
+      output_schema:
+        selected_value:
+          type: any
+          description: "The extracted value"
+          required: true
+        found:
+          type: bool
+          description: "Whether the path was found"
+          required: false
+        path_used:
+          type: string
+          description: "The path that was used"
+          required: false
+    
+    validation_status:
+      type: constants
+      node_description: "Provides static values that remain constant during flow execution"
+      description: "Webhook validation results"
+      processing_message: "Validating webhook..."
+      tags: ["validation", "static-data"]
+      layer: 3
+      parameters:
+        is_valid: true
+        validation_message: "Webhook validated successfully"
+        checks_passed: 5
+        security_score: 0.95
+      input_schema: {}
+      output_schema:
+        is_valid:
+          type: bool
+          description: "Whether webhook is valid"
+          required: true
+        validation_message:
+          type: string
+          description: "Validation message"
+          required: true
+        checks_passed:
+          type: int
+          description: "Number of validation checks passed"
+          required: true
+        security_score:
+          type: float
+          description: "Security validation score"
+          required: true
+    
+    order_summary:
+      type: constants
+      node_description: "Provides static values that remain constant during flow execution"
+      description: "Order processing summary"
+      processing_message: "Processing order summary..."
+      tags: ["order", "static-data"]
+      layer: 3
+      parameters:
+        processing_status: "completed"
+        items_count: 2
+        tax_calculated: 10.40
+        shipping_cost: 15.00
+        final_total: 155.37
+      input_schema: {}
+      output_schema:
+        processing_status:
+          type: string
+          description: "Order processing status"
+          required: true
+        items_count:
+          type: int
+          description: "Number of items processed"
+          required: true
+        tax_calculated:
+          type: float
+          description: "Calculated tax amount"
+          required: true
+        shipping_cost:
+          type: float
+          description: "Shipping cost"
+          required: true
+        final_total:
+          type: float
+          description: "Final order total"
+          required: true
+    
+    webhook_metadata:
+      type: metadata
+      node_description: "Accesses custom metadata like user information, session data, and other contextual information"
+      description: "Get webhook processing metadata"
+      processing_message: "Loading metadata..."
+      tags: ["input", "context", "metadata"]
+      layer: 3
+      parameters: {}
+      input_schema: {}
+      output_schema:
+        timestamp:
+          type: string
+          description: "Processing timestamp"
+          required: true
+        execution_id:
+          type: string
+          description: "Execution identifier"
+          required: true
+        user_id:
+          type: string
+          description: "User identifier"
+          required: true
+    
+    customer_merger:
+      type: merger
+      node_description: "Combines multiple data inputs into a single output"
+      description: "Merge customer name and email"
+      processing_message: "Merging customer data..."
+      tags: ["utility", "data-manipulation"]
+      layer: 3
+      parameters: {}
+      input_schema:
+        data1:
+          type: any
+          description: "First data input"
+          required: true
+        data2:
+          type: any
+          description: "Second data input"
+          required: true
+      output_schema:
+        merged_data:
+          type: any
+          description: "Combined data result"
+          required: true
+    
+    validation_merger:
+      type: merger
+      node_description: "Combines multiple data inputs into a single output"
+      description: "Merge validation and customer data"
+      processing_message: "Merging validation results..."
+      tags: ["utility", "data-manipulation"]
+      layer: 3
+      parameters: {}
+      input_schema:
+        data1:
+          type: any
+          description: "First data input"
+          required: true
+        data2:
+          type: any
+          description: "Second data input"
+          required: true
+      output_schema:
+        merged_data:
+          type: any
+          description: "Combined data result"
+          required: true
+    
+    order_merger:
+      type: merger
+      node_description: "Combines multiple data inputs into a single output"
+      description: "Merge order data with totals"
+      processing_message: "Merging order information..."
+      tags: ["utility", "data-manipulation"]
+      layer: 3
+      parameters: {}
+      input_schema:
+        data1:
+          type: any
+          description: "First data input"
+          required: true
+        data2:
+          type: any
+          description: "Second data input"
+          required: true
+      output_schema:
+        merged_data:
+          type: any
+          description: "Combined data result"
+          required: true
+    
+    response_merger:
+      type: merger
+      node_description: "Combines multiple data inputs into a single output"
+      description: "Merge validation and processing results"
+      processing_message: "Merging response data..."
+      tags: ["utility", "data-manipulation"]
+      layer: 3
+      parameters: {}
+      input_schema:
+        data1:
+          type: any
+          description: "First data input"
+          required: true
+        data2:
+          type: any
+          description: "Second data input"
+          required: true
+      output_schema:
+        merged_data:
+          type: any
+          description: "Combined data result"
+          required: true
+    
+    metadata_merger:
+      type: merger
+      node_description: "Combines multiple data inputs into a single output"
+      description: "Add metadata to response"
+      processing_message: "Adding metadata..."
+      tags: ["utility", "data-manipulation"]
+      layer: 3
+      parameters: {}
+      input_schema:
+        data1:
+          type: any
+          description: "First data input"
+          required: true
+        data2:
+          type: any
+          description: "Second data input"
+          required: true
+      output_schema:
+        merged_data:
+          type: any
+          description: "Combined data result"
+          required: true
+    
+    webhook_ack_api:
+      type: rest_api
+      node_description: "Makes HTTP requests to external APIs and returns response data"
+      description: "Send acknowledgment to webhook source"
+      processing_message: "Sending acknowledgment..."
+      tags: ["output", "external-data", "api"]
+      layer: 3
+      parameters:
+        url: "https://httpbin.org/post"  # Mock endpoint for testing
+        method: "POST"
+        headers:
+          Content-Type: "application/json"
+          Accept: "application/json"
+          X-Webhook-ID: "wh_12345"
+        auth_type: "none"
+        auth_config: {}
+        timeout: 10
+        retry_count: 1
+        retry_delay: 1
+      input_schema:
+        url_params:
+          type: json
+          description: "Parameters to inject into URL template"
+          required: false
+        query_params:
+          type: json
+          description: "Query string parameters"
+          required: false
+        body:
+          type: json
+          description: "Request body for POST/PUT/PATCH"
+          required: false
+        headers:
+          type: json
+          description: "Additional headers to include"
+          required: false
+      output_schema:
+        response:
+          type: json
+          description: "API response data"
+          required: true
+        status_code:
+          type: int
+          description: "HTTP status code"
+          required: true
+        headers:
+          type: json
+          description: "Response headers"
+          required: false
+        error:
+          type: string
+          description: "Error message if request failed"
+          required: false
+    
+    response_formatter:
+      type: llm_text
+      node_description: "Generates text using Large Language Models"
+      description: "Format webhook processing report"
+      processing_message: "Generating processing report..."
+      tags: ["ai", "text-generation", "report"]
+      layer: 3
+      parameters:
+        model: null
+        temperature: 0.3
+        max_tokens: 400
+        wrapper_prompt: |
+          Generate a webhook processing report for the following data:
+          
+          Event Type: {event_type}
+          Validation Status: {validation_data}
+          Order Information: {order_data}
+          Customer: {customer_data}
+          Acknowledgment Status: {ack_status}
+          
+          Create a professional report that includes:
+          1. Webhook reception confirmation
+          2. Validation status and security checks
+          3. Order processing summary
+          4. Customer information
+          5. Acknowledgment status
+          6. Processing timestamp and next steps
+          
+          Keep the report clear and structured.
+      input_schema:
+        event_type:
+          type: string
+          description: "Webhook event type"
+          required: true
+        validation_data:
+          type: json
+          description: "Validation results"
+          required: true
+        order_data:
+          type: json
+          description: "Order processing summary"
+          required: true
+        customer_data:
+          type: json
+          description: "Customer information"
+          required: true
+        ack_status:
+          type: int
+          description: "Acknowledgment status code"
+          required: true
+      output_schema:
+        llm_output:
+          type: string
+          description: "Formatted processing report"
+          required: true
+    
+    end_node:
+      type: end
+      node_description: "Terminal point of the flow execution"
+      description: "Complete webhook processing"
+      processing_message: "Finalizing webhook response..."
+      tags: ["flow-control", "exit-point"]
+      layer: 3
+      input_schema:
+        text_input:
+          type: string
+          description: "Processing report"
+          required: true
+      output_schema:
+        text_output:
+          type: string
+          description: "Final webhook processing report"
+          required: true
+  
+  connections:
+    # Control flow
+    - from_id: webhook_data
+      to_id: customer_selector
+      connection_type: control
+    
+    - from_id: webhook_data
+      to_id: order_total_selector
+      connection_type: control
+    
+    - from_id: webhook_data
+      to_id: items_selector
+      connection_type: control
+    
+    - from_id: customer_selector
+      to_id: customer_name_selector
+      connection_type: control
+    
+    - from_id: customer_selector
+      to_id: customer_email_selector
+      connection_type: control
+    
+    - from_id: items_selector
+      to_id: first_item_selector
+      connection_type: control
+    
+    - from_id: customer_name_selector
+      to_id: customer_merger
+      connection_type: control
+    
+    - from_id: customer_email_selector
+      to_id: customer_merger
+      connection_type: control
+    
+    - from_id: validation_status
+      to_id: validation_merger
+      connection_type: control
+    
+    - from_id: customer_merger
+      to_id: validation_merger
+      connection_type: control
+    
+    - from_id: order_total_selector
+      to_id: order_merger
+      connection_type: control
+    
+    - from_id: order_summary
+      to_id: order_merger
+      connection_type: control
+    
+    - from_id: validation_merger
+      to_id: response_merger
+      connection_type: control
+    
+    - from_id: order_merger
+      to_id: response_merger
+      connection_type: control
+    
+    - from_id: response_merger
+      to_id: metadata_merger
+      connection_type: control
+    
+    - from_id: webhook_metadata
+      to_id: metadata_merger
+      connection_type: control
+    
+    - from_id: metadata_merger
+      to_id: webhook_ack_api
+      connection_type: control
+    
+    - from_id: webhook_ack_api
+      to_id: response_formatter
+      connection_type: control
+    
+    - from_id: response_formatter
+      to_id: end_node
+      connection_type: control
+    
+    # Data connections: Webhook data to selectors
+    - from_id: webhook_data
+      to_id: event_type_selector
+      connection_type: data
+      from_output: "webhook_data:event_type"
+      to_input: "event_type_selector:data"
+    
+    - from_id: webhook_data
+      to_id: customer_selector
+      connection_type: data
+      from_output: "webhook_data:payload"
+      to_input: "customer_selector:data"
+    
+    - from_id: webhook_data
+      to_id: order_total_selector
+      connection_type: data
+      from_output: "webhook_data:payload"
+      to_input: "order_total_selector:data"
+    
+    - from_id: webhook_data
+      to_id: items_selector
+      connection_type: data
+      from_output: "webhook_data:payload"
+      to_input: "items_selector:data"
+    
+    # Data connections: Customer extraction
+    - from_id: customer_selector
+      to_id: customer_name_selector
+      connection_type: data
+      from_output: "customer_selector:selected_value"
+      to_input: "customer_name_selector:data"
+    
+    - from_id: customer_selector
+      to_id: customer_email_selector
+      connection_type: data
+      from_output: "customer_selector:selected_value"
+      to_input: "customer_email_selector:data"
+    
+    # Data connections: Items extraction
+    - from_id: items_selector
+      to_id: first_item_selector
+      connection_type: data
+      from_output: "items_selector:selected_value"
+      to_input: "first_item_selector:data"
+    
+    # Data connections: Customer merge
+    - from_id: customer_name_selector
+      to_id: customer_merger
+      connection_type: data
+      from_output: "customer_name_selector:selected_value"
+      to_input: "customer_merger:data1"
+    
+    - from_id: customer_email_selector
+      to_id: customer_merger
+      connection_type: data
+      from_output: "customer_email_selector:selected_value"
+      to_input: "customer_merger:data2"
+    
+    # Data connections: Validation merge
+    - from_id: validation_status
+      to_id: validation_merger
+      connection_type: data
+      from_output: "validation_status:validation_message"
+      to_input: "validation_merger:data1"
+    
+    - from_id: customer_merger
+      to_id: validation_merger
+      connection_type: data
+      from_output: "customer_merger:merged_data"
+      to_input: "validation_merger:data2"
+    
+    # Data connections: Order merge
+    - from_id: order_total_selector
+      to_id: order_merger
+      connection_type: data
+      from_output: "order_total_selector:selected_value"
+      to_input: "order_merger:data1"
+    
+    - from_id: order_summary
+      to_id: order_merger
+      connection_type: data
+      from_output: "order_summary:final_total"
+      to_input: "order_merger:data2"
+    
+    # Data connections: Response merge
+    - from_id: validation_merger
+      to_id: response_merger
+      connection_type: data
+      from_output: "validation_merger:merged_data"
+      to_input: "response_merger:data1"
+    
+    - from_id: order_merger
+      to_id: response_merger
+      connection_type: data
+      from_output: "order_merger:merged_data"
+      to_input: "response_merger:data2"
+    
+    # Data connections: Add metadata
+    - from_id: response_merger
+      to_id: metadata_merger
+      connection_type: data
+      from_output: "response_merger:merged_data"
+      to_input: "metadata_merger:data1"
+    
+    - from_id: webhook_metadata
+      to_id: metadata_merger
+      connection_type: data
+      from_output: "webhook_metadata:timestamp"
+      to_input: "metadata_merger:data2"
+    
+    # Data connections: Send acknowledgment
+    - from_id: metadata_merger
+      to_id: webhook_ack_api
+      connection_type: data
+      from_output: "metadata_merger:merged_data"
+      to_input: "webhook_ack_api:body"
+    
+    # Data connections: Format report
+    - from_id: webhook_data
+      to_id: response_formatter
+      connection_type: data
+      from_output: "webhook_data:event_type"
+      to_input: "response_formatter:event_type"
+    
+    - from_id: validation_status
+      to_id: response_formatter
+      connection_type: data
+      from_output: "validation_status:is_valid"
+      to_input: "response_formatter:validation_data"
+    
+    - from_id: order_summary
+      to_id: response_formatter
+      connection_type: data
+      from_output: "order_summary:processing_status"
+      to_input: "response_formatter:order_data"
+    
+    - from_id: customer_merger
+      to_id: response_formatter
+      connection_type: data
+      from_output: "customer_merger:merged_data"
+      to_input: "response_formatter:customer_data"
+    
+    - from_id: webhook_ack_api
+      to_id: response_formatter
+      connection_type: data
+      from_output: "webhook_ack_api:status_code"
+      to_input: "response_formatter:ack_status"
+    
+    # Data connections: Report to end
+    - from_id: response_formatter
+      to_id: end_node
+      connection_type: data
+      from_output: "response_formatter:llm_output"
+      to_input: "end_node:text_input"
+  
+  start_element: webhook_data
+
+# Metadata
+metadata:
+  flow_name: "Webhook Data Processor (No Custom)"
+  version: "1.0.0"
+  description: "Processes webhook data with validation, extraction using selectors, merging results, and sending acknowledgments without custom blocks"
+  author: "NeuraLabs"
+  tags: ["webhook", "validation", "api", "selector", "merger", "order-processing"]

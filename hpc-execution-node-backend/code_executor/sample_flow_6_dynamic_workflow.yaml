@@ -120,16 +120,12 @@ flow_definition:
           - Day: {day_of_week}
           
           Workflow Configuration:
-          - Name: {workflow_name}
-          - Mode: {execution_mode}
-          - Targets: {performance_targets}
-          - Resources: {resource_allocation}
-          - Data Sources: {data_sources}
+          {workflow_config}
           
           Context History:
           {execution_context}
           
-          Plan the optimal execution strategy and resource allocation.
+          Plan the optimal execution strategy and resource allocation based on the workflow configuration provided.
         llm_hidden_prompt: |
           Based on the workflow configuration and context, determine:
           1. Optimal execution strategy for current conditions
@@ -151,25 +147,9 @@ flow_definition:
           type: string
           description: "Day of week"
           required: true
-        workflow_name:
-          type: string
-          description: "Workflow name"
-          required: true
-        execution_mode:
-          type: string
-          description: "Execution mode"
-          required: true
-        performance_targets:
+        workflow_config:
           type: json
-          description: "Performance targets"
-          required: true
-        resource_allocation:
-          type: string
-          description: "Resource allocation strategy"
-          required: true
-        data_sources:
-          type: list
-          description: "Available data sources"
+          description: "Complete workflow configuration"
           required: true
         execution_context:
           type: any
@@ -368,35 +348,13 @@ flow_definition:
       to_input: "workflow_orchestrator:day_of_week"
     
     # Data connections: workflow configuration
+    # Note: The datablock outputs all data under 'data' key
+    # The orchestrator will need to extract nested values from the full data object
     - from_id: workflow_metadata
       to_id: workflow_orchestrator
       connection_type: data
-      from_output: "workflow_metadata:data.workflow_name"
-      to_input: "workflow_orchestrator:workflow_name"
-    
-    - from_id: workflow_metadata
-      to_id: workflow_orchestrator
-      connection_type: data
-      from_output: "workflow_metadata:data.execution_mode"
-      to_input: "workflow_orchestrator:execution_mode"
-    
-    - from_id: workflow_metadata
-      to_id: workflow_orchestrator
-      connection_type: data
-      from_output: "workflow_metadata:data.performance_targets"
-      to_input: "workflow_orchestrator:performance_targets"
-    
-    - from_id: workflow_metadata
-      to_id: workflow_orchestrator
-      connection_type: data
-      from_output: "workflow_metadata:data.scheduling.resource_allocation"
-      to_input: "workflow_orchestrator:resource_allocation"
-    
-    - from_id: workflow_metadata
-      to_id: workflow_orchestrator
-      connection_type: data
-      from_output: "workflow_metadata:data.data_sources"
-      to_input: "workflow_orchestrator:data_sources"
+      from_output: "workflow_metadata:data"
+      to_input: "workflow_orchestrator:workflow_config"
     
     # Data connections: execution context
     - from_id: session_context

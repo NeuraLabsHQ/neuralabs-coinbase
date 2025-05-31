@@ -1,0 +1,539 @@
+# Sample Flow 7: Multi-API Data Aggregator with Selector and Merger
+flow_definition:
+  nodes:
+    start_node:
+      type: start
+      node_description: "Initial node that receives input data"
+      description: "Start API aggregation flow"
+      processing_message: "Initializing data aggregation..."
+      tags: ["flow-control", "entry-point"]
+      layer: 3
+      input_schema:
+        initial_message:
+          type: string
+          description: "Initial user message"
+          required: true
+      output_schema:
+        initial_message:
+          type: string
+          description: "Pass through initial message"
+          required: true
+    
+    user_api:
+      type: rest_api
+      node_description: "Makes HTTP requests to external APIs and returns response data"
+      description: "Fetch user profile from API"
+      processing_message: "Fetching user profile..."
+      tags: ["input", "external-data", "api"]
+      layer: 3
+      parameters:
+        url: "https://jsonplaceholder.typicode.com/users/1"
+        method: "GET"
+        headers:
+          Content-Type: "application/json"
+          Accept: "application/json"
+        auth_type: "none"
+        auth_config: {}
+        timeout: 30
+        retry_count: 2
+        retry_delay: 1
+      input_schema:
+        url_params:
+          type: json
+          description: "Parameters to inject into URL template"
+          required: false
+        query_params:
+          type: json
+          description: "Query string parameters"
+          required: false
+        body:
+          type: json
+          description: "Request body for POST/PUT/PATCH"
+          required: false
+        headers:
+          type: json
+          description: "Additional headers to include"
+          required: false
+      output_schema:
+        response:
+          type: json
+          description: "API response data"
+          required: true
+        status_code:
+          type: int
+          description: "HTTP status code"
+          required: true
+        headers:
+          type: json
+          description: "Response headers"
+          required: false
+        error:
+          type: string
+          description: "Error message if request failed"
+          required: false
+    
+    posts_api:
+      type: rest_api
+      node_description: "Makes HTTP requests to external APIs and returns response data"
+      description: "Fetch user posts from API"
+      processing_message: "Fetching user posts..."
+      tags: ["input", "external-data", "api"]
+      layer: 3
+      parameters:
+        url: "https://jsonplaceholder.typicode.com/posts"
+        method: "GET"
+        headers:
+          Content-Type: "application/json"
+          Accept: "application/json"
+        auth_type: "none"
+        auth_config: {}
+        timeout: 30
+        retry_count: 2
+        retry_delay: 1
+      input_schema:
+        url_params:
+          type: json
+          description: "Parameters to inject into URL template"
+          required: false
+        query_params:
+          type: json
+          description: "Query string parameters"
+          required: false
+        body:
+          type: json
+          description: "Request body for POST/PUT/PATCH"
+          required: false
+        headers:
+          type: json
+          description: "Additional headers to include"
+          required: false
+      output_schema:
+        response:
+          type: json
+          description: "API response data"
+          required: true
+        status_code:
+          type: int
+          description: "HTTP status code"
+          required: true
+        headers:
+          type: json
+          description: "Response headers"
+          required: false
+        error:
+          type: string
+          description: "Error message if request failed"
+          required: false
+    
+    name_selector:
+      type: selector
+      node_description: "Extracts specific values from data structures using path-based selection"
+      description: "Extract user name from profile"
+      processing_message: "Extracting user name..."
+      tags: ["utility", "data-extraction", "transformation"]
+      layer: 3
+      parameters:
+        key: "name"
+        default_value: "Unknown User"
+        multiple_paths: []
+        error_on_missing: false
+      input_schema:
+        data:
+          type: any
+          description: "The data structure to select from"
+          required: true
+      output_schema:
+        selected_value:
+          type: any
+          description: "The extracted value"
+          required: true
+        found:
+          type: bool
+          description: "Whether the path was found"
+          required: false
+        path_used:
+          type: string
+          description: "The path that was used"
+          required: false
+    
+    email_selector:
+      type: selector
+      node_description: "Extracts specific values from data structures using path-based selection"
+      description: "Extract user email from profile"
+      processing_message: "Extracting email address..."
+      tags: ["utility", "data-extraction", "transformation"]
+      layer: 3
+      parameters:
+        key: "email"
+        default_value: "no-email@example.com"
+        multiple_paths: []
+        error_on_missing: false
+      input_schema:
+        data:
+          type: any
+          description: "The data structure to select from"
+          required: true
+      output_schema:
+        selected_value:
+          type: any
+          description: "The extracted value"
+          required: true
+        found:
+          type: bool
+          description: "Whether the path was found"
+          required: false
+        path_used:
+          type: string
+          description: "The path that was used"
+          required: false
+    
+    company_selector:
+      type: selector
+      node_description: "Extracts specific values from data structures using path-based selection"
+      description: "Extract company name using nested path"
+      processing_message: "Extracting company information..."
+      tags: ["utility", "data-extraction", "transformation"]
+      layer: 3
+      parameters:
+        key: "company.name"
+        default_value: "No Company"
+        multiple_paths: ["company.name", "workplace", "organization"]
+        error_on_missing: false
+      input_schema:
+        data:
+          type: any
+          description: "The data structure to select from"
+          required: true
+      output_schema:
+        selected_value:
+          type: any
+          description: "The extracted value"
+          required: true
+        found:
+          type: bool
+          description: "Whether the path was found"
+          required: false
+        path_used:
+          type: string
+          description: "The path that was used"
+          required: false
+    
+    posts_filter:
+      type: custom
+      node_description: "Executes custom code"
+      description: "Filter posts for specific user"
+      processing_message: "Filtering user posts..."
+      tags: ["custom", "data-processing"]
+      layer: 3
+      parameters:
+        code: |
+          posts = inputs.get('posts', [])
+          user_id = 1  # Filter for user 1
+          
+          # Filter posts for this user
+          user_posts = [post for post in posts if post.get('userId') == user_id]
+          
+          # Get first 3 posts
+          recent_posts = user_posts[:3]
+          
+          # Extract titles
+          post_titles = [post.get('title', 'Untitled') for post in recent_posts]
+          
+          output['user_posts'] = recent_posts
+          output['post_titles'] = post_titles
+          output['post_count'] = len(user_posts)
+      input_schema:
+        posts:
+          type: list
+          description: "All posts from API"
+          required: true
+      output_schema:
+        user_posts:
+          type: list
+          description: "Filtered user posts"
+          required: true
+        post_titles:
+          type: list
+          description: "Post titles"
+          required: true
+        post_count:
+          type: int
+          description: "Total post count"
+          required: true
+    
+    profile_merger:
+      type: merger
+      node_description: "Combines multiple data inputs into a single output"
+      description: "Merge name and email"
+      processing_message: "Merging profile data..."
+      tags: ["utility", "data-manipulation"]
+      layer: 3
+      parameters: {}
+      input_schema:
+        data1:
+          type: any
+          description: "First data input"
+          required: true
+        data2:
+          type: any
+          description: "Second data input"
+          required: true
+      output_schema:
+        merged_data:
+          type: any
+          description: "Combined data result"
+          required: true
+    
+    company_merger:
+      type: merger
+      node_description: "Combines multiple data inputs into a single output"
+      description: "Add company to profile"
+      processing_message: "Adding company information..."
+      tags: ["utility", "data-manipulation"]
+      layer: 3
+      parameters: {}
+      input_schema:
+        data1:
+          type: any
+          description: "First data input"
+          required: true
+        data2:
+          type: any
+          description: "Second data input"
+          required: true
+      output_schema:
+        merged_data:
+          type: any
+          description: "Combined data result"
+          required: true
+    
+    dashboard_merger:
+      type: merger
+      node_description: "Combines multiple data inputs into a single output"
+      description: "Build complete dashboard"
+      processing_message: "Creating user dashboard..."
+      tags: ["utility", "data-manipulation"]
+      layer: 3
+      parameters: {}
+      input_schema:
+        data1:
+          type: any
+          description: "First data input"
+          required: true
+        data2:
+          type: any
+          description: "Second data input"
+          required: true
+      output_schema:
+        merged_data:
+          type: any
+          description: "Combined data result"
+          required: true
+    
+    dashboard_summary:
+      type: llm_text
+      node_description: "Generates text using Large Language Models"
+      description: "Create dashboard summary"
+      processing_message: "Generating dashboard summary..."
+      tags: ["ai", "text-generation", "summary"]
+      layer: 3
+      parameters:
+        model: null
+        temperature: 0.7
+        max_tokens: 300
+        wrapper_prompt: |
+          Create a brief dashboard summary for the following user data:
+          
+          User Profile: {profile_data}
+          Recent Posts: {post_data}
+          
+          Provide a friendly summary including:
+          1. User greeting with their name
+          2. Company affiliation
+          3. Summary of their recent activity
+          4. Total post count
+      input_schema:
+        profile_data:
+          type: json
+          description: "User profile information"
+          required: true
+        post_data:
+          type: json
+          description: "User post information"
+          required: true
+      output_schema:
+        llm_output:
+          type: string
+          description: "Generated dashboard summary"
+          required: true
+    
+    end_node:
+      type: end
+      node_description: "Terminal point of the flow execution"
+      description: "Complete dashboard generation"
+      processing_message: "Finalizing dashboard..."
+      tags: ["flow-control", "exit-point"]
+      layer: 3
+      input_schema:
+        text_input:
+          type: string
+          description: "Dashboard summary"
+          required: true
+      output_schema:
+        text_output:
+          type: string
+          description: "Final dashboard output"
+          required: true
+  
+  connections:
+    # Control flow
+    - from_id: start_node
+      to_id: user_api
+      connection_type: control
+    
+    - from_id: start_node
+      to_id: posts_api
+      connection_type: control
+    
+    - from_id: user_api
+      to_id: name_selector
+      connection_type: control
+    
+    - from_id: user_api
+      to_id: email_selector
+      connection_type: control
+    
+    - from_id: user_api
+      to_id: company_selector
+      connection_type: control
+    
+    - from_id: posts_api
+      to_id: posts_filter
+      connection_type: control
+    
+    - from_id: name_selector
+      to_id: profile_merger
+      connection_type: control
+    
+    - from_id: email_selector
+      to_id: profile_merger
+      connection_type: control
+    
+    - from_id: profile_merger
+      to_id: company_merger
+      connection_type: control
+    
+    - from_id: company_selector
+      to_id: company_merger
+      connection_type: control
+    
+    - from_id: company_merger
+      to_id: dashboard_merger
+      connection_type: control
+    
+    - from_id: posts_filter
+      to_id: dashboard_merger
+      connection_type: control
+    
+    - from_id: dashboard_merger
+      to_id: dashboard_summary
+      connection_type: control
+    
+    - from_id: dashboard_summary
+      to_id: end_node
+      connection_type: control
+    
+    # Data connections: User API to selectors
+    - from_id: user_api
+      to_id: name_selector
+      connection_type: data
+      from_output: "user_api:response"
+      to_input: "name_selector:data"
+    
+    - from_id: user_api
+      to_id: email_selector
+      connection_type: data
+      from_output: "user_api:response"
+      to_input: "email_selector:data"
+    
+    - from_id: user_api
+      to_id: company_selector
+      connection_type: data
+      from_output: "user_api:response"
+      to_input: "company_selector:data"
+    
+    # Data connections: Posts API to filter
+    - from_id: posts_api
+      to_id: posts_filter
+      connection_type: data
+      from_output: "posts_api:response"
+      to_input: "posts_filter:posts"
+    
+    # Data connections: Selectors to first merger
+    - from_id: name_selector
+      to_id: profile_merger
+      connection_type: data
+      from_output: "name_selector:selected_value"
+      to_input: "profile_merger:data1"
+    
+    - from_id: email_selector
+      to_id: profile_merger
+      connection_type: data
+      from_output: "email_selector:selected_value"
+      to_input: "profile_merger:data2"
+    
+    # Data connections: Profile merger to company merger
+    - from_id: profile_merger
+      to_id: company_merger
+      connection_type: data
+      from_output: "profile_merger:merged_data"
+      to_input: "company_merger:data1"
+    
+    - from_id: company_selector
+      to_id: company_merger
+      connection_type: data
+      from_output: "company_selector:selected_value"
+      to_input: "company_merger:data2"
+    
+    # Data connections: Final dashboard merge
+    - from_id: company_merger
+      to_id: dashboard_merger
+      connection_type: data
+      from_output: "company_merger:merged_data"
+      to_input: "dashboard_merger:data1"
+    
+    - from_id: posts_filter
+      to_id: dashboard_merger
+      connection_type: data
+      from_output: "posts_filter:post_titles"
+      to_input: "dashboard_merger:data2"
+    
+    # Data connections: Dashboard to summary
+    - from_id: company_merger
+      to_id: dashboard_summary
+      connection_type: data
+      from_output: "company_merger:merged_data"
+      to_input: "dashboard_summary:profile_data"
+    
+    - from_id: posts_filter
+      to_id: dashboard_summary
+      connection_type: data
+      from_output: "posts_filter:user_posts"
+      to_input: "dashboard_summary:post_data"
+    
+    # Data connections: Summary to end
+    - from_id: dashboard_summary
+      to_id: end_node
+      connection_type: data
+      from_output: "dashboard_summary:llm_output"
+      to_input: "end_node:text_input"
+  
+  start_element: start_node
+
+# Metadata
+metadata:
+  flow_name: "Multi-API Data Aggregator"
+  version: "1.0.0"
+  description: "Demonstrates REST API integration with Selector and Merger elements for building user dashboards"
+  author: "NeuraLabs"
+  tags: ["api-integration", "data-aggregation", "selector", "merger", "dashboard"]

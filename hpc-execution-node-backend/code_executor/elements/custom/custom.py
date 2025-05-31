@@ -4,7 +4,17 @@ import multiprocessing
 import time
 import psutil
 import traceback
-from RestrictedPython import compile_restricted, safe_globals, limited_builtins, utility_builtins
+import json
+import math
+import statistics
+import datetime
+import re
+import collections
+import itertools
+import hashlib
+import base64
+import urllib.parse
+from RestrictedPython import compile_restricted, safe_globals, safe_builtins
 
 from core.element_base import ElementBase
 from utils.logger import logger
@@ -15,8 +25,7 @@ class Custom(ElementBase):
     
     def __init__(self, element_id: str, name: str, description: str,
                  input_schema: Dict[str, Any], output_schema: Dict[str, Any],
-                 code: str = "", hyperparameters: Dict[str, Any] = None,
-                 constants: Dict[str, Any] = None):
+                 parameters: Dict[str, Any] = None, code: str = "", **kwargs):
         super().__init__(
             element_id=element_id,
             name=name,
@@ -25,9 +34,14 @@ class Custom(ElementBase):
             input_schema=input_schema,
             output_schema=output_schema
         )
+        
+        # Extract parameters
+        params = parameters or {}
+        self.hyperparameters = params.get("hyperparameters", {})
+        self.constants = params.get("constants", {})
+        
+        # Code is passed separately in the flow definition
         self.code = code
-        self.hyperparameters = hyperparameters or {}
-        self.constants = constants or {}
     
     async def execute(self, executor, backtracking=False) -> Dict[str, Any]:
         """Execute the custom element."""
@@ -51,9 +65,9 @@ class Custom(ElementBase):
             })
             raise ValueError(error_msg)
         
-        # Get resource limits from config
+        # Get resource limits from config (30 seconds as per documentation)
         max_memory_mb = executor.config.get("custom_code_max_memory_mb", 100)
-        max_cpu_seconds = executor.config.get("custom_code_max_cpu_seconds", 10)
+        max_cpu_seconds = executor.config.get("custom_code_max_cpu_seconds", 30)
         
         # Stream code execution start
         await executor._stream_event("custom_code_start", {
@@ -86,6 +100,16 @@ class Custom(ElementBase):
             # Set outputs
             self.outputs = result["output"]
             
+            # Stream print outputs if any
+            if "prints" in result and result["prints"]:
+                await executor._stream_event("custom_code_prints", {
+                    "element_id": self.element_id,
+                    "prints": result["prints"]
+                })
+                # Also log prints for debugging
+                for line in result["prints"]:
+                    logger.debug(f"Custom code print: {line}")
+            
             # Validate outputs
             validation_result = validate_outputs(self.outputs, self.output_schema)
             if not validation_result["valid"]:
@@ -102,7 +126,8 @@ class Custom(ElementBase):
             # Stream code execution completion
             await executor._stream_event("custom_code_complete", {
                 "element_id": self.element_id,
-                "output_preview": str(self.outputs)[:1000] + ("..." if len(str(self.outputs)) > 1000 else "")
+                "output_preview": str(self.outputs)[:1000] + ("..." if len(str(self.outputs)) > 1000 else ""),
+                "has_prints": "prints" in result and bool(result["prints"])
             })
             
             return self.outputs
@@ -140,16 +165,23 @@ class Custom(ElementBase):
         """
         # Define the restricted execution function
         def run_code(queue):
-            # RestrictedPython setup
-            restricted_globals = {
-                '__builtins__': limited_builtins,  # Minimal builtins (no I/O)
-                '_print_': utility_builtins['_print_'],  # Safe print
-                '_getitem_': utility_builtins['_getitem_'],  # Safe item access
-                '_getattr_': utility_builtins['_getattr_'],  # Safe attribute access
-                '_write_': lambda x: x,  # Dummy write
-            }
+            # Collect print outputs
+            printed_lines = []
             
-            # Add safe utility modules
+            def safe_print(*args, **kwargs):
+                """Capture print statements for debugging."""
+                output = ' '.join(str(arg) for arg in args)
+                printed_lines.append(output)
+            
+            # RestrictedPython setup
+            restricted_globals = safe_globals.copy()
+            restricted_globals['__builtins__'] = safe_builtins
+            restricted_globals['_print_'] = safe_print  # Capture prints
+            restricted_globals['print'] = safe_print  # Direct print access
+            restricted_globals['_getiter_'] = iter  # For list comprehensions
+            restricted_globals['_iter_unpack_sequence_'] = iter  # For unpacking
+            
+            # Add safe built-in functions as per documentation
             restricted_globals['abs'] = abs
             restricted_globals['min'] = min
             restricted_globals['max'] = max
@@ -166,22 +198,58 @@ class Custom(ElementBase):
             restricted_globals['int'] = int
             restricted_globals['float'] = float
             restricted_globals['bool'] = bool
+            restricted_globals['enumerate'] = enumerate
+            restricted_globals['zip'] = zip
+            restricted_globals['map'] = map
+            restricted_globals['filter'] = filter
+            restricted_globals['all'] = all
+            restricted_globals['any'] = any
+            restricted_globals['isinstance'] = isinstance
+            restricted_globals['type'] = type
             
-            local_vars = {
-                'inputs': inputs,
-                'output': {},
+            # Add safe standard library modules as per documentation
+            restricted_globals['math'] = math
+            restricted_globals['statistics'] = statistics
+            restricted_globals['json'] = json
+            restricted_globals['datetime'] = datetime
+            restricted_globals['re'] = re
+            restricted_globals['collections'] = collections
+            restricted_globals['itertools'] = itertools
+            restricted_globals['hashlib'] = hashlib
+            restricted_globals['base64'] = base64
+            restricted_globals['urllib'] = {'parse': urllib.parse}  # Only URL parsing
+            
+            # Create parameters dict with hyperparameters and constants
+            parameters = {
                 'hyperparameters': hyperparameters,
                 'constants': constants
             }
             
+            local_vars = {
+                'inputs': inputs,
+                'output': {},
+                'parameters': parameters
+            }
+            
             try:
                 # Compile the code with RestrictedPython
-                byte_code = compile_restricted(self.code, '<inline>', 'exec')
-                exec(byte_code, restricted_globals, local_vars)
-                queue.put({
+                compiled = compile_restricted(self.code, '<inline>', 'exec')
+                
+                if hasattr(compiled, 'errors') and compiled.errors:
+                    raise ValueError(f"Code compilation errors: {compiled.errors}")
+                    
+                # Execute the compiled code
+                exec(compiled, restricted_globals, local_vars)
+                
+                # Include print outputs if any
+                result = {
                     "status": "success", 
                     "output": local_vars.get('output', {})
-                })
+                }
+                if printed_lines:
+                    result["prints"] = printed_lines
+                    
+                queue.put(result)
             except Exception as e:
                 queue.put({
                     "status": "error", 
