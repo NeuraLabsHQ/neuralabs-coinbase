@@ -1,0 +1,419 @@
+# Sample Flow 5: Conversation Analyzer using Context History + Random + LLM Structured
+flow_definition:
+  nodes:
+    conversation_context:
+      type: context_history
+      node_description: "Provides conversation history and context to downstream elements"
+      description: "Load recent conversation history"
+      processing_message: "Loading conversation history..."
+      tags: ["input", "context", "history"]
+      layer: 3
+      parameters:
+        max_messages: 5
+        format: "full"
+        filter_by_role: "all"
+        include_system: false
+      input_schema: {}
+      output_schema:
+        history:
+          type: list
+          description: "Array of previous conversation messages"
+          required: true
+    
+    analysis_config:
+      type: datablock
+      node_description: "Stores and provides static data for use in flows"
+      description: "Analysis configuration and scoring criteria"
+      processing_message: "Loading analysis parameters..."
+      tags: ["input", "static-data", "configuration"]
+      layer: 3
+      parameters:
+        format: "json"
+        data:
+          analysis_types: ["sentiment", "topic", "engagement", "satisfaction"]
+          scoring_criteria:
+            sentiment:
+              very_positive: 0.8
+              positive: 0.4
+              neutral: 0.0
+              negative: -0.4
+              very_negative: -0.8
+            engagement:
+              high: "detailed responses, questions, enthusiasm"
+              medium: "appropriate responses, some interest"
+              low: "short responses, minimal engagement"
+            topics:
+              - "product_support"
+              - "billing_issues" 
+              - "feature_requests"
+              - "technical_problems"
+              - "general_inquiry"
+          confidence_thresholds:
+            high: 0.85
+            medium: 0.65
+            low: 0.4
+      input_schema: {}
+      output_schema:
+        data:
+          type: any
+          description: "Analysis configuration data"
+          required: true
+    
+    analysis_id:
+      type: random_generator
+      node_description: "Generates random values of different types"
+      description: "Generate unique analysis ID"
+      processing_message: "Generating analysis ID..."
+      tags: ["utility", "random", "identifier"]
+      layer: 3
+      parameters:
+        type: "string"
+        length: 12
+      input_schema: {}
+      output_schema:
+        random_data:
+          type: any
+          description: "Generated analysis ID"
+          required: true
+    
+    conversation_analyzer:
+      type: llm_structured
+      node_description: "Generates structured data according to defined schemas"
+      description: "Perform comprehensive conversation analysis"
+      processing_message: "Analyzing conversation patterns..."
+      tags: ["ai", "structured-output", "analysis"]
+      layer: 3
+      parameters:
+        model: null
+        temperature: 0.2
+        max_tokens: 800
+        wrapper_prompt: |
+          Analyze this conversation history for insights and patterns:
+          
+          Analysis ID: {analysis_id}
+          Conversation History: {conversation_history}
+          
+          Analysis Configuration:
+          - Types: {analysis_types}
+          - Sentiment Scale: {sentiment_scale}
+          - Topic Categories: {topic_categories}
+          - Confidence Thresholds: {confidence_thresholds}
+          
+          Perform comprehensive analysis according to the configured criteria.
+        llm_hidden_prompt: |
+          You are a conversation analysis expert. Analyze the conversation for:
+          1. Overall sentiment trends across messages
+          2. Main topics and themes discussed
+          3. Engagement level and interaction quality
+          4. User satisfaction indicators
+          5. Key insights and patterns
+          6. Recommendations for improvement
+      input_schema:
+        conversation_history:
+          type: list
+          description: "Conversation messages to analyze"
+          required: true
+        analysis_id:
+          type: string
+          description: "Unique analysis identifier"
+          required: true
+        analysis_types:
+          type: list
+          description: "Types of analysis to perform"
+          required: false
+        sentiment_scale:
+          type: json
+          description: "Sentiment scoring criteria"
+          required: false
+        topic_categories:
+          type: list
+          description: "Available topic categories"
+          required: false
+        confidence_thresholds:
+          type: json
+          description: "Confidence level thresholds"
+          required: false
+      output_schema:
+        analysis_id:
+          type: string
+          description: "Analysis identifier"
+          required: true
+        overall_sentiment:
+          type: string
+          description: "Overall conversation sentiment"
+          required: true
+          enum: ["very_positive", "positive", "neutral", "negative", "very_negative"]
+        sentiment_score:
+          type: float
+          description: "Numerical sentiment score (-1 to 1)"
+          required: true
+          minimum: -1.0
+          maximum: 1.0
+        primary_topics:
+          type: list
+          description: "Main topics discussed"
+          required: true
+        engagement_level:
+          type: string
+          description: "User engagement assessment"
+          required: true
+          enum: ["high", "medium", "low"]
+        satisfaction_score:
+          type: float
+          description: "Estimated user satisfaction (0 to 1)"
+          required: true
+          minimum: 0.0
+          maximum: 1.0
+        key_insights:
+          type: list
+          description: "Key insights from the conversation"
+          required: true
+        recommendations:
+          type: list
+          description: "Recommendations for improvement"
+          required: false
+        confidence:
+          type: float
+          description: "Analysis confidence level"
+          required: true
+          minimum: 0.0
+          maximum: 1.0
+        structured_output:
+          type: string
+          description: "Complete analysis as JSON"
+          required: true
+    
+    insights_summary:
+      type: llm_text
+      node_description: "Generates text using Large Language Models"
+      description: "Generate executive summary of conversation insights"
+      processing_message: "Creating insights summary..."
+      tags: ["ai", "text-generation", "summary"]
+      layer: 3
+      parameters:
+        model: null
+        temperature: 0.7
+        max_tokens: 500
+        wrapper_prompt: |
+          Create an executive summary of conversation analysis results:
+          
+          Analysis ID: {analysis_id}
+          Overall Sentiment: {overall_sentiment} (Score: {sentiment_score})
+          Primary Topics: {primary_topics}
+          Engagement Level: {engagement_level}
+          Satisfaction Score: {satisfaction_score}
+          Confidence: {confidence}
+          
+          Key Insights:
+          {key_insights}
+          
+          Recommendations:
+          {recommendations}
+          
+          Create a clear, actionable summary for stakeholders including:
+          1. Overall conversation assessment
+          2. Key findings and trends
+          3. Priority recommendations
+          4. Confidence level in the analysis
+      input_schema:
+        analysis_id:
+          type: string
+          description: "Analysis identifier"
+          required: true
+        overall_sentiment:
+          type: string
+          description: "Overall sentiment"
+          required: true
+        sentiment_score:
+          type: float
+          description: "Sentiment score"
+          required: true
+        primary_topics:
+          type: list
+          description: "Main topics"
+          required: true
+        engagement_level:
+          type: string
+          description: "Engagement level"
+          required: true
+        satisfaction_score:
+          type: float
+          description: "Satisfaction score"
+          required: true
+        key_insights:
+          type: list
+          description: "Key insights"
+          required: true
+        recommendations:
+          type: list
+          description: "Recommendations"
+          required: false
+        confidence:
+          type: float
+          description: "Analysis confidence"
+          required: true
+      output_schema:
+        llm_output:
+          type: string
+          description: "Executive summary of conversation analysis"
+          required: true
+    
+    end_node:
+      type: end
+      node_description: "Terminal point of the flow execution"
+      description: "Complete conversation analysis"
+      processing_message: "Finalizing analysis report..."
+      tags: ["flow-control", "exit-point"]
+      layer: 3
+      input_schema:
+        text_input:
+          type: string
+          description: "Final analysis summary"
+          required: true
+        proposed_transaction:
+          type: json
+          description: "Analysis results data"
+          required: false
+          default: null
+      output_schema:
+        text_output:
+          type: string
+          description: "Final conversation analysis report"
+          required: true
+        proposed_transaction:
+          type: json
+          description: "Analysis metadata"
+          required: false
+  
+  connections:
+    # Control flow: parallel start -> analysis -> summary -> end
+    - from_id: conversation_context
+      to_id: conversation_analyzer
+      connection_type: control
+    
+    - from_id: analysis_config
+      to_id: conversation_analyzer
+      connection_type: control
+    
+    - from_id: analysis_id
+      to_id: conversation_analyzer
+      connection_type: control
+    
+    - from_id: conversation_analyzer
+      to_id: insights_summary
+      connection_type: control
+    
+    - from_id: insights_summary
+      to_id: end_node
+      connection_type: control
+    
+    # Data connections: conversation history to analyzer
+    - from_id: conversation_context
+      to_id: conversation_analyzer
+      connection_type: data
+      from_output: "conversation_context:history"
+      to_input: "conversation_analyzer:conversation_history"
+    
+    # Data connections: config data to analyzer
+    - from_id: analysis_config
+      to_id: conversation_analyzer
+      connection_type: data
+      from_output: "analysis_config:data.analysis_types"
+      to_input: "conversation_analyzer:analysis_types"
+    
+    - from_id: analysis_config
+      to_id: conversation_analyzer
+      connection_type: data
+      from_output: "analysis_config:data.scoring_criteria.sentiment"
+      to_input: "conversation_analyzer:sentiment_scale"
+    
+    - from_id: analysis_config
+      to_id: conversation_analyzer
+      connection_type: data
+      from_output: "analysis_config:data.topics"
+      to_input: "conversation_analyzer:topic_categories"
+    
+    - from_id: analysis_config
+      to_id: conversation_analyzer
+      connection_type: data
+      from_output: "analysis_config:data.confidence_thresholds"
+      to_input: "conversation_analyzer:confidence_thresholds"
+    
+    # Data connections: analysis ID to analyzer
+    - from_id: analysis_id
+      to_id: conversation_analyzer
+      connection_type: data
+      from_output: "analysis_id:random_data"
+      to_input: "conversation_analyzer:analysis_id"
+    
+    # Data connections: analysis results to summary
+    - from_id: conversation_analyzer
+      to_id: insights_summary
+      connection_type: data
+      from_output: "conversation_analyzer:analysis_id"
+      to_input: "insights_summary:analysis_id"
+    
+    - from_id: conversation_analyzer
+      to_id: insights_summary
+      connection_type: data
+      from_output: "conversation_analyzer:overall_sentiment"
+      to_input: "insights_summary:overall_sentiment"
+    
+    - from_id: conversation_analyzer
+      to_id: insights_summary
+      connection_type: data
+      from_output: "conversation_analyzer:sentiment_score"
+      to_input: "insights_summary:sentiment_score"
+    
+    - from_id: conversation_analyzer
+      to_id: insights_summary
+      connection_type: data
+      from_output: "conversation_analyzer:primary_topics"
+      to_input: "insights_summary:primary_topics"
+    
+    - from_id: conversation_analyzer
+      to_id: insights_summary
+      connection_type: data
+      from_output: "conversation_analyzer:engagement_level"
+      to_input: "insights_summary:engagement_level"
+    
+    - from_id: conversation_analyzer
+      to_id: insights_summary
+      connection_type: data
+      from_output: "conversation_analyzer:satisfaction_score"
+      to_input: "insights_summary:satisfaction_score"
+    
+    - from_id: conversation_analyzer
+      to_id: insights_summary
+      connection_type: data
+      from_output: "conversation_analyzer:key_insights"
+      to_input: "insights_summary:key_insights"
+    
+    - from_id: conversation_analyzer
+      to_id: insights_summary
+      connection_type: data
+      from_output: "conversation_analyzer:recommendations"
+      to_input: "insights_summary:recommendations"
+    
+    - from_id: conversation_analyzer
+      to_id: insights_summary
+      connection_type: data
+      from_output: "conversation_analyzer:confidence"
+      to_input: "insights_summary:confidence"
+    
+    # Data connections: summary to end
+    - from_id: insights_summary
+      to_id: end_node
+      connection_type: data
+      from_output: "insights_summary:llm_output"
+      to_input: "end_node:text_input"
+  
+  start_element: conversation_context
+
+# Metadata
+metadata:
+  flow_name: "Conversation Analyzer"
+  version: "1.0.0"
+  description: "Comprehensive conversation analysis using context history, configuration data, and structured AI analysis"
+  author: "NeuraLabs"
+  tags: ["conversation-analysis", "sentiment-analysis", "structured-ai", "insights"]

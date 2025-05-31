@@ -1,0 +1,253 @@
+# Sample Flow 4: Time-based Data Processing using Time Block + Data Blocks + Random Generator
+flow_definition:
+  nodes:
+    current_time:
+      type: time
+      node_description: "Provides current date and time information in various formats"
+      description: "Get current timestamp with timezone info"
+      processing_message: "Getting current time..."
+      tags: ["utility", "time", "datetime"]
+      layer: 3
+      parameters:
+        format: "iso"
+        timezone: "America/New_York"
+        include_components: ["timestamp", "date", "time", "day_of_week", "year", "month", "day"]
+      input_schema: {}
+      output_schema:
+        timestamp:
+          type: string
+          description: "ISO format timestamp"
+          required: true
+        date:
+          type: string
+          description: "Date in YYYY-MM-DD format"
+          required: true
+        time:
+          type: string
+          description: "Time in HH:MM:SS format"
+          required: true
+        day_of_week:
+          type: string
+          description: "Day of the week"
+          required: true
+        year:
+          type: int
+          description: "Year"
+          required: true
+        month:
+          type: int
+          description: "Month"
+          required: true
+        day:
+          type: int
+          description: "Day"
+          required: true
+    
+    system_config:
+      type: datablock
+      node_description: "Stores and provides static data for use in flows"
+      description: "Application configuration data"
+      processing_message: "Loading configuration..."
+      tags: ["input", "static-data", "configuration"]
+      layer: 3
+      parameters:
+        format: "json"
+        data:
+          app_name: "NeuraLabs Time Processor"
+          version: "1.2.0"
+          max_processing_time: 300
+          supported_formats: ["json", "csv", "xml"]
+          business_hours:
+            start: "09:00"
+            end: "17:00"
+            timezone: "America/New_York"
+          features:
+            time_tracking: true
+            data_validation: true
+            random_sampling: true
+      input_schema: {}
+      output_schema:
+        data:
+          type: any
+          description: "Application configuration"
+          required: true
+    
+    random_session_id:
+      type: random_generator
+      node_description: "Generates random values of different types"
+      description: "Generate unique session identifier"
+      processing_message: "Generating session ID..."
+      tags: ["utility", "random", "session"]
+      layer: 3
+      parameters:
+        type: "string"
+        length: 16
+      input_schema: {}
+      output_schema:
+        random_data:
+          type: any
+          description: "Generated random session ID"
+          required: true
+    
+    process_data:
+      type: llm_text
+      node_description: "Generates text using Large Language Models"
+      description: "Process time and configuration data"
+      processing_message: "Processing time-based data..."
+      tags: ["ai", "text-generation", "processing"]
+      layer: 3
+      parameters:
+        model: null
+        temperature: 0.6
+        max_tokens: 400
+        wrapper_prompt: |
+          You are a time-based data processing assistant for NeuraLabs. Analyze the current execution data:
+          
+          EXECUTION DETAILS:
+          - Session ID: {session_id}
+          - Current Timestamp: {timestamp}
+          - Date: {date}
+          - Time: {time}
+          - Day: {day_of_week}
+          
+          SYSTEM CONFIGURATION:
+          {app_config}
+          
+          ANALYSIS REQUIRED:
+          1. Check if current time is within business hours (9 AM - 5 PM EST)
+          2. Assess system status based on current day and time
+          3. Provide recommendations based on the configuration
+          4. Generate a processing report for session {session_id}
+          
+          Please provide a structured analysis addressing all points above.
+      input_schema:
+        timestamp:
+          type: string
+          description: "Current timestamp"
+          required: true
+        date:
+          type: string
+          description: "Current date"
+          required: true
+        time:
+          type: string
+          description: "Current time"
+          required: true
+        day_of_week:
+          type: string
+          description: "Day of week"
+          required: true
+        session_id:
+          type: string
+          description: "Session identifier"
+          required: true
+        app_config:
+          type: json
+          description: "Complete application configuration"
+          required: true
+      output_schema:
+        llm_output:
+          type: string
+          description: "Generated time processing report"
+          required: true
+    
+    end_node:
+      type: end
+      node_description: "Terminal point of the flow execution"
+      description: "Complete time-based data processing"
+      processing_message: "Finalizing report..."
+      tags: ["flow-control", "exit-point"]
+      layer: 3
+      input_schema:
+        text_input:
+          type: string
+          description: "Final processing report"
+          required: true
+        proposed_transaction:
+          type: json
+          description: "Optional transaction data"
+          required: false
+          default: null
+      output_schema:
+        text_output:
+          type: string
+          description: "Final time processing report"
+          required: true
+        proposed_transaction:
+          type: json
+          description: "Processing metadata"
+          required: false
+  
+  connections:
+    # Control flow: parallel start -> processing -> end
+    - from_id: current_time
+      to_id: process_data
+      connection_type: control
+    
+    - from_id: system_config
+      to_id: process_data
+      connection_type: control
+    
+    - from_id: random_session_id
+      to_id: process_data
+      connection_type: control
+    
+    - from_id: process_data
+      to_id: end_node
+      connection_type: control
+    
+    # Data connections: time data to processor
+    - from_id: current_time
+      to_id: process_data
+      connection_type: data
+      from_output: "current_time:timestamp"
+      to_input: "process_data:timestamp"
+    
+    - from_id: current_time
+      to_id: process_data
+      connection_type: data
+      from_output: "current_time:date"
+      to_input: "process_data:date"
+    
+    - from_id: current_time
+      to_id: process_data
+      connection_type: data
+      from_output: "current_time:time"
+      to_input: "process_data:time"
+    
+    - from_id: current_time
+      to_id: process_data
+      connection_type: data
+      from_output: "current_time:day_of_week"
+      to_input: "process_data:day_of_week"
+    
+    # Data connections: config data to processor
+    - from_id: system_config
+      to_id: process_data
+      connection_type: data
+      from_output: "system_config:data"
+      to_input: "process_data:app_config"
+    
+    # Data connections: random session ID to processor
+    - from_id: random_session_id
+      to_id: process_data
+      connection_type: data
+      from_output: "random_session_id:random_data"
+      to_input: "process_data:session_id"
+    
+    # Data connections: processor to end
+    - from_id: process_data
+      to_id: end_node
+      connection_type: data
+      from_output: "process_data:llm_output"
+      to_input: "end_node:text_input"
+  
+  start_element: current_time
+
+# Metadata
+metadata:
+  flow_name: "Time-based Data Processing"
+  version: "1.0.0"
+  description: "Demonstrates time block, data blocks, and random generator working together for time-aware processing"
+  author: "NeuraLabs"
+  tags: ["time-processing", "data-analysis", "configuration", "session-management"]
