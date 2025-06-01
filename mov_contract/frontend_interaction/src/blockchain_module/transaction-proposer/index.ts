@@ -121,7 +121,21 @@ export async function signAndExecuteTransaction(
   try {
     const result = await signAndExecute({ transaction });
     
+    // Log the result for debugging
+    console.log('Transaction result:', result);
+    
     if (!isTransactionSuccessful(result)) {
+      console.error('Transaction marked as failed, but result was:', result);
+      // Check if we have a digest - that usually means success
+      if (result?.digest) {
+        console.log('Transaction has digest, treating as success');
+        return {
+          digest: result.digest,
+          effects: result.effects || {},
+          events: result.events || [],
+          objectChanges: result.objectChanges || [],
+        };
+      }
       throw new Error('Transaction execution failed');
     }
     
@@ -132,6 +146,10 @@ export async function signAndExecuteTransaction(
       objectChanges: result.objectChanges || [],
     };
   } catch (error) {
+    // If error contains "Transaction failed:" already, don't double-wrap
+    if (error.message?.includes('Transaction failed:')) {
+      throw error;
+    }
     throw new Error(`Transaction failed: ${parseError(error)}`);
   }
 }

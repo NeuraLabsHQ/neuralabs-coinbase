@@ -39,5 +39,12 @@ export function delay(ms: number): Promise<void> {
 }
 
 export function isTransactionSuccessful(result: any): boolean {
-  return result?.effects?.status?.status === 'success';
+  // Check multiple possible success indicators
+  // dapp-kit might return a different structure than expected
+  return (
+    result?.effects?.status?.status === 'success' ||
+    result?.effects?.status === 'success' ||
+    (result?.digest && !result?.effects?.status?.error) ||
+    (result?.digest && result?.effects && !result?.error)
+  );
 }

@@ -12,19 +12,26 @@ import SealEncryption from './pages/SealEncryption'
 import SUIToWALConverter from './pages/SUIToWALConverter'
 import WalrusStorage from './pages/WalrusStorage'
 
-// Import complex components that haven't been modularized yet
-import EncryptionJourney from './components/EncryptionJourney'
-import InteractiveEncryptionJourneyV2 from './components/InteractiveEncryptionJourneyV2'
+// Import modularized journey component from new structure
+import InteractiveEncryptionJourney from './pages/InteractiveEncryptionJourney'
+import InteractivePublish from './pages/InteractivePublish'
+import AnimationTester from './pages/AnimationTester'
 
 // Configuration based on deployment-config.json
 const CONFIG = {
   PACKAGE_ID: import.meta.env.VITE_PACKAGE_ID || '0x040e550205820846970d5dcc1490911c85aacef73b819d66d9f76fd779219184',
   REGISTRY_ID: import.meta.env.VITE_REGISTRY_ID || '0x8ef28e813a10aabf456a7f188ab60e08233fcf2c7a527436485e6ce007de651f',
   ACCESS_REGISTRY_ID: import.meta.env.VITE_ACCESS_REGISTRY_ID || '0xb01b33f8038a78532a946b3d9093616cf050f23f01fb3cfa94d19d2bfc7a2125',
-  WALRUS_AGGREGATOR: 'https://aggregator.walrus-testnet.walrus.space',
-  WALRUS_PUBLISHER: 'https://publisher.walrus-testnet.walrus.space',
+  WALRUS_AGGREGATOR: import.meta.env.VITE_WALRUS_AGGREGATOR_URL || 'https://aggregator.walrus-testnet.walrus.space',
+  WALRUS_PUBLISHER: import.meta.env.VITE_WALRUS_PUBLISHER_URL || 'https://publisher.walrus-testnet.walrus.space',
   SEAL_APP_NAME: 'NeuraLabs',
   SEAL_URL: 'https://seal-testnet.mystenlabs.com',
+  // Exchange configuration
+  EXCHANGE_PACKAGE_ID: import.meta.env.VITE_EXCHANGE_PACKAGE_ID || '0x82593828ed3fcb8c6a235eac9abd0adbe9c5f9bbffa9b1e7a45cdd884481ef9f',
+  EXCHANGE_SHARED_OBJECT_ID: import.meta.env.VITE_EXCHANGE_SHARED_OBJECT_ID || '0x8d63209cf8589ce7aef8f262437163c67577ed09f3e636a9d8e0813843fb8bf1',
+  EXCHANGE_INITIAL_SHARED_VERSION: import.meta.env.VITE_EXCHANGE_INITIAL_SHARED_VERSION || '400185628',
+  // WAL Token configuration
+  WAL_TOKEN_TYPE: import.meta.env.VITE_WAL_TOKEN_TYPE || '0x8270feb7375eee355e64fdb69c50abb6b5f9393a722883c1cf45f8e26048810a::wal::WAL',
 }
 
 function App() {
@@ -54,8 +61,9 @@ useEffect(() => {
     { id: 'walrus', label: 'Walrus Storage', icon: '🐋' },
     { id: 'details', label: 'NFT Details', icon: '🔍' },
     { id: 'converter', label: 'SUI ↔ WAL', icon: '💱' },
-    { id: 'journey', label: 'Encryption Journey', icon: '🚀' },
-    { id: 'interactive', label: 'Interactive Journey', icon: '✨' }
+    { id: 'interactive', label: 'Interactive Journey', icon: '✨' },
+    { id: 'publish', label: 'Interactive Publish', icon: '📤' },
+    { id: 'animations', label: 'Animation Tester', icon: '🎬' }
   ]
 
   return (
@@ -112,7 +120,7 @@ useEffect(() => {
             </div>
 
             {/* Tab Content */}
-            <div className={activeTab === 'journey' || activeTab === 'interactive' ? '' : 'bg-white rounded-lg shadow p-6'}>
+            <div className={activeTab === 'interactive' || activeTab === 'publish' || activeTab === 'animations' ? '' : 'bg-white rounded-lg shadow p-6'}>
               {activeTab === 'info' && <ContractInfo config={CONFIG} />}
               {activeTab === 'nft' && <NFTManager config={CONFIG} />}
               {activeTab === 'access' && <AccessControl config={CONFIG} />}
@@ -120,8 +128,9 @@ useEffect(() => {
               {activeTab === 'walrus' && <WalrusStorage config={CONFIG} />}
               {activeTab === 'details' && <NFTDetails config={CONFIG} />}
               {activeTab === 'converter' && <SUIToWALConverter config={CONFIG} />}
-              {activeTab === 'journey' && <EncryptionJourney config={CONFIG} />}
-              {activeTab === 'interactive' && <InteractiveEncryptionJourneyV2 config={CONFIG} />}
+              {activeTab === 'interactive' && <InteractiveEncryptionJourney config={CONFIG} />}
+              {activeTab === 'publish' && <InteractivePublish config={CONFIG} />}
+              {activeTab === 'animations' && <AnimationTester />}
             </div>
           </>
         )}

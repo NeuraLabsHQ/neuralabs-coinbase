@@ -1,6 +1,7 @@
-import { checkUserAccess, decryptData, downloadFromWalrus, createTransaction } from '../../../utils/blockchain'
+import { checkUserAccess, downloadFromWalrus } from '../../../utils/blockchain'
 import { fromHex, toHex } from '@mysten/sui/utils'
 import { Transaction } from '@mysten/sui/transactions'
+import { EncryptedObject } from '@mysten/seal'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 
@@ -41,13 +42,17 @@ export function DecryptSection({ account, sealClient, sessionKey, userNFTs, conf
       let encryptedData, encryptionId, fileName
 
       // If Walrus blob ID provided, fetch from Walrus
-      if (decryptForm.walrusBlobId) {
-        const walrusData = await downloadFromWalrus(decryptForm.walrusBlobId)
-        const parsed = JSON.parse(walrusData)
-        encryptedData = fromHex(parsed.encryptedData)
-        encryptionId = parsed.encryptionId
-        fileName = parsed.fileName
-      } else {
+      if (decryptForm.walrusBlobId) 
+        {
+          const walrusData = await downloadFromWalrus(decryptForm.walrusBlobId)
+          // const parsed = JSON.parse(walrusData)
+          const parsed  = JSON.parse(new TextDecoder().decode(walrusData))
+          encryptedData = fromHex(parsed.encryptedData)
+          encryptionId  = parsed.encryptionId
+          fileName      = parsed.fileName
+        } 
+      else 
+      {
         // Use provided encrypted data
         encryptedData = fromHex(decryptForm.encryptedData)
         // For manual input, we need to reconstruct the encryption ID
@@ -59,32 +64,48 @@ export function DecryptSection({ account, sealClient, sessionKey, userNFTs, conf
         fileName = 'decrypted-file'
       }
 
-      // Create transaction for fetching keys
-      const tx = new Transaction()
-      tx.setSender(account.address)
+      // Create move call constructor function following the example pattern
+      const moveCallConstructor = (tx, id) => 
+        {
+          tx.moveCall({
+            target: `${config.PACKAGE_ID}::access::seal_approve`,
+            arguments: [
+              tx.pure.vector('u8', fromHex(id)),
+              tx.object(decryptForm.nftId),
+              tx.object(config.ACCESS_REGISTRY_ID),
+            ],
+          })
+        }
 
-      // Add the seal_approve call
-      tx.moveCall({
-        target: `${config.PACKAGE_ID}::access::seal_approve`,
-        arguments: [
-          tx.pure.vector('u8', fromHex(encryptionId)),
-          tx.object(decryptForm.nftId),
-          tx.object(config.ACCESS_REGISTRY_ID),
-        ],
-      })
+      // Get the encryption ID from the encrypted data
+      let actualEncryptionId
+      if (decryptForm.walrusBlobId) 
+      {
+        // Parse encrypted object to get the ID
+        actualEncryptionId = EncryptedObject.parse(encryptedData).id
+      } 
+      else 
+      {
+        // Use the manually constructed encryption ID
+        actualEncryptionId = encryptionId
+      }
+
+      // Create transaction for decryption following the example pattern
+      const tx = new Transaction()
+      moveCallConstructor(tx, actualEncryptionId)
 
       // Get transaction bytes for decryption
       if (!client) {
         throw new Error('SUI client not available')
       }
-      const txBytes = await tx.build({ client: client, onlyTransactionKind: true })
+      const txBytes = await tx.build({ client : client, onlyTransactionKind: true })
 
-      // Decrypt the data using the seal client directly
-      const decrypted = await decryptData(sealClient, {
-        encryptedData,
-        sessionKey,
-        txBytes
-      })
+      // Decrypt the data using the seal client directly following the example pattern
+      const decrypted = await sealClient.decrypt({
+                                                    data: encryptedData,
+                                                    sessionKey,
+                                                    txBytes,
+                                                  })
 
       // Convert decrypted data to blob for download
       const blob = new Blob([decrypted], { type: 'application/octet-stream' })

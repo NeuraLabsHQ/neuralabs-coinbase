@@ -1,0 +1,89 @@
+{
+  "cells": [
+    {
+      "language": "javascript",
+      "value": "INTERACTIVE_PUBLISH_STEPS",
+      "kind": 2
+    },
+    {
+      "language": "javascript",
+      "value": "targetStep",
+      "kind": 2
+    },
+    {
+      "language": "javascript",
+      "value": "action",
+      "kind": 2
+    },
+    {
+      "language": "javascript",
+      "value": "console.log(\"journey data\", journeyData.keys);",
+      "kind": 2
+    },
+    {
+      "language": "javascript",
+      "value": "journeyData.walBalance",
+      "kind": 2
+    },
+    {
+      "language": "javascript",
+      "value": "state.nftDescription",
+      "kind": 2
+    },
+    {
+      "language": "javascript",
+      "value": "client",
+      "kind": 2
+    },
+    {
+      "language": "javascript",
+      "value": "config",
+      "kind": 2
+    },
+    {
+      "language": "javascript",
+      "value": "currentAccount.address",
+      "kind": 2
+    },
+    {
+      "language": "javascript",
+      "value": "signAndExecute",
+      "kind": 2
+    },
+    {
+      "language": "javascript",
+      "value": "result",
+      "kind": 2
+    },
+    {
+      "language": "javascript",
+      "value": "txDetails",
+      "kind": 2
+    },
+    {
+      "language": "javascript",
+      "value": "txDetails.objectChanges[1].objectType",
+      "kind": 2
+    },
+    {
+      "language": "javascript",
+      "value": "accessLevel",
+      "kind": 2
+    },
+    {
+      "language": "javascript",
+      "value": "sealClient",
+      "kind": 2
+    },
+    {
+      "language": "javascript",
+      "value": "finalConfig.PACKAGE_ID",
+      "kind": 2
+    },
+    {
+      "language": "javascript",
+      "value": "",
+      "kind": 2
+    }
+  ]
+}
