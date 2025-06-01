@@ -218,6 +218,7 @@ class LLMText(ElementBase):
             )
         
         # Set output
+
         self.outputs = {"llm_output": llm_output}
         
         # Validate output

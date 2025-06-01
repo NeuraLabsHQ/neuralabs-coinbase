@@ -107,7 +107,7 @@
     },
     {
       "language": "python",
-      "value": "formatted_prompt",
+      "value": "print(formatted_prompt)",
       "kind": 2
     },
     {

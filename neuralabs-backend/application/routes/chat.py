@@ -221,7 +221,7 @@ def map_node_type_to_element_type(node_type: str) -> str:
         'ContextHistory': 'context_history', 'context_history': 'context_history', 'contexthistory': 'context_history',
         'Datablock': 'datablock', 'datablock': 'datablock',
         'Constants': 'constants', 'constants': 'constants',
-        'RestAPI': 'rest_api', 'rest_api': 'rest_api',
+        'RestAPI': 'rest_api', 'rest_api': 'rest_api', 'restapi': 'rest_api',
         'Metadata': 'metadata', 'metadata': 'metadata',
         'Selector': 'selector', 'selector': 'selector',
         'Merger': 'merger', 'merger': 'merger',
