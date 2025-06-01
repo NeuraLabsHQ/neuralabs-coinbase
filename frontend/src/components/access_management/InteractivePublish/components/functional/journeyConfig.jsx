@@ -16,8 +16,8 @@ export const INTERACTIVE_PUBLISH_STEPS = [
     completed: (data) => data.suiBalance !== null && data.walBalance !== null,
     detail: (data) => {
       if (data.suiBalance !== null && data.walBalance !== null) {
-        const suiAmount = (Number(data.suiBalance) / 1e9).toFixed(2);
-        const walAmount = (Number(data.walBalance) / 1e9).toFixed(2);
+        const suiAmount = (Number(data.suiBalance) ).toFixed(2);
+        const walAmount = (Number(data.walBalance) ).toFixed(2);
         return `SUI: ${suiAmount} • WAL: ${walAmount}`;
       }
       return '';

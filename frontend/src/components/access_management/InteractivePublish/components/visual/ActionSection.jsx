@@ -86,6 +86,21 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
       console.log('Digital signature step - triggering action');
       onAction();
       return;
+    } else if (step.id === 'mint') {
+      // For mint step, check if form data exists
+      if (!journeyData.nftName || !journeyData.nftDescription) {
+        // Need to submit form first - find the submit button
+        const submitButton = document.querySelector('.mint-form-submit');
+        if (submitButton) {
+          submitButton.click();
+          return;
+        } else {
+          console.error('Mint form submit button not found');
+          return;
+        }
+      }
+      // Form data exists, proceed with action
+      onAction();
     } else {
       // For all other steps, just call the action
       onAction()
@@ -141,9 +156,6 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
             className="action-button"
             onClick={(e) => {
               e.preventDefault();
-              console.log('Action button clicked for step:', step.id);
-              console.log('Is disabled:', isDisabled());
-              console.log('Is processing:', isProcessing);
               handleAction();
             }}
             disabled={isDisabled()}
@@ -160,7 +172,6 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
             className="continue-button"
             onClick={(e) => {
               e.preventDefault();
-              console.log('Continue button clicked, advancing to next step');
               onContinue();
             }}
             whileHover={{ scale: 1.02 }}

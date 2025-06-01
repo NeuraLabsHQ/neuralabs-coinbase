@@ -177,31 +177,45 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
   // Removed handleShowActionContent as content is now always visible
   
   // Handle action from content (for mint step with form data)
-  const handleActionFromContent = () => {
-    if (versionNumber && nftDescription) {
-      // Construct full NFT name with neuralabs prefix
-      const currentAgentId = agentId || agentData?.id || journeyData.agentId || 'unknown'
-      const fullNftName = `neuralabs:${currentAgentId}:${versionNumber}`
-      
-      // Update journey data with form data
-      updateJourneyData({
-        nftName: fullNftName,
-        versionNumber: versionNumber,
-        nftDescription: nftDescription
-      })
+  const handleActionFromContent = async () => {
+    // Validate required fields
+    if (!versionNumber || !nftDescription) {
+      toast.error('Please fill in all required fields');
+      return;
     }
     
-    // Go back to animation and trigger action
+    // Construct full NFT name with neuralabs prefix
+    const currentAgentId = agentId || agentData?.id || journeyData.agentId || 'unknown'
+    const fullNftName = `neuralabs:${currentAgentId}:${versionNumber}`
+    
+    
+    // Create temporary state with form data for the blockchain action
+    const tempJourneyData = {
+      ...journeyData,
+      nftName: fullNftName,
+      versionNumber: versionNumber,
+      nftDescription: nftDescription
+    }
+    
+    // Update journey data and immediately trigger action with temp data
+    updateJourneyData({
+      nftName: fullNftName,
+      versionNumber: versionNumber,
+      nftDescription: nftDescription
+    })
+    
+    // Call the action directly with the temp data
     setAnimationPhase('idle')
     setTimeout(() => {
-      handleStepAction()
+      handleStepActionWithData(tempJourneyData)
     }, 100)
   }
   
-  // Handle step actions
-  const handleStepAction = async () => {
+  // Handle step actions with optional data override
+  const handleStepActionWithData = async (dataOverride = null) => {
     const step = INTERACTIVE_PUBLISH_STEPS[currentStep]
-    console.log('handleStepAction called for step:', step)
+    const actionData = dataOverride || journeyData
+    
     
     if (!step.action) {
       console.log('No action defined for step:', step.id)
@@ -237,7 +251,7 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
     await new Promise(resolve => setTimeout(resolve, 3000))
     
     try {
-      const result = await action(journeyData, updateJourneyData, config)
+      const result = await action(actionData, updateJourneyData, config)
       console.log('Action result:', result)
       
       if (result.success) {
@@ -287,13 +301,26 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
         setAnimationPhase('idle')
       }
     } catch (error) {
-      console.error('Error in handleStepAction:', error)
-      toast.error(error.message || 'An error occurred')
-      setError(error.message)
-      setAnimationPhase('idle')
+      console.error('=== STEP ACTION ERROR ===');
+      console.error('Step:', step.id);
+      console.error('Action:', step.action);
+      console.error('Error:', error);
+      console.error('Error type:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      console.error('Journey data at error:', actionData);
+      
+      toast.error(error.message || 'An error occurred');
+      setError(error.message);
+      setAnimationPhase('idle');
     } finally {
       setProcessingState(false)
     }
+  }
+  
+  // Handle step actions
+  const handleStepAction = async () => {
+    return handleStepActionWithData(null)
   }
   
   // Reset progress and start new journey

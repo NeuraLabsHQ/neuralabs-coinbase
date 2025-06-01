@@ -31,7 +31,8 @@ import {
 } from '../lib/blockchain_module/access-management/index.ts'
 
 // Wrap access functions
-export const grantAccessToUser = async (params) => {
+export const grantAccessToUser = async (params) => 
+{
   const client = params.client || window.suiClient
   const signAndExecute = params.signAndExecute || window.signAndExecute
   const config = params.config || window.config

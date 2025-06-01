@@ -88,6 +88,8 @@ export const renderActionContent = (currentStep, journeyData, versionNumber, nft
                   required
                 />
               </div>
+              {/* Hidden submit button for ActionSection to trigger */}
+              <button type="submit" className="mint-form-submit" style={{ display: 'none' }}>Submit</button>
             </form>
           )}
         </div>

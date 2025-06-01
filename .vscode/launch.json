@@ -45,6 +45,14 @@
             "request": "attach",
             "port": 9223,
             "webRoot": "/home/sid/projects/06_02 NeuraLabs/neuralabs-sui/mov_contract/frontend_interaction", 
+        },
+
+        {
+            "name": "frontend_sid",
+            "type": "msedge",
+            "request": "attach",
+            "port": 9223,
+            "webRoot": "/home/sid/projects/06_02 NeuraLabs/neuralabs-sui/frontend", 
         }
 
     ]
