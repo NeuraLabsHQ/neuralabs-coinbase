@@ -123,7 +123,8 @@ const AgentDetailPage = () => {
       'metadata': <MetadataPage agentData={agentData} onUpdate={setAgentData} />,
       'version': <VersionPage agentData={agentData} />,
       'publish': <PublishPage agentData={agentData} onUpdate={setAgentData} />,
-      'interactive-publish': <InteractivePublishPage agentData={agentData} agentId={agentId} onComplete={() => setCurrentPage('summary')} />,
+      // 'interactive-publish': <InteractivePublishPage agentData={agentData} agentId={agentId} onComplete={() => setCurrentPage('summary')} />,
+      'interactive-publish': <InteractivePublishPage agentData={agentData} agentId={agentId} onComplete={null} />,
       'blockchain': <BlockchainPage agentData={agentData} />,
       'download': <DownloadPage agentData={agentData} />,
       // Coming soon pages

@@ -3,6 +3,7 @@ import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import './styles/themed-index.css'
+import { agentAPI } from '../../../utils/agent-api'
 
 // Visual Components
 import ProgressSection from './components/visual/ProgressSection'
@@ -40,12 +41,12 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
   
   // Create config from environment
   const config = {
-    walrusApiUrl: import.meta.env.VITE_WALRUS_API_URL || 'https://walrus-testnet.walrus.space',
-    network: import.meta.env.VITE_SUI_NETWORK || 'testnet',
-    PACKAGE_ID: import.meta.env.VITE_PACKAGE_ID || '0x0',
-    ACCESS_REGISTRY_ID: import.meta.env.VITE_ACCESS_REGISTRY_ID || '0x0',
-    WALRUS_PUBLISHER: import.meta.env.VITE_WALRUS_PUBLISHER || 'https://publisher.walrus-testnet.walrus.space',
-    WALRUS_AGGREGATOR: import.meta.env.VITE_WALRUS_AGGREGATOR || 'https://aggregator.walrus-testnet.walrus.space'
+    walrusApiUrl        : import.meta.env.VITE_WALRUS_API_URL     || 'https://walrus-testnet.walrus.space',
+    network             : import.meta.env.VITE_SUI_NETWORK        || 'testnet',
+    PACKAGE_ID          : import.meta.env.VITE_PACKAGE_ID         || '0x0',
+    ACCESS_REGISTRY_ID  : import.meta.env.VITE_ACCESS_REGISTRY_ID || '0x0',
+    WALRUS_PUBLISHER    : import.meta.env.VITE_WALRUS_PUBLISHER   || 'https://publisher.walrus-testnet.walrus.space',
+    WALRUS_AGGREGATOR   : import.meta.env.VITE_WALRUS_AGGREGATOR  || 'https://aggregator.walrus-testnet.walrus.space'
   }
   
   // Core state management
@@ -60,10 +61,10 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
     canProceed,
   } = useJourneyState()
   
-  const [flowId, setFlowIdState] = useState(() => getFlowId())
-  const [currentStep, setCurrentStepState] = useState(0)
-  const [isProcessing, setProcessingState] = useState(false)
-  const [animationPhase, setAnimationPhase] = useState('idle')
+  const [flowId, setFlowIdState]                              = useState(() => getFlowId())
+  const [currentStep, setCurrentStepState]                    = useState(0)
+  const [isProcessing, setProcessingState]                    = useState(false)
+  const [animationPhase, setAnimationPhase]                   = useState('idle')
   const [incompletePrerequisites, setIncompletePrerequisites] = useState([])
   
   // NFT form state
@@ -71,10 +72,7 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
   const [nftDescription, setNftDescription] = useState('')
   
   // Animation system
-  const {
-    renderStepIcon,
-    renderAnimation
-  } = useAnimationSystem()
+  const {renderStepIcon,renderAnimation} = useAnimationSystem()
   
   // Initialize global blockchain references
   useEffect(() => {
@@ -211,6 +209,56 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
     }, 100)
   }
   
+  // Save publish data to backend
+  const savePublishDataToBackend = async () => {
+    try {
+      // Extract version from NFT name
+      const version = journeyData.nftName ? journeyData.nftName.split('::').pop() : journeyData.versionNumber
+      
+      // Prepare blockchain data for backend
+      const blockchainData = {
+        version: version,
+        published_hash: journeyData.transactionDigest || '',
+        contract_id: config.PACKAGE_ID,
+        nft_id: journeyData.nftId || '',
+        nft_mint_trx_id: journeyData.transactionDigest || '',
+        published_date: null, // Backend will set current timestamp
+        other_data: {
+          walrus_blob_id: journeyData.blobId || '',
+          walrus_url: journeyData.walrusUrl || '',
+          access_cap_id: journeyData.accessCapId || '',
+          seal_session_key: journeyData.sessionKey || '',
+          encryption_details: {
+            encrypted_data_hash: journeyData.encryptedDataHash || '',
+            file_size: journeyData.fileSize || 0,
+            mime_type: journeyData.mimeType || '',
+            original_filename: journeyData.fileName || ''
+          },
+          file_metadata: {
+            agent_id: agentId,
+            agent_name: agentData?.name || '',
+            description: journeyData.nftDescription || '',
+            publisher_address: account?.address || ''
+          }
+        }
+      }
+      
+      console.log('Saving blockchain data to backend:', blockchainData)
+      
+      // Call API to save blockchain data
+      const response = await agentAPI.publishToBlockchain(agentId, blockchainData)
+      
+      console.log('Backend save response:', response)
+      toast.success('Successfully saved to blockchain!')
+      
+      return true
+    } catch (error) {
+      console.error('Error saving to backend:', error)
+      toast.error(`Failed to save blockchain data: ${error.message}`)
+      throw error
+    }
+  }
+  
   // Handle step actions with optional data override
   const handleStepActionWithData = async (dataOverride = null) => {
     const step = INTERACTIVE_PUBLISH_STEPS[currentStep]
@@ -283,12 +331,28 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
           
           // Check if this is the final step
           if (currentStep === INTERACTIVE_PUBLISH_STEPS.length - 1 && result.success) {
-            // Call onComplete after successful final step
-            setTimeout(() => {
-              if (onComplete) {
-                onComplete()
-              }
-            }, 2000)
+            // Save to backend before completing
+            try {
+              toast.loading('Saving blockchain data...', { id: 'backend-save' })
+              await savePublishDataToBackend()
+              toast.dismiss('backend-save')
+              
+              // Call onComplete after successful backend save
+              setTimeout(() => {
+                if (onComplete) {
+                  onComplete()
+                }
+              }, 1000)
+            } catch (error) {
+              toast.dismiss('backend-save')
+              // Still proceed with completion even if backend save fails
+              console.error('Backend save failed, but proceeding:', error)
+              setTimeout(() => {
+                if (onComplete) {
+                  onComplete()
+                }
+              }, 1000)
+            }
           }
           
           // Don't auto-advance - wait for user to click continue
