@@ -29,18 +29,22 @@ export const selectFile = async (state, updateState, config) => {
     const workflowJson = JSON.stringify(workflowData, null, 2);
     const blob = new Blob([workflowJson], { type: 'application/json' });
     
-    // Create a file-like object from the workflow
-    const pseudoFile = {
+    // Convert blob to array buffer immediately
+    const arrayBuffer = await blob.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    
+    // Create a file object that stores the data directly
+    const fileData = {
       name: `${agent.name || 'workflow'}-v${agent.version || '1.0'}.json`,
       type: 'application/json',
       size: blob.size,
-      arrayBuffer: async () => blob.arrayBuffer(),
+      data: Array.from(uint8Array), // Store as array for JSON serialization
     };
     
-    console.log('Workflow file prepared:', pseudoFile.name, 'size:', pseudoFile.size);
+    console.log('Workflow file prepared:', fileData.name, 'size:', fileData.size);
     
     updateState({
-      selectedFile: pseudoFile,
+      selectedFile: fileData,
       loading: false,
     });
     
@@ -70,19 +74,47 @@ export const encryptFile = async (state, updateState, config) => {
     }
 
     console.log('Starting file encryption...');
-    const fileData = await state.selectedFile.arrayBuffer();
-    console.log('File data length:', fileData.byteLength);
     
-    const encryptedData = await encryptData(
+    // Convert the stored array back to Uint8Array
+    const fileData = new Uint8Array(state.selectedFile.data);
+    console.log('File data length:', fileData.length);
+    
+    // Get config for package ID
+    const finalConfig = config || window.config || {};
+    
+    // Check if we have the required IDs
+    if (!finalConfig.PACKAGE_ID) {
+      throw new Error('Package ID not configured');
+    }
+    
+    if (!state.nftId) {
+      throw new Error('NFT ID not available - please mint NFT first');
+    }
+    
+    console.log('Using Package ID:', finalConfig.PACKAGE_ID);
+    console.log('Using NFT ID as Policy ID:', state.nftId);
+    
+    // Call encryptData with proper parameters
+    // Package ID from config, NFT ID as policy ID
+    const encryptResult = await encryptData(
       state.sealClient,
-      new Uint8Array(fileData),
-      state.sessionKeyObject
+      {
+        data: fileData,
+        packageId: finalConfig.PACKAGE_ID,
+        policyId: state.nftId, // Use NFT ID as policy ID
+        threshold: 2 // Default threshold
+      }
     );
     
+    // Extract the encrypted data from the result
+    const encryptedData = encryptResult.encryptedData;
+    
     console.log('Encryption completed, encrypted data:', !!encryptedData);
+    console.log('Encrypted ID:', encryptResult.encryptedId);
     
     updateState({
       encryptedData,
+      encryptedId: encryptResult.encryptedId,
       loading: false,
     });
     
