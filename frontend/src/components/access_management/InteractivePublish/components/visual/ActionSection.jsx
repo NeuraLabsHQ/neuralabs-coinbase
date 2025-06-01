@@ -122,7 +122,7 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
         if (animationPhase === 'awaiting-signature') return 'Waiting for Signature...'
         if (isSignatureTriggered) return 'Check Your Wallet'
         return 'Create Session Key'
-      case 'file': return 'Continue with Selected File'
+      case 'file': return journeyData.selectedFile ? 'Workflow Ready' : 'Fetch Workflow'
       case 'encrypt': return 'Encrypt File'
       case 'walrus': return 'Store on Walrus'
       default: return 'Continue'
@@ -135,7 +135,6 @@ const ActionSection = ({ currentStep, journeyData, isProcessing, animationPhase,
   
   const isDisabled = () => {
     if (isProcessing) return true
-    if (step.id === 'file' && !journeyData.selectedFile) return true
     return false
   }
   

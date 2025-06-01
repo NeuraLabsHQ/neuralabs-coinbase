@@ -175,7 +175,7 @@ export const renderActionContent = (currentStep, journeyData, versionNumber, nft
             </div>
           ) : (
             <div className="workflow-fetch">
-              <p>Click below to prepare your agent's workflow for blockchain publishing</p>
+              <p>Click "Fetch Workflow" to automatically retrieve your agent's workflow from the system</p>
             </div>
           )}
         </div>

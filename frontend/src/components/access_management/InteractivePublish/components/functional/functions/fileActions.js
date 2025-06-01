@@ -1,5 +1,5 @@
 import { encryptData, uploadToWalrus } from '../../../../../../utils/blockchain';
-import agentAPI from '../../../../../../utils/agent-api';
+import {agentAPI} from '../../../../../../utils/agent-api';
 
 export const selectFile = async (state, updateState, config) => {
   try {
