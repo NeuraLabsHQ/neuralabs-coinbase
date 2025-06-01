@@ -1,4 +1,5 @@
 import { createAccessCap, grantAccessToUser, checkUserAccess } from '../../../../../../utils/blockchain';
+import { executeTransactionWithRetry } from '../../../functions/objectRefresh';
 
 export const createAccessCapAction = async (state, updateState, config) => {
   try {
@@ -14,8 +15,17 @@ export const createAccessCapAction = async (state, updateState, config) => {
       throw new Error('NFT ID is required to create AccessCap');
     }
     
+    // Add a delay to ensure the NFT object is fully propagated
+    console.log('Waiting for NFT to be fully propagated...');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
     console.log('Calling createAccessCap with NFT ID:', state.nftId);
-    const result = await createAccessCap(state.nftId);
+    
+    // Use retry logic to handle version conflicts
+    const result = await executeTransactionWithRetry(async () => {
+      return await createAccessCap(state.nftId);
+    }, 5); // Increase retries to 5
+    
     console.log('createAccessCap result:', result);
     
     // Extract the created AccessCap ID from object changes
@@ -143,7 +153,14 @@ export const grantSelfAccess = async (state, updateState, config) => {
     console.log('Using accessCapId:', state.accessCapId);
     
     console.log('Calling grantAccessToUser with params:', params);
-    const result = await grantAccessToUser(params);
+    
+    // Add delay and retry logic for grant access as well
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const result = await executeTransactionWithRetry(async () => {
+      return await grantAccessToUser(params);
+    });
+    
     console.log('grantAccessToUser result:', result);
     
     updateState({

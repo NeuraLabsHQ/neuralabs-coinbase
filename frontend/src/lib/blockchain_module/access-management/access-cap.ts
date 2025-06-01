@@ -22,6 +22,9 @@ export async function createAccessCap(
   
   const tx = new Transaction();
   
+  // The NFT needs to be passed as a reference, and we should set the transaction to run at latest version
+  tx.setGasBudget(10000000); // 0.01 SUI
+  
   tx.moveCall({
     target: `${config.PACKAGE_ID}::access::create_access_cap_entry`,
     arguments: [
