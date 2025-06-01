@@ -9,6 +9,11 @@ import { getSuiBalance } from './balance';
 export interface ConversionParams {
   amount: bigint;
   slippageTolerance?: number; // Percentage (e.g., 0.5 for 0.5%)
+  exchangeConfig?: {
+    PACKAGE_ID: string;
+    SHARED_OBJECT_ID: string;
+    INITIAL_SHARED_VERSION: string;
+  };
 }
 
 // Mock exchange rate for demonstration
@@ -36,20 +41,33 @@ export async function convertSuiToWal(
   
   const tx = createTransaction();
   
-  // In a real implementation, this would interact with a DEX or swap contract
-  // For now, we'll create a mock transaction
-  
-  // Split the amount to convert
-  const [coinToConvert] = tx.splitCoins(tx.gas, [params.amount]);
-  
-  // Mock: Transfer to a swap pool (in reality, this would be a swap call)
-  // tx.moveCall({
-  //   target: `${SWAP_PACKAGE}::swap::swap_sui_to_wal`,
-  //   arguments: [coinToConvert, tx.object(SWAP_POOL)],
-  // });
-  
-  // For demonstration, we'll just transfer back to sender
-  tx.transferObjects([coinToConvert], address);
+  // Use the exchange contract if configuration is provided
+  if (params.exchangeConfig) {
+    const { PACKAGE_ID, SHARED_OBJECT_ID, INITIAL_SHARED_VERSION } = params.exchangeConfig;
+    
+    // Split the amount to convert from gas coins
+    const [coinToConvert] = tx.splitCoins(tx.gas, [params.amount]);
+    
+    // Call the exchange contract to convert SUI to WAL
+    const [walCoin] = tx.moveCall({
+      target: `${PACKAGE_ID}::wal_exchange::exchange_all_for_wal`,
+      arguments: [
+        tx.sharedObjectRef({
+          objectId: SHARED_OBJECT_ID,
+          initialSharedVersion: INITIAL_SHARED_VERSION,
+          mutable: true,
+        }),
+        coinToConvert,
+      ],
+    });
+    
+    // Transfer the resulting WAL coin to the user
+    tx.transferObjects([walCoin], address);
+  } else {
+    // Fallback: Mock transaction for testing
+    const [coinToConvert] = tx.splitCoins(tx.gas, [params.amount]);
+    tx.transferObjects([coinToConvert], address);
+  }
   
   return await signAndExecuteTransaction(signAndExecute, tx);
 }

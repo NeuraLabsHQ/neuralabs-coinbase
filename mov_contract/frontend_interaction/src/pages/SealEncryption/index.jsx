@@ -13,7 +13,7 @@ import { SessionKeySection } from './components/SessionKeySection'
  */
 function SealEncryption({ config }) {
   const account = useCurrentAccount()
-  const client = useSuiClient()
+  const client  = useSuiClient()
   
   const [sessionKey, setSessionKey] = useState(null)
   const [sealClient, setSealClient] = useState(null)

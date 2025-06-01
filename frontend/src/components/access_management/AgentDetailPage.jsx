@@ -26,6 +26,7 @@ import PublishPage from './pages/PublishPage';
 import SettingsPage from './pages/SettingsPage';
 import SummaryPage from './pages/SummaryPage';
 import VersionPage from './pages/VersionPage';
+import InteractivePublishPage from './pages/InteractivePublishPage';
 
 const AgentDetailPage = () => {
   const { agentId } = useParams();
@@ -122,6 +123,7 @@ const AgentDetailPage = () => {
       'metadata': <MetadataPage agentData={agentData} onUpdate={setAgentData} />,
       'version': <VersionPage agentData={agentData} />,
       'publish': <PublishPage agentData={agentData} onUpdate={setAgentData} />,
+      'interactive-publish': <InteractivePublishPage agentData={agentData} agentId={agentId} onComplete={() => setCurrentPage('summary')} />,
       'blockchain': <BlockchainPage agentData={agentData} />,
       'download': <DownloadPage agentData={agentData} />,
       // Coming soon pages

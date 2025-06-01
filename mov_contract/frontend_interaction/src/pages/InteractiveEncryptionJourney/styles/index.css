@@ -1,0 +1,7 @@
+/* Import the original InteractiveEncryptionJourneyV2 styles */
+@import './InteractiveEncryptionJourneyV2.css';
+
+/* Import completion section styles */
+@import './CompletionSection.css';
+
+/* Additional modular styles can be added here */

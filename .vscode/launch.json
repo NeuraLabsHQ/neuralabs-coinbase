@@ -32,19 +32,28 @@
 
 
         {
-      "type": "msedge",
-      "request": "launch",
-      "name": "3000 test localhost",
-      "url": "http://localhost:3000",
-      "webRoot": "${workspaceFolder}"
-    },
+            "type": "msedge",
+            "request": "launch",
+            "name": "Edge - Launch 3000",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}"
+        },
+ 
+        {
+            "name": "move_contract_frontend_sid",
+            "type": "msedge",
+            "request": "attach",
+            "port": 9223,
+            "webRoot": "/home/sid/projects/06_02 NeuraLabs/neuralabs-sui/mov_contract/frontend_interaction", 
+        },
 
-            {
-      "type": "msedge",
-      "request": "launch",
-      "name": "3001 test localhost",
-      "url": "http://localhost:3000",
-      "webRoot": "${workspaceFolder}"
-    }
+        {
+            "name": "frontend_sid",
+            "type": "msedge",
+            "request": "attach",
+            "port": 9223,
+            "webRoot": "/home/sid/projects/06_02 NeuraLabs/neuralabs-sui/frontend", 
+        }
+
     ]
 }

@@ -6,6 +6,7 @@ import AccessDetailPanel from './AccessDetailPanel';
 import AccessHomePage from './AccessHomePage';
 import AccessMainContent from './AccessMainContent';
 import AccessSidebar from './AccessSidebar';
+import SwapPage from './pages/SwapPage';
 
 const AccessPage = () => {
   const [view, setView] = useState('home'); // Default to home view
@@ -63,6 +64,8 @@ const AccessPage = () => {
         />
       ) : view === 'home' ? (
         <AccessHomePage onSelectFlow={handleFlowSelect} />
+      ) : view === 'swap' ? (
+        <SwapPage />
       ) : (
         <AccessMainContent 
           currentView={view}
