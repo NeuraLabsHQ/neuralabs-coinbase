@@ -36,9 +36,11 @@ export const importFlowFromJSON = (jsonData, setNodes, setEdges) => {
             // Generate a unique ID for the node (use original_id if available, otherwise generate new)
             const nodeId = element.original_id || `node-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
+            const nodeType = mapElementTypeToNodeType(element.type);
+            
             return {
               id: nodeId,
-              type: mapElementTypeToNodeType(element.type),
+              type: nodeType,
               name: element.name || elementId,
               description: element.description || '',
               x: Number(element.position?.x) || Math.random() * 400 + 100,
@@ -56,7 +58,9 @@ export const importFlowFromJSON = (jsonData, setNodes, setEdges) => {
               metadata: {
                 originalElementId: elementId,
                 importedAt: new Date().toISOString()
-              }
+              },
+              // Preserve fieldAccess from the element data
+              fieldAccess: element.fieldAccess || element.field_access || {}
             };
           });
 
@@ -235,7 +239,12 @@ function convertSchemaToInputs(schema) {
     name,
     type: config.type || 'string',
     description: config.description || '',
-    required: config.required !== false
+    required: config.required !== false,
+    editable: config.editable || false,
+    value: config.value,
+    default: config.default,
+    // Preserve any additional properties that might be needed
+    ...config
   }));
 }
 
@@ -244,7 +253,12 @@ function convertSchemaToOutputs(schema) {
     name,
     type: config.type || 'string',
     description: config.description || '',
-    required: config.required !== false
+    required: config.required !== false,
+    editable: config.editable || false,
+    value: config.value,
+    default: config.default,
+    // Preserve any additional properties that might be needed
+    ...config
   }));
 }
 

@@ -87,6 +87,11 @@ export const exportFlowAsJSON = (nodes, edges, metadata = {}) => {
             element.parameters.code = node.code;
           }
 
+          // Preserve fieldAccess for access control
+          if (node.fieldAccess) {
+            element.fieldAccess = node.fieldAccess;
+          }
+
           nodes_dict[elementId] = element;
         });
 
@@ -207,7 +212,11 @@ function convertInputsToSchema(inputs) {
     schema[input.name] = {
       type: input.type || 'string',
       description: input.description || '',
-      required: input.required !== false
+      required: input.required !== false,
+      // Preserve additional properties like editable, value, default
+      ...(input.editable !== undefined && { editable: input.editable }),
+      ...(input.value !== undefined && { value: input.value }),
+      ...(input.default !== undefined && { default: input.default })
     };
   });
   return schema;
@@ -219,7 +228,11 @@ function convertOutputsToSchema(outputs) {
     schema[output.name] = {
       type: output.type || 'string',
       description: output.description || '',
-      required: output.required !== false
+      required: output.required !== false,
+      // Preserve additional properties like editable, value, default
+      ...(output.editable !== undefined && { editable: output.editable }),
+      ...(output.value !== undefined && { value: output.value }),
+      ...(output.default !== undefined && { default: output.default })
     };
   });
   return schema;

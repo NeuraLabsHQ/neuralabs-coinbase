@@ -188,6 +188,7 @@ const FlowBuilder = ({ agentId, agentData }) => {
           });
         } catch (error) {
           console.error('Error loading workflow:', error);
+          console.log('Workflow data that failed to load:', workflow);
           
           // Fallback: Try to load directly if it's in the old format
           try {

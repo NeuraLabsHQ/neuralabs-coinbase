@@ -209,7 +209,7 @@ async def setup_flow_executor(flow_def: FlowDefinition, stream_manager, user_con
                           "element_id", "name", "processingMessage", "parametersObject", 
                           "hyperparameters", "position", "original_id", "x", "y", 
                           "inputs", "outputs", "code", "metadata", "templateId", 
-                          "parameter_schema_structure", "id"]
+                          "parameter_schema_structure", "id", "fieldAccess", "field_access"]
         additional_params = {k: v for k, v in node_data.dict().items() 
                            if k not in frontend_fields}
         
