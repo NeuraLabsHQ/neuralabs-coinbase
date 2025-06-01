@@ -97,6 +97,36 @@ class Constants(ElementBase):
             # Process all parameters as constants
             constants = {}
             
+            # First, check if output_schema has defaults we should use
+            # This handles the case where frontend defines constants in output_schema
+            if self.output_schema and not self.parameters:
+                logger.info(f"No parameters found, checking output_schema for defaults")
+                for output_name, output_config in self.output_schema.items():
+                    if isinstance(output_config, dict) and 'default' in output_config:
+                        # Try to convert the default value to the correct type
+                        default_value = output_config['default']
+                        output_type = output_config.get('type', 'string')
+                        
+                        try:
+                            if output_type == 'number' or output_type == 'float':
+                                constants[output_name] = float(default_value)
+                            elif output_type == 'int' or output_type == 'integer':
+                                constants[output_name] = int(default_value)
+                            elif output_type == 'bool' or output_type == 'boolean':
+                                constants[output_name] = str(default_value).lower() in ['true', '1', 'yes']
+                            elif output_type == 'json' or output_type == 'object':
+                                if isinstance(default_value, str):
+                                    constants[output_name] = json.loads(default_value)
+                                else:
+                                    constants[output_name] = default_value
+                            else:
+                                # Default to string
+                                constants[output_name] = str(default_value)
+                        except (ValueError, json.JSONDecodeError) as e:
+                            logger.warning(f"Failed to convert default value for {output_name}: {e}. Using as string.")
+                            constants[output_name] = str(default_value)
+            
+            # Then process parameters (these override schema defaults)
             for key, value in self.parameters.items():
                 # Handle environment variable references
                 if isinstance(value, str) and value.startswith("${") and value.endswith("}"):
