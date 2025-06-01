@@ -228,7 +228,7 @@ def map_node_type_to_element_type(node_type: str) -> str:
         'RandomGenerator': 'random_generator', 'random_generator': 'random_generator',
         'Time': 'time', 'time': 'time',
         'LLMText': 'llm_text', 'llm_text': 'llm_text',
-        'LLMStructured': 'llm_structured', 'llm_structured': 'llm_structured',
+        'LLMStructured': 'llm_structured', 'llm_structured': 'llm_structured', 'llmstructured': 'llm_structured',  # cspell:ignore llmstructured
         'ReadBlockchainData': 'read_blockchain_data', 'read_blockchain_data': 'read_blockchain_data',
         'BuildTransactionJSON': 'build_transaction_json', 'build_transaction_json': 'build_transaction_json',
         'Custom': 'custom', 'custom': 'custom',

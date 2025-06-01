@@ -267,8 +267,14 @@ class LLMStructured(ElementBase):
         
         return self.outputs
     
-    def _format_prompt(self, prompt: str, context: List[str], additional_data: Dict[str, Any], 
-                      wrapper_prompt: str, llm_hidden_prompt: str) -> str:
+    def _format_prompt(self, 
+                       prompt           : str, 
+                       context          : List[str], 
+                       additional_data  : Dict[str, Any], 
+                       wrapper_prompt   : str, 
+                       llm_hidden_prompt: str
+                       ) -> str:
+        
         """Format the complete prompt for structured generation."""
         # Format context as string
         context_str = "\n".join(context) if context else ""
@@ -283,7 +289,15 @@ class LLMStructured(ElementBase):
                 logger.warning(f"Error formatting additional data as JSON: {str(e)}")
         
         # Format output schema
-        schema_str = json.dumps(self.output_schema, indent=2)
+        # schema_str = json.dumps(self.output_schema, indent=2)
+        
+        
+        schema_dict = {}
+
+        for i in self.output_schema:
+            schema_dict[i] = self.output_schema[i]["type"]
+        
+        schema_str = json.dumps(schema_dict)
         
         # Combine user wrapper prompt with hidden prompt and schema
         user_part = ""
@@ -304,6 +318,10 @@ class LLMStructured(ElementBase):
         hidden_part = llm_hidden_prompt if llm_hidden_prompt else ""
         
         full_prompt = f"""
+        
+        
+        
+        
 {user_part}
 
 {hidden_part}

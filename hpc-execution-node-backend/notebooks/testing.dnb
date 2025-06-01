@@ -1,0 +1,124 @@
+{
+  "cells": [
+    {
+      "language": "python",
+      "value": "print(formatted_prompt)",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "print(structured_prompt)",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": " response_body['choices']",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "response_body",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "response_body['choices'][0]",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "response_body['content']",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "'message' in choice",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "choice['message']",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "choice['message']['content']",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "print(text_result)",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "schema_str",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "self.output_schema",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "schema_dict = {}\n\nfor i in self.output_schema:\n    schema_dict[i] = self.output_schema[i][\"type\"]",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "schema_dict",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "schema_str = json.dumps(schema_dict)",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "schema_str",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "print(full_prompt)",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "print(prompt)",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "response_body['choices'][0]['message']['content']",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "structured_output",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "self.inputs",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "formatted_prompt",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "print(llm_output)",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "",
+      "kind": 2
+    }
+  ]
+}

@@ -73,9 +73,10 @@ class DeepSeekModel(BaseModel):
             return text_result
             
         except Exception as e:
-            print(f"DEBUG: Error in generate_text: {str(e)}")
+            error_msg = f"Error in generate_text: {str(e)}"
+            print(f"DEBUG: {error_msg}")
             print(f"DEBUG: Request body: {request_body}")
-            return ""
+            raise RuntimeError(error_msg)
     
     async def generate_text_stream(self, 
                                  prompt: str, 
@@ -154,16 +155,18 @@ class DeepSeekModel(BaseModel):
         """Generate structured output according to a schema using DeepSeek models."""
         schema_prompt = json.dumps(output_schema, indent=2)
         
-        structured_prompt = f"""
-        You are a helpful assistant that generates structured data.
-        Please respond with JSON that follows this schema:
+        # structured_prompt = f"""
+        # You are a helpful assistant that generates structured data.
+        # Please respond with JSON that follows this schema:
         
-        {schema_prompt}
+        # {schema_prompt}
         
-        Human request: {prompt}
+        # Human request: {prompt}
         
-        Your JSON response:
-        """
+        # Your JSON response:
+        # """
+        
+        structured_prompt = prompt
         
         print(f"DEBUG: Structured prompt being sent:")
         print(f"DEBUG: {structured_prompt}")

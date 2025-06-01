@@ -8,7 +8,7 @@
             "name": "backend1 code executor",
             "type": "debugpy",
             "request": "launch",
-            "cwd": "${workspaceFolder}/backend/code_executor",
+            "cwd": "${workspaceFolder}/hpc-execution-node-backend/code_executor",
             "module": "uvicorn",
             "args": [
                 "app:app",
