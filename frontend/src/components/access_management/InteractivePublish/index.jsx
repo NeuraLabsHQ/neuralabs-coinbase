@@ -257,6 +257,94 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
     })
   }
   
+  // Handle resetting from a specific step (debug mode only)
+  const handleResetFromStep = (stepIndex) => {
+    console.log('Debug mode: Resetting from step', stepIndex)
+    console.log('Current journeyData before reset:', journeyData)
+    console.log('Steps to reset:', INTERACTIVE_PUBLISH_STEPS.slice(stepIndex))
+    
+    // Create the reset data object with specific fields to clear
+    const resetUpdates = {}
+    
+    // Always reset completedSteps array to only include steps before the reset point
+    if (journeyData.completedSteps) {
+      resetUpdates.completedSteps = journeyData.completedSteps.filter(step => step < stepIndex)
+    }
+    
+    // Reset completed steps for all steps from stepIndex onwards
+    INTERACTIVE_PUBLISH_STEPS.forEach((step, index) => {
+      if (index >= stepIndex) {
+        console.log(`Resetting step ${index}: ${step.id}`)
+        
+        // Remove completion data for this step based on its actual ID
+        switch(step.id) {
+          case 'wallet':
+            resetUpdates.walletConnected = false
+            resetUpdates.walletAddress = null
+            resetUpdates.account = null
+            break
+          case 'balances':
+            resetUpdates.suiBalance = null
+            resetUpdates.walBalance = null
+            break
+          case 'mint':
+            resetUpdates.nftId = null
+            resetUpdates.nftObjectId = null
+            resetUpdates.nftAddress = null
+            resetUpdates.nftName = ''
+            resetUpdates.nftDescription = ''
+            break
+          case 'accessCap':
+            resetUpdates.accessCapId = null
+            break
+          case 'grant':
+            // This step uses completedSteps array, which we already handled above
+            break
+          case 'verify':
+            resetUpdates.accessLevel = null
+            break
+          case 'seal':
+            resetUpdates.sealClient = null
+            break
+          case 'signature':
+            resetUpdates.sessionKey = null
+            resetUpdates.sessionKeySigned = false
+            resetUpdates.signatureCompleted = false
+            break
+          case 'file':
+            resetUpdates.selectedFile = null
+            break
+          case 'encrypt':
+            resetUpdates.encryptedData = null
+            break
+          case 'walrus':
+            resetUpdates.walrusBlobId = null
+            resetUpdates.walrusUrl = null
+            break
+          default:
+            console.warn(`Unknown step ID: ${step.id}`)
+        }
+      }
+    })
+    
+    console.log('Reset updates to apply:', resetUpdates)
+    
+    // Apply the updates
+    updateJourneyData(resetUpdates)
+    
+    // Set current step to the reset step
+    setCurrentStepState(stepIndex)
+    setAnimationPhase('idle')
+    setIncompletePrerequisites([])
+    
+    // Save the updated state
+    const updatedData = { ...journeyData, ...resetUpdates }
+    saveJourneyData(flowId, updatedData)
+    saveCurrentStep(flowId, stepIndex)
+    
+    toast.success(`Reset from step ${stepIndex + 1}: ${INTERACTIVE_PUBLISH_STEPS[stepIndex].title}`)
+  }
+
   // Handle signature callback for Seal session key
   useEffect(() => {
     const handleMessage = (event) => {
@@ -286,6 +374,7 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
             renderStepIcon={renderStepIcon}
             onStepClick={handleStepNavigation}
             onResetProgress={handleResetProgressWrapper}
+            onResetFromStep={handleResetFromStep}
           />
 
           {/* Conditional layout based on completion status */}

@@ -192,6 +192,17 @@
   color: var(--journey-text);
 }
 
+/* Progress Track */
+.progress-track {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0;
+}
+
+
+
 /* Steps */
 .progress-steps {
   display: flex;
@@ -261,6 +272,43 @@
   color: var(--journey-text-muted);
   margin-top: 8px;
   font-family: 'Monaco', 'Courier New', monospace;
+}
+
+/* Step Refresh Button (Debug Mode) */
+.step-refresh-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  padding: 4px;
+  background: var(--journey-card-bg);
+  border: 1px solid var(--journey-border);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  color: var(--journey-text-secondary);
+  z-index: 10;
+}
+
+.progress-step.completed:hover .step-refresh-button {
+  opacity: 0.7;
+}
+
+.step-refresh-button:hover {
+  opacity: 1 !important;
+  background: var(--journey-hover-bg);
+  color: var(--journey-warning-color);
+  border-color: var(--journey-warning-color);
+}
+
+.step-refresh-button svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* Right Stack Layout */
