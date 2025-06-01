@@ -225,6 +225,7 @@ const FlowBuilder = ({ agentId, agentData }) => {
                 sourceName: edge.sourceName || '',
                 targetName: edge.targetName || '',
                 mappings: edge.mappings || [],
+                connectionType: edge.connectionType || 'both',
                 sourcePort: edge.sourcePort || 0,
                 targetPort: edge.targetPort || 0
               }));
@@ -407,7 +408,7 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
   };
   
   // Handle saving connection from popup
-  const handleSaveConnection = (mappings) => {
+  const handleSaveConnection = (mappings, connectionType = 'both') => {
     if (!connectionSource || !connectionTarget) return;
     
     // Find existing edge if any
@@ -419,25 +420,27 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
     let updatedEdgesList;
     
     if (existingEdgeIndex >= 0) {
-      // Update existing edge with new mappings
+      // Update existing edge with new mappings and connection type
       const updatedEdges = [...edges];
       updatedEdges[existingEdgeIndex] = {
         ...updatedEdges[existingEdgeIndex],
         mappings,
         sourceName: connectionSource.name,
-        targetName: connectionTarget.name
+        targetName: connectionTarget.name,
+        connectionType
       };
       setEdges(updatedEdges);
       updatedEdgesList = updatedEdges;
     } else {
-      // Create new edge with mappings
+      // Create new edge with mappings and connection type
       const newEdge = {
         id: `edge-${Date.now()}`,
         source: connectionSource.id,
         target: connectionTarget.id,
         sourceName: connectionSource.name,
         targetName: connectionTarget.name,
-        mappings
+        mappings,
+        connectionType
       };
       const newEdges = [...edges, newEdge];
       setEdges(newEdges);
@@ -1325,6 +1328,7 @@ const handleSaveWorkflow = async () => {
           }
         }}
         existingMappings={selectedEdge?.mappings || []}
+        connectionType={selectedEdge?.connectionType || 'both'}
         allEdges={edges}
       />
     </Flex>

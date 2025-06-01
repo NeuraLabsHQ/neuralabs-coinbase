@@ -294,12 +294,28 @@ export const importFlowFromYAML = (yamlContent) => {
             sourceName: '', // Will be set from first mapping or left empty
             targetName: '', // Will be set from first mapping or left empty
             mappings: [],
+            connectionType: 'both', // Default to both
             sourcePort: 0,
             targetPort: 0
           });
         }
         
         const edge = edgeMap.get(edgeKey);
+        
+        // Update connection type based on the connections we see
+        if (conn.connection_type === 'control') {
+          // If we haven't seen any data connections yet, set to control only
+          if (edge.mappings.length === 0) {
+            edge.connectionType = 'control';
+          }
+        } else if (conn.connection_type === 'data') {
+          // If we see a data connection, update type accordingly
+          if (edge.connectionType === 'control') {
+            edge.connectionType = 'both';
+          } else {
+            edge.connectionType = 'data';
+          }
+        }
         
         // Add mapping if both output and input are specified
         if (conn.from_output && conn.to_input) {

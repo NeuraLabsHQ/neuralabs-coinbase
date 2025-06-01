@@ -38,7 +38,7 @@ const ConnectionPopup = ({
   const [mappings, setMappings] = useState([]);
   const [isValid, setIsValid] = useState(false);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
-  const [connectionType, setConnectionType] = useState(existingConnectionType);
+  const [connectionType, setConnectionType] = useState('both');
   
   const bgColor = useColorModeValue('white', 'gray.900');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
@@ -62,6 +62,13 @@ const ConnectionPopup = ({
   const buttonBg = useColorModeValue('blue.500', 'cyan.600');
   const buttonHoverBg = useColorModeValue('blue.600', 'cyan.700');
 
+  // Initialize connection type when modal opens
+  useEffect(() => {
+    if (isOpen && existingConnectionType) {
+      setConnectionType(existingConnectionType);
+    }
+  }, [isOpen, existingConnectionType]);
+  
   // Initialize mappings when modal opens
   useEffect(() => {
     if (isOpen && sourceNode && targetNode) {
@@ -71,16 +78,29 @@ const ConnectionPopup = ({
       
       // Initialize mappings based on existing mappings or create new ones
       const initialMappings = [];
-      for (let i = 0; i < maxRows; i++) {
-        const existingMapping = existingMappings.find(m => m.index === i);
+      
+      // First, add all existing mappings
+      existingMappings.forEach((mapping, idx) => {
+        initialMappings.push({
+          index: idx,
+          fromOutput: mapping.fromOutput || '',
+          toInput: mapping.toInput || '',
+          fromType: '',
+          toType: ''
+        });
+      });
+      
+      // Then add empty rows for remaining slots
+      for (let i = existingMappings.length; i < maxRows; i++) {
         initialMappings.push({
           index: i,
-          fromOutput: existingMapping?.fromOutput || '',
-          toInput: existingMapping?.toInput || '',
+          fromOutput: '',
+          toInput: '',
           fromType: '',
           toType: ''
         });
       }
+      
       setMappings(initialMappings);
     }
   }, [isOpen, sourceNode, targetNode, existingMappings]);
