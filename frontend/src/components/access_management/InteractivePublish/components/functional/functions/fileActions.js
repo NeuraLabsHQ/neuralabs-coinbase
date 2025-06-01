@@ -1,6 +1,9 @@
 import { encryptData, uploadToWalrus } from '../../../../../../utils/blockchain';
 import {agentAPI} from '../../../../../../utils/agent-api';
 
+import { initializeSealClient } from '../../../../../../utils/blockchain';
+
+
 export const selectFile = async (state, updateState, config) => {
   try {
     updateState({ loading: true, error: null });
@@ -94,10 +97,16 @@ export const encryptFile = async (state, updateState, config) => {
     console.log('Using Package ID:', finalConfig.PACKAGE_ID);
     console.log('Using NFT ID as Policy ID:', state.nftId);
     
+    const client = window.suiClient;
+
+    const sealClient = initializeSealClient(client);
+    
+    
     // Call encryptData with proper parameters
     // Package ID from config, NFT ID as policy ID
     const encryptResult = await encryptData(
-      state.sealClient,
+      // state.sealClient,
+      sealClient,
       {
         data: fileData,
         packageId: finalConfig.PACKAGE_ID,
