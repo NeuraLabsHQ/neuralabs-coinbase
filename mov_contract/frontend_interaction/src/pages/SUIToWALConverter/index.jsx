@@ -1,0 +1,162 @@
+import { convertSUIToWAL } from '../../utils/blockchain'
+import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
+import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
+import { getSuiBalance, getWalBalance, formatBalance } from '../../blockchain_module/exchange'
+import { BalanceDisplay } from './components/BalanceDisplay'
+import { ConversionForm } from './components/ConversionForm'
+import { HowItWorks } from './components/HowItWorks'
+import { ImportantNotes } from './components/ImportantNotes'
+import { TransactionDetails } from './components/TransactionDetails'
+import { TestBalance } from './components/TestBalance'
+
+/**
+ * SUI to WAL Token Converter Page Component
+ * Converts SUI tokens to Walrus (WAL) tokens using the exchange contract
+ */
+function SUIToWALConverter({ config }) {
+  const account = useCurrentAccount()
+  const client = useSuiClient()
+  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction()
+  
+  const [suiBalance, setSuiBalance] = useState('0')
+  const [walBalance, setWalBalance] = useState('0')
+  const [convertAmount, setConvertAmount] = useState('')
+  const [isConverting, setIsConverting] = useState(false)
+  const [exchangeRate] = useState('1:1') // Default rate
+
+  // Exchange contract configuration from config
+  const EXCHANGE_CONFIG = {
+    PACKAGE_ID: config.EXCHANGE_PACKAGE_ID,
+    SHARED_OBJECT_ID: config.EXCHANGE_SHARED_OBJECT_ID,
+    INITIAL_SHARED_VERSION: config.EXCHANGE_INITIAL_SHARED_VERSION
+  }
+
+  // WAL Token configuration from config
+  const WAL_TOKEN_TYPE = config.WAL_TOKEN_TYPE
+
+  // Load balances
+  const loadBalances = async () => {
+    if (!account || !client) return
+
+    try {
+      // Get SUI balance
+      const suiBalanceData = await getSuiBalance(client, account.address)
+      setSuiBalance(formatBalance(suiBalanceData.totalBalance, 9))
+
+      // Get WAL balance
+      const walBalanceData = await getWalBalance(client, account.address, WAL_TOKEN_TYPE)
+      setWalBalance(formatBalance(walBalanceData.totalBalance, 9))
+    } catch (error) {
+      console.error('Error loading balances:', error)
+      toast.error('Failed to load balances')
+    }
+  }
+
+  // Convert SUI to WAL
+  const handleConvertSUIToWAL = async () => {
+    if (!account || !convertAmount) {
+      toast.error('Please enter an amount to convert')
+      return
+    }
+
+    const amount = parseFloat(convertAmount)
+    if (amount <= 0 || amount > parseFloat(suiBalance)) {
+      toast.error('Invalid amount or insufficient SUI balance')
+      return
+    }
+
+    setIsConverting(true)
+    const toastId = toast.loading('Converting SUI to WAL...')
+
+    try {
+      await convertSUIToWAL({
+        amount,
+        senderAddress: account.address,
+        exchangeConfig: EXCHANGE_CONFIG,
+        client,
+        signAndExecute: signAndExecuteTransaction,
+        config,
+        currentAccount: account
+      })
+
+      toast.success(`Successfully converted ${amount} SUI to WAL!`, { id: toastId })
+      
+      // Reload balances
+      setTimeout(() => {
+        loadBalances()
+      }, 2000)
+      
+      // Reset form
+      setConvertAmount('')
+    } catch (error) {
+      console.error('Error converting SUI to WAL:', error)
+      toast.error(`Conversion failed: ${error.message}`, { id: toastId })
+    } finally {
+      setIsConverting(false)
+    }
+  }
+
+  // Load balances on mount and when account or client changes
+  useEffect(() => {
+    if (account && client) {
+      loadBalances()
+      // Refresh balances every 30 seconds
+      const interval = setInterval(loadBalances, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [account, client])
+
+  if (!account) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-600">Please connect your wallet to use the SUI to WAL converter.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-semibold mb-4">SUI to WAL Token Converter</h2>
+        <p className="text-gray-600 mb-4">
+          Convert your SUI tokens to Walrus (WAL) tokens to pay for Walrus storage fees.
+        </p>
+      </div>
+
+      {/* Test Balance Component */}
+      <TestBalance />
+
+      {/* Balance Display */}
+      <BalanceDisplay
+        suiBalance={suiBalance}
+        walBalance={walBalance}
+        onRefresh={loadBalances}
+      />
+
+      {/* Conversion Form */}
+      <ConversionForm
+        suiBalance={suiBalance}
+        convertAmount={convertAmount}
+        setConvertAmount={setConvertAmount}
+        exchangeRate={exchangeRate}
+        isConverting={isConverting}
+        onConvert={handleConvertSUIToWAL}
+      />
+
+      {/* Transaction Details */}
+      <TransactionDetails
+        exchangeConfig={EXCHANGE_CONFIG}
+        walTokenType={WAL_TOKEN_TYPE}
+      />
+
+      {/* How it Works */}
+      <HowItWorks />
+
+      {/* Important Notes */}
+      <ImportantNotes />
+    </div>
+  )
+}
+
+export default SUIToWALConverter

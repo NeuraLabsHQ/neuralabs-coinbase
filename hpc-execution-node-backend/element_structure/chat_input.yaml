@@ -1,0 +1,68 @@
+type: chat_input
+element_id: null  # Auto-generated at L2
+name: null  # Set by L2
+node_description: Captures user text input for processing
+description: null  # Customizable by L2
+input_schema: {}  # No inputs - receives from L3 user
+output_schema:
+  chat_input:
+    type: string
+    description: The text entered by the user
+    required: true
+parameter_schema_structure:
+  placeholder:
+    type: string
+    description: Placeholder text shown in input field
+  max_length:
+    type: int
+    description: Maximum character length allowed
+  min_length:
+    type: int
+    description: Minimum character length required
+  validation_pattern:
+    type: string
+    description: Regex pattern for input validation
+  required:
+    type: bool
+    description: Whether input is required
+parameters:
+  placeholder: "Enter your message..."
+  max_length: 1000
+  min_length: 1
+  validation_pattern: null
+  required: true
+processing_message: Receiving input...
+tags:
+- input
+- user-interaction
+- text
+layer: null  # Set by L2
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: fixed
+  parameters.placeholder:
+    access: edit
+  parameters.max_length:
+    access: edit
+  parameters.min_length:
+    access: edit
+  parameters.validation_pattern:
+    access: edit
+  parameters.required:
+    access: edit
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit

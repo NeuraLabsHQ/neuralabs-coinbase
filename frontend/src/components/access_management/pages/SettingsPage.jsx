@@ -1,28 +1,25 @@
 // src/components/access_management/pages/SettingsPage.jsx
-import React, { useState } from 'react';
-import { 
-  Box, 
-  VStack, 
-  HStack,
-  Text, 
-  Button,
-  Input,
-  Textarea,
-  FormControl,
-  FormLabel,
-  Select,
-  Tag,
-  TagLabel,
-  TagCloseButton,
-  InputGroup,
-  InputLeftAddon,
-  useColorModeValue,
-  useToast,
-  Heading,
-  Divider,
-  IconButton
+import {
+    Box,
+    Button,
+    FormControl,
+    FormLabel,
+    Heading,
+    HStack,
+    Input,
+    InputGroup,
+    InputLeftAddon,
+    Select,
+    Tag,
+    TagCloseButton,
+    TagLabel,
+    Textarea,
+    useColorModeValue,
+    useToast,
+    VStack
 } from '@chakra-ui/react';
-import { FiSave, FiTwitter, FiGithub, FiLinkedin, FiGlobe } from 'react-icons/fi';
+import { useState } from 'react';
+import { FiGithub, FiGlobe, FiLinkedin, FiSave, FiTwitter } from 'react-icons/fi';
 import colors from '../../../color';
 import { agentAPI } from '../../../utils/agent-api';
 

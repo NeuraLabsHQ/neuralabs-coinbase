@@ -279,9 +279,11 @@ async def move_workflow_to_published(pg_conn, agent_id, user_pub_key) -> Tuple[b
         """
         await pg_conn.execute_query(published_insert_query, (agent_id, datetime.now(), workflow_json, md5))
     
+    
+    # Dont change this, do not remove unpublished agent     
     # Delete from UNPUBLISHED_AGENT
-    delete_query = "DELETE FROM UNPUBLISHED_AGENT WHERE agent_id = %s"
-    await pg_conn.execute_query(delete_query, (agent_id,))
+    # delete_query = "DELETE FROM UNPUBLISHED_AGENT WHERE agent_id = %s"
+    # await pg_conn.execute_query(delete_query, (agent_id,))
     
     return True, None
 
@@ -325,7 +327,7 @@ async def update_blockchain_data(pg_conn, agent_id, blockchain_data, chain_id) -
         update_query = """
         UPDATE BLOCKCHAIN_AGENT_DATA
         SET version = %s, published_date = %s, published_hash = %s, 
-            contract_id = %s, nft_id = %s, nft_mint_trx_id = %s
+            contract_id = %s, nft_id = %s, nft_mint_trx_id = %s, other_data = %s
         WHERE agent_id = %s
         """
         params = (
@@ -335,6 +337,7 @@ async def update_blockchain_data(pg_conn, agent_id, blockchain_data, chain_id) -
             contract_id,
             nft_id,
             blockchain_data.get("nft_mint_trx_id"),
+            json.dumps(blockchain_data.get("other_data", {})) if blockchain_data.get("other_data") else None,
             agent_id
         )
         
@@ -344,8 +347,8 @@ async def update_blockchain_data(pg_conn, agent_id, blockchain_data, chain_id) -
         insert_query = """
         INSERT INTO BLOCKCHAIN_AGENT_DATA (
             agent_id, version, published_date, published_hash, 
-            contract_id, nft_id, nft_mint_trx_id
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            contract_id, nft_id, nft_mint_trx_id, other_data
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """
         params = (
             agent_id,
@@ -354,7 +357,8 @@ async def update_blockchain_data(pg_conn, agent_id, blockchain_data, chain_id) -
             blockchain_data.get("published_hash"),
             contract_id,
             nft_id,
-            blockchain_data.get("nft_mint_trx_id")
+            blockchain_data.get("nft_mint_trx_id"),
+            json.dumps(blockchain_data.get("other_data", {})) if blockchain_data.get("other_data") else None
         )
         
         await pg_conn.execute_query(insert_query, params)

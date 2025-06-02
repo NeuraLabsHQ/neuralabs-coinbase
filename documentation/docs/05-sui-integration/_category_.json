@@ -1,0 +1,8 @@
+{
+  "label": "SUI Integration",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "description": "Complete SUI blockchain integration including smart contracts, zkLogin authentication, Seal encryption, and Walrus storage."
+  }
+}

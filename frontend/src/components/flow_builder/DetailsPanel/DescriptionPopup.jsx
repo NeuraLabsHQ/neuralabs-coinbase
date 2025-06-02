@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from 'react';
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  ModalCloseButton,
-  Button,
-  Textarea,
-  Text,
-  Box,
-  useColorModeValue,
+    Box,
+    Button,
+    Modal,
+    ModalBody,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
+    Text,
+    Textarea,
+    useColorModeValue
 } from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
 
 const DescriptionPopup = ({ 
   isOpen, 

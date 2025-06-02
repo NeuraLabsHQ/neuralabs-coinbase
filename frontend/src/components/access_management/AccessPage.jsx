@@ -1,11 +1,12 @@
 // src/components/access_management/AccessPage.jsx
-import React, { useState, useEffect } from 'react';
 import { Flex, useToast } from '@chakra-ui/react';
-import AccessSidebar from './AccessSidebar';
-import AccessMainContent from './AccessMainContent';
-import AccessDetailPanel from './AccessDetailPanel';
+import { useState } from 'react';
 import { accessManagementApi } from '../../utils/access-api';
+import AccessDetailPanel from './AccessDetailPanel';
 import AccessHomePage from './AccessHomePage';
+import AccessMainContent from './AccessMainContent';
+import AccessSidebar from './AccessSidebar';
+import SwapPage from './pages/SwapPage';
 
 const AccessPage = () => {
   const [view, setView] = useState('home'); // Default to home view
@@ -63,6 +64,8 @@ const AccessPage = () => {
         />
       ) : view === 'home' ? (
         <AccessHomePage onSelectFlow={handleFlowSelect} />
+      ) : view === 'swap' ? (
+        <SwapPage />
       ) : (
         <AccessMainContent 
           currentView={view}

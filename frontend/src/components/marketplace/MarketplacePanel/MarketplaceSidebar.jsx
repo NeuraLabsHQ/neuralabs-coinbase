@@ -1,22 +1,18 @@
 // src/components/marketplace/MarketplacePanel/MarketplacePanel.jsx
-import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Flex, 
-  Heading, 
-  Input, 
-  IconButton, 
-  Text, 
-  SimpleGrid,
-  Tag,
-  Divider,
-  Spinner,
-  useColorModeValue, 
+import {
+    Box,
+    Flex,
+    Heading,
+    IconButton,
+    Input,
+    SimpleGrid,
+    Spinner,
+    Text,
+    useColorModeValue
 } from '@chakra-ui/react';
-import { 
-  FiX, 
-  FiSearch,
-  FiStar,
+import { useEffect, useState } from 'react';
+import {
+    FiX
 } from 'react-icons/fi';
 import { marketplaceApi } from '../../../utils/api';
 

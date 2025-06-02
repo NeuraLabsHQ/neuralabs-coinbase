@@ -1,15 +1,15 @@
 // src/components/access_management/pages/PublishPage.jsx
-import React, { useState } from 'react';
-import { 
-  Box, 
-  VStack,
-  useColorModeValue,
-  Center,
-  Button
+import {
+    Box,
+    Button,
+    Center,
+    VStack,
+    useColorModeValue
 } from '@chakra-ui/react';
+import { useState } from 'react';
 import { FiSend } from 'react-icons/fi';
-import PublishModal from '../Popup/PublishModal';
 import colors from '../../../color';
+import PublishModal from '../Popup/PublishModal';
 
 const PublishPage = ({ agentData, onUpdate }) => {
   const [isModalOpen, setIsModalOpen] = useState(true);

@@ -1,0 +1,94 @@
+{
+  "cells": [
+    {
+      "language": "python",
+      "value": "data",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "data.dict()[\"other_data\"]",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "blockchain_data.get(\"contract_id\")",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "blockchain_data.get(\"contract_version\", \"1.0.0\")",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "blockchain_data.keys()",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "blockchain_data.get(\"nft_id\")",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "params = (\n    agent_id,\n    blockchain_data.get(\"version\"),\n    datetime.now() if blockchain_data.get(\"published_date\") is None else blockchain_data.get(\"published_date\"),\n    blockchain_data.get(\"published_hash\"),\n    contract_id,\n    nft_id,\n    blockchain_data.get(\"nft_mint_trx_id\"),\n    json.dumps(blockchain_data.get(\"other_data\", {})) if blockchain_data.get(\"other_data\") else None\n)",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "params",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "len(params[1])",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "params[1]",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "agent_id",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "agent_id",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "user_pub_key",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "flow_detail",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "flow_detail[\"markdown_object\"] = \"\"",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "flow_detail",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "flow_detail[\"other_data\"]",
+      "kind": 2
+    },
+    {
+      "language": "python",
+      "value": "",
+      "kind": 2
+    }
+  ]
+}

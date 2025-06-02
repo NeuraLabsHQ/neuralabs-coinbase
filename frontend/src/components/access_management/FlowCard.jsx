@@ -1,17 +1,16 @@
 // src/components/access_management/FlowCard.jsx - Fixed version
-import React, { useState } from 'react';
-import { 
-  Box, 
-  Flex, 
-  Text, 
-  Button, 
-  Center, 
-  useColorModeValue,
-  VStack,
-  HStack,
-  Badge,
-  Tooltip
+import {
+    Badge,
+    Box,
+    Button,
+    Center,
+    HStack,
+    Text,
+    Tooltip,
+    useColorModeValue,
+    VStack
 } from '@chakra-ui/react';
+import { useState } from 'react';
 import colors from '../../color';
 
 const FlowCard = ({ flow, onClick }) => {

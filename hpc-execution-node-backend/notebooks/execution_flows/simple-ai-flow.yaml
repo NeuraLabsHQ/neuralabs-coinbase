@@ -1,121 +1,243 @@
-flow_id: simple_ai_flow
-flow_definition:
-  flow_id: simple_ai_flow
-  elements:
-    start_node:
-      type: start
-      element_id: start_node
-      name: Start Block
-      description: Entry point of the flow
-      input_schema: {}
-      output_schema: {}
-    chat_input:
-      type: chat_input
-      element_id: chat_input
-      name: User Input
-      description: Captures the user's message
-      input_schema:
-        chat_input:
-          type: string
-          description: The input provided by the user
-          required: true
-      output_schema:
-        chat_input:
-          type: string
-          description: The input provided by the user
-          required: true
-    context_history:
-      type: context_history
-      element_id: context_history
-      name: Conversation Context
-      description: Provides conversation history for context
-      input_schema:
-        context_history:
-          type: list
-          description: List of previous messages
-          required: false
-      output_schema:
-        context_history:
-          type: list
-          description: List of previous messages
-          required: false
-    llm_text:
-      type: llm_text
-      element_id: llm_text
-      name: AI Text Generator
-      description: Generates a response using the LLM
-      input_schema:
-        prompt:
-          type: string
-          description: The prompt for the LLM
-          required: true
-        context:
-          type: list
-          description: Context for the LLM
-          required: false
-        additional_data:
-          type: json
-          description: Additional data for the LLM
-          required: false
-      output_schema:
-        llm_output:
-          type: string
-          description: Generated text from the LLM
-          required: true
-      # model: anthropic.claude-3-sonnet-20240229-v1:0
-      # model: deepseek.r1-v1:0
-      # model: arn:aws:bedrock:us-east-1:559050205657:inference-profile/us.deepseek.r1-v1:0
-      # model: arn:aws:bedrock:us-east-2:559050205657:inference-profile/us.deepseek.r1-v1:0
-      # model: arn:aws:bedrock:us-east-2:559050205657:foundation-model/meta.llama3-3-70b-instruct-v1:0
-      
+# Simple AI Conversational Flow
+# Complete flow definition with proper schemas following HPC Neura documentation
+
+flow_id: "flow_simple_ai_20250127_001"
+
+# 1. INPUTS - Initial data mapped to nodes
+inputs:
+  start_001:
+    "start_001:user_message": "What is artificial intelligence?"
+    "start_001:language": "en"
+
+# 2. NODES - Instances created from elements
+nodes:
+  # Entry point
+  start_001:
+    type: "start"
+    element_id: "start_001"
+    name: "Flow Start"
+    description: "Entry point of a flow that receives initial inputs and passes them forward"
+    input_schema: {}  # No fixed inputs - accepts any data
+    output_schema: {}  # Outputs mirror inputs
+    parameter_schema_structure: {}  # No parameters
+    parameters: {}
+    processing_message: "Starting flow..."
+    tags:
+      - flow-control
+      - required
+    layer: "input"
+    
+  # Conversation history
+  context_history_001:
+    type: "context_history"
+    element_id: "context_history_001"
+    name: "Conversation Memory"
+    description: "Provides access to conversation history and previous interactions"
+    input_schema: {}  # No inputs - retrieves from session
+    output_schema:
+      history:
+        type: list
+        description: "Array of previous conversation messages"
+        required: true
+    parameter_schema_structure:
+      max_messages:
+        type: int
+        description: "Maximum number of messages to retrieve"
+      include_system:
+        type: bool
+        description: "Whether to include system messages"
+      format:
+        type: string
+        enum: ["full", "text_only", "structured"]
+        description: "Output format for messages"
+      filter_by_role:
+        type: string
+        enum: ["all", "user", "assistant", "system"]
+        description: "Filter messages by role"
+    parameters:
+      max_messages: 5
+      include_system: false
+      format: "full"
+      filter_by_role: "all"
+    processing_message: "Loading conversation history..."
+    tags:
+      - input
+      - context
+      - history
+    layer: "context"
+    
+  # AI text generator
+  llm_text_001:
+    type: "llm_text"
+    element_id: "llm_text_001"
+    name: "AI Assistant"
+    description: "Generates free-form text using a language model"
+    input_schema:
+      prompt:
+        type: string
+        description: "The prompt for the LLM"
+        required: true
+      context:
+        type: list
+        description: "Previous conversation context"
+        required: false
+      additional_data:
+        type: json
+        description: "Additional data for the LLM"
+        required: false
+    output_schema:
+      llm_output:
+        type: string
+        description: "Generated text response"
+        required: true
+    parameter_schema_structure:
+      model:
+        type: string
+      temperature:
+        type: float
+        min: 0.0
+        max: 1.0
+      max_tokens:
+        type: int
+      wrapper_prompt:
+        type: string
+    parameters:
+      model: "llama-3.3-70b"
       temperature: 0.7
-      max_tokens: 1000
-      wrapper_prompt: "You are a helpful AI assistant. Please respond to the following: {prompt}\n\nContext: {context}, enclose the chain of thought inside <think> Thought </think> tags. and answer within <answer> </answer> tags." 
-    end_node:
-      type: end
-      element_id: end_node
-      name: End Block
-      description: Exit point of the flow
-      input_schema:
-        text_input:
-          type: string
-          description: Text output to return to the user
-          required: true
-        proposed_transaction:
-          type: json
-          description: Transaction to be sent to the blockchain
-          required: false
-      output_schema:
-        text_output:
-          type: string
-          description: Final text output
-          required: true
-        proposed_transaction:
-          type: json
-          description: Final transaction payload
-          required: false
-  connections:
-    - from_id: start_node
-      to_id: llm_text
-    - from_id: chat_input
-      to_id: llm_text
-      from_output: chat_input
-      to_input: prompt
-    - from_id: context_history
-      to_id: llm_text
-      from_output: context_history
-      to_input: context
-    - from_id: llm_text
-      to_id: end_node
-      from_output: llm_output
-      to_input: text_input
-  start_element_id: start_node
-  metadata:
-    name: Simple AI Flow
-    description: A simple flow that takes user input and generates a response using an LLM
-initial_inputs:
-  chat_input:
-    chat_input: How to write a python script?
-  context_history:
-    context_history:
-      - Hello, I'm a harsh
+      max_tokens: 800
+      wrapper_prompt: |
+        You are a helpful and knowledgeable AI assistant. Use the conversation context to provide relevant and coherent responses.
+        
+        Previous conversation:
+        {context}
+        
+        Current user message: {prompt}
+        
+        Please provide a helpful, informative response:
+    processing_message: "AI is generating response..."
+    tags:
+      - ai
+      - llm
+      - text-generation
+    layer: "ai-processing"
+    
+  # Exit point
+  end_001:
+    type: "end"
+    element_id: "end_001"
+    name: "Flow End"
+    description: "Exit point of a flow that collects final outputs including text and optional blockchain transactions"
+    input_schema:
+      text_input:
+        type: string
+        description: "Final text output of the flow"
+        required: true
+      proposed_transaction:
+        type: json
+        description: "Transaction data for blockchain interaction"
+        required: false
+    output_schema:
+      text_output:
+        type: string
+        description: "Final text output"
+        required: true
+      proposed_transaction:
+        type: json
+        description: "Final transaction payload"
+        required: false
+    parameter_schema_structure: {}  # No parameters
+    parameters: {}
+    processing_message: "Completing flow..."
+    tags:
+      - flow-control
+      - required
+    layer: "output"
+
+# 3. CONNECTIONS - Data flow definitions
+connections:
+  # Start connections
+  - from_id: "start_001"
+    to_id: "context_history_001"
+    connection_type: "control"
+    
+  - from_id: "start_001"
+    to_id: "llm_text_001"
+    connection_type: "control"
+    
+  # Data flow to LLM
+  - from_id: "start_001"
+    to_id: "llm_text_001"
+    from_output: "start_001:user_message"
+    to_input: "llm_text_001:prompt"
+    connection_type: "data"
+    
+  - from_id: "context_history_001"
+    to_id: "llm_text_001"
+    from_output: "context_history_001:history"
+    to_input: "llm_text_001:context"
+    connection_type: "data"
+    
+  # LLM output to end
+  - from_id: "llm_text_001"
+    to_id: "end_001"
+    from_output: "llm_text_001:llm_output"
+    to_input: "end_001:text_input"
+    connection_type: "both"
+
+# 4. START ELEMENT - Entry point
+start_element: "start_001"
+
+# 5. METADATA - Execution context
+metadata:
+  execution_context:
+    # L3 User information
+    user_id: "user_123"
+    user_name: "Test User"
+    user_email: "test@example.com"
+    wallet_address: "0x742d35Cc6634C0532925a3b844Bc9e7595f6E123"
+    
+    # Session information
+    session_id: "session_456"
+    session_count: 3
+    last_interaction: "2025-01-27T09:30:00Z"
+    
+    # Execution environment
+    environment: "test"
+    region: "us-west-2"
+    execution_start: "2025-01-27T10:00:00Z"
+    
+    # Conversation history
+    conversation_history:
+      - role: "user"
+        content: "Hello, can you help me understand technology?"
+        timestamp: "2025-01-27T09:55:00Z"
+        metadata:
+          message_id: "msg_001"
+          session_id: "session_456"
+      - role: "assistant"
+        content: "Hello! I'd be happy to help you understand technology. What specific aspect would you like to learn about?"
+        timestamp: "2025-01-27T09:55:15Z"
+        metadata:
+          message_id: "msg_002"
+          model: "llama-3.3-70b"
+    
+    # Custom context
+    feature_flags:
+      premium_features: true
+      ai_suggestions: true
+      blockchain_integration: false
+      
+  # Flow-level configuration
+  flow_config:
+    timeout_seconds: 300
+    max_retries: 3
+    stream_responses: true
+    
+  # Flow metadata
+  flow_info:
+    name: "Simple AI Conversational Assistant"
+    description: "Basic AI assistant with conversation memory"
+    version: "1.0.0"
+    tags: ["ai", "conversation", "assistant"]
+
+

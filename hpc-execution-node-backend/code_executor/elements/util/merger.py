@@ -10,7 +10,8 @@ class Merger(ElementBase):
     """Merger element for combining multiple data inputs."""
     
     def __init__(self, element_id: str, name: str, description: str,
-                 input_schema: Dict[str, Any], output_schema: Dict[str, Any]):
+                 input_schema: Dict[str, Any], output_schema: Dict[str, Any],
+                 parameters: Dict[str, Any] = None, **kwargs):
         super().__init__(
             element_id=element_id,
             name=name,
@@ -51,14 +52,14 @@ class Merger(ElementBase):
         return self.outputs
     
     def _merge_data(self, data1: Any, data2: Any) -> Any:
-        """Merge two data items based on their types."""
-        # If either is None, return the other
+        """Merge two data items based on their types following documented behavior."""
+        # If either is None/undefined, return the non-null value
         if data1 is None:
-            return copy.deepcopy(data2)
+            return copy.deepcopy(data2) if data2 is not None else None
         if data2 is None:
             return copy.deepcopy(data1)
         
-        # Dictionaries: merge keys
+        # Object + Object: Deep merge (recursive)
         if isinstance(data1, dict) and isinstance(data2, dict):
             result = copy.deepcopy(data1)
             for key, value in data2.items():
@@ -66,31 +67,37 @@ class Merger(ElementBase):
                     # Recursively merge nested dictionaries
                     result[key] = self._merge_data(result[key], value)
                 else:
-                    # Otherwise just overwrite
+                    # Otherwise data2 overwrites data1
                     result[key] = copy.deepcopy(value)
             return result
         
-        # Lists: concatenate
+        # Array + Array: Concatenated array
         elif isinstance(data1, list) and isinstance(data2, list):
             return copy.deepcopy(data1) + copy.deepcopy(data2)
         
-        # Strings: concatenate
-        elif isinstance(data1, str) and isinstance(data2, str):
-            return data1 + data2
+        # Object + Primitive: Object with primitive as property
+        elif isinstance(data1, dict) and not isinstance(data2, (dict, list)):
+            result = copy.deepcopy(data1)
+            result['_merged_value'] = data2
+            return result
         
-        # Numbers: add
-        elif isinstance(data1, (int, float)) and isinstance(data2, (int, float)):
-            return data1 + data2
+        # Primitive + Object: Object with primitive as property
+        elif not isinstance(data1, (dict, list)) and isinstance(data2, dict):
+            result = copy.deepcopy(data2)
+            result['_merged_value'] = data1
+            return result
         
-        # Booleans: logical OR
-        elif isinstance(data1, bool) and isinstance(data2, bool):
-            return data1 or data2
+        # Primitive + Primitive: Object containing both
+        elif not isinstance(data1, (dict, list)) and not isinstance(data2, (dict, list)):
+            return {
+                'data1': copy.deepcopy(data1),
+                'data2': copy.deepcopy(data2)
+            }
         
-        # Mixed types: convert to strings and concatenate
-        elif isinstance(data1, (str, int, float, bool)) and isinstance(data2, (str, int, float, bool)):
-            return str(data1) + str(data2)
-        
-        # Default: return data2 (overwrite data1)
+        # Mixed types (any other combination): Wrap in container object
         else:
-            logger.warning(f"Cannot merge data types {type(data1)} and {type(data2)}, using data2")
-            return copy.deepcopy(data2)
+            logger.debug(f"Merging mixed types {type(data1).__name__} and {type(data2).__name__}")
+            return {
+                'data1': copy.deepcopy(data1),
+                'data2': copy.deepcopy(data2)
+            }

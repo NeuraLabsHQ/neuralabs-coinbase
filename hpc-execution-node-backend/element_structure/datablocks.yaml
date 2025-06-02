@@ -1,0 +1,63 @@
+type: datablock
+element_id: null  # Auto-generated at L2
+name: null  # Set by L2
+node_description: Stores and provides static data for use in flows
+description: null  # Customizable by L2
+input_schema: {}  # No inputs - data is embedded
+output_schema:
+  data:
+    type: any
+    description: The stored data in specified format
+    required: true
+parameter_schema_structure:
+  data:
+    type: any
+    description: The actual data to store
+  format:
+    type: string
+    enum: ["json", "csv", "text", "yaml"]
+    description: Data format type
+  parse_csv:
+    type: bool
+    description: Whether to parse CSV into objects
+  csv_headers:
+    type: list
+    description: Custom headers for CSV data
+parameters:
+  data: null  # Set by L2
+  format: "json"
+  parse_csv: true
+  csv_headers: null
+processing_message: Loading data...
+tags:
+- input
+- static-data
+- configuration
+layer: null  # Set by L2
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: fixed
+  parameters.data:
+    access: edit
+  parameters.format:
+    access: edit
+  parameters.parse_csv:
+    access: edit
+  parameters.csv_headers:
+    access: edit
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit

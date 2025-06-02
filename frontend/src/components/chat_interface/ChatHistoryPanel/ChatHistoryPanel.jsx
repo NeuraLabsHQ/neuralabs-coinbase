@@ -1,5 +1,4 @@
 
-import React from 'react';
 import { 
   Box, 
   VStack, 
@@ -41,8 +40,8 @@ const ChatHistoryPanel = ({
   setNewTitle
 }) => {
   // Colors that adapt to light/dark mode
-  const bgColor = useColorModeValue(colors.chat.bgTertiary.light, colors.gray[800]);
-  const borderColor = useColorModeValue(colors.chat.borderColor.light, colors.chat.borderLight.dark);
+  const bgColor = useColorModeValue(colors.chat.bgTertiary.light, colors.chat.bgTertiary.dark);
+  const borderColor = useColorModeValue(colors.chat.borderColor.light, colors.chat.borderColor.dark);
   const textColor = useColorModeValue(colors.chat.textPrimary.light, colors.chat.textPrimary.dark);
   const mutedTextColor = useColorModeValue(colors.chat.textMuted.light, colors.chat.textMuted.dark);
   const selectedBgColor = useColorModeValue(colors.chat.bgSelected.light, colors.chat.bgSelected.dark);
@@ -172,7 +171,28 @@ const ChatHistoryPanel = ({
           </Text>
         </Box>
         
-        <VStack spacing={0} align="stretch" flex="1" overflowY="auto">
+        <VStack 
+          spacing={0} 
+          align="stretch" 
+          flex="1" 
+          overflowY="auto"
+          overflowX="hidden"
+          sx={{
+            '&::-webkit-scrollbar': {
+              width: '6px',
+            },
+            '&::-webkit-scrollbar-track': {
+              bg: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              bg: borderColor,
+              borderRadius: '3px',
+            },
+            '&::-webkit-scrollbar-thumb:hover': {
+              bg: mutedTextColor,
+            },
+          }}
+        >
           {chats.map(chat => (
             <Box 
               key={chat.id} 
@@ -227,7 +247,7 @@ const ChatHistoryPanel = ({
                 >
                   <Flex align="center">
                     <Box as={FiMessageCircle} mr={2} color={iconColor} />
-                    <Text color={textColor} fontSize="sm" isTruncated>{chat.title}</Text>
+                    <Text color={textColor} fontSize="sm" isTruncated maxW="180px">{chat.title}</Text>
                   </Flex>
                   <Flex 
                     visibility="hidden" 

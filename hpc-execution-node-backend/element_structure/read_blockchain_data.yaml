@@ -1,0 +1,81 @@
+type: read_blockchain_data
+element_id: null  # Auto-generated at L2
+name: null  # Set by L2
+node_description: Reads data from blockchain networks including contract states, balances, and transaction history
+description: null  # Customizable by L2
+input_schema:
+  query_type:
+    type: string
+    description: Type of blockchain query to perform
+    enum: ["balance", "object", "transaction", "events", "contract_call"]
+    required: true
+  address:
+    type: string
+    description: Wallet address or object ID to query
+    required: false
+  parameters:
+    type: json
+    description: Additional parameters specific to query type
+    required: false
+output_schema:
+  data:
+    type: json
+    description: Query result data
+    required: true
+  success:
+    type: bool
+    description: Whether the query succeeded
+    required: true
+  error:
+    type: string
+    description: Error message if query failed
+    required: false
+  metadata:
+    type: json
+    description: Additional metadata about the query
+    required: false
+  parameter_schema_structure:
+    node_url:
+      type: string
+      description: RPC endpoint URL
+    network:
+      type: string
+      enum: ["mainnet", "testnet", "devnet"]
+    api_key:
+      type: string
+      description: API key for RPC provider
+parameters:
+  node_url: "https://fullnode.mainnet.sui.io"
+  network: "mainnet"
+  api_key: ""
+processing_message: Reading blockchain data...
+tags:
+- blockchain
+- sui
+- read-only
+layer: null
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: fixed
+  parameters.node_url:
+    access: edit
+  parameters.network:
+    access: edit
+  parameters.api_key:
+    access: hidden
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit

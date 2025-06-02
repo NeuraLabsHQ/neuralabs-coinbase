@@ -1,32 +1,32 @@
 // src/components/access_management/AgentDetailPage.jsx
-import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Flex, 
-  useToast,
-  Spinner,
-  Center,
-  Text
+import {
+    Box,
+    Center,
+    Flex,
+    Spinner,
+    Text,
+    useToast
 } from '@chakra-ui/react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import colors from '../../color';
+import { accessManagementApi } from '../../utils/access-api';
 import AccessSidebar from './AccessSidebar';
 import FlowActionPanel from './FlowActionPanel';
-import { accessManagementApi } from '../../utils/access-api';
-import colors from '../../color';
 
 // Import page components (to be created)
-import SummaryPage from './pages/SummaryPage';
-import ChatPage from './pages/ChatPage';
 import AccessControlPage from './pages/AccessControlPage';
+import BlockchainPage from './pages/BlockchainPage';
+import ComingSoonPage from './pages/ComingSoonPage';
+import DownloadPage from './pages/DownloadPage';
 import EditFlowPage from './pages/EditFlowPage';
 import FlowViewPage from './pages/FlowViewPage';
-import SettingsPage from './pages/SettingsPage';
 import MetadataPage from './pages/MetadataPage';
-import VersionPage from './pages/VersionPage';
 import PublishPage from './pages/PublishPage';
-import BlockchainPage from './pages/BlockchainPage';
-import DownloadPage from './pages/DownloadPage';
-import ComingSoonPage from './pages/ComingSoonPage';
+import SettingsPage from './pages/SettingsPage';
+import SummaryPage from './pages/SummaryPage';
+import VersionPage from './pages/VersionPage';
+import InteractivePublishPage from './pages/InteractivePublishPage';
 
 const AgentDetailPage = () => {
   const { agentId } = useParams();
@@ -123,6 +123,8 @@ const AgentDetailPage = () => {
       'metadata': <MetadataPage agentData={agentData} onUpdate={setAgentData} />,
       'version': <VersionPage agentData={agentData} />,
       'publish': <PublishPage agentData={agentData} onUpdate={setAgentData} />,
+      // 'interactive-publish': <InteractivePublishPage agentData={agentData} agentId={agentId} onComplete={() => setCurrentPage('summary')} />,
+      'interactive-publish': <InteractivePublishPage agentData={agentData} agentId={agentId} onComplete={null} />,
       'blockchain': <BlockchainPage agentData={agentData} />,
       'download': <DownloadPage agentData={agentData} />,
       // Coming soon pages

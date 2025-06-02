@@ -1,6 +1,5 @@
 // export default FlowDetailComponent;
 // src/components/access_management/FlowDetailComponent.jsx
-import React from "react";
 import {
   Box,
   Flex,
@@ -82,9 +81,14 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
     contractVersion: "Version of the smart contract",
     contractId: "Unique identifier of the smart contract",
     nftId: "Identifier of the NFT associated with the workflow",
-    nftMintHash: "Blockchain hash of the NFT minting transaction",
     myAccess: "Your access level to the workflow",
     noOfAccess: "Number of users with access to the workflow",
+    walrusBlobId: "Unique identifier of the workflow data stored on Walrus",
+    walrusUrl: "URL to access the workflow data on Walrus network",
+    accessCapId: "Access capability ID for permission management",
+    encryptedId: "Encrypted identifier for secure data access",
+    fileSize: "Size of the encrypted workflow file in bytes",
+    mimeType: "MIME type of the encrypted workflow file",
     monetization: "Monetization status or strategy of the workflow",
   };
 
@@ -287,9 +291,26 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
           {/* NFT Info */}
           <VStack align="start" spacing={2} w="100%">
             {renderField("nftId", "NFT ID:")}
-            {renderField("nftMintHash", "NFT Mint Hash:")}
             {renderField("myAccess", "My Access:")}
             {renderField("noOfAccess", "No of Access:")}
+          </VStack>
+
+          <Divider borderColor={colors.gray[600]} />
+
+          {/* Walrus Storage Info */}
+          <VStack align="start" spacing={2} w="100%">
+            {renderField("walrusBlobId", "Walrus Blob ID:")}
+            {renderField("walrusUrl", "Walrus URL:")}
+            {renderField("accessCapId", "Access Cap ID:")}
+          </VStack>
+
+          <Divider borderColor={colors.gray[600]} />
+
+          {/* Encryption Details */}
+          <VStack align="start" spacing={2} w="100%">
+            {renderField("encryptedId", "Encrypted ID:")}
+            {renderField("fileSize", "File Size:")}
+            {renderField("mimeType", "MIME Type:")}
           </VStack>
 
           <Divider borderColor={colors.gray[600]} />

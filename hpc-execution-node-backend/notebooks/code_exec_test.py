@@ -4,35 +4,77 @@ import json
 import asyncio
 import websockets
 import time
-
-
-import sys
-from typing import Dict, Any, List, Optional
-from datetime import datetime
-
-
-
-import nest_asyncio
-nest_asyncio.apply()  # This allows asyncio.run() inside Jupyter
-
-# Load the YAML flow file
-yaml_file_path = "./execution_flows/simple-ai-flow.yaml"  # Update this to your file location
-print(f"Loading flow from {yaml_file_path}...")
-
-with open(yaml_file_path, 'r') as file:
-    yaml_data = yaml.safe_load(file)
-
-flow_id = yaml_data.get("flow_id", "flow-" + yaml_file_path.split("/")[-1].split(".")[0])
-print(f"Flow ID: {flow_id}")
-
-import asyncio
-import websockets
-import json
-import yaml
 import sys
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 import uuid
+
+import nest_asyncio
+nest_asyncio.apply()  # This allows asyncio.run() inside Jupyter
+
+# Test configurations for different flows
+test_flows = [
+    {
+        "file": "../code_executor/sample_flow_1_intent_classifier.yaml",
+        "initial_inputs": {
+            "chat_input": {
+                "chat_input": "I need help with a refund for my order #12345. It's been 2 weeks and I haven't received my money back."
+            }
+        }
+    },
+    {
+        "file": "../code_executor/sample_flow_2_personalized_assistant.yaml", 
+        "initial_inputs": {
+            "chat_input": {
+                "chat_input": "Hi there! Can you help me understand the new features in your premium plan?"
+            }
+        }
+    },
+    {
+        "file": "../code_executor/sample_flow_3_comprehensive_assistant.yaml",
+        "initial_inputs": {
+            "user_input": {
+                "chat_input": "I'm having trouble with my account login and it's really frustrating. I can't access my premium features that I paid for."
+            },
+            "conversation_history": {
+                "context_history": [
+                    {"role": "user", "content": "I tried resetting my password yesterday"},
+                    {"role": "assistant", "content": "Let me help you with the password reset process"}
+                ]
+            }
+        }
+    }
+]
+
+def load_and_test_flow(flow_config):
+    """Load and test a single flow."""
+    yaml_file_path = flow_config["file"]
+    print(f"\n{'='*80}")
+    print(f"Loading flow from {yaml_file_path}...")
+    print(f"{'='*80}")
+    
+    with open(yaml_file_path, 'r') as file:
+        yaml_data = yaml.safe_load(file)
+    
+    # Extract flow_definition from the new structure
+    flow_definition = yaml_data.get("flow_definition", {})
+    metadata = yaml_data.get("metadata", {})
+    
+    # Generate flow ID
+    flow_id = metadata.get("flow_name", "flow-" + yaml_file_path.split("/")[-1].split(".")[0]).replace(" ", "-").lower()
+    print(f"Flow ID: {flow_id}")
+    
+    # Prepare the flow data in the format expected by the backend
+    flow_data = {
+        "flow_id": flow_id,
+        "flow_definition": flow_definition,
+        "initial_inputs": flow_config["initial_inputs"]
+    }
+    
+    websocket_url = "ws://localhost:8000/ws/execute/" + flow_id
+    print(f"WebSocket URL: {websocket_url}")
+    
+    return flow_data, websocket_url
 
 class Element:
     """
@@ -147,9 +189,9 @@ class FlowManager:
     
     def _initialize_elements(self):
         """Initialize Element instances from flow definition."""
-        elements_config = self.flow_definition.get('elements', {})
-        for element_id, config in elements_config.items():
-            # Extract processing_message from config, default to "Processing {name}"
+        nodes_config = self.flow_definition.get('nodes', {})
+        for element_id, config in nodes_config.items():
+            # Extract processing_message from config
             element_name = config.get('name', element_id)
             processing_message = config.get('processing_message', f"Processing {element_name}")
             
@@ -180,13 +222,8 @@ class FlowManager:
         }
         
         # Print formatted JSON (replace with actual streaming to frontend)
-        # print(json.dumps(event, indent=2))
         print(json.dumps(event))
-        
         print()  # Add separator line
-        
-        # In real implementation, this would be:
-        # await websocket.send(json.dumps(event))
     
     def handle_flow_started(self, data: Dict[str, Any]):
         """Handle flow started event."""
@@ -248,12 +285,12 @@ class FlowManager:
             if element_id not in self.execution_order:
                 self.execution_order.append(element_id)
             
-            # Stream element start event with processing_message instead of description
+            # Stream element start event with processing_message
             self.stream_json_event("element_started", {
                 "element_id": element_id,
                 "element_name": element.element_name,
                 "element_type": element.element_type,
-                "description": element.processing_message,  # Use processing_message for frontend
+                "description": element.processing_message,
                 "backtracking": element.backtracking
             })
     
@@ -295,6 +332,17 @@ class FlowManager:
                 "backtracking": element.backtracking
             })
     
+    def handle_processing(self, data: Dict[str, Any]):
+        """Handle processing message event."""
+        element_id = data.get('element_id')
+        message = data.get('message', '')
+        
+        # Stream processing event
+        self.stream_json_event("processing", {
+            "element_id": element_id,
+            "message": message
+        })
+    
     def handle_llm_chunk(self, data: Dict[str, Any]):
         """Handle LLM chunk event."""
         element_id = data.get('element_id')
@@ -306,16 +354,13 @@ class FlowManager:
         # Add chunk to element (for reference only)
         if element_id in self.elements:
             self.elements[element_id].add_llm_chunk(content)
-        
-        # # Stream chunk to frontend with minimal payload
-        # self.stream_json_event("llm_chunk", {
-        #     "element_id": element_id,
-        #     "content": content
-        # })
     
     def handle_final_output(self, data: Dict[str, Any]):
         """Handle final output event."""
         self.final_output = data
+        
+        # Add newline after LLM output
+        print("\n")
         
         # Stream final output event
         self.stream_json_event("final_output", {
@@ -364,6 +409,8 @@ class FlowManager:
             self.handle_element_completed(data)
         elif event_type == 'element_error':
             self.handle_element_error(data)
+        elif event_type == 'processing':
+            self.handle_processing(data)
         elif event_type == 'llm_chunk':
             self.handle_llm_chunk(data)
         elif event_type == 'final_output':
@@ -476,4 +523,56 @@ async def execute_flow_from_dict(flow_data: Dict[str, Any], websocket_url: Optio
         return {}
 
 
-elements = asyncio.run(execute_flow_from_dict(yaml_data))
+async def test_all_flows():
+    """Test all sample flows."""
+    results = []
+    
+    for i, flow_config in enumerate(test_flows):
+        print(f"\n{'#'*100}")
+        print(f"TESTING FLOW {i+1}/{len(test_flows)}")
+        print(f"{'#'*100}")
+        
+        try:
+            flow_data, websocket_url = load_and_test_flow(flow_config)
+            result = await execute_flow_from_dict(flow_data, websocket_url)
+            results.append({
+                "flow_file": flow_config["file"],
+                "flow_id": flow_data["flow_id"], 
+                "status": "success",
+                "result": result
+            })
+            
+            print(f"\n✅ Flow {i+1} completed successfully!")
+            
+        except Exception as e:
+            print(f"\n❌ Flow {i+1} failed: {str(e)}")
+            results.append({
+                "flow_file": flow_config["file"],
+                "flow_id": "unknown",
+                "status": "failed", 
+                "error": str(e)
+            })
+        
+        # Add delay between tests
+        if i < len(test_flows) - 1:
+            print(f"\nWaiting 2 seconds before next test...")
+            await asyncio.sleep(2)
+    
+    print(f"\n{'#'*100}")
+    print("TESTING SUMMARY")
+    print(f"{'#'*100}")
+    
+    for i, result in enumerate(results):
+        status_emoji = "✅" if result["status"] == "success" else "❌"
+        print(f"{status_emoji} Flow {i+1}: {result['flow_file'].split('/')[-1]} - {result['status']}")
+        if result["status"] == "failed":
+            print(f"   Error: {result['error']}")
+    
+    successful = len([r for r in results if r["status"] == "success"])
+    print(f"\nResults: {successful}/{len(results)} flows passed")
+    
+    return results
+
+# Execute all flows
+print("\nStarting comprehensive flow testing...\n")
+test_results = asyncio.run(test_all_flows())

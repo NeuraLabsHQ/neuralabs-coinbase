@@ -1,25 +1,27 @@
 
-import React, { useEffect, useState, useRef } from "react";
-import {
-  Box,
-  Flex,
-  VStack,
-  Text,
-  List,
-  ListItem,
-  useColorModeValue,
-  Spinner,
-} from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
-import { FiCheck, FiList } from "react-icons/fi";
+import {
+    Box,
+    Flex,
+    List,
+    ListItem,
+    Spinner,
+    Text,
+    useColorModeValue,
+    VStack,
+} from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import thinkresponse from "../../../utils/thinkresponse.json";
-import thinkingStepTemplates from "../../../utils/thinkingStepTemplates.json";
+import { useEffect, useRef, useState } from 'react';
+import { FiCheck } from "react-icons/fi";
 import colors from "../../../color";
+import thinkingStepTemplates from "../../../utils/thinkingStepTemplates.json";
+import thinkresponse from "../../../utils/thinkresponse.json";
 
 
 const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true }) => {
-  const { isThinking, steps, currentStep, searchResults, timeElapsed, onTypingComplete } = thinkingState;
+  const { isThinking, steps = [], currentStep, searchResults, timeElapsed, onTypingComplete, executionSteps = [] } = thinkingState;
+  
+  console.log('ThinkingUI render - isThinking:', isThinking, 'executionSteps:', executionSteps.length, 'thinkingState:', thinkingState);
 
   const [responseData, setResponseData] = useState(null);
   const [wasThinking, setWasThinking] = useState(false);
@@ -50,6 +52,13 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true }) => {
       setWasThinking(true);
     }
   }, [isThinking]);
+
+  // Auto-scroll to bottom when new execution steps are added
+  useEffect(() => {
+    if (scrollableRef.current) {
+      scrollableRef.current.scrollTop = scrollableRef.current.scrollHeight;
+    }
+  }, [executionSteps]);
 
   // useEffect(() => {
   //   if (currentStep && currentStep !== previousStep) {
@@ -198,8 +207,32 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true }) => {
     });
   }, [query]);
 
-  if (!isThinking && !wasThinking) return null;
-  if (!isThinking && !shouldPersist) return null;
+  // Always show if we have execution steps or if currently thinking
+  if (!isThinking && executionSteps.length === 0) return null;
+  if (!isThinking && !shouldPersist && executionSteps.length === 0) return null;
+
+  // Helper function to render output values
+  const renderOutput = (output) => {
+    if (typeof output === 'string') {
+      return output;
+    } else if (Array.isArray(output)) {
+      // Check if it's an array of message objects (context history)
+      if (output.length > 0 && typeof output[0] === 'object' && 'role' in output[0] && 'content' in output[0]) {
+        // Format conversation history nicely
+        return output.map((msg, index) => 
+          `${msg.role}: ${msg.content}`
+        ).join('\n');
+      } else {
+        // For simple arrays, join with commas
+        return output.map(item => 
+          typeof item === 'object' ? JSON.stringify(item) : String(item)
+        ).join(', ');
+      }
+    } else if (typeof output === 'object') {
+      return JSON.stringify(output, null, 2);
+    }
+    return String(output);
+  };
 
   return (
     <Box
@@ -218,7 +251,7 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true }) => {
           <Flex align="center" mb={4}>
             <SearchIcon mr={2} />
             <Text fontWeight="medium" color={textColor}>
-              {steps.length > 0 && steps[steps.length - 1].completed
+              {executionSteps.length > 0 && executionSteps.some(step => step.status === 'completed' && step.elementName === 'End Block')
                 ? "Completed"
                 : "Thinking"}
             </Text>
@@ -228,20 +261,10 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true }) => {
           </Flex>
 
           <List spacing={3}>
-            {steps.map((step, index) => {
-              const allPreviousCompleted = steps
-                .slice(0, index)
-                .every((prevStep) => prevStep.completed);
-
-              const shouldShow =
-                allPreviousCompleted ||
-                (currentStep && currentStep.name === step.name);
-
-              if (!shouldShow) return null;
-
+            {executionSteps.map((step, index) => {
               return (
                 <motion.div
-                  key={index}
+                  key={`${step.elementId}-${index}`}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
@@ -252,19 +275,19 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true }) => {
                       width="24px"
                       height="24px"
                       display="flex"
-                      bg={step.completed ? checkmarkBgColor : spinnerBgColor}
+                      bg={step.status === 'completed' ? checkmarkBgColor : spinnerBgColor}
                       p={1}
                       mr={3}
                       alignItems="center"
                       justifyContent="center"
                     >
-                      {step.completed ? (
+                      {step.status === 'completed' ? (
                         <FiCheck color="white" size={14} />
                       ) : (
                         <Spinner size="xs" color={spinnerColor} />
                       )}
                     </Box>
-                    <Text color={textColor}>{step.name}</Text>
+                    <Text color={textColor} fontSize="sm">{step.elementName}</Text>
                   </ListItem>
                 </motion.div>
               );
@@ -283,7 +306,7 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true }) => {
           <Text fontSize="lg" fontWeight="medium" mb={4}>
             {!isThinking && wasThinking
               ? "Analysis Complete"
-              : currentStep?.name || "Thinking"}
+              : executionSteps.length > 0 && executionSteps[executionSteps.length - 1]?.elementName || "Thinking"}
           </Text>
 
           <Box
@@ -305,149 +328,60 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true }) => {
             }}
             ref={scrollableRef}
           >
-            {!isThinking && wasThinking ? (
-              <VStack align="start" spacing={4} w="100%">
-                <Text>Analysis completed for: "{query}"</Text>
-                {responseData && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                    style={{ width: "100%" }}
-                  >
-                    <Box bg={sourceBgColor} p={3} borderRadius="md" w="100%">
-                      <Text fontSize="sm">{responseData.response}</Text>
-                    </Box>
-                  </motion.div>
-                )}
-              </VStack>
-            ) : (
-              <>
-                {currentStep?.name === "Thinking" && (
-                  <VStack align="start" spacing={4}>
-                    <Box>
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <Text fontSize="md" whiteSpace="pre-line">
-                          {typedText}
-                        </Text>
-                      </motion.div>
-                    </Box>
-                  </VStack>
-                )}
-
-                {currentStep?.name === "Clarifying the request" && (
-                  <VStack align="start" spacing={4}>
-                    <Box>
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <Text fontSize="md" whiteSpace="pre-line">
-                          {typedText}
-                        </Text>
-                      </motion.div>
-                    </Box>
-                  </VStack>
-                )}
-
-                {currentStep?.name === "Searching" && (
-                  <VStack align="start" spacing={3}>
-                    <Flex align="center">
-                      <SearchIcon mr={2} />
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <Text fontWeight="medium">{typedText}</Text>
-                      </motion.div>
-                    </Flex>
-
-                    {!isTyping && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.5, delay: 0.3 }}
-                      >
-                        <Text>{searchResults?.length || 0} results found</Text>
-                      </motion.div>
-                    )}
-
-                    {!isTyping &&
-                      searchResults &&
-                      searchResults.map((result, idx) => (
-                        <motion.div
-                          key={idx}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: 0.4 + idx * 0.1 }}
-                          style={{ width: "100%" }}
-                        >
-                          <Box w="100%" py={2}>
-                            <Flex align="center">
-                              <Box
-                                as="span"
-                                mr={2}
-                                fontSize="sm"
-                                p={1}
-                                borderRadius="md"
-                                bg={sourceBgColor}
-                              >
-                                {result.icon}
-                              </Box>
-                              <Text fontWeight="medium">{result.title}</Text>
-                            </Flex>
-                            <Text fontSize="sm" color={secondaryColor} ml={8}>
-                              {result.url}
+            <VStack align="start" spacing={4} w="100%">
+              {executionSteps.map((step, index) => (
+                <motion.div
+                  key={`content-${step.elementId}-${index}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  style={{ width: "100%" }}
+                >
+                  <Box w="100%">
+                    <Text fontSize="sm" fontWeight="medium" color={secondaryColor} mb={1}>
+                      {step.description}
+                    </Text>
+                    
+                    {/* Show outputs if available and step is completed */}
+                    {step.status === 'completed' && step.outputs && Object.keys(step.outputs).length > 0 && (
+                      <Box bg={sourceBgColor} p={3} borderRadius="md" mt={2}>
+                        {Object.entries(step.outputs).map(([key, value]) => (
+                          <Box key={key} mb={2}>
+                            <Text fontSize="xs" fontWeight="bold" color={secondaryColor} mb={1}>
+                              {key}:
+                            </Text>
+                            <Text fontSize="sm" whiteSpace="pre-wrap">
+                              {renderOutput(value)}
                             </Text>
                           </Box>
-                        </motion.div>
-                      ))}
-
-                    {!isTyping && searchResults && searchResults.length > 5 && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.5, delay: 0.8 }}
-                      >
-                        <Text color={linkColor} cursor="pointer">
-                          See more ({searchResults.length - 5})
-                        </Text>
-                      </motion.div>
+                        ))}
+                      </Box>
                     )}
-                  </VStack>
-                )}
-
-                {currentStep?.name === "Analyzing results" && (
-                  <VStack align="start" spacing={4}>
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <Text>{typedText}</Text>
-                    </motion.div>
-
-                    {!isTyping && responseData && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.5, delay: 0.5 }}
-                      >
-                        <Box bg={sourceBgColor} p={3} borderRadius="md" w="100%">
-                          <Text fontSize="sm">{responseData.response}</Text>
-                        </Box>
-                      </motion.div>
+                    
+                    {/* Show execution time if available */}
+                    {step.status === 'completed' && step.executionTime && (
+                      <Text fontSize="xs" color={secondaryColor} mt={1}>
+                        Completed in {step.executionTime.toFixed(3)}s
+                      </Text>
                     )}
-                  </VStack>
-                )}
-              </>
-            )}
+                  </Box>
+                </motion.div>
+              ))}
+              
+              {/* Show final message when analysis is complete */}
+              {!isThinking && wasThinking && executionSteps.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                  style={{ width: "100%" }}
+                >
+                  <Box bg={sourceBgColor} p={3} borderRadius="md" w="100%">
+                    <Text fontSize="sm">Analysis completed for: "{query}"</Text>
+                  </Box>
+                </motion.div>
+              )}
+            </VStack>
           </Box>
         </Box>
       </Flex>

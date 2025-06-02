@@ -1,5 +1,4 @@
 // src/components/flow_builder/CanvasControls/CanvasControls.jsx
-import React from 'react';
 import { 
   Box, 
   VStack, 

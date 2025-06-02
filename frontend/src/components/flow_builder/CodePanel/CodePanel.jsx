@@ -1,18 +1,18 @@
 
 
 // src/components/flow_builder/CodePanel/CodePanel.jsx
-import React, { useState, useEffect } from 'react';
 import {
-  Box,
-  Flex,
-  Heading,
-  IconButton,
-  Textarea,
-  Button,
-  useColorModeValue,
-  useToast,
+    Box,
+    Button,
+    Flex,
+    Heading,
+    IconButton,
+    Textarea,
+    useColorModeValue,
+    useToast,
 } from '@chakra-ui/react';
-import { FiX, FiPlay, FiSave } from 'react-icons/fi';
+import { useEffect, useState } from 'react';
+import { FiPlay, FiSave, FiX } from 'react-icons/fi';
 
 const CodePanel = ({ 
   node, 

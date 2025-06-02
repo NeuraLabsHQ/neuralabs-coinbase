@@ -1,0 +1,436 @@
+# Sample Flow 6: Dynamic Workflow using All Fixed Elements
+flow_definition:
+  nodes:
+    workflow_metadata:
+      type: datablock
+      node_description: "Stores and provides static data for use in flows"
+      description: "Workflow execution metadata and settings"
+      processing_message: "Loading workflow configuration..."
+      tags: ["input", "static-data", "configuration"]
+      layer: 3
+      parameters:
+        format: "json"
+        data:
+          workflow_name: "Dynamic Processing Pipeline"
+          execution_mode: "adaptive"
+          performance_targets:
+            max_execution_time: 120
+            min_accuracy: 0.85
+            preferred_response_length: 300
+          scheduling:
+            priority: "high"
+            resource_allocation: "auto"
+            retry_attempts: 3
+          data_sources: ["user_input", "historical_data", "real_time_feed"]
+          output_formats: ["summary", "detailed", "structured"]
+      input_schema: {}
+      output_schema:
+        data:
+          type: any
+          description: "Workflow configuration data"
+          required: true
+    
+    execution_timestamp:
+      type: time
+      node_description: "Provides current date and time information in various formats"
+      description: "Capture workflow execution timing"
+      processing_message: "Recording execution time..."
+      tags: ["utility", "time", "datetime"]
+      layer: 3
+      parameters:
+        format: "iso"
+        timezone: "UTC"
+        include_components: ["timestamp", "date", "time", "unix_timestamp", "day_of_week"]
+      input_schema: {}
+      output_schema:
+        timestamp:
+          type: string
+          description: "ISO format timestamp"
+          required: true
+        date:
+          type: string
+          description: "Execution date"
+          required: true
+        time:
+          type: string
+          description: "Execution time"
+          required: true
+        unix_timestamp:
+          type: int
+          description: "Unix timestamp"
+          required: true
+        day_of_week:
+          type: string
+          description: "Day of week"
+          required: true
+    
+    execution_id:
+      type: random_generator
+      node_description: "Generates random values of different types"
+      description: "Generate unique execution identifier"
+      processing_message: "Generating execution ID..."
+      tags: ["utility", "random", "identifier"]
+      layer: 3
+      parameters:
+        type: "string"
+        length: 20
+      input_schema: {}
+      output_schema:
+        random_data:
+          type: any
+          description: "Generated execution ID"
+          required: true
+    
+    session_context:
+      type: context_history
+      node_description: "Provides conversation history and context to downstream elements"
+      description: "Load workflow execution context"
+      processing_message: "Loading execution context..."
+      tags: ["input", "context", "history"]
+      layer: 3
+      parameters:
+        max_messages: 3
+        format: "structured"
+        filter_by_role: "all"
+        include_system: true
+      input_schema: {}
+      output_schema:
+        history:
+          type: any
+          description: "Structured execution context"
+          required: true
+    
+    workflow_orchestrator:
+      type: llm_structured
+      node_description: "Generates structured data according to defined schemas"
+      description: "Orchestrate dynamic workflow execution"
+      processing_message: "Orchestrating workflow execution..."
+      tags: ["ai", "structured-output", "orchestration"]
+      layer: 3
+      parameters:
+        model: null
+        temperature: 0.3
+        max_tokens: 1000
+        wrapper_prompt: |
+          You are a workflow orchestration engine. Plan and coordinate this dynamic workflow execution:
+          
+          Execution Details:
+          - ID: {execution_id}
+          - Timestamp: {timestamp}
+          - Day: {day_of_week}
+          
+          Workflow Configuration:
+          {workflow_config}
+          
+          Context History:
+          {execution_context}
+          
+          Plan the optimal execution strategy and resource allocation based on the workflow configuration provided.
+        llm_hidden_prompt: |
+          Based on the workflow configuration and context, determine:
+          1. Optimal execution strategy for current conditions
+          2. Resource allocation and priority settings
+          3. Expected performance and completion time
+          4. Risk assessment and mitigation steps
+          5. Quality assurance checkpoints
+          6. Fallback procedures if needed
+      input_schema:
+        execution_id:
+          type: string
+          description: "Execution identifier"
+          required: true
+        timestamp:
+          type: string
+          description: "Execution timestamp"
+          required: true
+        day_of_week:
+          type: string
+          description: "Day of week"
+          required: true
+        workflow_config:
+          type: json
+          description: "Complete workflow configuration"
+          required: true
+        execution_context:
+          type: any
+          description: "Historical execution context"
+          required: false
+      output_schema:
+        execution_id:
+          type: string
+          description: "Execution identifier"
+          required: true
+        execution_plan:
+          type: json
+          description: "Detailed execution plan"
+          required: true
+        resource_allocation:
+          type: json
+          description: "Resource allocation strategy"
+          required: true
+        estimated_completion:
+          type: string
+          description: "Estimated completion time"
+          required: true
+        priority_level:
+          type: string
+          description: "Execution priority"
+          required: true
+          enum: ["low", "medium", "high", "critical"]
+        quality_checkpoints:
+          type: list
+          description: "Quality assurance checkpoints"
+          required: true
+        risk_assessment:
+          type: json
+          description: "Risk analysis and mitigation"
+          required: true
+        fallback_procedures:
+          type: list
+          description: "Fallback procedures"
+          required: false
+        structured_output:
+          type: string
+          description: "Complete orchestration plan as JSON"
+          required: true
+    
+    execution_summary:
+      type: llm_text
+      node_description: "Generates text using Large Language Models"
+      description: "Generate workflow execution summary"
+      processing_message: "Creating execution summary..."
+      tags: ["ai", "text-generation", "summary"]
+      layer: 3
+      parameters:
+        model: null
+        temperature: 0.6
+        max_tokens: 600
+        wrapper_prompt: |
+          Create a comprehensive workflow execution summary:
+          
+          Execution Overview:
+          - ID: {execution_id}
+          - Started: {timestamp} ({day_of_week})
+          - Priority: {priority_level}
+          - Estimated Completion: {estimated_completion}
+          
+          Execution Plan:
+          {execution_plan}
+          
+          Resource Allocation:
+          {resource_allocation}
+          
+          Quality Checkpoints:
+          {quality_checkpoints}
+          
+          Risk Assessment:
+          {risk_assessment}
+          
+          Provide a clear, actionable summary including:
+          1. Execution status and timeline
+          2. Resource utilization plan
+          3. Key milestones and checkpoints
+          4. Risk factors and mitigation strategies
+          5. Success criteria and monitoring approach
+      input_schema:
+        execution_id:
+          type: string
+          description: "Execution identifier"
+          required: true
+        timestamp:
+          type: string
+          description: "Execution timestamp"
+          required: true
+        day_of_week:
+          type: string
+          description: "Day of week"
+          required: true
+        priority_level:
+          type: string
+          description: "Priority level"
+          required: true
+        estimated_completion:
+          type: string
+          description: "Estimated completion"
+          required: true
+        execution_plan:
+          type: json
+          description: "Execution plan"
+          required: true
+        resource_allocation:
+          type: json
+          description: "Resource allocation"
+          required: true
+        quality_checkpoints:
+          type: list
+          description: "Quality checkpoints"
+          required: true
+        risk_assessment:
+          type: json
+          description: "Risk assessment"
+          required: true
+      output_schema:
+        llm_output:
+          type: string
+          description: "Workflow execution summary"
+          required: true
+    
+    end_node:
+      type: end
+      node_description: "Terminal point of the flow execution"
+      description: "Complete dynamic workflow orchestration"
+      processing_message: "Finalizing workflow plan..."
+      tags: ["flow-control", "exit-point"]
+      layer: 3
+      input_schema:
+        text_input:
+          type: string
+          description: "Final execution summary"
+          required: true
+        proposed_transaction:
+          type: json
+          description: "Execution metadata"
+          required: false
+          default: null
+      output_schema:
+        text_output:
+          type: string
+          description: "Final workflow execution plan"
+          required: true
+        proposed_transaction:
+          type: json
+          description: "Execution tracking data"
+          required: false
+  
+  connections:
+    # Control flow: all inputs -> orchestrator -> summary -> end
+    - from_id: workflow_metadata
+      to_id: workflow_orchestrator
+      connection_type: control
+    
+    - from_id: execution_timestamp
+      to_id: workflow_orchestrator
+      connection_type: control
+    
+    - from_id: execution_id
+      to_id: workflow_orchestrator
+      connection_type: control
+    
+    - from_id: session_context
+      to_id: workflow_orchestrator
+      connection_type: control
+    
+    - from_id: workflow_orchestrator
+      to_id: execution_summary
+      connection_type: control
+    
+    - from_id: execution_summary
+      to_id: end_node
+      connection_type: control
+    
+    # Data connections: execution metadata
+    - from_id: execution_id
+      to_id: workflow_orchestrator
+      connection_type: data
+      from_output: "execution_id:random_data"
+      to_input: "workflow_orchestrator:execution_id"
+    
+    - from_id: execution_timestamp
+      to_id: workflow_orchestrator
+      connection_type: data
+      from_output: "execution_timestamp:timestamp"
+      to_input: "workflow_orchestrator:timestamp"
+    
+    - from_id: execution_timestamp
+      to_id: workflow_orchestrator
+      connection_type: data
+      from_output: "execution_timestamp:day_of_week"
+      to_input: "workflow_orchestrator:day_of_week"
+    
+    # Data connections: workflow configuration
+    # Note: The datablock outputs all data under 'data' key
+    # The orchestrator will need to extract nested values from the full data object
+    - from_id: workflow_metadata
+      to_id: workflow_orchestrator
+      connection_type: data
+      from_output: "workflow_metadata:data"
+      to_input: "workflow_orchestrator:workflow_config"
+    
+    # Data connections: execution context
+    - from_id: session_context
+      to_id: workflow_orchestrator
+      connection_type: data
+      from_output: "session_context:history"
+      to_input: "workflow_orchestrator:execution_context"
+    
+    # Data connections: orchestrator results to summary
+    - from_id: execution_id
+      to_id: execution_summary
+      connection_type: data
+      from_output: "execution_id:random_data"
+      to_input: "execution_summary:execution_id"
+    
+    - from_id: execution_timestamp
+      to_id: execution_summary
+      connection_type: data
+      from_output: "execution_timestamp:timestamp"
+      to_input: "execution_summary:timestamp"
+    
+    - from_id: execution_timestamp
+      to_id: execution_summary
+      connection_type: data
+      from_output: "execution_timestamp:day_of_week"
+      to_input: "execution_summary:day_of_week"
+    
+    - from_id: workflow_orchestrator
+      to_id: execution_summary
+      connection_type: data
+      from_output: "workflow_orchestrator:priority_level"
+      to_input: "execution_summary:priority_level"
+    
+    - from_id: workflow_orchestrator
+      to_id: execution_summary
+      connection_type: data
+      from_output: "workflow_orchestrator:estimated_completion"
+      to_input: "execution_summary:estimated_completion"
+    
+    - from_id: workflow_orchestrator
+      to_id: execution_summary
+      connection_type: data
+      from_output: "workflow_orchestrator:execution_plan"
+      to_input: "execution_summary:execution_plan"
+    
+    - from_id: workflow_orchestrator
+      to_id: execution_summary
+      connection_type: data
+      from_output: "workflow_orchestrator:resource_allocation"
+      to_input: "execution_summary:resource_allocation"
+    
+    - from_id: workflow_orchestrator
+      to_id: execution_summary
+      connection_type: data
+      from_output: "workflow_orchestrator:quality_checkpoints"
+      to_input: "execution_summary:quality_checkpoints"
+    
+    - from_id: workflow_orchestrator
+      to_id: execution_summary
+      connection_type: data
+      from_output: "workflow_orchestrator:risk_assessment"
+      to_input: "execution_summary:risk_assessment"
+    
+    # Data connections: summary to end
+    - from_id: execution_summary
+      to_id: end_node
+      connection_type: data
+      from_output: "execution_summary:llm_output"
+      to_input: "end_node:text_input"
+  
+  start_element: workflow_metadata
+
+# Metadata
+metadata:
+  flow_name: "Dynamic Workflow Orchestrator"
+  version: "1.0.0"
+  description: "Advanced workflow orchestration using all fixed elements: time, data blocks, random generator, context history, and structured AI"
+  author: "NeuraLabs"
+  tags: ["workflow-orchestration", "dynamic-execution", "comprehensive-integration", "ai-planning"]

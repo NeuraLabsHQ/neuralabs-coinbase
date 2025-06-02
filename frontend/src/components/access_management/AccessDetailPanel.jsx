@@ -1,5 +1,5 @@
 // src/components/access_management/AccessDetailPanel.jsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   Box, 
   Flex, 

@@ -1,0 +1,524 @@
+# Sample Flow 3: Comprehensive Assistant using All Updated Elements
+flow_definition:
+  nodes:
+    system_config:
+      type: constants
+      node_description: "Completely customizable key-value storage"
+      description: "System configuration and business rules"
+      processing_message: "Loading system configuration..."
+      tags: ["configuration", "business-rules"]
+      layer: 3
+      parameters:
+        business_name: "NeuraLabs Customer Service"
+        business_hours: "9 AM - 6 PM PST"
+        escalation_threshold: 0.3
+        supported_departments: ["sales", "support", "billing", "technical"]
+        auto_responses:
+          greeting: "Thank you for contacting NeuraLabs. Let me help you today."
+          escalation: "I'm connecting you with a human agent who can better assist you."
+        response_templates:
+          high_confidence: "Based on your query, here's what I can help with:"
+          low_confidence: "I want to make sure I understand correctly. Let me clarify:"
+        feature_toggles:
+          enable_sentiment_analysis: true
+          enable_auto_escalation: true
+          enable_conversation_history: true
+    
+    user_metadata:
+      type: metadata
+      node_description: "Provides access to execution context automatically"
+      description: "Load comprehensive user and session information"
+      processing_message: "Loading your information..."
+      tags: ["context", "user-data", "session"]
+      layer: 3
+      parameters:
+        include_all: false
+        data_filter: ["user_id", "user_name", "session_count", "environment", "timestamp"]
+        custom_fields:
+          session_type: "support_chat"
+          channel: "web_interface"
+          priority_customer: false
+      input_schema: {}
+      output_schema:
+        user_id:
+          type: string
+          description: "User identifier"
+          required: false
+        user_name:
+          type: string
+          description: "User's name"
+          required: false
+        session_count:
+          type: int
+          description: "Session count"
+          required: false
+        environment:
+          type: string
+          description: "Environment"
+          required: false
+        timestamp:
+          type: string
+          description: "Current timestamp"
+          required: false
+        session_type:
+          type: string
+          description: "Type of session"
+          required: false
+        channel:
+          type: string
+          description: "Communication channel"
+          required: false
+        priority_customer:
+          type: bool
+          description: "Priority customer flag"
+          required: false
+    
+    conversation_history:
+      type: context_history
+      node_description: "Provides conversation history and context to downstream elements"
+      description: "Load previous conversation context"
+      processing_message: "Loading conversation history..."
+      tags: ["input", "context", "memory"]
+      layer: 3
+      input_schema:
+        context_history:
+          type: list
+          description: "Previous conversation turns"
+          required: true
+      output_schema:
+        context_history:
+          type: list
+          description: "Formatted conversation context"
+          required: true
+    
+    user_input:
+      type: chat_input
+      node_description: "Captures user text input as the primary interface"
+      description: "Customer's current message or question"
+      processing_message: "Processing your message..."
+      tags: ["input", "user-interaction", "chat"]
+      layer: 3
+      parameters:
+        placeholder: "How can we help you today?"
+        max_length: 2000
+        min_length: 3
+        required: true
+        validation_pattern: "^[\\s\\S]*$"  # Allow any characters including newlines
+      input_schema: {}
+      output_schema:
+        chat_input:
+          type: string
+          description: "Customer's message"
+          required: true
+    
+    intent_and_sentiment:
+      type: llm_structured
+      node_description: "Generates structured data according to defined schemas"
+      description: "Analyze intent, sentiment, and extract key information"
+      processing_message: "Analyzing your request..."
+      tags: ["ai", "structured-output", "analysis"]
+      layer: 3
+      parameters:
+        model: null
+        temperature: 0.1  # Very low for consistent analysis
+        max_tokens: 800
+        wrapper_prompt: |
+          Analyze this customer service interaction:
+          
+          Customer: {user_name} (Session #{session_count})
+          Channel: {channel}
+          Previous Context: {context}
+          Current Message: {prompt}
+          
+          Perform comprehensive analysis including intent classification, sentiment analysis, and entity extraction.
+        llm_hidden_prompt: |
+          You are an expert customer service AI analyst. Analyze the customer message for:
+          1. Primary intent and confidence
+          2. Emotional sentiment and intensity
+          3. Urgency level based on language and context
+          4. Key entities (products, issues, dates, etc.)
+          5. Whether human escalation is recommended
+          6. Suggested department for routing
+      input_schema:
+        prompt:
+          type: string
+          description: "Customer message to analyze"
+          required: true
+        user_name:
+          type: string
+          description: "Customer name"
+          required: false
+        session_count:
+          type: int
+          description: "Session number"
+          required: false
+        channel:
+          type: string
+          description: "Communication channel"
+          required: false
+        context:
+          type: list
+          description: "Conversation history"
+          required: false
+          default: []
+        additional_data:
+          type: json
+          description: "Additional context"
+          required: false
+          default: {}
+      output_schema:
+        intent:
+          type: string
+          description: "Primary customer intent"
+          required: true
+        intent_confidence:
+          type: float
+          description: "Confidence in intent classification (0-1)"
+          required: true
+          minimum: 0.0
+          maximum: 1.0
+        sentiment:
+          type: string
+          description: "Customer sentiment"
+          required: true
+          enum: ["very_negative", "negative", "neutral", "positive", "very_positive"]
+        sentiment_score:
+          type: float
+          description: "Sentiment intensity (-1 to 1)"
+          required: true
+          minimum: -1.0
+          maximum: 1.0
+        urgency:
+          type: string
+          description: "Urgency level"
+          required: true
+          enum: ["low", "medium", "high", "critical"]
+        entities:
+          type: json
+          description: "Extracted entities and values"
+          required: false
+        escalate_to_human:
+          type: bool
+          description: "Whether to escalate to human agent"
+          required: true
+        suggested_department:
+          type: string
+          description: "Recommended department"
+          required: true
+        key_topics:
+          type: list
+          description: "Main topics discussed"
+          required: false
+        structured_output:
+          type: string
+          description: "Complete analysis as JSON"
+          required: true
+    
+    response_engine:
+      type: llm_text
+      node_description: "Generates text using Large Language Models"
+      description: "Generate appropriate customer service response"
+      processing_message: "Crafting your response..."
+      tags: ["ai", "text-generation", "customer-service"]
+      layer: 3
+      parameters:
+        model: null
+        temperature: 0.7
+        max_tokens: 1000
+        wrapper_prompt: |
+          You are a {business_name} customer service representative. Generate a response based on this analysis:
+          
+          Customer: {user_name} ({session_type} via {channel})
+          Business Hours: {business_hours}
+          
+          Original Message: "{prompt}"
+          Intent: {intent} (confidence: {intent_confidence})
+          Sentiment: {sentiment} (score: {sentiment_score})
+          Urgency: {urgency}
+          Department: {suggested_department}
+          Topics: {key_topics}
+          Entities: {entities}
+          
+          Context: {context}
+          
+          Response Guidelines:
+          - Be professional, empathetic, and helpful
+          - Address their specific {intent} request
+          - Acknowledge their {sentiment} sentiment appropriately
+          - Use the {response_template} tone
+          - If escalation is needed, explain next steps
+          - Stay within business hours and policies
+      input_schema:
+        prompt:
+          type: string
+          description: "Original customer message"
+          required: true
+        user_name:
+          type: string
+          description: "Customer name"
+          required: false
+        session_type:
+          type: string
+          description: "Session type"
+          required: false
+        channel:
+          type: string
+          description: "Communication channel"
+          required: false
+        business_name:
+          type: string
+          description: "Business name"
+          required: false
+        business_hours:
+          type: string
+          description: "Business operating hours"
+          required: false
+        intent:
+          type: string
+          description: "Customer intent"
+          required: false
+        intent_confidence:
+          type: float
+          description: "Intent confidence"
+          required: false
+        sentiment:
+          type: string
+          description: "Customer sentiment"
+          required: false
+        sentiment_score:
+          type: float
+          description: "Sentiment score"
+          required: false
+        urgency:
+          type: string
+          description: "Urgency level"
+          required: false
+        suggested_department:
+          type: string
+          description: "Suggested department"
+          required: false
+        key_topics:
+          type: list
+          description: "Key topics"
+          required: false
+        entities:
+          type: json
+          description: "Extracted entities"
+          required: false
+        context:
+          type: list
+          description: "Conversation context"
+          required: false
+          default: []
+        response_template:
+          type: string
+          description: "Response template to use"
+          required: false
+        additional_data:
+          type: json
+          description: "Additional context"
+          required: false
+          default: {}
+      output_schema:
+        llm_output:
+          type: string
+          description: "Generated customer service response"
+          required: true
+    
+    end_node:
+      type: end
+      node_description: "Terminal point of the flow execution"
+      description: "Finalize comprehensive customer service response"
+      processing_message: "Finalizing your response..."
+      tags: ["flow-control", "exit-point"]
+      layer: 3
+      input_schema:
+        text_input:
+          type: string
+          description: "Final response text"
+          required: true
+        proposed_transaction:
+          type: json
+          description: "Optional transaction or escalation data"
+          required: false
+          default: null
+      output_schema:
+        text_output:
+          type: string
+          description: "Final customer service response"
+          required: true
+        proposed_transaction:
+          type: json
+          description: "Escalation or follow-up data"
+          required: false
+  
+  connections:
+    # Control flow: parallel start -> convergence -> analysis -> response -> end
+    - from_id: system_config
+      to_id: intent_and_sentiment
+      connection_type: control
+    
+    - from_id: user_metadata
+      to_id: intent_and_sentiment
+      connection_type: control
+    
+    - from_id: conversation_history
+      to_id: user_input
+      connection_type: control
+    
+    - from_id: user_input
+      to_id: intent_and_sentiment
+      connection_type: control
+    
+    - from_id: intent_and_sentiment
+      to_id: response_engine
+      connection_type: control
+    
+    - from_id: response_engine
+      to_id: end_node
+      connection_type: control
+    
+    # Data connections: user metadata to analysis
+    - from_id: user_metadata
+      to_id: intent_and_sentiment
+      connection_type: data
+      from_output: "user_metadata:user_name"
+      to_input: "intent_and_sentiment:user_name"
+    
+    - from_id: user_metadata
+      to_id: intent_and_sentiment
+      connection_type: data
+      from_output: "user_metadata:session_count"
+      to_input: "intent_and_sentiment:session_count"
+    
+    - from_id: user_metadata
+      to_id: intent_and_sentiment
+      connection_type: data
+      from_output: "user_metadata:channel"
+      to_input: "intent_and_sentiment:channel"
+    
+    # Data connections: conversation history to analysis
+    - from_id: conversation_history
+      to_id: intent_and_sentiment
+      connection_type: data
+      from_output: "conversation_history:context_history"
+      to_input: "intent_and_sentiment:context"
+    
+    # Data connections: user input to analysis
+    - from_id: user_input
+      to_id: intent_and_sentiment
+      connection_type: data
+      from_output: "user_input:chat_input"
+      to_input: "intent_and_sentiment:prompt"
+    
+    # Data connections: user input to response engine
+    - from_id: user_input
+      to_id: response_engine
+      connection_type: data
+      from_output: "user_input:chat_input"
+      to_input: "response_engine:prompt"
+    
+    # Data connections: metadata to response engine
+    - from_id: user_metadata
+      to_id: response_engine
+      connection_type: data
+      from_output: "user_metadata:user_name"
+      to_input: "response_engine:user_name"
+    
+    - from_id: user_metadata
+      to_id: response_engine
+      connection_type: data
+      from_output: "user_metadata:session_type"
+      to_input: "response_engine:session_type"
+    
+    - from_id: user_metadata
+      to_id: response_engine
+      connection_type: data
+      from_output: "user_metadata:channel"
+      to_input: "response_engine:channel"
+    
+    # Data connections: system config to response engine
+    - from_id: system_config
+      to_id: response_engine
+      connection_type: data
+      from_output: "system_config:business_name"
+      to_input: "response_engine:business_name"
+    
+    - from_id: system_config
+      to_id: response_engine
+      connection_type: data
+      from_output: "system_config:business_hours"
+      to_input: "response_engine:business_hours"
+    
+    # Data connections: analysis results to response engine
+    - from_id: intent_and_sentiment
+      to_id: response_engine
+      connection_type: data
+      from_output: "intent_and_sentiment:intent"
+      to_input: "response_engine:intent"
+    
+    - from_id: intent_and_sentiment
+      to_id: response_engine
+      connection_type: data
+      from_output: "intent_and_sentiment:intent_confidence"
+      to_input: "response_engine:intent_confidence"
+    
+    - from_id: intent_and_sentiment
+      to_id: response_engine
+      connection_type: data
+      from_output: "intent_and_sentiment:sentiment"
+      to_input: "response_engine:sentiment"
+    
+    - from_id: intent_and_sentiment
+      to_id: response_engine
+      connection_type: data
+      from_output: "intent_and_sentiment:sentiment_score"
+      to_input: "response_engine:sentiment_score"
+    
+    - from_id: intent_and_sentiment
+      to_id: response_engine
+      connection_type: data
+      from_output: "intent_and_sentiment:urgency"
+      to_input: "response_engine:urgency"
+    
+    - from_id: intent_and_sentiment
+      to_id: response_engine
+      connection_type: data
+      from_output: "intent_and_sentiment:suggested_department"
+      to_input: "response_engine:suggested_department"
+    
+    - from_id: intent_and_sentiment
+      to_id: response_engine
+      connection_type: data
+      from_output: "intent_and_sentiment:key_topics"
+      to_input: "response_engine:key_topics"
+    
+    - from_id: intent_and_sentiment
+      to_id: response_engine
+      connection_type: data
+      from_output: "intent_and_sentiment:entities"
+      to_input: "response_engine:entities"
+    
+    # Data connections: conversation history to response engine
+    - from_id: conversation_history
+      to_id: response_engine
+      connection_type: data
+      from_output: "conversation_history:context_history"
+      to_input: "response_engine:context"
+    
+    # Data connections: response engine to end
+    - from_id: response_engine
+      to_id: end_node
+      connection_type: data
+      from_output: "response_engine:llm_output"
+      to_input: "end_node:text_input"
+  
+  start_element: system_config
+
+# Metadata
+metadata:
+  flow_name: "Comprehensive Customer Service Assistant"
+  version: "1.0.0"
+  description: "Advanced customer service flow with intent analysis, sentiment detection, and personalized responses"
+  author: "NeuraLabs"
+  tags: ["customer-service", "comprehensive", "intent-analysis", "sentiment-analysis", "personalization"]

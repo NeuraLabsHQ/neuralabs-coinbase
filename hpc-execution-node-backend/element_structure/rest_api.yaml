@@ -1,0 +1,116 @@
+type: rest_api
+element_id: null  # Auto-generated at L2
+name: null  # Set by L2
+node_description: Makes HTTP requests to external APIs and returns response data
+description: null  # Customizable by L2
+input_schema:
+  url_params:
+      type: json
+      description: Parameters to inject into URL template
+      required: false
+  query_params:
+      type: json
+      description: Query string parameters
+      required: false
+  body:
+      type: json
+      description: Request body for POST/PUT/PATCH
+      required: false
+  headers:
+      type: json
+      description: Additional headers to include
+      required: false
+output_schema:
+  response:
+      type: json
+      description: API response data
+      required: true
+  status_code:
+      type: int
+      description: HTTP status code
+      required: true
+  headers:
+      type: json
+      description: Response headers
+      required: false
+  error:
+      type: string
+      description: Error message if request failed
+      required: false
+parameter_schema_structure:
+  url:
+      type: string
+      description: API endpoint URL (supports templating)
+  method:
+      type: string
+      enum: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+  headers:
+      type: json
+      description: Default headers
+  auth_type:
+      type: string
+      enum: ["none", "bearer", "basic", "api_key"]
+  auth_config:
+      type: json
+      description: Authentication configuration
+  timeout:
+      type: int
+      description: Request timeout in seconds
+  retry_count:
+      type: int
+      description: Number of retry attempts
+  retry_delay:
+      type: int
+      description: Delay between retries in seconds
+parameters:
+  url: ""
+  method: "GET"
+  headers:
+      Content-Type: "application/json"
+      Accept: "application/json"
+  auth_type: "none"
+  auth_config: {}
+  timeout: 30
+  retry_count: 3
+  retry_delay: 1
+processing_message: Calling API...
+tags:
+  - input
+  - external-data
+  - api
+layer: null  # Set by L2
+hyperparameters:
+  type:
+      access: fixed
+  element_id:
+      access: fixed
+  name:
+      access: edit
+  description:
+      access: edit
+  input_schema:
+      access: fixed
+  output_schema:
+      access: fixed
+  parameters.url:
+      access: edit
+  parameters.method:
+      access: edit
+  parameters.headers:
+      access: edit
+  parameters.auth_type:
+      access: edit
+  parameters.auth_config:
+      access: edit
+  parameters.timeout:
+      access: edit
+  parameters.retry_count:
+      access: edit
+  parameters.retry_delay:
+      access: edit
+  processing_message:
+      access: edit
+  tags:
+      access: append
+  layer:
+      access: edit

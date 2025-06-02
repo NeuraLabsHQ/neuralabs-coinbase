@@ -175,7 +175,8 @@ async def verify_access_permission(user_pub_key: str, agent_id: str, required_le
     query = """
     SELECT al.access_level
     FROM AGENT a
-    LEFT JOIN NFT_ACCESS na ON a.agent_id = na.nft_id AND na.user_id = %s
+    LEFT JOIN blockchain_agent_data bad ON a.agent_id = bad.agent_id
+    LEFT JOIN NFT_ACCESS na ON bad.nft_id = na.nft_id AND na.user_id = %s
     LEFT JOIN ACCESS_LEVEL_TABLE al ON na.access_level = al.access_level
     WHERE a.agent_id = %s AND (a.owner = %s OR na.user_id = %s)
     """

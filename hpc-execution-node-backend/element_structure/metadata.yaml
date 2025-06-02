@@ -1,0 +1,88 @@
+type: metadata
+element_id: null  # Auto-generated at L2
+name: null  # Set by L2
+node_description: Provides access to execution context including user, session, and environment metadata
+description: null  # Customizable by L2
+input_schema: {}  # No inputs - data from execution context
+output_schema:
+  user_id:
+    type: string
+    description: Unique user identifier
+    required: false
+  user_name:
+    type: string
+    description: User's display name
+    required: false
+  user_email:
+    type: string
+    description: User's email address
+    required: false
+  wallet_address:
+    type: string
+    description: User's blockchain wallet address
+    required: false
+  session_id:
+    type: string
+    description: Current session identifier
+    required: false
+  session_count:
+    type: int
+    description: Number of user sessions
+    required: false
+  environment:
+    type: string
+    description: Execution environment (production, staging, etc)
+    required: false
+  execution_id:
+    type: string
+    description: Current flow execution ID
+    required: false
+  custom_data:
+    type: json
+    description: Additional custom metadata
+    required: false
+parameter_schema_structure:
+  data_filter:
+    type: list
+    description: Specific metadata fields to include
+  include_all:
+    type: bool
+    description: Include all available metadata
+  custom_fields:
+    type: json
+    description: Additional custom fields to add
+parameters:
+  data_filter: []
+  include_all: true
+  custom_fields: {}
+processing_message: Loading metadata...
+tags:
+- input
+- context
+- metadata
+layer: null  # Set by L2
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: fixed
+  parameters.data_filter:
+    access: edit
+  parameters.include_all:
+    access: edit
+  parameters.custom_fields:
+    access: edit
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit

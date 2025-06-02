@@ -71,7 +71,6 @@
 // };
 
 // export default SidebarItem;
-import React from 'react';
 import {
   Flex,
   Text,

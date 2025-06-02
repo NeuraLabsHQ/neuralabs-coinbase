@@ -1,0 +1,350 @@
+/* Auto-generated from color.js - DO NOT EDIT MANUALLY */
+
+:root {
+  /* Core color scales */
+  --neutral-0: #FFFFFF;
+  --neutral-50: #FDFDFD;
+  --neutral-100: #F9F9FA;
+  --neutral-200: #F2F3F4;
+  --neutral-300: #E6E7E9;
+  --neutral-400: #D3D6D9;
+  --neutral-500: #ABB2B7;
+  --neutral-600: #848E95;
+  --neutral-700: #5E6C74;
+  --neutral-800: #4C5B64;
+  --neutral-900: #3E4045;
+  --neutral-950: #2B2D2F;
+  
+  --dark-50: #242629;
+  --dark-100: #212325;
+  --dark-200: #1E2024;
+  --dark-300: #1B1D21;
+  --dark-400: #191B1F;
+  --dark-500: #16181C;
+  --dark-600: #131417;
+  --dark-700: #101114;
+  --dark-800: #0D0E11;
+  --dark-900: #0A0C0F;
+  --dark-950: #070809;
+  
+  --gray-50: #F9F9F9;
+  --gray-100: #EBEBEB;
+  --gray-200: #D9D9D9;
+  --gray-300: #C4C4C4;
+  --gray-400: #9D9D9D;
+  --gray-500: #7B7B7B;
+  --gray-600: #555555;
+  --gray-700: #333333;
+  --gray-800: #1F1F1F;
+  --gray-900: #141414;
+  --gray-950: #161619;
+  
+  --blue-50: #E9F2FF;
+  --blue-100: #D4E6FF;
+  --blue-200: #A8CCFF;
+  --blue-300: #63B3ED;
+  --blue-400: #5290FF;
+  --blue-500: #3182CE;
+  --blue-600: #2C5282;
+  --blue-700: #1E63EA;
+  --blue-800: #0084B2;
+  --blue-900: #005C7D;
+  
+  --green-50: #E6FFED;
+  --green-100: #B8FFD0;
+  --green-200: #68D391;
+  --green-300: #4ADE80;
+  --green-400: #38A169;
+  --green-500: #31E27B;
+  --green-600: #276749;
+  --green-700: #229E56;
+  --green-800: #186F3C;
+  --green-900: #16A34A;
+  
+  --purple-50: #F5E6FF;
+  --purple-100: #E9CCFF;
+  --purple-200: #DA11FF;
+  --purple-300: #B794F4;
+  --purple-400: #A000BC;
+  --purple-500: #805AD5;
+  --purple-600: #700084;
+  --purple-700: #553C9A;
+  --purple-800: #4E005C;
+  --purple-900: #3D1A5F;
+  
+  --yellow-50: #FFFBE6;
+  --yellow-100: #FFF4CC;
+  --yellow-200: #FFE300;
+  --yellow-300: #F6E05E;
+  --yellow-400: #FFBC00;
+  --yellow-500: #D69E2E;
+  --yellow-600: #B28400;
+  --yellow-700: #975A16;
+  --yellow-800: #7D5C00;
+  --yellow-900: #5F4300;
+  
+  --red-50: #FFE6E6;
+  --red-100: #FFCCCC;
+  --red-200: #FF9999;
+  --red-300: #FC8181;
+  --red-400: #F03B3A;
+  --red-500: #E53E3E;
+  --red-600: #DC3938;
+  --red-700: #9B2C2C;
+  --red-800: #7A1F1F;
+  --red-900: #5A1212;
+  
+  --ocean-50: #E6F4F9;
+  --ocean-100: #CFE7F1;
+  --ocean-200: #ACCCDA;
+  --ocean-300: #97BAC9;
+  --ocean-400: #82A8B8;
+  --ocean-500: #598395;
+  --ocean-600: #2F5F73;
+  --ocean-700: #063B51;
+  --ocean-800: #052F41;
+  --ocean-900: #021820;
+
+  /* Component colors - Light theme defaults (reverted to grays) */
+  --navbar-body: #F9F9FA;
+  --navbar-border: #E6E7E9;
+  --navbar-selected: #FFFFFF;
+  --navbar-icon: #5E6C74;
+  --navbar-hover: #F2F3F4;
+  --navbar-text: #333333;
+  
+  --marketplace-body: #F2F3F4;
+  --marketplace-border: #E6E7E9;
+  --marketplace-item: #FFFFFF;
+  --marketplace-heading: #333333;
+  --marketplace-text: #5E6C74;
+  --marketplace-tag: #F2F3F4;
+  --marketplace-tagText: #5E6C74;
+  --marketplace-activeTab: #333333;
+  --marketplace-activeTabBorder: #3182CE;
+  --marketplace-hoverBorder: #D3D6D9;
+  --marketplace-marketplaceCardbg: #FFFFFF;
+  
+  --vizpanel-body: #FFFFFF;
+  --vizpanel-border: #E6E7E9;
+  --vizpanel-selected: #F2F3F4;
+  --vizpanel-icon: #5E6C74;
+  --vizpanel-hover: #F9F9FA;
+  
+  --blockpanel-icon: #5E6C74;
+  --blockpanel-itemBg: #FFFFFF;
+  --blockpanel-layerHeader: #333333;
+  --blockpanel-layerHeadertext: #333333;
+  --blockpanel-listhoverBg: #F9F9FA;
+  --blockpanel-selected_category: #3182CE;
+  
+  --sidepanel-body: #F9F9FA;
+  --sidepanel-itemBgColor: #FFFFFF;
+  --sidepanel-border: #E6E7E9;
+  --sidepanel-headingColor: #333333;
+  --sidepanel-accordionBgColor: #F9F9FA;
+  --sidepanel-layerHeaderBg: #F2F3F4;
+  --sidepanel-layerHeaderColor: #5E6C74;
+  --sidepanel-emptyStateIconColor: #ABB2B7;
+  --sidepanel-selected: #E9F2FF;
+  --sidepanel-icon: #5E6C74;
+  --sidepanel-hover: #F2F3F4;
+  --sidepanel-text: #5E6C74;
+  
+  --detailpanel-body: #F9F9FA;
+  --detailpanel-border: #E6E7E9;
+  --detailpanel-inputbg: #FFFFFF;
+  --detailpanel-selected: #F2F3F4;
+  --detailpanel-icon: #5E6C74;
+  --detailpanel-hover: #F9F9FA;
+  --detailpanel-text: #333333;
+  
+  --accessManagement-sidebar-bg: #F9F9FA;
+  --accessManagement-sidebar-border: #E6E7E9;
+  --accessManagement-sidebar-itemHover: #F2F3F4;
+  --accessManagement-sidebar-selected: #E9F2FF;
+  --accessManagement-sidebar-selectedText: #3182CE;
+  --accessManagement-sidebar-icon: #5E6C74;
+  --accessManagement-mainContent-bg: #F2F3F4;
+  --accessManagement-mainContent-heading: #333333;
+  --accessManagement-flowCard-bg: #FFFFFF;
+  --accessManagement-flowCard-border: #E6E7E9;
+  --accessManagement-flowCard-iconBg: #333333;
+  --accessManagement-flowCard-iconText: #FFFFFF;
+  --accessManagement-detailPanel-bg: #FFFFFF;
+  --accessManagement-detailPanel-border: #E6E7E9;
+  --accessManagement-detailPanel-addressBg: #F9F9FA;
+  --accessManagement-detailPanel-levelBadge: #805AD5;
+  
+  --canvas-body: #F2F3F4;
+  --canvas-grid: #E6E7E9;
+  --canvas-controls: #FFFFFF;
+  --canvas-controlsIcon: #5E6C74;
+  --canvas-edge: #D3D6D9;
+  --canvas-node: #FFFFFF;
+  --canvas-nodeBorder: #E6E7E9;
+  --canvas-nodeSelected: #3182CE;
+  --canvas-nodeActive: #82A8B8;
+  --canvas-nodeActiveFill: #ACCCDA;
+  --canvas-nodeSelectedFill: #ACCCDA;
+  
+  --chat-bgPrimary: #FFFFFF;
+  --chat-bgSecondary: #F9F9FA;
+  --chat-bgTertiary: #F2F3F4;
+  --chat-bgInput: #FFFFFF;
+  --chat-bgHover: #F9F9FA;
+  --chat-bgSelected: #E9F2FF;
+  --chat-bgSource: #F9F9FA;
+  --chat-bgButton: #FFFFFF;
+  --chat-bgButtonHover: #F2F3F4;
+  --chat-textPrimary: #333333;
+  --chat-textSecondary: #5E6C74;
+  --chat-textMuted: #ABB2B7;
+  --chat-borderColor: #E6E7E9;
+  --chat-borderLight: #F2F3F4;
+  --chat-iconColor: #5E6C74;
+  --chat-linkColor: #3182CE;
+  --chat-checkmarkBgColor: #38A169;
+  --chat-spinnerBgColor: #E6E7E9;
+  --chat-spinnerColor: #5E6C74;
+  --chat-userMessageBg: #F2F3F4;
+  --chat-assistantMessageBg: #FFFFFF;
+  
+  --states-focus: #3182CE;
+  --states-error: #E53E3E;
+  --states-warning: #D69E2E;
+  --states-success: #38A169;
+  --states-info: #3182CE;
+  
+  --shadows-small: rgba(0, 0, 0, 0.05);
+  --shadows-medium: rgba(0, 0, 0, 0.1);
+  --shadows-large: rgba(0, 0, 0, 0.15);
+  --shadows-overlay: rgba(0, 0, 0, 0.4);
+  
+  --ports-default: #D3D6D9;
+  --ports-connected: #38A169;
+  --ports-hover: #3182CE;
+  --ports-active: #16A34A;
+}
+
+[data-theme="dark"] {
+  --navbar-body: #0A0C0F;
+  --navbar-border: #1B1D21;
+  --navbar-selected: #1B1D21;
+  --navbar-icon: #ABB2B7;
+  --navbar-hover: #16181C;
+  --navbar-text: #FFFFFF;
+  
+  --marketplace-body: #0A0C0F;
+  --marketplace-border: #3E4045;
+  --marketplace-item: #131417;
+  --marketplace-heading: #FFFFFF;
+  --marketplace-text: #ABB2B7;
+  --marketplace-tag: #1B1D21;
+  --marketplace-tagText: #ABB2B7;
+  --marketplace-activeTab: #FFFFFF;
+  --marketplace-activeTabBorder: #5290FF;
+  --marketplace-hoverBorder: #3E4045;
+  --marketplace-marketplaceCardbg: #16181C;
+  
+  --vizpanel-body: #131417;
+  --vizpanel-border: #1B1D21;
+  --vizpanel-selected: #1B1D21;
+  --vizpanel-icon: #ABB2B7;
+  --vizpanel-hover: #16181C;
+  
+  --blockpanel-icon: #ABB2B7;
+  --blockpanel-itemBg: #131417;
+  --blockpanel-layerHeader: #FFFFFF;
+  --blockpanel-layerHeadertext: #FFFFFF;
+  --blockpanel-listhoverBg: #1B1D21;
+  --blockpanel-selected_category: #5290FF;
+  
+  --sidepanel-body: #16181C;
+  --sidepanel-itemBgColor: #131417;
+  --sidepanel-border: #3E4045;
+  --sidepanel-headingColor: #FFFFFF;
+  --sidepanel-accordionBgColor: #131417;
+  --sidepanel-layerHeaderBg: #131417;
+  --sidepanel-layerHeaderColor: #ABB2B7;
+  --sidepanel-emptyStateIconColor: #5E6C74;
+  --sidepanel-selected: #1B1D21;
+  --sidepanel-icon: #ABB2B7;
+  --sidepanel-hover: #1B1D21;
+  --sidepanel-text: #ABB2B7;
+  
+  --detailpanel-body: #16181C;
+  --detailpanel-border: #3E4045;
+  --detailpanel-inputbg: #131417;
+  --detailpanel-selected: #1B1D21;
+  --detailpanel-icon: #ABB2B7;
+  --detailpanel-hover: #1B1D21;
+  --detailpanel-text: #FFFFFF;
+  
+  --accessManagement-sidebar-bg: #16181C;
+  --accessManagement-sidebar-border: #3E4045;
+  --accessManagement-sidebar-itemHover: #1B1D21;
+  --accessManagement-sidebar-selected: #1B1D21;
+  --accessManagement-sidebar-selectedText: #5290FF;
+  --accessManagement-sidebar-icon: #ABB2B7;
+  --accessManagement-mainContent-bg: #0A0C0F;
+  --accessManagement-mainContent-heading: #FFFFFF;
+  --accessManagement-flowCard-bg: #16181C;
+  --accessManagement-flowCard-border: #3E4045;
+  --accessManagement-flowCard-iconBg: #ABB2B7;
+  --accessManagement-flowCard-iconText: #16181C;
+  --accessManagement-detailPanel-bg: #16181C;
+  --accessManagement-detailPanel-border: #3E4045;
+  --accessManagement-detailPanel-addressBg: #131417;
+  --accessManagement-detailPanel-levelBadge: #B794F4;
+  
+  --canvas-body: #0A0C0F;
+  --canvas-grid: #1B1D21;
+  --canvas-controls: #16181C;
+  --canvas-controlsIcon: #ABB2B7;
+  --canvas-edge: #3E4045;
+  --canvas-node: #16181C;
+  --canvas-nodeBorder: #3E4045;
+  --canvas-nodeSelected: #63B3ED;
+  --canvas-nodeActive: #005C7D;
+  --canvas-nodeActiveFill: #0D0E11;
+  --canvas-nodeSelectedFill: #0D0E11;
+  
+  --chat-bgPrimary: #0A0C0F;
+  --chat-bgSecondary: #16181C;
+  --chat-bgTertiary: #131417;
+  --chat-bgInput: #16181C;
+  --chat-bgHover: #1B1D21;
+  --chat-bgSelected: #1B1D21;
+  --chat-bgSource: #131417;
+  --chat-bgButton: #1B1D21;
+  --chat-bgButtonHover: #212325;
+  --chat-textPrimary: #FFFFFF;
+  --chat-textSecondary: #ABB2B7;
+  --chat-textMuted: #5E6C74;
+  --chat-borderColor: #3E4045;
+  --chat-borderLight: #1E1F21;
+  --chat-iconColor: #ABB2B7;
+  --chat-linkColor: #5290FF;
+  --chat-checkmarkBgColor: #4ADE80;
+  --chat-spinnerBgColor: #3E4045;
+  --chat-spinnerColor: #ABB2B7;
+  --chat-userMessageBg: #16181C;
+  --chat-assistantMessageBg: #131417;
+  
+  --states-focus: #5290FF;
+  --states-error: #FC8181;
+  --states-warning: #F6E05E;
+  --states-success: #68D391;
+  --states-info: #63B3ED;
+  
+  --shadows-small: rgba(0, 0, 0, 0.2);
+  --shadows-medium: rgba(0, 0, 0, 0.3);
+  --shadows-large: rgba(0, 0, 0, 0.4);
+  --shadows-overlay: rgba(0, 0, 0, 0.7);
+  
+  --ports-default: #3E4045;
+  --ports-connected: #4ADE80;
+  --ports-hover: #5290FF;
+  --ports-active: #31E27B;
+}

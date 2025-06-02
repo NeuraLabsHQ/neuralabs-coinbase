@@ -1,0 +1,49 @@
+type: custom
+element_id: null
+name: null
+node_description: Executes custom Python code with security restrictions
+description: null
+input_schema: {}
+output_schema: {}
+parameter_schema_structure:
+  hyperparameters:
+    type: json
+  constants:
+    type: json
+parameters:
+  hyperparameters: {}
+  constants: {}
+processing_message: Executing custom code...
+tags:
+  - custom
+  - code
+layer: null
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: edit
+  output_schema:
+    access: edit
+  code:
+    access: edit
+  parameters.hyperparameters:
+    access: edit
+  parameters.constants:
+    access: edit
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit
+input: null
+output: null
+code: ""
+flow_control: null

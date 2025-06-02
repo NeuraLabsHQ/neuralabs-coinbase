@@ -1,40 +1,38 @@
 // src/components/chat_interface/ChatInterface.jsx
-import React, { useState, useRef, useEffect } from "react";
 import {
-  Box,
-  Flex,
-  Text,
-  Textarea,
-  IconButton,
-  HStack,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  Button,
-  Tooltip,
-  Divider,
-  Center,
-  VStack,
+    Box,
+    Button,
+    Divider,
+    Flex,
+    HStack,
+    IconButton,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuList,
+    Text,
+    Textarea,
+    Tooltip,
+    VStack
 } from "@chakra-ui/react";
+import { useEffect, useRef, useState,Fragment } from 'react';
 import {
-  FiSend,
-  FiChevronDown,
-  FiPaperclip,
-  FiArrowUp,
-  FiCode,
-  FiImage,
-  FiSearch,
-  FiThumbsUp,
-  FiThumbsDown,
+    FiArrowUp,
+    FiChevronDown,
+    FiCode,
+    FiPaperclip,
+    FiSearch,
+    FiThumbsDown,
+    FiThumbsUp
 } from "react-icons/fi";
 
 // Import the separate ThinkingUI component
 import ThinkingUI from "./ThinkingUI/ThinkingUI";
+import MarkdownRenderer from "./MarkdownRenderer";
 
 // Import colors
-import colors from "../../color";
 import { useColorModeValue } from "@chakra-ui/react";
+import colors from "../../color";
 // Sample AI models/agents
 const AI_MODELS = [
   { id: "portfolio", name: "Portfolio Manager" },
@@ -71,7 +69,11 @@ const Message = ({ message }) => {
           bg={isUser ? userMessageBg : assistantMessageBg}
           color={textColor}
         >
-          <Text>{message.content}</Text>
+          {isUser ? (
+            <Text>{message.content}</Text>
+          ) : (
+            <MarkdownRenderer content={message.content} textColor={textColor} />
+          )}
         </Box>
       </Flex>
 
@@ -120,6 +122,7 @@ const ChatInterface = ({
   onSendMessage,
   isLanding = false,
   thinkingState = { isThinking: false },
+  messageThinkingStates = {},
   onToggleColorMode,
 }) => {
   const [input, setInput] = useState("");
@@ -149,9 +152,31 @@ const ChatInterface = ({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    // Scroll to bottom when thinking state changes (for real-time streaming)
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [thinkingState.isThinking, thinkingState.executionSteps, messageThinkingStates]);
+
+  useEffect(() => {
+    // Initialize textarea height on mount
+    if (inputRef.current) {
+      inputRef.current.style.height = '60px';
+    }
+  }, []);
+
   const handleInputChange = (e) => {
     const value = e.target.value;
     setInput(value);
+    
+    // Auto-resize textarea based on content
+    if (inputRef.current) {
+      // Reset height to auto to get the accurate scrollHeight
+      inputRef.current.style.height = 'auto';
+      // Calculate the scroll height
+      const scrollHeight = inputRef.current.scrollHeight;
+      // Set height to scrollHeight, but respect min and max height
+      inputRef.current.style.height = `${Math.max(60, Math.min(scrollHeight, 200))}px`;
+    }
     
     // If the input is empty, reset the mentionSelected flag
     if (value.trim() === "") {
@@ -252,6 +277,11 @@ const handleSendMessage = () => {
     onSendMessage(cleanMessage.trim(), modelId, useThinkMode);
     setInput("");
     setMentionActive(false);
+    
+    // Reset textarea height after sending
+    if (inputRef.current) {
+      inputRef.current.style.height = '60px';
+    }
   };
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -314,23 +344,25 @@ const handleSendMessage = () => {
       <Message key={message.id} message={message} />
     );
     
-    // Check if this is a user message and if it's the last message or followed by a non-user message
+    // Check if this is the very last user message in the entire conversation
     const isLastUserMessage = 
       message.role === "user" && 
-      (index === messages.length - 1 || messages[index + 1].role !== "user");
+      index === messages.length - 1;
     
-    // If it's the last user message and thinking is happening or was happening, 
-    // return both the message and ThinkingUI
-    if (isLastUserMessage) {
+    // Check if this message has a thinking state (either active or completed)
+    const messageThinkingState = messageThinkingStates[message.id];
+    
+    // Show thinking UI for user messages that have thinking state
+    if (message.role === "user" && messageThinkingState) {
       return (
-        <React.Fragment key={`fragment-${message.id}`}>
+        <Fragment key={`fragment-${message.id}`}>
           {messageElement}
           <ThinkingUI 
-            thinkingState={thinkingState} 
-            query={lastQueryText} 
+            thinkingState={messageThinkingState} 
+            query={message.content} 
             shouldPersist={true} 
           />
-        </React.Fragment>
+        </Fragment>
       );
     }
     
@@ -393,10 +425,19 @@ const handleSendMessage = () => {
             border="none"
             _focus={{ border: "none", boxShadow: "none" }}
             resize="none"
-            minH="40px"
+            minH="60px"
             maxH="200px"
-            overflow="auto"
+            overflowY="auto"
             ref={inputRef}
+            transition="height 0.1s ease"
+            style={{ height: '60px' }}
+            sx={{
+              '&::-webkit-scrollbar': {
+                display: 'none',
+              },
+              '-ms-overflow-style': 'none',
+              'scrollbarWidth': 'none',
+            }}
           />
 
           {mentionActive && (
@@ -517,35 +558,7 @@ const handleSendMessage = () => {
             </HStack>
 
             <HStack>
-            <Menu placement={isLanding ? "bottom-end" : "top-end"} gutter={4}>
-                <MenuButton
-                  as={Button}
-                  rightIcon={<FiChevronDown />}
-                  size="sm"
-                  variant="ghost"
-                  color={iconColor}
-                >
-                  {selectedModel.name}
-                </MenuButton>
-                <MenuList
-                  bg={bgSecondary}
-                  borderColor={borderColor}
-                  p={0}
-                  marginTop={isLanding ? "10px" : "0"} 
-                >
-                  {AI_MODELS.map((model) => (
-                    <MenuItem
-                      key={model.id}
-                      onClick={() => setSelectedModel(model)}
-                      _hover={{ bg: bgHover }}
-                    bg={bgSecondary}
 
-                    >
-                      {model.name}
-                    </MenuItem>
-                  ))}
-                </MenuList>
-              </Menu>
 
               <Tooltip label="Send message">
                 <IconButton

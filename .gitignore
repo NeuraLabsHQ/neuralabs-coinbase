@@ -4,15 +4,16 @@ build/
 .env
 config.yaml
 
-backend/code_executor/logs
+hpc-execution-node-backend/code_executor/logs
 
 
-backend/notebooks/flow_outputs/**
-!backend/notebooks/flow_outputs/__placeholder__
+hpc-execution-node-backend/notebooks/flow_outputs/**
+!hpc-execution-node-backend/notebooks/flow_outputs/__placeholder__
 
 
 prover-service/**
-!./prover-service/__placeholder__
+!prover-service/__placeholder__
+!prover-service/readme.md
 
 CLAUDE.local.md
 

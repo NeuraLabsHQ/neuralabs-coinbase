@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "backend1 code executor",
+            "name": "code executor",
             "type": "debugpy",
             "request": "launch",
-            "cwd": "${workspaceFolder}/backend/code_executor",
+            "cwd": "${workspaceFolder}/hpc-execution-node-backend/code_executor",
             "module": "uvicorn",
             "args": [
                 "app:app",
@@ -32,19 +32,28 @@
 
 
         {
-      "type": "msedge",
-      "request": "launch",
-      "name": "3000 test localhost",
-      "url": "http://localhost:3000",
-      "webRoot": "${workspaceFolder}"
-    },
+            "type": "msedge",
+            "request": "launch",
+            "name": "Edge - Launch 3000",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}"
+        },
+ 
+        {
+            "name": "move_contract_frontend_sid",
+            "type": "msedge",
+            "request": "attach",
+            "port": 9223,
+            "webRoot": "/home/sid/projects/06_02 NeuraLabs/neuralabs-sui/mov_contract/frontend_interaction", 
+        },
 
-            {
-      "type": "msedge",
-      "request": "launch",
-      "name": "3001 test localhost",
-      "url": "http://localhost:3000",
-      "webRoot": "${workspaceFolder}"
-    }
+        {
+            "name": "frontend_sid",
+            "type": "msedge",
+            "request": "attach",
+            "port": 9223,
+            "webRoot": "/home/sid/projects/06_02 NeuraLabs/neuralabs-sui/frontend", 
+        }
+
     ]
 }

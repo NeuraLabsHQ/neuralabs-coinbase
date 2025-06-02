@@ -1,28 +1,27 @@
-import React, { useState, useEffect } from 'react';
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  TableContainer,
-  Select,
-  Box,
-  Text,
-  HStack,
-  IconButton,
-  useColorModeValue,
-  Badge,
+    Box,
+    Button,
+    HStack,
+    IconButton,
+    Modal,
+    ModalBody,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
+    Select,
+    Table,
+    TableContainer,
+    Tbody,
+    Td,
+    Text,
+    Th,
+    Thead,
+    Tr,
+    useColorModeValue
 } from '@chakra-ui/react';
-import { FiPlus, FiX, FiMoreHorizontal } from 'react-icons/fi';
+import { useEffect, useState } from 'react';
+import { FiX } from 'react-icons/fi';
 import DeleteConnectionPopup from './DeleteConnectionPopup';
 
 const ConnectionPopup = ({
@@ -33,11 +32,13 @@ const ConnectionPopup = ({
   onSave,
   onDelete,
   existingMappings = [],
-  allEdges = []
+  allEdges = [],
+  connectionType: existingConnectionType = 'both'
 }) => {
   const [mappings, setMappings] = useState([]);
   const [isValid, setIsValid] = useState(false);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
+  const [connectionType, setConnectionType] = useState('both');
   
   const bgColor = useColorModeValue('white', 'gray.900');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
@@ -61,6 +62,13 @@ const ConnectionPopup = ({
   const buttonBg = useColorModeValue('blue.500', 'cyan.600');
   const buttonHoverBg = useColorModeValue('blue.600', 'cyan.700');
 
+  // Initialize connection type when modal opens
+  useEffect(() => {
+    if (isOpen && existingConnectionType) {
+      setConnectionType(existingConnectionType);
+    }
+  }, [isOpen, existingConnectionType]);
+  
   // Initialize mappings when modal opens
   useEffect(() => {
     if (isOpen && sourceNode && targetNode) {
@@ -70,16 +78,29 @@ const ConnectionPopup = ({
       
       // Initialize mappings based on existing mappings or create new ones
       const initialMappings = [];
-      for (let i = 0; i < maxRows; i++) {
-        const existingMapping = existingMappings.find(m => m.index === i);
+      
+      // First, add all existing mappings
+      existingMappings.forEach((mapping, idx) => {
+        initialMappings.push({
+          index: idx,
+          fromOutput: mapping.fromOutput || '',
+          toInput: mapping.toInput || '',
+          fromType: '',
+          toType: ''
+        });
+      });
+      
+      // Then add empty rows for remaining slots
+      for (let i = existingMappings.length; i < maxRows; i++) {
         initialMappings.push({
           index: i,
-          fromOutput: existingMapping?.fromOutput || '',
-          toInput: existingMapping?.toInput || '',
+          fromOutput: '',
+          toInput: '',
           fromType: '',
           toType: ''
         });
       }
+      
       setMappings(initialMappings);
     }
   }, [isOpen, sourceNode, targetNode, existingMappings]);
@@ -203,7 +224,7 @@ const ConnectionPopup = ({
   const handleSave = () => {
     // Filter out empty mappings - if all mappings are empty, pass an empty array
     const validMappings = mappings.filter(m => m.fromOutput && m.toInput);
-    onSave(validMappings);
+    onSave(validMappings, connectionType);
     onClose();
   };
 
@@ -271,9 +292,23 @@ const ConnectionPopup = ({
         transition="border-color 0.2s"
       >
         <ModalHeader borderBottom="1px solid" borderColor={borderColor} color={textColor}>
-          <HStack justify="space-between">
+          <HStack justify="space-between" width="100%">
             <Text>Connection: {sourceNode.name} → {targetNode.name}</Text>
-            <HStack>
+            <HStack spacing={4}>
+              <HStack>
+                <Text fontSize="sm" color={mutedTextColor}>Type:</Text>
+                <Select
+                  size="sm"
+                  value={connectionType}
+                  onChange={(e) => setConnectionType(e.target.value)}
+                  width="120px"
+                  bg={inputBg}
+                >
+                  <option value="both">Control & Data</option>
+                  <option value="control">Control Only</option>
+                  <option value="data">Data Only</option>
+                </Select>
+              </HStack>
               {onDelete && (
                 <Button
                   size="sm"
@@ -289,6 +324,14 @@ const ConnectionPopup = ({
         </ModalHeader>
 
         <ModalBody py={6}>
+          {connectionType === 'control' ? (
+            <Box p={4} bg={headerBg} borderRadius="md" textAlign="center">
+              <Text color={textColor}>Control connections don't require data mappings.</Text>
+              <Text fontSize="sm" color={mutedTextColor} mt={2}>
+                This connection will only control the execution flow between nodes.
+              </Text>
+            </Box>
+          ) : (
           <TableContainer>
             <Table variant="unstyled" size="sm">
               <Thead>
@@ -417,6 +460,7 @@ const ConnectionPopup = ({
               </Tbody>
             </Table>
           </TableContainer>
+          )}
         </ModalBody>
 
         <ModalFooter borderTop="1px solid" borderColor={borderColor}>

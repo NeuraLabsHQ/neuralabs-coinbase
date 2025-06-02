@@ -1,0 +1,482 @@
+---
+id: hpc-aws-bedrock-model-selection
+title: Model Selection
+sidebar_label: Model Selection
+sidebar_position: 2
+---
+
+import { Card, CardHeader, CardTitle, CardDescription } from '@site/src/components/Card';
+import { Callout } from '@site/src/components/Callout';
+import { Features, Feature } from '@site/src/components/Features';
+import { CollapsibleCodeBlock, InlineCodeCard } from '@site/src/components/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+# AWS Bedrock Model Selection
+
+Choosing the right model is crucial for optimal performance and cost-efficiency. This guide helps you understand the available models in AWS Bedrock and how to select the best one for your use case.
+
+## Understanding Model Types
+
+AWS Bedrock offers two types of model identifiers:
+
+<Card>
+  <CardHeader>
+    <CardTitle>Model Identifier Types</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Format</th>
+          <th>Example</th>
+          <th>Use Case</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Foundation Model ID</strong></td>
+          <td><code>provider.model-name</code></td>
+          <td><code>anthropic.claude-3-haiku-20240307-v1:0</code></td>
+          <td>Direct model access</td>
+        </tr>
+        <tr>
+          <td><strong>Inference Profile ARN</strong></td>
+          <td><code>arn:aws:bedrock:region:account:inference-profile/...</code></td>
+          <td><code>arn:aws:bedrock:us-east-2:559050205657:inference-profile/us.deepseek.r1-v1:0</code></td>
+          <td>Models requiring inference profiles</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</Card>
+
+## Available Models by Provider
+
+### Anthropic Claude Models
+
+<Features>
+  <Feature title="Claude 3 Haiku" icon="/img/icons/ai-workflow.svg">
+    Fast, cost-effective for simple tasks
+  </Feature>
+  <Feature title="Claude 3 Sonnet" icon="/img/icons/network.svg">
+    Balanced performance and capability
+  </Feature>
+  <Feature title="Claude 3 Opus" icon="/img/icons/hpc.svg">
+    Most capable, best for complex tasks
+  </Feature>
+</Features>
+
+<CollapsibleCodeBlock
+  title="Anthropic Model IDs"
+  description="Available Claude models in Bedrock"
+  language="yaml"
+  defaultCollapsed={false}
+>
+{`# Claude 3 Models (Latest)
+anthropic.claude-3-haiku-20240307-v1:0     # Fastest, most cost-effective
+anthropic.claude-3-sonnet-20240229-v1:0    # Balanced performance
+anthropic.claude-3-opus-20240229-v1:0      # Most capable
+
+# Claude 2 Models (Previous generation)
+anthropic.claude-v2:1                       # General purpose
+anthropic.claude-v2:0                       # Earlier version
+anthropic.claude-instant-v1                 # Fast responses
+
+# Model Characteristics:
+# Haiku: 200K context, fastest response, lowest cost
+# Sonnet: 200K context, balanced performance
+# Opus: 200K context, highest quality, higher cost`}
+</CollapsibleCodeBlock>
+
+### DeepSeek Models
+
+<Card>
+  <CardHeader>
+    <CardTitle>DeepSeek R1 - Advanced Reasoning Model</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <p>DeepSeek models require inference profile ARNs and are optimized for complex reasoning tasks.</p>
+    
+    <Callout type="info">
+      DeepSeek models feature advanced chain-of-thought reasoning capabilities and require special handling for streaming responses.
+    </Callout>
+    
+    <CollapsibleCodeBlock
+      title="DeepSeek Configuration"
+      description="Using DeepSeek models with inference profiles"
+      language="python"
+    >
+{`# DeepSeek requires full ARN for inference profile
+model_id = "arn:aws:bedrock:us-east-2:559050205657:inference-profile/us.deepseek.r1-v1:0"
+
+# The model supports reasoning traces
+request_body = {
+    "messages": [{"role": "user", "content": prompt}],
+    "max_tokens": 4000,
+    "temperature": 0.7,
+    "stream": True  # Supports streaming with reasoning
+}`}
+    </CollapsibleCodeBlock>
+  </div>
+</Card>
+
+### Meta Llama Models
+
+<CollapsibleCodeBlock
+  title="Meta Llama Model IDs"
+  description="Available Llama models in Bedrock"
+  language="yaml"
+>
+{`# Llama 3 Models
+meta.llama3-8b-instruct-v1:0       # 8B parameters, efficient
+meta.llama3-70b-instruct-v1:0      # 70B parameters, powerful
+
+# Llama 2 Models
+meta.llama2-13b-chat-v1            # 13B chat model
+meta.llama2-70b-chat-v1            # 70B chat model
+
+# Characteristics:
+# - Open-source foundation
+# - Good for general tasks
+# - Cost-effective option`}
+</CollapsibleCodeBlock>
+
+### Mistral AI Models
+
+<CollapsibleCodeBlock
+  title="Mistral Model IDs"
+  description="Available Mistral models in Bedrock"
+  language="yaml"
+>
+{`# Mistral Models
+mistral.mistral-7b-instruct-v0:2      # 7B instruct model
+mistral.mixtral-8x7b-instruct-v0:1    # Mixture of experts
+
+# Characteristics:
+# - Efficient architecture
+# - Good multilingual support
+# - Strong coding capabilities`}
+</CollapsibleCodeBlock>
+
+## Model Selection Criteria
+
+### By Use Case
+
+<Tabs>
+  <TabItem value="chat" label="Conversational AI" default>
+    <div style={{ marginTop: '1rem' }}>
+      <h4>Recommended Models:</h4>
+      <ul>
+        <li><strong>Claude 3 Haiku</strong> - Fast, natural conversations</li>
+        <li><strong>Llama 3 8B</strong> - Cost-effective option</li>
+        <li><strong>Mistral 7B</strong> - Efficient multilingual chat</li>
+      </ul>
+      
+      <CollapsibleCodeBlock
+        title="Chat Configuration Example"
+        language="yaml"
+      >
+{`# For chat applications in flow definition
+nodes:
+  chat_processor:
+    type: llm_text
+    model: anthropic.claude-3-haiku-20240307-v1:0
+    temperature: 0.7
+    max_tokens: 1000
+    wrapper_prompt: |
+      You are a helpful assistant. 
+      Respond naturally and concisely.`}
+      </CollapsibleCodeBlock>
+    </div>
+  </TabItem>
+  
+  <TabItem value="analysis" label="Complex Analysis">
+    <div style={{ marginTop: '1rem' }}>
+      <h4>Recommended Models:</h4>
+      <ul>
+        <li><strong>Claude 3 Opus</strong> - Best analytical capabilities</li>
+        <li><strong>DeepSeek R1</strong> - Advanced reasoning</li>
+        <li><strong>Llama 3 70B</strong> - Strong general analysis</li>
+      </ul>
+      
+      <CollapsibleCodeBlock
+        title="Analysis Configuration Example"
+        language="yaml"
+      >
+{`# For complex analysis in flow definition
+nodes:
+  analyzer:
+    type: llm_structured
+    model: anthropic.claude-3-opus-20240229-v1:0
+    temperature: 0.3  # Lower for consistency
+    max_tokens: 4000
+    custom_output_schema:
+      analysis:
+        type: string
+        description: Detailed analysis
+      confidence:
+        type: float
+        description: Confidence score
+      recommendations:
+        type: array
+        description: Action items`}
+      </CollapsibleCodeBlock>
+    </div>
+  </TabItem>
+  
+  <TabItem value="coding" label="Code Generation">
+    <div style={{ marginTop: '1rem' }}>
+      <h4>Recommended Models:</h4>
+      <ul>
+        <li><strong>Claude 3 Sonnet</strong> - Excellent code understanding</li>
+        <li><strong>DeepSeek R1</strong> - Strong debugging capabilities</li>
+        <li><strong>Mistral Mixtral</strong> - Good for multiple languages</li>
+      </ul>
+      
+      <CollapsibleCodeBlock
+        title="Code Generation Configuration"
+        language="yaml"
+      >
+{`# For code generation tasks
+nodes:
+  code_generator:
+    type: llm_text
+    model: anthropic.claude-3-sonnet-20240229-v1:0
+    temperature: 0.2  # Low for precise code
+    max_tokens: 2000
+    wrapper_prompt: |
+      Generate clean, well-commented code.
+      Follow best practices and include error handling.`}
+      </CollapsibleCodeBlock>
+    </div>
+  </TabItem>
+</Tabs>
+
+### By Performance Requirements
+
+<Card>
+  <CardHeader>
+    <CardTitle>Performance Comparison</CardTitle>
+  </CardHeader>
+  <div style={{ padding: '1rem' }}>
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Response Time</th>
+          <th>Context Window</th>
+          <th>Cost/1K tokens</th>
+          <th>Best For</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Claude 3 Haiku</td>
+          <td>~1-2s</td>
+          <td>200K</td>
+          <td>$</td>
+          <td>High-volume, fast responses</td>
+        </tr>
+        <tr>
+          <td>Claude 3 Sonnet</td>
+          <td>~2-4s</td>
+          <td>200K</td>
+          <td>$$</td>
+          <td>Balanced workloads</td>
+        </tr>
+        <tr>
+          <td>Claude 3 Opus</td>
+          <td>~4-8s</td>
+          <td>200K</td>
+          <td>$$$</td>
+          <td>Complex tasks</td>
+        </tr>
+        <tr>
+          <td>DeepSeek R1</td>
+          <td>~3-6s</td>
+          <td>64K</td>
+          <td>$$</td>
+          <td>Reasoning tasks</td>
+        </tr>
+        <tr>
+          <td>Llama 3 8B</td>
+          <td>~1-2s</td>
+          <td>8K</td>
+          <td>$</td>
+          <td>Cost-sensitive apps</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</Card>
+
+## Checking Model Availability
+
+### List Available Models
+
+<CollapsibleCodeBlock
+  title="List Foundation Models"
+  description="AWS CLI command to check available models"
+  language="bash"
+>
+{`# List all available models in your region
+aws bedrock list-foundation-models --region us-east-2
+
+# Filter by provider
+aws bedrock list-foundation-models --region us-east-2 \\
+  --query "modelSummaries[?contains(providerName, 'Anthropic')]"
+
+# Check specific model details
+aws bedrock get-foundation-model \\
+  --model-identifier anthropic.claude-3-haiku-20240307-v1:0 \\
+  --region us-east-2`}
+</CollapsibleCodeBlock>
+
+### Check Model Access
+
+<CollapsibleCodeBlock
+  title="Verify Model Access"
+  description="Python script to check which models you can use"
+  language="python"
+>
+{`import boto3
+import json
+from botocore.exceptions import ClientError
+
+def check_model_access(region='us-east-2'):
+    """Check which models are accessible in your account."""
+    
+    session = boto3.Session(region_name=region)
+    bedrock = session.client('bedrock')
+    bedrock_runtime = session.client('bedrock-runtime')
+    
+    # Get list of foundation models
+    response = bedrock.list_foundation_models()
+    
+    print(f"Checking model access in {region}...")
+    accessible_models = []
+    
+    for model in response['modelSummaries']:
+        model_id = model['modelId']
+        try:
+            # Try a minimal invocation
+            test_body = {
+                "messages": [{"role": "user", "content": "test"}],
+                "max_tokens": 1
+            }
+            
+            bedrock_runtime.invoke_model(
+                modelId=model_id,
+                body=json.dumps(test_body),
+                contentType='application/json'
+            )
+            
+            accessible_models.append(model_id)
+            print(f"✓ {model_id}: ACCESSIBLE")
+            
+        except ClientError as e:
+            if "no access" in str(e).lower():
+                print(f"✗ {model_id}: NO ACCESS")
+            else:
+                print(f"? {model_id}: {e}")
+    
+    return accessible_models`}
+</CollapsibleCodeBlock>
+
+## Dynamic Model Selection
+
+The HPC Execution Engine supports dynamic model selection based on configuration:
+
+<CollapsibleCodeBlock
+  title="Dynamic Model Configuration"
+  description="Configure model selection in your flows"
+  language="yaml"
+>
+{`# In your flow definition
+nodes:
+  ai_processor:
+    type: llm_text
+    model: null  # Uses DEFAULT_MODEL_ID from environment
+    
+  # Or specify explicitly
+  premium_ai:
+    type: llm_text
+    model: anthropic.claude-3-opus-20240229-v1:0
+    
+  # Or use inference profile ARN
+  reasoning_ai:
+    type: llm_text
+    model: arn:aws:bedrock:us-east-2:559050205657:inference-profile/us.deepseek.r1-v1:0
+
+# In your .env file
+DEFAULT_MODEL_ID=anthropic.claude-3-haiku-20240307-v1:0
+
+# Override at runtime via API
+{
+  "config": {
+    "model_overrides": {
+      "ai_processor": "anthropic.claude-3-sonnet-20240229-v1:0"
+    }
+  }
+}`}
+</CollapsibleCodeBlock>
+
+## Cost Optimization Strategies
+
+<Features>
+  <Feature title="Use Appropriate Models" icon="/img/icons/settings.svg">
+    Match model capability to task complexity
+  </Feature>
+  <Feature title="Implement Caching" icon="/img/icons/database.svg">
+    Cache responses for repeated queries
+  </Feature>
+  <Feature title="Optimize Prompts" icon="/img/icons/ai-workflow.svg">
+    Shorter, clearer prompts reduce costs
+  </Feature>
+</Features>
+
+### Cost-Saving Tips
+
+1. **Start with smaller models** - Use Haiku or Llama 3 8B for initial development
+2. **Use structured outputs** - More efficient than parsing free text
+3. **Set appropriate max_tokens** - Don't request more than needed
+4. **Monitor usage** - Track token consumption per model
+
+<Callout type="tip" title="Model Selection Best Practice">
+Start with the smallest model that meets your needs, then upgrade only if necessary. Many tasks that seem to require large models can be handled effectively by smaller, faster models with well-crafted prompts.
+</Callout>
+
+## Next Steps
+
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginTop: '1.5rem' }}>
+  <Card>
+    <CardHeader>
+      <CardTitle>Configuration</CardTitle>
+      <CardDescription>
+        Advanced model configuration options
+      </CardDescription>
+    </CardHeader>
+    <div style={{ padding: '1rem', paddingTop: 0 }}>
+      <a href="./configuration" style={{ textDecoration: 'none' }}>
+        Configure models →
+      </a>
+    </div>
+  </Card>
+  
+  <Card>
+    <CardHeader>
+      <CardTitle>Troubleshooting</CardTitle>
+      <CardDescription>
+        Resolve common model issues
+      </CardDescription>
+    </CardHeader>
+    <div style={{ padding: '1rem', paddingTop: 0 }}>
+      <a href="./troubleshooting" style={{ textDecoration: 'none' }}>
+        Fix issues →
+      </a>
+    </div>
+  </Card>
+</div>

@@ -1,35 +1,34 @@
 // src/components/marketplace/MarketplacePanel/MarketplaceDetailPanel.jsx
-import React, { useState } from 'react';
 import {
-  Box,
-  Flex,
-  Heading,
-  Text,
-  Button,
-  IconButton,
-  Divider,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
-  List,
-  ListItem,
-  ListIcon,
-  Tag,
-  Badge,
-  Spinner,
-  useColorModeValue,
-  useToast,
+    Box,
+    Button,
+    Divider,
+    Flex,
+    Heading,
+    IconButton,
+    List,
+    ListIcon,
+    ListItem,
+    Spinner,
+    Tab,
+    TabList,
+    TabPanel,
+    TabPanels,
+    Tabs,
+    Tag,
+    Text,
+    useColorModeValue,
+    useToast
 } from '@chakra-ui/react';
+import { useState } from 'react';
 import {
-  FiX,
-  FiDownload,
-  FiStar,
-  FiCheck,
-  FiInfo,
-  FiGlobe,
-  FiTrash2
+    FiCheck,
+    FiDownload,
+    FiGlobe,
+    FiInfo,
+    FiStar,
+    FiTrash2,
+    FiX
 } from 'react-icons/fi';
 import { marketplaceApi } from '../../../utils/api';
 

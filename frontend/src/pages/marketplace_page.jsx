@@ -1,5 +1,4 @@
 // src/pages/marketplace_page.jsx
-import React from 'react';
 import { Box } from '@chakra-ui/react';
 import Marketplace from '../components/marketplace/marketplace';
 

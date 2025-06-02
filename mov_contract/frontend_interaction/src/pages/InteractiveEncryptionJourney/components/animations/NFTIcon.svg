@@ -1,0 +1,43 @@
+<svg 
+  viewBox="0 0 100 100" 
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g transform-origin="50 50">
+    <animateTransform
+      attributeName="transform"
+      type="rotate"
+      values="0;5;-5;0"
+      dur="2s"
+      repeatCount="indefinite"
+    />
+    <path
+      d="M30 20 L70 20 L80 50 L50 80 L20 50 Z"
+      fill="none" stroke="currentColor" stroke-width="2"
+      stroke-dasharray="200"
+      stroke-dashoffset="200"
+    >
+      <animate
+        attributeName="stroke-dashoffset"
+        from="200" to="0"
+        dur="1.5s"
+        fill="freeze"
+      />
+    </path>
+    <text 
+      x="50" y="55" 
+      text-anchor="middle" 
+      font-size="20" 
+      fill="currentColor"
+      opacity="0"
+    >
+      NFT
+      <animate
+        attributeName="opacity"
+        from="0" to="1"
+        dur="1s"
+        begin="1.5s"
+        fill="freeze"
+      />
+    </text>
+  </g>
+</svg>

@@ -1,24 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  VStack, 
-  Text, 
-  Input, 
-  InputGroup, 
-  InputLeftElement,
-  Divider,
-  Flex,
-  Button,
-  useColorModeValue,
-  Icon,
-  Spinner,
-  Collapse,
-  Tooltip
+import {
+    Box,
+    Flex,
+    Icon,
+    Input,
+    InputGroup,
+    InputLeftElement,
+    Spinner,
+    Text,
+    Tooltip,
+    useColorModeValue,
+    VStack,
+    HStack,
+    Button
 } from '@chakra-ui/react';
-import { FiSearch, FiPlus, FiHome, FiList, FiChevronRight, FiChevronDown } from 'react-icons/fi';
+import { useEffect, useState } from 'react';
+import { FiHome, FiList, FiSearch, FiRefreshCw } from 'react-icons/fi';
+import { RiExchangeLine } from 'react-icons/ri';
+import colors from '../../color';
 import { accessManagementApi } from '../../utils/access-api'; // Updated import path
 import SidebarItem from './SidebarItem';
-import colors from '../../color';
+import { useCurrentAccount, useSuiClient } from '@mysten/dapp-kit';
+import { getSuiBalance, getWalBalance, formatBalance } from '../../lib/blockchain_module/exchange';
+import { useZkLogin } from '../../contexts/ZkLoginContext';
 
 
 const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = false }) => {
@@ -35,10 +38,25 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
   const [view, setView] = useState('home'); // 'home', 'all', 'myFlows', 'otherFlows', etc.
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [suiBalance, setSuiBalance] = useState('0');
+  const [walBalance, setWalBalance] = useState('0');
+  const [loadingBalances, setLoadingBalances] = useState(false);
+  
+  const account = useCurrentAccount();
+  const client = useSuiClient();
+  const { zkLoginAddress, isAuthenticated: zkIsAuthenticated } = useZkLogin();
+  
+  // Get the active address from either wallet connection or zkLogin
+  const activeAddress = account?.address || zkLoginAddress;
+  
+  // WAL Token configuration  
+  const WAL_TOKEN_TYPE = '0x8270feb7375eee355e64fdb69c50abb6b5f9393a722883c1cf45f8e26048810a::wal::WAL';
 
   const bgColor = useColorModeValue(colors.accessManagement.sidebar.bg.light, colors.accessManagement.sidebar.bg.dark);
   const borderColor = useColorModeValue(colors.accessManagement.sidebar.border.light, colors.accessManagement.sidebar.border.dark);
   const hoverBgColor = useColorModeValue(colors.accessManagement.sidebar.itemHover.light, colors.accessManagement.sidebar.itemHover.dark);
+  const balanceBoxBg = useColorModeValue(colors.gray[50], colors.gray[800]);
+  const balanceTextColor = useColorModeValue(colors.gray[700], colors.gray[200]);
 
   // Check authentication status
   useEffect(() => {
@@ -117,6 +135,44 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
     
     fetchData();
   }, [isAuthenticated]);
+  
+  // Load balances
+  const loadBalances = async () => {
+
+    console.log('Loading balances...');
+    console.log('Account:', account);
+    console.log('zkLoginAddress:', zkLoginAddress);
+    console.log('activeAddress:', activeAddress);
+    console.log('Client:', client);
+    
+    if (!activeAddress || !client) {
+      console.log('No active address or client available');
+      return;
+    }
+
+    setLoadingBalances(true);
+    try {
+      // Get SUI balance
+      const suiBalanceData = await getSuiBalance(client, activeAddress);
+      console.log('SUI Balance Data:', suiBalanceData);
+      setSuiBalance(formatBalance(suiBalanceData.totalBalance, 9));
+      
+      // Get WAL balance
+      const walBalanceData = await getWalBalance(client, activeAddress, WAL_TOKEN_TYPE);
+      setWalBalance(formatBalance(walBalanceData.totalBalance, 9));
+    } catch (error) {
+      console.error('Error loading balances:', error);
+    } finally {
+      setLoadingBalances(false);
+    }
+  };
+  
+  // Load balances on mount and when account changes
+  useEffect(() => {
+    if (activeAddress && client) {
+      loadBalances();
+    }
+  }, [activeAddress, client]);
 
   // Filter flows by search query
   const filterFlows = (flows) => {
@@ -324,22 +380,62 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
         )}
       </Box>
       
-      {/* Create Flow Button - fixed at bottom */}
+      {/* Balance Box and Swap Button - fixed at bottom */}
       <Box 
         p={4} 
+        borderTop="1px"
         borderColor={borderColor} 
         bg={bgColor}
       >
-        {/* <Button 
-          leftIcon={<FiPlus />} 
-          colorScheme="blue" 
-          size="sm" 
-          w="100%"
-          onClick={() => console.log('Create new project')}
-          bgColor={colors.gray[900]}
+        <Box
+          p={3}
+          bg={balanceBoxBg}
+          borderRadius="md"
+          border="1px"
+          borderColor={borderColor}
+          mb={3}
         >
-          Create new project
-        </Button> */}
+          <HStack justify="space-between" mb={2}>
+            <Text fontSize="sm" fontWeight="medium" color={balanceTextColor}>
+              Wallet Balances
+            </Text>
+            <Icon
+              as={FiRefreshCw}
+              fontSize="sm"
+              color={colors.gray[500]}
+              cursor="pointer"
+              onClick={loadBalances}
+              className={loadingBalances ? 'animate-spin' : ''}
+              _hover={{ color: colors.blue[500] }}
+            />
+          </HStack>
+          <VStack align="stretch" spacing={2}>
+            <HStack justify="space-between">
+              <Text fontSize="xs" color={colors.gray[500]}>SUI</Text>
+              <Text fontSize="sm" fontWeight="semibold" color={balanceTextColor}>
+                {loadingBalances ? '...' : suiBalance}
+              </Text>
+            </HStack>
+            <HStack justify="space-between">
+              <Text fontSize="xs" color={colors.gray[500]}>WAL</Text>
+              <Text fontSize="sm" fontWeight="semibold" color={balanceTextColor}>
+                {loadingBalances ? '...' : walBalance}
+              </Text>
+            </HStack>
+          </VStack>
+        </Box>
+        
+        <Button
+          leftIcon={<RiExchangeLine />}
+          size="sm"
+          w="100%"
+          variant="outline"
+          colorScheme="blue"
+          onClick={() => handleViewChange('swap')}
+          isDisabled={!activeAddress}
+        >
+          Swap SUI to WAL
+        </Button>
       </Box>
     </Box>
   );

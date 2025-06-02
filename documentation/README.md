@@ -114,15 +114,21 @@ documentation/
 1. Create a new MDX file in the appropriate directory under `docs/`
 2. Add front matter at the top:
 
-```mdx
+```js
 ---
-id: unique-doc-id
-title: Document Title
-sidebar_label: Sidebar Label
-sidebar_position: 1
+id: <id>
+title: <title>
+sidebar_label: <sidebar-label>
+sidebar_position: <sidebar-index>
 ---
 
-import ComponentName from '@site/src/components/ComponentName';
+import { Card, CardHeader, CardTitle, CardDescription } from '@site/src/components/Card';
+import { Callout } from '@site/src/components/Callout';
+import { Features, Feature } from '@site/src/components/Features';
+import { CollapsibleCodeBlock, InlineCodeCard } from '@site/src/components/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
 
 # Document Title
 

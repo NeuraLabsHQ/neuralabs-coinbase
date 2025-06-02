@@ -15,14 +15,16 @@ export function Feature({ icon, title, description }) {
   
   return (
     <div className="feature-card card">
-      <div className="feature-icon">
-        {isImagePath ? (
-          <img src={icon} alt="" width="32" height="32" />
-        ) : (
-          icon
-        )}
+      <div className="flex items-center gap-2 mb-2" >
+        <div className="feature-icon">
+          {isImagePath ? (
+            <img src={icon} alt="" width="32" height="32" />
+          ) : (
+            icon
+          )}
+        </div>
+        <h3 className=" m-0">{title}</h3>
       </div>
-      <h3>{title}</h3>
       <p>{description}</p>
     </div>
   );

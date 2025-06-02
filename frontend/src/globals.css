@@ -1,85 +1,90 @@
 /* globals.css */
+@import './styles/_color-variables.scss';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Use centralized color system */
+    --background: var(--neutral-0);
+    --foreground: var(--gray-700);
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: var(--neutral-0);
+    --card-foreground: var(--gray-700);
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: var(--neutral-0);
+    --popover-foreground: var(--gray-700);
 
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
+    --primary: var(--blue-500);
+    --primary-foreground: var(--neutral-0);
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: var(--neutral-100);
+    --secondary-foreground: var(--gray-700);
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: var(--neutral-200);
+    --muted-foreground: var(--gray-500);
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: var(--blue-50);
+    --accent-foreground: var(--blue-700);
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: var(--red-500);
+    --destructive-foreground: var(--neutral-0);
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --border: var(--neutral-300);
+    --input: var(--neutral-300);
+    --ring: var(--blue-500);
 
     --radius: 0.5rem;
 
-    /* Node colors */
-    --node-fill-default: 0 0% 100%;
-    --node-stroke-default: 214.3 31.8% 91.4%;
-    --node-fill-selected: 221.2 83.2% 95%;
-    --node-stroke-selected: 221.2 83.2% 53.3%;
-    --edge-stroke: 215.4 16.3% 46.9%;
-    --edge-arrowhead-fill: 215.4 16.3% 46.9%;
+    /* Node colors - use centralized system */
+    --node-fill-default: var(--canvas-node);
+    --node-stroke-default: var(--canvas-nodeBorder);
+    --node-fill-active: var(--canvas-nodeActiveFill);
+    --node-stroke-active: var(--canvas-nodeActive);
+    --node-fill-selected: var(--canvas-nodeSelectedFill);
+    --node-stroke-selected: var(--canvas-nodeSelected);
+    --edge-stroke: var(--canvas-edge);
+    --edge-arrowhead-fill: var(--canvas-edge);
   }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+  [data-theme="dark"] {
+    --background: var(--dark-900);
+    --foreground: var(--neutral-0);
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: var(--dark-700);
+    --card-foreground: var(--neutral-0);
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: var(--dark-700);
+    --popover-foreground: var(--neutral-0);
 
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: var(--blue-400);
+    --primary-foreground: var(--dark-900);
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: var(--dark-500);
+    --secondary-foreground: var(--neutral-0);
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: var(--dark-300);
+    --muted-foreground: var(--neutral-500);
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: var(--dark-300);
+    --accent-foreground: var(--blue-400);
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: var(--red-300);
+    --destructive-foreground: var(--neutral-0);
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --border: var(--neutral-900);
+    --input: var(--neutral-900);
+    --ring: var(--blue-400);
 
-    /* Node colors in dark mode */
-    --node-fill-default: 217.2 32.6% 17.5%;
-    --node-stroke-default: 215 20.2% 65.1%;
-    --node-fill-selected: 221.2 83.2% 20%;
-    --node-stroke-selected: 221.2 83.2% 65%;
-    --edge-stroke: 215 20.2% 65.1%;
-    --edge-arrowhead-fill: 215 20.2% 65.1%;
+    /* Node colors for dark theme */
+    --node-fill-default: var(--canvas-node);
+    --node-stroke-default: var(--canvas-nodeBorder);
+    --node-fill-active: var(--canvas-nodeActiveFill);
+    --node-stroke-active: var(--canvas-nodeActive);
+    --node-fill-selected: var(--canvas-nodeSelectedFill);
+    --node-stroke-selected: var(--canvas-nodeSelected);
   }
 }
 
@@ -104,7 +109,7 @@
 }
 
 .flow-canvas__node--selected rect {
-  filter: drop-shadow(0px 0px 5px rgba(0, 119, 255, 0.5));
+  filter: drop-shadow(0px 0px 5px var(--blue-400));
 }
 
 .flow-canvas__node-connector {

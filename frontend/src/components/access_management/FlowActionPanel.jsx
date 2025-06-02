@@ -1,55 +1,46 @@
 // src/components/access_management/FlowActionPanel.jsx
-import React, { useState } from "react";
 import {
-  Box,
-  Flex,
-  Button,
-  VStack,
-  Tooltip,
-  useColorModeValue,
-  useToast,
+    Box,
+    Button,
+    Flex,
+    Tooltip,
+    useColorModeValue,
+    useToast,
+    VStack,
 } from "@chakra-ui/react";
-import {
-  FiHome,
-  FiMessageSquare,
-  FiKey,
-  FiEdit,
-  FiTag,
-  FiClock,
-  FiUpload,
-  FiSettings,
-  FiLayout,
-  FiLink,
-  FiBarChart2,
-  FiDownload,
-  FiDollarSign,
-  FiCreditCard,
-  FiGitBranch,
-  FiUsers,
-  FiSend, // Added for Publish icon
-} from "react-icons/fi";
-import { FaAngleDoubleLeft, FaAngleDoubleRight } from "react-icons/fa";
 import { useCurrentWallet } from "@mysten/dapp-kit";
-import { useWallet } from "../../contexts/WalletContext";
-import { useExecuteContractFunction } from "../../utils/transaction";
-import flowIcons from "../../utils/my-flow-icons.json";
-import PublishModal from "./Popup/PublishModal"; // Import the new modal
+import { useState,useEffect } from 'react';
+import { FaAngleDoubleLeft, FaAngleDoubleRight } from "react-icons/fa";
+import {
+    FiBarChart2,
+    FiClock,
+    FiCreditCard,
+    FiDollarSign,
+    FiDownload,
+    FiEdit,
+    FiGitBranch,
+    FiHome,
+    FiKey,
+    FiLayout,
+    FiLink,
+    FiMessageSquare,
+    FiSend,
+    FiSettings,
+    FiTag,
+    FiUpload,
+    FiUsers,
+} from "react-icons/fi";
 import colors from '../../color';
+import flowIcons from "../../utils/my-flow-icons.json";
+// Removed PublishModal import - will use InteractivePublish page instead
 
 const FlowActionPanel = ({ toggleSidebar, sidebarOpen, currentPage, onPageChange }) => {
   const [activeAction, setActiveAction] = useState('Summary');
-  const [isModalOpen, setModalOpen] = useState(false);
-  const [contractValue, setContractValue] = useState("0");
   const { currentWallet } = useCurrentWallet();
-  // const { signAndSubmitTransaction, account } = useWallet();
-  const signAndSubmitTransaction = currentWallet?.signAndSubmitTransaction;
-  const account = "12344";
-  const connected = !!currentWallet;
-  const wallet = currentWallet;
   const toast = useToast();
   
   // Update active action based on current page
-  React.useEffect(() => {
+useEffect(() => {
     const pageToAction = {
       'summary': 'Home',
       'chat': 'Chat',
@@ -73,12 +64,6 @@ const FlowActionPanel = ({ toggleSidebar, sidebarOpen, currentPage, onPageChange
     }
   }, [currentPage]);
 
-  const executeContract = useExecuteContractFunction(
-    signAndSubmitTransaction,
-    account,
-    connected,
-    wallet
-  );
 
   const bgColor = useColorModeValue(colors.accessManagement.sidebar.bg.light, colors.accessManagement.sidebar.bg.dark);
   const borderColor = useColorModeValue(colors.accessManagement.sidebar.border.light, colors.accessManagement.sidebar.border.dark);
@@ -121,7 +106,7 @@ const FlowActionPanel = ({ toggleSidebar, sidebarOpen, currentPage, onPageChange
     console.log(`Action clicked: ${actionName}`);
     
     if (actionName === "Publish") {
-      setModalOpen(true); // Open the modal instead of directly publishing
+      onPageChange('interactive-publish'); // Navigate to Interactive Publish page
     } else if (onPageChange) {
       // Map action names to page names
       const pageMapping = {
@@ -132,9 +117,9 @@ const FlowActionPanel = ({ toggleSidebar, sidebarOpen, currentPage, onPageChange
         'Flow View': 'flow-view',
         'Settings': 'settings',
         'Metadata': 'metadata',
-        'Versions': 'version',
         'Blockchain': 'blockchain',
         'Download': 'download',
+         'Versions': 'version',
         'Analytics': 'analytics',
         'Cost': 'cost-estimation',
         'Monetization': 'monetization',
@@ -149,70 +134,6 @@ const FlowActionPanel = ({ toggleSidebar, sidebarOpen, currentPage, onPageChange
     }
   };
 
-  const handlePublish = async ({ versionName, versionNumber, allPreviews }) => {
-    try {
-      // Replace with your contract details
-      const contractAddress = "0x48b3475fd2c5d2ae55b80154ea006e6ed6ffb78c8e7dbfd14288168d7da3f7e6"; // Your contract address
-      const moduleName = "NFT"; // Your module name
-      const functionName = "create_nft"; // Your function name
-      const address = account.address; // The address of the account
-      console.log("Account Address:", address); // Log the account address
-      const name = "My NFT 2";
-      const levelOfOwnership = 6;
-    
-
-      if (!connected || !account) {
-        toast({
-          title: "Wallet Error",
-          description: "Please connect wallet first",
-          status: "warning",
-          duration: 5000,
-          isClosable: true,
-        });
-        return;
-      }
-
-      // Log the modal inputs (for debugging or further use)
-      console.log("Version Name:", versionName);
-      console.log("Version Number:", versionNumber);
-      console.log("All Previews:", allPreviews);
-
-      // Execute the contract
-      await executeContract(
-        contractAddress,
-        moduleName,
-        functionName,
-        [], // type_arguments
-        [name, levelOfOwnership], // args
-        // { maxGasAmount: "2000", gasUnitPrice: "100" } // options
-      );
-    // await executeContract(
-    //     contractAddress,
-    //     moduleName,
-    //     "initialize",
-    //     [], // type_arguments
-    //     [], // args
-    //     // { maxGasAmount: "2000", gasUnitPrice: "100" } // options
-    //   );
-
-      toast({
-        title: "Contract Executed",
-        description: "Transaction submitted successfully",
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error("Publish failed:", error);
-      toast({
-        title: "Publish Failed",
-        description: error.message || "Failed to publish",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
-    }
-  };
 
   return (
     <Box
@@ -277,12 +198,6 @@ const FlowActionPanel = ({ toggleSidebar, sidebarOpen, currentPage, onPageChange
         ))}
       </VStack>
 
-      {/* Publish Modal */}
-      <PublishModal
-        isOpen={isModalOpen}
-        onClose={() => setModalOpen(false)}
-        onPublish={handlePublish}
-      />
     </Box>
   );
 };

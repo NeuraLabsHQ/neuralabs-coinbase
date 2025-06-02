@@ -1,6 +1,6 @@
 // src/utils/agent-api.js
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
 class AgentAPI {
   constructor() {
@@ -214,6 +214,118 @@ class AgentAPI {
       return result;
     } catch (error) {
       console.error('Error saving metadata:', error);
+      throw error;
+    }
+  }
+
+  // Publish agent to blockchain
+  async publishToBlockchain(agentId, blockchainData) {
+    try {
+      const token = this.getAuthToken();
+      
+      const response = await fetch(`${this.baseURL}/api/set-data/agent/${agentId}/publish`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(blockchainData)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Error publishing to blockchain:', error);
+      throw error;
+    }
+  }
+
+  // Grant access to NFT
+  async grantNFTAccess(nftId, targetUserId, accessLevel) {
+    try {
+      const token = this.getAuthToken();
+      
+      const response = await fetch(`${this.baseURL}/api/set-data/nft/${nftId}/grant-access`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          target_user_id: targetUserId,
+          access_level: accessLevel
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Error granting NFT access:', error);
+      throw error;
+    }
+  }
+
+  // Revoke access from NFT
+  async revokeNFTAccess(nftId, targetUserId) {
+    try {
+      const token = this.getAuthToken();
+      
+      const response = await fetch(`${this.baseURL}/api/set-data/nft/${nftId}/revoke-access`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          target_user_id: targetUserId
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Error revoking NFT access:', error);
+      throw error;
+    }
+  }
+
+  // Get access list for NFT
+  async getNFTAccessList(nftId) {
+    try {
+      const token = this.getAuthToken();
+      
+      const response = await fetch(`${this.baseURL}/api/dashboard/nft/${nftId}/access-list`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Error fetching NFT access list:', error);
       throw error;
     }
   }

@@ -1,6 +1,6 @@
 // src/theme.js
 import { extendTheme, Icon } from "@chakra-ui/react";
-import { hover } from "framer-motion";
+// import { hover } from "framer-motion";
 
 
 import colors from "./color";

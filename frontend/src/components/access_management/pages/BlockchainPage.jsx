@@ -1,5 +1,4 @@
 // src/components/access_management/pages/BlockchainPage.jsx
-import React from 'react';
 import { 
   Box, 
   VStack, 
@@ -16,9 +15,10 @@ import {
 } from '@chakra-ui/react';
 import { FiExternalLink, FiCopy, FiCheck } from 'react-icons/fi';
 import colors from '../../../color';
+import {useState,useEffect} from 'react';
 
 const BlockchainPage = ({ agentData }) => {
-  const [copiedField, setCopiedField] = React.useState(null);
+  const [copiedField, setCopiedField] = useState(null);
   
   const bgColor = useColorModeValue(colors.accessManagement.mainContent.bg.light, colors.accessManagement.mainContent.bg.dark);
   const cardBg = useColorModeValue(colors.accessManagement.flowCard.bg.light, colors.accessManagement.flowCard.bg.dark);
@@ -123,30 +123,132 @@ const BlockchainPage = ({ agentData }) => {
                     {agentData.published_date ? new Date(agentData.published_date).toLocaleString() : 'Unknown'}
                   </Text>
                 </HStack>
-                <Divider />
-                <HStack justify="space-between">
-                  <Text fontWeight="medium" color={labelColor}>Transaction Hash:</Text>
-                  <HStack>
-                    <Text color={textColor} fontFamily="monospace" fontSize="xs" isTruncated maxW="200px">
-                      {agentData.publish_hash || 'Not available'}
-                    </Text>
-                    {agentData.publish_hash && (
-                      <Tooltip label={copiedField === 'hash' ? 'Copied!' : 'Copy hash'}>
-                        <IconButton
-                          icon={copiedField === 'hash' ? <FiCheck /> : <FiCopy />}
-                          size="xs"
-                          variant="ghost"
-                          onClick={() => handleCopy(agentData.publish_hash, 'hash')}
-                          colorScheme={copiedField === 'hash' ? 'green' : 'gray'}
-                        />
-                      </Tooltip>
-                    )}
-                  </HStack>
-                </HStack>
               </>
             )}
           </VStack>
         </Box>
+
+        {/* NFT Details */}
+        {isPublished && (
+          <Box bg={cardBg} p={6} borderRadius="md" border="1px" borderColor={borderColor}>
+            <Heading size="md" mb={4} color={textColor}>
+              NFT Details
+            </Heading>
+            <VStack align="stretch" spacing={4}>
+              <HStack justify="space-between">
+                <Text fontWeight="medium" color={labelColor}>NFT ID:</Text>
+                <HStack>
+                  <Text color={textColor} fontFamily="monospace" fontSize="sm">
+                    {agentData.nft_id ? `${agentData.nft_id.slice(0, 10)}...${agentData.nft_id.slice(-8)}` : 'Not minted'}
+                  </Text>
+                  {agentData.nft_id && (
+                    <Tooltip label={copiedField === 'nft' ? 'Copied!' : 'Copy NFT ID'}>
+                      <IconButton
+                        icon={copiedField === 'nft' ? <FiCheck /> : <FiCopy />}
+                        size="xs"
+                        variant="ghost"
+                        onClick={() => handleCopy(agentData.nft_id, 'nft')}
+                        colorScheme={copiedField === 'nft' ? 'green' : 'gray'}
+                      />
+                    </Tooltip>
+                  )}
+                </HStack>
+              </HStack>
+              <Divider />
+              <HStack justify="space-between">
+                <Text fontWeight="medium" color={labelColor}>Access Cap ID:</Text>
+                <HStack>
+                  <Text color={textColor} fontFamily="monospace" fontSize="sm">
+                    {agentData.other_data?.access_cap_id ? 
+                      `${agentData.other_data.access_cap_id.slice(0, 10)}...${agentData.other_data.access_cap_id.slice(-8)}` 
+                      : 'Not available'}
+                  </Text>
+                  {agentData.other_data?.access_cap_id && (
+                    <Tooltip label={copiedField === 'accesscap' ? 'Copied!' : 'Copy Access Cap ID'}>
+                      <IconButton
+                        icon={copiedField === 'accesscap' ? <FiCheck /> : <FiCopy />}
+                        size="xs"
+                        variant="ghost"
+                        onClick={() => handleCopy(agentData.other_data.access_cap_id, 'accesscap')}
+                        colorScheme={copiedField === 'accesscap' ? 'green' : 'gray'}
+                      />
+                    </Tooltip>
+                  )}
+                </HStack>
+              </HStack>
+            </VStack>
+          </Box>
+        )}
+
+        {/* Walrus Storage Details */}
+        {isPublished && agentData.other_data && (
+          <Box bg={cardBg} p={6} borderRadius="md" border="1px" borderColor={borderColor}>
+            <Heading size="md" mb={4} color={textColor}>
+              Walrus Storage Details
+            </Heading>
+            <VStack align="stretch" spacing={4}>
+              <HStack justify="space-between">
+                <Text fontWeight="medium" color={labelColor}>Blob ID:</Text>
+                <HStack>
+                  <Text color={textColor} fontFamily="monospace" fontSize="sm">
+                    {agentData.other_data.walrus_blob_id ? 
+                      `${agentData.other_data.walrus_blob_id.slice(0, 10)}...` 
+                      : 'Not available'}
+                  </Text>
+                  {agentData.other_data.walrus_blob_id && (
+                    <Tooltip label={copiedField === 'blob' ? 'Copied!' : 'Copy Blob ID'}>
+                      <IconButton
+                        icon={copiedField === 'blob' ? <FiCheck /> : <FiCopy />}
+                        size="xs"
+                        variant="ghost"
+                        onClick={() => handleCopy(agentData.other_data.walrus_blob_id, 'blob')}
+                        colorScheme={copiedField === 'blob' ? 'green' : 'gray'}
+                      />
+                    </Tooltip>
+                  )}
+                </HStack>
+              </HStack>
+              <Divider />
+              <HStack justify="space-between">
+                <Text fontWeight="medium" color={labelColor}>File Size:</Text>
+                <Text color={textColor}>
+                  {agentData.other_data.encryption_details?.file_size ? 
+                    `${(agentData.other_data.encryption_details.file_size / 1024).toFixed(2)} KB` 
+                    : 'Not available'}
+                </Text>
+              </HStack>
+              <Divider />
+              <HStack justify="space-between">
+                <Text fontWeight="medium" color={labelColor}>MIME Type:</Text>
+                <Text color={textColor}>
+                  {agentData.other_data.encryption_details?.mime_type || 'Not available'}
+                </Text>
+              </HStack>
+              <Divider />
+              <HStack justify="space-between">
+                <Text fontWeight="medium" color={labelColor}>Encrypted ID:</Text>
+                <HStack>
+                  <Text color={textColor} fontFamily="monospace" fontSize="xs">
+                    {agentData.other_data.encryption_details?.encrypted_id ? 
+                      `${agentData.other_data.encryption_details.encrypted_id.slice(0, 12)}...` 
+                      : 'Not available'}
+                  </Text>
+                  {agentData.other_data.encryption_details?.encrypted_id && (
+                    <Tooltip label={copiedField === 'encrypted' ? 'Copied!' : 'Copy Encrypted ID'}>
+                      <IconButton
+                        icon={copiedField === 'encrypted' ? <FiCheck /> : <FiCopy />}
+                        size="xs"
+                        variant="ghost"
+                        onClick={() => handleCopy(agentData.other_data.encryption_details.encrypted_id, 'encrypted')}
+                        colorScheme={copiedField === 'encrypted' ? 'green' : 'gray'}
+                      />
+                    </Tooltip>
+                  )}
+                </HStack>
+              </HStack>
+            </VStack>
+          </Box>
+        )}
         
         {/* Explorer Links */}
         <Box bg={cardBg} p={6} borderRadius="md" border="1px" borderColor={borderColor}>
@@ -154,30 +256,56 @@ const BlockchainPage = ({ agentData }) => {
             Explorer Links
           </Heading>
           <VStack align="stretch" spacing={3}>
-            <Link
-              href={`https://suiexplorer.com/address/${agentData.contract_id || '0x0'}?network=testnet`}
-              isExternal
-              color="blue.400"
-              _hover={{ textDecoration: 'underline' }}
-            >
-              <HStack>
-                <Text>View Contract on SUI Explorer</Text>
-                <FiExternalLink />
-              </HStack>
-            </Link>
-            {agentData.publish_hash && (
+            {agentData.contract_id && (
               <Link
-                href={`https://suiexplorer.com/txblock/${agentData.publish_hash}?network=testnet`}
+                href={`https://suiexplorer.com/address/${agentData.contract_id}?network=testnet`}
                 isExternal
                 color="blue.400"
                 _hover={{ textDecoration: 'underline' }}
               >
                 <HStack>
-                  <Text>View Deploy Transaction</Text>
+                  <Text>View Contract on SUI Explorer</Text>
                   <FiExternalLink />
                 </HStack>
               </Link>
             )}
+            {agentData.nft_id && (
+              <Link
+                href={`https://suiexplorer.com/object/${agentData.nft_id}?network=testnet`}
+                isExternal
+                color="blue.400"
+                _hover={{ textDecoration: 'underline' }}
+              >
+                <HStack>
+                  <Text>View NFT on SUI Explorer</Text>
+                  <FiExternalLink />
+                </HStack>
+              </Link>
+            )}
+            {agentData.other_data?.walrus_url && (
+              <Link
+                href={agentData.other_data.walrus_url}
+                isExternal
+                color="blue.400"
+                _hover={{ textDecoration: 'underline' }}
+              >
+                <HStack>
+                  <Text>View on Walrus Network</Text>
+                  <FiExternalLink />
+                </HStack>
+              </Link>
+            )}
+            <Link
+              href="https://suiscan.xyz/testnet/"
+              isExternal
+              color="blue.400"
+              _hover={{ textDecoration: 'underline' }}
+            >
+              <HStack>
+                <Text>SuiScan Explorer</Text>
+                <FiExternalLink />
+              </HStack>
+            </Link>
             <Link
               href="https://faucet.sui.io"
               isExternal

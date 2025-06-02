@@ -1,12 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Flex, useDisclosure, useColorMode } from '@chakra-ui/react';
+import { Flex, useColorMode, useDisclosure } from '@chakra-ui/react';
+import { useEffect, useState, useRef } from 'react';
+import { useCurrentAccount } from '@mysten/dapp-kit';
+import { useZkLogin } from '../../../contexts/ZkLoginContext';
+import useUiColors from '../../../utils/uiColors';
 import ChatHistoryPanel from '../ChatHistoryPanel/ChatHistoryPanel';
 import ChatInterface from '../ChatInterface';
-import useUiColors from '../../../utils/uiColors';
-import thinkingdata from '../../../utils/thinkingdata.json';
 
 const ChatPage = () => {
   const colors = useUiColors();
+  
+  // Wallet context
+  const currentAccount = useCurrentAccount();
+  const { isAuthenticated: isZkLoggedIn, zkLoginAddress } = useZkLogin();
+  
+  // Get wallet address from either dapp-kit or zkLogin
+  const walletAddress = currentAccount?.address || zkLoginAddress || null;
+  
   const [chats, setChats] = useState([]);
   const [selectedChatId, setSelectedChatId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -20,11 +29,21 @@ const ChatPage = () => {
     currentStep: null,
     searchResults: [],
     timeElapsed: 0,
-    onTypingComplete: null // Explicitly add callback to state
+    onTypingComplete: null, // Explicitly add callback to state
+    executionSteps: [] // New field for backend execution steps
   });
+  
+  // Store thinking states for each message
+  const [messageThinkingStates, setMessageThinkingStates] = useState({});
+  const [activeMessageId, setActiveMessageId] = useState(null);
+  
+  const websocketRef = useRef(null);
+  const timerRef = useRef(null);
+  const streamBufferRef = useRef('');
+  const messageStreamBuffers = useRef({});
 
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: false });
-  const { colorMode, toggleColorMode } = useColorMode();
+  const { toggleColorMode } = useColorMode();
   
   useEffect(() => {
     const initialChats = [
@@ -35,93 +54,313 @@ const ChatPage = () => {
     ];
     setChats(initialChats);
   }, []);
-  
-  const sampleSearchResults = thinkingdata.searchResults;
 
-  const simulateThinking = (query, modelId) => {
-    const steps = thinkingdata.steps;
-    let currentStepIndex = 0;
+  // Cleanup function for WebSocket
+  useEffect(() => {
+    return () => {
+      if (websocketRef.current) {
+        websocketRef.current.close();
+      }
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
 
-    console.log("Starting simulateThinking with steps:", steps);
-
-    setThinkingState({
+  const connectToBackend = (agentId, userMessage, messageId) => {
+    console.log('Connecting to NeuraLabs backend with agent:', agentId);
+    console.log('User message:', userMessage);
+    console.log('Message ID:', messageId);
+    console.log('Wallet address:', walletAddress);
+    
+    // Set active message ID
+    setActiveMessageId(messageId);
+    
+    // Initialize thinking state for this specific message
+    const initialThinkingState = {
       isThinking: true,
-      steps: steps.map(step => ({ ...step, completed: false })),
-      currentStep: steps[0],
+      steps: [],
+      currentStep: null,
       searchResults: [],
       timeElapsed: 0,
-      onTypingComplete: null
+      onTypingComplete: null,
+      executionSteps: [],
+      messageId: messageId
+    };
+    
+    console.log('Setting initial thinking state for message:', messageId);
+    
+    // Update both current and message-specific thinking state
+    setThinkingState(initialThinkingState);
+    setMessageThinkingStates(prev => {
+      const newState = {
+        ...prev,
+        [messageId]: initialThinkingState
+      };
+      console.log('New message thinking states:', newState);
+      return newState;
     });
 
-    const timerInterval = setInterval(() => {
+    // Clear stream buffer and initialize message-specific buffer
+    streamBufferRef.current = '';
+    messageStreamBuffers.current[messageId] = '';
+
+    // Start timer for this specific message
+    timerRef.current = setInterval(() => {
+      // Only update the active message's time
+      setMessageThinkingStates(prev => {
+        if (!prev[messageId]) return prev;
+        
+        return {
+          ...prev,
+          [messageId]: {
+            ...prev[messageId],
+            timeElapsed: (prev[messageId].timeElapsed || 0) + 1
+          }
+        };
+      });
+      
+      // Also update current state if this is the active message
       setThinkingState(prev => ({
         ...prev,
         timeElapsed: prev.timeElapsed + 1
       }));
     }, 1000);
 
-    const advanceStep = () => {
-      console.log("Advancing step. Current index:", currentStepIndex);
-      currentStepIndex++;
+    // Connect to NeuraLabs backend WebSocket (port 8001)
+    const backendUrl = import.meta.env.REACT_APP_API_URL || 'http://localhost:8001';
+    const wsUrl = backendUrl.replace('http://', 'ws://').replace('https://', 'wss://') + `/api/chat/execute/${agentId}`;
+    console.log('Attempting WebSocket connection to NeuraLabs backend:', wsUrl);
+    
+    const ws = new WebSocket(wsUrl);
+    websocketRef.current = ws;
+    
+    // Store the message ID this WebSocket is handling
+    ws.messageId = messageId;
 
-      if (currentStepIndex < steps.length) {
-        setThinkingState(prev => {
-          const newState = {
-            ...prev,
-            steps: prev.steps.map((step, idx) =>
-              idx < currentStepIndex ? { ...step, completed: true } : step
-            ),
-            currentStep: steps[currentStepIndex]
-          };
-          console.log("New thinkingState:", newState);
-          return newState;
-        });
-      } else {
-        console.log("All steps completed");
-        setThinkingState(prev => {
-          const finalState = {
-            ...prev,
-            steps: prev.steps.map((step, idx) =>
-              idx <= currentStepIndex - 1 ? { ...step, completed: true } : step
-            ),
-            isThinking: false
-          };
-          console.log("Final thinkingState:", finalState);
-          return finalState;
-        });
+    ws.onopen = () => {
+      console.log('✅ WebSocket connected to NeuraLabs backend');
+      
+      // Get conversation history for this chat (excluding the current message)
+      const conversationHistory = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp,
+        metadata: {
+          message_id: msg.id,
+          model: msg.model || null
+        }
+      }));
+      
+      // Send initial data to NeuraLabs backend with conversation history
+      const initialData = {
+        user_id: walletAddress || 'anonymous', // Use actual wallet address
+        message: userMessage,
+        agent_id: agentId,
+        conversation_history: conversationHistory
+      };
+      
+      console.log('📤 Sending initial data to NeuraLabs backend:', initialData);
+      console.log('📋 Conversation history length:', conversationHistory.length);
+      ws.send(JSON.stringify(initialData));
+    };
 
-        clearInterval(timerInterval);
-
-        const assistantMessage = {
-          id: Date.now().toString(),
-          role: 'assistant',
-          content: getResponseBasedOnQuery(query, modelId),
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, assistantMessage]);
+    ws.onmessage = (event) => {
+      console.log('📨 WebSocket message received:', event.data);
+      const message = JSON.parse(event.data);
+      
+      // NeuraLabs backend forwards HPC execution events directly
+      if (message.type) {
+        console.log('→ Handling execution event:', message.type, 'for message:', messageId);
+        handleExecutionEvent(message, messageId);
+      } else if (message.status || message.error) {
+        console.log('→ NeuraLabs backend status:', message);
+        // Handle backend status messages if needed
       }
     };
 
-    // Pass advanceStep as the callback
-    setThinkingState(prev => ({
-      ...prev,
-      onTypingComplete: advanceStep
-    }));
+    ws.onerror = (error) => {
+      console.error('❌ WebSocket error:', error);
+      // Stop thinking UI on error
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      setThinkingState(prev => ({
+        ...prev,
+        isThinking: false
+      }));
+      
+      // Add error message to chat
+      const errorMessage = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: 'Sorry, I couldn\'t connect to the NeuraLabs backend. Please make sure the NeuraLabs backend is running on port 8001.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    };
 
-    return advanceStep;
+    ws.onclose = (event) => {
+      console.log('🔌 WebSocket closed:', event.code, event.reason);
+      // If connection was not established properly, it might be because NeuraLabs backend is not running
+      if (event.code === 1006) {
+        console.error('WebSocket connection failed. Is the NeuraLabs backend running on port 8001?');
+      }
+    };
   };
 
-  const getResponseBasedOnQuery = (query, modelId) => {
-    if (query.toLowerCase().includes('president') || query.toLowerCase().includes('who is')) {
-      return "Based on my analysis of current information, Donald Trump is the President of the United States as of March 2025. He was inaugurated for his second term (non-consecutive) on January 20, 2025, after winning the 2024 presidential election.";
-    } else if (query.toLowerCase().includes('weather') || query.toLowerCase().includes('forecast')) {
-      return "I don't have access to real-time weather data, but I can help you find weather forecasts for your location using weather services. Would you like me to suggest some reliable weather resources?";
-    } else if (query.toLowerCase().includes('code') || query.toLowerCase().includes('program')) {
-      return "I'd be happy to help with coding. Could you tell me more about what you're trying to build or what programming language you're working with?";
-    } else {
-      return `I've analyzed your question about "${query}" and here's my response: This is a simulated AI response using the ${modelId} model. In a real application, this would be generated by the actual AI model with relevant information.`;
+  const handleExecutionEvent = (event, messageId) => {
+    const { type, data } = event;
+
+    // Update function that updates both current state and message-specific state
+    const updateStates = (updater) => {
+      console.log('Updating states for message:', messageId, 'event type:', type);
+      setThinkingState(updater);
+      if (messageId) {
+        setMessageThinkingStates(prev => {
+          const currentState = prev[messageId] || {};
+          const newState = updater(currentState);
+          console.log('Message state update:', messageId, 'new state:', newState);
+          return {
+            ...prev,
+            [messageId]: newState
+          };
+        });
+      }
+    };
+
+    // Handle any type of event generically
+    if (type === 'element_started') {
+      // Add a new step when an element starts
+      updateStates(prev => ({
+        ...prev,
+        executionSteps: [...(prev.executionSteps || []), {
+          elementId: data.element_id,
+          elementName: data.element_name || data.element_id,
+          elementType: data.element_type,
+          description: data.description || `Processing ${data.element_name || data.element_id}`,
+          status: 'running',
+          outputs: {},
+          backtracking: data.backtracking || false,
+          executionTime: null
+        }]
+      }));
+    } else if (type === 'element_completed') {
+      // Update the step when it completes
+      updateStates(prev => ({
+        ...prev,
+        executionSteps: (prev.executionSteps || []).map(step =>
+          step.elementId === data.element_id
+            ? {
+                ...step,
+                status: 'completed',
+                outputs: data.outputs || {},
+                executionTime: data.execution_time || null,
+                description: data.description || step.description
+              }
+            : step
+        )
+      }));
+    } else if (type === 'llm_chunk') {
+      // Accumulate LLM chunks in message-specific buffer
+      if (data.content && messageId) {
+        messageStreamBuffers.current[messageId] = (messageStreamBuffers.current[messageId] || '') + data.content;
+        console.log('LLM chunk for message:', messageId, 'total length:', messageStreamBuffers.current[messageId].length);
+      }
+    } else if (type === 'final_output') {
+      // Extract answer from final output using message-specific buffer
+      const messageBuffer = messageStreamBuffers.current[messageId] || '';
+      const finalText = data.text_output || messageBuffer;
+      console.log('Final output for message:', messageId, 'using buffer:', finalText.substring(0, 100) + '...');
+      
+      // First check for </think> tag and extract content after it
+      let processedContent = finalText;
+      const thinkEndMatch = finalText.match(/<\/think>\s*([\s\S]*)/);
+      if (thinkEndMatch) {
+        processedContent = thinkEndMatch[1].trim();
+        console.log('Extracted content after </think>:', processedContent);
+      }
+      
+      // Then check for answer tags in the processed content
+      const answerMatch = processedContent.match(/<answer>([\s\S]*?)<\/answer>/);
+      
+      if (answerMatch) {
+        const answerContent = answerMatch[1].trim();
+        
+        // Add assistant message
+        const assistantMessage = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: answerContent,
+          timestamp: new Date(),
+          parentMessageId: messageId // Link to the user message
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+      } else if (processedContent) {
+        // If no answer tags, use the processed text (after </think> if present)
+        const assistantMessage = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: processedContent,
+          timestamp: new Date(),
+          parentMessageId: messageId // Link to the user message
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+      }
+    } else if (type === 'flow_completed' || type === 'flow_error') {
+      // Stop timer and thinking UI for flow completion or error
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      
+      // Update thinking state
+      updateStates(prev => ({
+        ...prev,
+        isThinking: false
+      }));
+
+      // Clear stream buffers
+      streamBufferRef.current = '';
+      if (messageId && messageStreamBuffers.current[messageId]) {
+        delete messageStreamBuffers.current[messageId];
+      }
+      
+      // Close WebSocket
+      if (websocketRef.current) {
+        websocketRef.current.close();
+        websocketRef.current = null;
+      }
+      
+      // Clear active message ID
+      setActiveMessageId(null);
+      
+      if (type === 'flow_error') {
+        console.error('Flow error:', data.error || 'Unknown error');
+      }
+    }
+    // For any other event types, we can add them to execution steps if needed
+    else if (data && type !== 'flow_started') {
+      // Optionally log or handle other event types
+      console.log('Received event:', type, data);
     }
   };
+
+  const simulateThinking = (query, _modelId, messageId) => {
+    console.log('🚀 simulateThinking called with query:', query);
+    console.log('📋 Message ID for thinking:', messageId);
+    
+    // Get agentId from URL params (if available)
+    const currentPath = window.location.pathname;
+    const agentIdMatch = currentPath.match(/\/chat\/([^\/]+)/);
+    const agentId = agentIdMatch ? agentIdMatch[1] : 'default-agent';
+    
+    console.log('📋 Agent ID:', agentId);
+    console.log('📋 Messages for context:', messages.length);
+    
+    // Connect to NeuraLabs backend with agent ID and user message
+    connectToBackend(agentId, query, messageId);
+  };
+
 
   const handleNewChat = () => {
     setIsLanding(true);
@@ -170,9 +409,37 @@ const ChatPage = () => {
     setEditingChatId(null);
   };
 
-  const handleSendMessage = (content, modelId, useThinking = false) => {
-    const hasAtMention = content.includes('@');
-
+  const handleSendMessage = (content, modelId) => {
+    // First, close any existing WebSocket connection and stop thinking UI
+    if (websocketRef.current) {
+      console.log('Closing existing WebSocket connection');
+      websocketRef.current.close();
+      websocketRef.current = null;
+    }
+    
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    // Clear all stream buffers
+    streamBufferRef.current = '';
+    Object.keys(messageStreamBuffers.current).forEach(key => {
+      delete messageStreamBuffers.current[key];
+    });
+    
+    // Reset thinking state and clear active message
+    setActiveMessageId(null);
+    setThinkingState({
+      isThinking: false,
+      steps: [],
+      currentStep: null,
+      searchResults: [],
+      timeElapsed: 0,
+      onTypingComplete: null,
+      executionSteps: []
+    });
+    
     if (isLanding) {
       const newChatId = Date.now().toString();
       const truncatedTitle = content.length > 30 ? content.substring(0, 27) + '...' : content;
@@ -182,8 +449,9 @@ const ChatPage = () => {
       setIsLanding(false);
     }
 
+    const userMessageId = Date.now().toString();
     const userMessage = {
-      id: Date.now().toString(),
+      id: userMessageId,
       role: 'user',
       content,
       model: modelId,
@@ -192,19 +460,11 @@ const ChatPage = () => {
 
     setMessages(prev => [...prev, userMessage]);
 
-    if (hasAtMention || useThinking) {
-      simulateThinking(content, modelId);
-    } else {
-      setTimeout(() => {
-        const assistantMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: getResponseBasedOnQuery(content, modelId),
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-      }, 1000);
-    }
+    // Small delay to ensure WebSocket is fully closed before starting new connection
+    setTimeout(() => {
+      // Always call the backend for every user input with the message ID
+      simulateThinking(content, modelId, userMessageId);
+    }, 100);
   };
 
   return (
@@ -229,6 +489,7 @@ const ChatPage = () => {
           onSendMessage={handleSendMessage}
           isLanding={isLanding}
           thinkingState={thinkingState}
+          messageThinkingStates={messageThinkingStates}
           onToggleColorMode={toggleColorMode}
         />
       </Flex>

@@ -1,0 +1,165 @@
+# Simple AI Flow using new structure
+flow_definition:
+  nodes:
+    start_node:
+      type: start
+      node_description: "Entry point of the flow execution"
+      description: "Initializes the conversation flow"
+      processing_message: "Starting conversation flow..."
+      tags: ["flow-control", "entry-point"]
+      layer: 3
+      input_schema:
+        prompt:
+          type: string
+          description: "User's input prompt"
+          required: true
+        context_history:
+          type: list
+          description: "Previous conversation history"
+          required: false
+          default: []
+      output_schema:
+        prompt:
+          type: string
+          description: "User's input prompt"
+          required: true
+        context_history:
+          type: list
+          description: "Previous conversation history"
+          required: true
+    
+    context_node:
+      type: context_history
+      node_description: "Provides conversation history and context to downstream elements"
+      description: "Manages conversation context for the AI"
+      processing_message: "Loading conversation context..."
+      tags: ["input", "context", "memory"]
+      layer: 3
+      input_schema:
+        context_history:
+          type: list
+          description: "Historical conversation context"
+          required: true
+      output_schema:
+        context_history:
+          type: list
+          description: "Formatted context for LLM"
+          required: true
+    
+    llm_node:
+      type: llm_text
+      node_description: "Generates text using Large Language Models"
+      description: "AI assistant that processes user queries"
+      processing_message: "Generating AI response..."
+      tags: ["ai", "text-generation", "llm"]
+      layer: 3
+      parameters:
+        model: null  # Will use default from config
+        temperature: 0.7
+        max_tokens: 2000
+        wrapper_prompt: |
+          You are a helpful AI assistant. Use the following context if relevant:
+          
+          Context:
+          {context}
+          
+          User Query:
+          {prompt}
+          
+          Please provide a helpful response.
+      input_schema:
+        prompt:
+          type: string
+          description: "User's query"
+          required: true
+        context:
+          type: list
+          description: "Conversation context"
+          required: false
+          default: []
+        additional_data:
+          type: json
+          description: "Additional metadata"
+          required: false
+          default: {}
+      output_schema:
+        llm_output:
+          type: string
+          description: "AI generated response"
+          required: true
+    
+    end_node:
+      type: end
+      node_description: "Terminal point of the flow execution"
+      description: "Finalizes the conversation response"
+      processing_message: "Finalizing response..."
+      tags: ["flow-control", "exit-point"]
+      layer: 3
+      input_schema:
+        text_input:
+          type: string
+          description: "Final text output"
+          required: true
+        proposed_transaction:
+          type: json
+          description: "Optional transaction data"
+          required: false
+          default: null
+      output_schema:
+        text_output:
+          type: string
+          description: "Final response text"
+          required: true
+        proposed_transaction:
+          type: json
+          description: "Optional transaction data"
+          required: false
+  
+  connections:
+    # Control flow: start -> context -> llm -> end
+    - from_id: start_node
+      to_id: context_node
+      connection_type: control
+    
+    - from_id: context_node
+      to_id: llm_node
+      connection_type: control
+    
+    - from_id: llm_node
+      to_id: end_node
+      connection_type: control
+    
+    # Data flow connections
+    - from_id: start_node
+      to_id: context_node
+      connection_type: data
+      from_output: "start_node:context_history"
+      to_input: "context_node:context_history"
+    
+    - from_id: start_node
+      to_id: llm_node
+      connection_type: data
+      from_output: "start_node:prompt"
+      to_input: "llm_node:prompt"
+    
+    - from_id: context_node
+      to_id: llm_node
+      connection_type: data
+      from_output: "context_node:context_history"
+      to_input: "llm_node:context"
+    
+    - from_id: llm_node
+      to_id: end_node
+      connection_type: data
+      from_output: "llm_node:llm_output"
+      to_input: "end_node:text_input"
+  
+  start_element: start_node
+
+# Metadata (optional)
+metadata:
+  flow_name: "Simple AI Conversation Flow"
+  version: "1.0.0"
+  description: "A basic conversational AI flow with context management"
+  author: "NeuraLabs"
+  tags: ["ai", "conversation", "simple"]

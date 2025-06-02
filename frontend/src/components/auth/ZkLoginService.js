@@ -14,7 +14,7 @@ class ZkLoginService {
   constructor() {
     this.clientId = '';
     this.redirectUrl = window.location.origin + '/auth/callback';
-    this.fullnodeUrl = `https://fullnode.${process.env.REACT_APP_SUI_NETWORK}.sui.io`;
+    this.fullnodeUrl = `https://fullnode.${import.meta.env.VITE_SUI_NETWORK}.sui.io`;
     this.suiClient = new SuiClient({ url: this.fullnodeUrl });
     
     // Storage keys
@@ -91,7 +91,7 @@ class ZkLoginService {
   }
 
   // *** UPDATED: Complete login with authentication ***
-  async completeLogin(jwt) {
+  async completeLogin(jwt, shouldSign = false) {
     try {
       const decodedJwt = jwtDecode(jwt);
       const email = decodedJwt.email;
@@ -100,7 +100,7 @@ class ZkLoginService {
       sessionStorage.setItem(this.STORAGE_EMAIL, email);
       
       // STEP 1: Get salt from backend
-      const saltResponse = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/zk-login/zklogin-salt', {
+      const saltResponse = await fetch(import.meta.env.VITE_BACKEND_URL + '/api/zk-login/zklogin-salt', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -137,6 +137,17 @@ class ZkLoginService {
       sessionStorage.setItem(this.STORAGE_PARTIAL_ZK_LOGIN, JSON.stringify(zkProof));
       sessionStorage.setItem('zkLoginJwt', jwt);
       sessionStorage.setItem('zkLoginAddress', zkLoginAddress);
+      
+      // If shouldSign is false, return early with preparation data
+      if (!shouldSign) {
+        return {
+          success: false,
+          needsSignature: true,
+          email,
+          timestamp: Date.now(),
+          address: zkLoginAddress
+        };
+      }
       
       // STEP 4: *** NEW *** - Sign authentication message and get JWT token
       const authResult = await this._authenticateWithBackend(
@@ -210,7 +221,7 @@ class ZkLoginService {
       console.log('ZkLogin Signature:', zkLoginSignature);
       
       // Send to backend for verification and JWT generation
-      const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/zk-login/zklogin-verify', {
+      const response = await fetch(import.meta.env.VITE_BACKEND_URL + '/api/zk-login/zklogin-verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -349,7 +360,7 @@ class ZkLoginService {
 
   async _getZkProof(requestData) {
     try {
-      const proverUrl = process.env.REACT_APP_PROVER_URL;
+      const proverUrl = import.meta.env.VITE_PROVER_URL;
       
       const requestBody = JSON.stringify({
         jwt: requestData.jwt,

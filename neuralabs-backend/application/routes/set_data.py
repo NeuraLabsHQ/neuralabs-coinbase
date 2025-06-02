@@ -52,6 +52,7 @@ class BlockchainDataRequest(BaseModel):
     nft_id: str = Field(..., description="NFT identifier")
     nft_mint_trx_id: Optional[str] = Field(None, description="Transaction ID for NFT minting")
     published_date: Optional[datetime] = Field(None, description="Date published to blockchain")
+    other_data: Optional[Dict[str, Any]] = Field(None, description="Additional blockchain-related data (walrus, seal, encryption details)")
 
 
 class GrantAccessRequest(BaseModel):

@@ -1,0 +1,381 @@
+# Sample Flow 9: Blockchain Portfolio Tracker
+flow_definition:
+  nodes:
+    start_node:
+      type: start
+      node_description: "Initial node that receives input data"
+      description: "Start blockchain portfolio analysis"
+      processing_message: "Initializing portfolio tracker..."
+      tags: ["flow-control", "entry-point"]
+      layer: 3
+      input_schema:
+        initial_message:
+          type: string
+          description: "Initial user message with wallet address"
+          required: true
+      output_schema:
+        initial_message:
+          type: string
+          description: "Pass through initial message"
+          required: true
+    
+    address_extractor:
+      type: llm_structured
+      node_description: "Extracts structured data using Large Language Models"
+      description: "Extract wallet address from user input"
+      processing_message: "Extracting wallet address..."
+      tags: ["ai", "data-extraction"]
+      layer: 3
+      parameters:
+        model: null
+        temperature: 0.1
+        max_tokens: 200
+        wrapper_prompt: |
+          Extract the SUI wallet address from this text: {initial_message}
+          
+          Look for patterns like:
+          - 0x followed by 64 hexadecimal characters
+          - "address", "wallet", "account" keywords
+          
+          If no valid address found, return null for wallet_address.
+      input_schema:
+        initial_message:
+          type: string
+          description: "User input containing wallet address"
+          required: true
+      output_schema:
+        wallet_address:
+          type: string
+          description: "Extracted SUI wallet address"
+          required: false
+        confidence:
+          type: float
+          description: "Confidence in extraction (0.0-1.0)"
+          required: true
+    
+    sui_balance_reader:
+      type: read_blockchain_data
+      node_description: "Reads data from blockchain networks including contract states, balances, and transaction history"
+      description: "Check SUI balance"
+      processing_message: "Reading SUI balance..."
+      tags: ["blockchain", "sui", "balance-check"]
+      layer: 3
+      parameters:
+        node_url: "https://fullnode.mainnet.sui.io"
+        network: "mainnet"
+        api_key: ""
+      input_schema:
+        query_type:
+          type: string
+          description: "Type of blockchain query to perform"
+          required: true
+        address:
+          type: string
+          description: "Wallet address to query"
+          required: true
+        parameters:
+          type: json
+          description: "Additional parameters for the query"
+          required: false
+      output_schema:
+        data:
+          type: json
+          description: "Query result data"
+          required: true
+        success:
+          type: bool
+          description: "Whether the query succeeded"
+          required: true
+        error:
+          type: string
+          description: "Error message if query failed"
+          required: false
+        metadata:
+          type: json
+          description: "Additional metadata about the query"
+          required: false
+    
+    transaction_history:
+      type: read_blockchain_data
+      node_description: "Reads data from blockchain networks including contract states, balances, and transaction history"
+      description: "Get recent transaction events"
+      processing_message: "Reading transaction history..."
+      tags: ["blockchain", "sui", "transactions"]
+      layer: 3
+      parameters:
+        node_url: "https://fullnode.mainnet.sui.io"
+        network: "mainnet"
+        api_key: ""
+      input_schema:
+        query_type:
+          type: string
+          description: "Type of blockchain query to perform"
+          required: true
+        address:
+          type: string
+          description: "Wallet address to query"
+          required: false
+        parameters:
+          type: json
+          description: "Additional parameters for the query"
+          required: true
+      output_schema:
+        data:
+          type: json
+          description: "Query result data"
+          required: true
+        success:
+          type: bool
+          description: "Whether the query succeeded"
+          required: true
+        error:
+          type: string
+          description: "Error message if query failed"
+          required: false
+        metadata:
+          type: json
+          description: "Additional metadata about the query"
+          required: false
+    
+    portfolio_constants:
+      type: constants
+      node_description: "Provides static values that remain constant during flow execution"
+      description: "Portfolio analysis configuration"
+      processing_message: "Loading portfolio settings..."
+      tags: ["input", "static-data", "config"]
+      layer: 3
+      parameters:
+        balance_query_params:
+          coin_type: "0x2::sui::SUI"
+        events_query_params:
+          event_type: "0x2::coin::Transfer<0x2::sui::SUI>"
+          limit: 20
+          descending_order: true
+        analysis_thresholds:
+          high_value_threshold: 1000.0
+          activity_threshold: 10
+          risk_score_weights:
+            balance_concentration: 0.3
+            transaction_frequency: 0.4
+            recent_activity: 0.3
+      input_schema: {}
+      output_schema:
+        balance_query_params:
+          type: json
+          description: "Parameters for balance queries"
+          required: true
+        events_query_params:
+          type: json
+          description: "Parameters for events queries"
+          required: true
+        analysis_thresholds:
+          type: json
+          description: "Portfolio analysis thresholds"
+          required: true
+    
+    balance_merger:
+      type: merger
+      node_description: "Combines multiple data inputs into a single output"
+      description: "Merge balance and transaction data"
+      processing_message: "Combining portfolio data..."
+      tags: ["utility", "data-manipulation"]
+      layer: 3
+      parameters: {}
+      input_schema:
+        data1:
+          type: any
+          description: "First data input"
+          required: true
+        data2:
+          type: any
+          description: "Second data input"
+          required: true
+      output_schema:
+        merged_data:
+          type: any
+          description: "Combined data result"
+          required: true
+    
+    portfolio_analyzer:
+      type: llm_text
+      node_description: "Generates text using Large Language Models"
+      description: "Analyze portfolio and generate insights"
+      processing_message: "Analyzing portfolio data..."
+      tags: ["ai", "text-generation", "analysis"]
+      layer: 3
+      parameters:
+        model: null
+        temperature: 0.7
+        max_tokens: 500
+        wrapper_prompt: |
+          Analyze this SUI blockchain portfolio data and provide insights:
+          
+          Wallet Address: {wallet_address}
+          Balance Data: {balance_data}
+          Transaction History: {transaction_data}
+          Analysis Config: {analysis_config}
+          
+          Provide a comprehensive analysis including:
+          1. Current Holdings Summary
+          2. Portfolio Value Assessment
+          3. Transaction Activity Analysis
+          4. Risk Assessment (based on provided thresholds)
+          5. Recommendations for portfolio optimization
+          
+          Be specific with numbers and provide actionable insights.
+      input_schema:
+        wallet_address:
+          type: string
+          description: "Wallet address"
+          required: true
+        balance_data:
+          type: json
+          description: "Balance data"
+          required: true
+        transaction_data:
+          type: json
+          description: "Transaction history data"
+          required: true
+        analysis_config:
+          type: json
+          description: "Analysis configuration"
+          required: true
+      output_schema:
+        llm_output:
+          type: string
+          description: "Portfolio analysis report"
+          required: true
+    
+    end_node:
+      type: end
+      node_description: "Terminal point of the flow execution"
+      description: "Complete portfolio analysis"
+      processing_message: "Finalizing portfolio report..."
+      tags: ["flow-control", "exit-point"]
+      layer: 3
+      input_schema:
+        text_input:
+          type: string
+          description: "Portfolio analysis report"
+          required: true
+      output_schema:
+        text_output:
+          type: string
+          description: "Final portfolio analysis"
+          required: true
+  
+  connections:
+    # Control flow
+    - from_id: start_node
+      to_id: address_extractor
+      connection_type: control
+    
+    - from_id: address_extractor
+      to_id: sui_balance_reader
+      connection_type: control
+    
+    - from_id: address_extractor
+      to_id: transaction_history
+      connection_type: control
+    
+    - from_id: sui_balance_reader
+      to_id: balance_merger
+      connection_type: control
+    
+    - from_id: transaction_history
+      to_id: balance_merger
+      connection_type: control
+    
+    - from_id: balance_merger
+      to_id: portfolio_analyzer
+      connection_type: control
+    
+    - from_id: portfolio_constants
+      to_id: portfolio_analyzer
+      connection_type: control
+    
+    - from_id: portfolio_analyzer
+      to_id: end_node
+      connection_type: control
+    
+    # Data connections
+    - from_id: start_node
+      to_id: address_extractor
+      connection_type: data
+      from_output: "start_node:initial_message"
+      to_input: "address_extractor:initial_message"
+    
+    # Set query types for blockchain reads
+    - from_id: portfolio_constants
+      to_id: sui_balance_reader
+      connection_type: data
+      from_output: "portfolio_constants:balance_query_params"
+      to_input: "sui_balance_reader:parameters"
+    
+    - from_id: portfolio_constants
+      to_id: transaction_history
+      connection_type: data
+      from_output: "portfolio_constants:events_query_params"
+      to_input: "transaction_history:parameters"
+    
+    # Blockchain queries
+    - from_id: address_extractor
+      to_id: sui_balance_reader
+      connection_type: data
+      from_output: "address_extractor:wallet_address"
+      to_input: "sui_balance_reader:address"
+    
+    # Balance merger
+    - from_id: sui_balance_reader
+      to_id: balance_merger
+      connection_type: data
+      from_output: "sui_balance_reader:data"
+      to_input: "balance_merger:data1"
+    
+    - from_id: transaction_history
+      to_id: balance_merger
+      connection_type: data
+      from_output: "transaction_history:data"
+      to_input: "balance_merger:data2"
+    
+    # Analysis
+    - from_id: address_extractor
+      to_id: portfolio_analyzer
+      connection_type: data
+      from_output: "address_extractor:wallet_address"
+      to_input: "portfolio_analyzer:wallet_address"
+    
+    - from_id: sui_balance_reader
+      to_id: portfolio_analyzer
+      connection_type: data
+      from_output: "sui_balance_reader:data"
+      to_input: "portfolio_analyzer:balance_data"
+    
+    - from_id: transaction_history
+      to_id: portfolio_analyzer
+      connection_type: data
+      from_output: "transaction_history:data"
+      to_input: "portfolio_analyzer:transaction_data"
+    
+    - from_id: portfolio_constants
+      to_id: portfolio_analyzer
+      connection_type: data
+      from_output: "portfolio_constants:analysis_thresholds"
+      to_input: "portfolio_analyzer:analysis_config"
+    
+    # Final output
+    - from_id: portfolio_analyzer
+      to_id: end_node
+      connection_type: data
+      from_output: "portfolio_analyzer:llm_output"
+      to_input: "end_node:text_input"
+  
+  start_element: start_node
+
+# Metadata
+metadata:
+  flow_name: "Blockchain Portfolio Tracker"
+  version: "1.0.0"
+  description: "Analyzes SUI blockchain portfolios by reading balances and transaction history"
+  author: "NeuraLabs"
+  tags: ["blockchain", "portfolio", "sui", "analysis", "defi"]

@@ -1,0 +1,294 @@
+import { Card, CardHeader, CardTitle, CardDescription } from '@site/src/components/Card';
+import { Callout } from '@site/src/components/Callout';
+import { Features, Feature } from '@site/src/components/Features';
+import { CollapsibleCodeBlock, InlineCodeCard } from '@site/src/components/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+
+# Welcome to NeuraLabs Documentation
+
+<Callout type="info" title="The Future of AI is Decentralized">
+  NeuraLabs is pioneering the world's first truly decentralized platform for autonomous AI agents, built on SUI blockchain infrastructure.
+</Callout>
+
+NeuraLabs democratizes AI ownership by enabling anyone to create, deploy, and monetize autonomous AI agents without centralized control. Our platform combines advanced cryptographic primitives with intuitive developer tools to build the future of self-organizing AI systems.
+
+## Core Vision: Democratizing AI Ownership
+
+> **"We are not enabling blockchain, but blockchain is enabling us"**
+> 
+> Blockchain provides the trustless infrastructure necessary for autonomous AI agents to transact, collaborate, and evolve without centralized control.
+
+### Our Mission
+
+- **Universal AI Creation**: Anyone can create and deploy AI agents, regardless of technical expertise
+- **True Ownership**: Complete sovereignty over your AI agents, models, and data  
+- **Fair Compensation**: Automatic and fair payment when your AI capabilities are used by others
+- **Autonomous Collaboration**: AI agents discover and integrate capabilities to solve complex problems
+- **Privacy-First**: Zero-knowledge techniques enable collaboration without data exposure
+
+## Platform Capabilities
+
+<Features>
+  <Feature 
+    icon="/img/icons/ai-workflow.svg" 
+    title="Autonomous Agent Protocol" 
+    description="AI agents can discover capabilities, negotiate costs, and compose workflows automatically"
+  />
+  <Feature 
+    icon="/img/icons/frontend.svg" 
+    title="Visual Workflow Builder" 
+    description="Intuitive drag-and-drop interface for building complex AI pipelines with real-time execution"
+  />
+  <Feature 
+    icon="/img/icons/blockchain.svg" 
+    title="Blockchain-Native Access Control" 
+    description="NFT-based permissions with micropayment channels for seamless monetization"
+  />
+  <Feature 
+    icon="/img/icons/security.svg" 
+    title="Advanced Cryptography" 
+    description="zkLogin, SUI Seal threshold encryption, and VRF for privacy and security"
+  />
+  <Feature 
+    icon="/img/icons/database.svg" 
+    title="Decentralized Storage" 
+    description="Walrus content-addressed storage with encrypted data blobs and access control"
+  />
+  <Feature 
+    icon="/img/icons/network.svg" 
+    title="Multi-Provider AI Support" 
+    description="Seamless integration with Anthropic, DeepSeek, AWS Bedrock, and custom models"
+  />
+</Features>
+
+## Documentation Structure
+
+Our documentation is organized into comprehensive sections designed to take you from concept to deployment:
+
+<div className="row margin-top--lg">
+  <div className="col col--6">
+    <Card>
+      <CardHeader>
+        <CardTitle>Theoretical Foundation</CardTitle>
+        <CardDescription>
+          <strong>Master the concepts behind autonomous AI systems:</strong>
+          <ul>
+            <li>Platform Overview & Vision</li>
+            <li>System Architecture & Design</li>
+            <li>Blockchain Integration Patterns</li>
+            <li>Security & Cryptographic Primitives</li>
+            <li>AI Agent Protocols & Workflows</li>
+          </ul>
+        </CardDescription>
+      </CardHeader>
+    </Card>
+  </div>
+  
+  <div className="col col--6">
+    <Card>
+      <CardHeader>
+        <CardTitle>Implementation Guides</CardTitle>
+        <CardDescription>
+          <strong>Hands-on tutorials for each platform component:</strong>
+          <ul>
+            <li>Database & Storage Setup</li>
+            <li>Frontend Development & UI</li>
+            <li>Backend Services & APIs</li>
+            <li>HPC Execution Infrastructure</li>
+            <li>Smart Contract Deployment</li>
+            <li>Cryptographic Service Setup</li>
+          </ul>
+        </CardDescription>
+      </CardHeader>
+    </Card>
+  </div>
+</div>
+
+## Roadmap to Full Autonomy
+
+<div className="margin-top--lg">
+  <div className="row">
+    <div className="col col--3">
+      <div className="text--center padding--md" style={{border: '2px solid var(--ifm-color-success)', borderRadius: '8px', backgroundColor: 'var(--ifm-color-success-contrast-background)'}}>
+        <h4>Phase 1: Foundation</h4>
+        <p><small><strong>Current - Q4 2024</strong></small></p>
+        <ul style={{textAlign: 'left', fontSize: '0.9rem'}}>
+          <li>Workflow composition</li>
+          <li>NFT access control</li>
+          <li>Crypto primitives</li>
+          <li>Manual workflows</li>
+        </ul>
+      </div>
+    </div>
+    <div className="col col--3">
+      <div className="text--center padding--md" style={{border: '2px solid var(--ifm-color-warning)', borderRadius: '8px', backgroundColor: 'var(--ifm-color-warning-contrast-background)'}}>
+        <h4>Phase 2: Semi-Autonomous</h4>
+        <p><small><strong>Q1-Q2 2025</strong></small></p>
+        <ul style={{textAlign: 'left', fontSize: '0.9rem'}}>
+          <li>Agent capability ads</li>
+          <li>Auto sub-workflow discovery</li>
+          <li>Cost optimization</li>
+          <li>Federated learning</li>
+        </ul>
+      </div>
+    </div>
+    <div className="col col--3">
+      <div className="text--center padding--md" style={{border: '2px solid var(--ifm-color-info)', borderRadius: '8px', backgroundColor: 'var(--ifm-color-info-contrast-background)'}}>
+        <h4>Phase 3: Full Autonomy</h4>
+        <p><small><strong>Q3-Q4 2025</strong></small></p>
+        <ul style={{textAlign: 'left', fontSize: '0.9rem'}}>
+          <li>Self-improving agents</li>
+          <li>Emergent composition</li>
+          <li>Cross-chain communication</li>
+          <li>Decentralized execution</li>
+        </ul>
+      </div>
+    </div>
+    <div className="col col--3">
+      <div className="text--center padding--md" style={{border: '2px solid var(--ifm-color-primary)', borderRadius: '8px', backgroundColor: 'var(--ifm-color-primary-contrast-background)'}}>
+        <h4>Phase 4: The Singularity</h4>
+        <p><small><strong>2026+</strong></small></p>
+        <ul style={{textAlign: 'left', fontSize: '0.9rem'}}>
+          <li>Agents creating agents</li>
+          <li>Self-organizing swarms</li>
+          <li>Human-AI collaboration</li>
+          <li>AGI-level decomposition</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+## Quick Navigation
+
+<div className="row margin-top--lg">
+  <div className="col col--6">
+    <div className="card">
+      <div className="card__header">
+        <h3>New to NeuraLabs?</h3>
+      </div>
+      <div className="card__body">
+        <p>Start with our foundational guides:</p>
+        <ul>
+          <li><a href="./02-theoretical/03-getting-started">Getting Started Guide</a></li>
+          <li><a href="./02-theoretical/02-overview">Platform Overview</a></li>
+          <li><a href="./02-theoretical/04-blockchain-architecture">Blockchain Architecture</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+  <div className="col col--6">
+    <div className="card">
+      <div className="card__header">
+        <h3>Ready to Build?</h3>
+      </div>
+      <div className="card__body">
+        <p>Jump into implementation:</p>
+        <ul>
+          <li><a href="./03-implementation/01-database/setup">Database Setup</a></li>
+          <li><a href="./03-implementation/02-frontend/setup">Frontend Development</a></li>
+          <li><a href="./04-sui-integration/02-smart-contracts/02-deployment">Smart Contract Deployment</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+## Prerequisites
+
+<Callout type="warning" title="Before You Begin">
+  Make sure you have the required tools and knowledge before starting development.
+</Callout>
+
+| Category | Requirements |
+|----------|-------------|
+| **Development Tools** | Node.js 18+, Python 3.12+, SUI CLI, Docker & Docker Compose |
+| **Blockchain Knowledge** | Basic understanding of smart contracts, NFTs, and DeFi concepts |
+| **AI/ML Familiarity** | Experience with AI APIs, workflow automation, or data pipelines |
+| **System Requirements** | 16GB RAM (for prover service), Linux/macOS/WSL2 |
+
+### Quick Setup
+
+```bash title="One-command setup"
+# Clone and setup the entire platform
+git clone https://github.com/neuralabs/neuralabs-sui
+cd neuralabs-sui
+
+# Install all dependencies
+./scripts/setup.sh
+
+# Start all services
+docker-compose up -d
+```
+
+<Callout type="success" title="Ready to go!">
+  Your NeuraLabs development environment should now be running at `http://localhost:3000`
+</Callout>
+
+## Community & Ecosystem
+
+<div className="row margin-top--lg">
+  <div className="col col--4">
+    <div className="text--center">
+      <h3>Join the Community</h3>
+      <p>Connect with other developers building on NeuraLabs</p>
+      <div className="margin-top--md">
+        <a href="https://discord.gg/neuralabs" className="button button--primary button--block margin-bottom--sm">
+          Discord
+        </a>
+        <a href="https://forum.neuralabs.org" className="button button--secondary button--block">
+          Forum
+        </a>
+      </div>
+    </div>
+  </div>
+  
+  <div className="col col--4">
+    <div className="text--center">
+      <h3>Developer Resources</h3>
+      <p>Tools, SDKs, and examples to accelerate development</p>
+      <div className="margin-top--md">
+        <a href="https://github.com/neuralabs/neuralabs-sui" className="button button--primary button--block margin-bottom--sm">
+          GitHub
+        </a>
+        <a href="/docs/api" className="button button--secondary button--block">
+          API Docs
+        </a>
+      </div>
+    </div>
+  </div>
+  
+  <div className="col col--4">
+    <div className="text--center">
+      <h3>Stay Updated</h3>
+      <p>Latest news, updates, and ecosystem developments</p>
+      <div className="margin-top--md">
+        <a href="https://twitter.com/neuralabs" className="button button--primary button--block margin-bottom--sm">
+          Twitter
+        </a>
+        <a href="/blog" className="button button--secondary button--block">
+          Blog
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+---
+
+<div className="text--center margin-top--xl">
+  <h2>Ready to Build the Future of AI?</h2>
+  <p className="margin-bottom--lg">
+    Start your journey into decentralized AI development
+  </p>
+  
+  <a href="./02-theoretical/03-getting-started" className="button button--primary button--lg margin-right--md">
+    Read the Guide
+  </a>
+  <a href="./03-implementation" className="button button--secondary button--lg">
+    Start Building
+  </a>
+</div>

@@ -20,113 +20,160 @@ export const exportFlowAsYAML = (nodes, edges, metadata = {}) => {
       const startNode = nodes.find(node => node.type === 'start') || nodes[0];
       
       // Transform nodes to YAML element format
-      const elements = {};
+      const nodes_dict = {};
       nodes.forEach(node => {
-        const elementId = node.id;
+        // Create element ID with format: NodeType_timestamp
+        const nodeType = mapNodeTypeToElementType(node.type);
+        const timestamp = node.id.split('-').pop() || Date.now();
+        const elementId = `${nodeType}_${timestamp}`;
         
         // Convert frontend node to backend element format
         const element = {
-          type: mapNodeTypeToElementType(node.type),
-          element_id: elementId,
-          name: node.name || `${node.type} element`,
+          type: nodeType,
+          name: node.name || node.id, // Preserve the original name
+          node_description: node.description || `${node.type} element`,
           description: node.description || `${node.type} element`,
-          input_schema: convertInputsToSchema(node.inputs || []),
-          output_schema: convertOutputsToSchema(node.outputs || []),
-          // Add position data for layout preservation
+          processing_message: node.processing_message || node.processingMessage || 'Processing...',
+          tags: node.tags || [],
+          layer: node.layer || 3,
+          // Add position data for reimporting
           position: {
-            x: node.x || 0,
-            y: node.y || 0
-          }
+            x: Number(node.x || node.position?.x || 0),
+            y: Number(node.y || node.position?.y || 0)
+          },
+          original_id: node.id // Store original ID for connection mapping
         };
 
-        // Add hyperparameters directly to the element (not nested)
-        if (node.hyperparameters && Array.isArray(node.hyperparameters)) {
-          // Convert array of hyperparameter objects to direct properties
-          node.hyperparameters.forEach(param => {
-            if (param.name) {
-              // Use the value if provided by user, otherwise use default, otherwise empty string
-              const paramValue = param.value !== undefined ? param.value : 
-                                (param.default !== undefined ? param.default : '');
-              element[param.name] = paramValue;
+        // Add parameters (user-configurable values)
+        // Priority: parametersObject > parameters array with values > parameters object
+        if (node.parametersObject && Object.keys(node.parametersObject).length > 0) {
+          // Use parametersObject if available (this is the object format stored by detail panel)
+          element.parameters = node.parametersObject;
+        } else if (node.parameters) {
+          if (Array.isArray(node.parameters)) {
+            // Convert from array format, prioritizing 'value' field over 'default'
+            const params = {};
+            node.parameters.forEach(param => {
+              if (param.name) {
+                // Use 'value' if defined, otherwise use 'default'
+                const paramValue = param.value !== undefined ? param.value : param.default;
+                if (paramValue !== undefined && paramValue !== '') {
+                  params[param.name] = paramValue;
+                }
+              }
+            });
+            if (Object.keys(params).length > 0) {
+              element.parameters = params;
             }
-          });
+          } else if (typeof node.parameters === 'object') {
+            // Already in object format
+            element.parameters = node.parameters;
+          }
         }
 
-        // Add optional fields if they exist
-        if (node.processing_message) {
-          element.processing_message = node.processing_message;
-        }
-        if (node.tags && node.tags.length > 0) {
-          element.tags = node.tags;
-        }
-        if (node.layer) {
-          element.layer = node.layer;
-        }
+        // Add input/output schemas
+        element.input_schema = convertInputsToSchema(node.inputs || []);
+        element.output_schema = convertOutputsToSchema(node.outputs || []);
+
+        // Add code for custom nodes
         if (node.code) {
-          element.code = node.code;
+          element.parameters = element.parameters || {};
+          element.parameters.code = node.code;
         }
 
-        elements[elementId] = element;
+        // Preserve fieldAccess for access control
+        if (node.fieldAccess) {
+          element.fieldAccess = node.fieldAccess;
+        }
+
+        nodes_dict[elementId] = element;
       });
 
-      // Transform edges to connections format
+      // Create a mapping from original IDs to new IDs for connections
+      const idMapping = {};
+      nodes.forEach(node => {
+        const nodeType = mapNodeTypeToElementType(node.type);
+        const timestamp = node.id.split('-').pop() || Date.now();
+        const newId = `${nodeType}_${timestamp}`;
+        idMapping[node.id] = newId;
+      });
+
+      // Transform edges to connections format with control and data types
       const connections = [];
       
       edges.forEach(edge => {
-        if (edge.mappings && edge.mappings.length > 0) {
-          // Create a separate connection for each mapping in the edge
+        // Map source and target IDs to new IDs
+        const mappedSource = idMapping[edge.source] || edge.source;
+        const mappedTarget = idMapping[edge.target] || edge.target;
+        
+        // Default connection type is 'both' (control and data)
+        const connectionType = edge.connectionType || 'both';
+        
+        if (connectionType === 'both' || connectionType === 'control') {
+          // Add control connection
+          connections.push({
+            from_id: mappedSource,
+            to_id: mappedTarget,
+            connection_type: 'control'
+          });
+        }
+        
+        // Add data connections only if there are mappings
+        if ((connectionType === 'both' || connectionType === 'data') && 
+            (edge.mappings && edge.mappings.length > 0)) {
+          // Create a separate data connection for each mapping
           edge.mappings.forEach(mapping => {
             if (mapping.fromOutput && mapping.toInput) {
               connections.push({
-                from_id: edge.source,
-                to_id: edge.target,
-                from_output: mapping.fromOutput,
-                to_input: mapping.toInput
+                from_id: mappedSource,
+                to_id: mappedTarget,
+                connection_type: 'data',
+                from_output: `${mappedSource}:${mapping.fromOutput}`,
+                to_input: `${mappedTarget}:${mapping.toInput}`
               });
             }
           });
-        } else if (edge.sourceName && edge.targetName) {
-          // If no mappings array but has sourceName/targetName, use those
+        } else if ((connectionType === 'both' || connectionType === 'data') && 
+                   edge.sourceName && edge.targetName) {
+          // Legacy support: If no mappings array but has sourceName/targetName
           connections.push({
-            from_id: edge.source,
-            to_id: edge.target,
-            from_output: edge.sourceName,
-            to_input: edge.targetName
-          });
-        } else {
-          // If no mappings at all, create a basic connection without ports
-          connections.push({
-            from_id: edge.source,
-            to_id: edge.target
+            from_id: mappedSource,
+            to_id: mappedTarget,
+            connection_type: 'data',
+            from_output: `${mappedSource}:${edge.sourceName}`,
+            to_input: `${mappedTarget}:${edge.targetName}`
           });
         }
       });
 
-      // Create the complete flow definition
+      // Create the complete flow definition matching the new format
       const flowDefinition = {
-        flow_id: metadata.flow_id || `flow_${Date.now()}`,
         flow_definition: {
-          flow_id: metadata.flow_id || `flow_${Date.now()}`,
-          elements: elements,
+          nodes: nodes_dict,
           connections: connections,
-          start_element_id: startNode.id,
-          metadata: {
-            name: metadata.name || "Exported Flow",
-            description: metadata.description || "Flow exported from Neuralabs",
-            version: metadata.version || "1.0.0",
-            created_at: new Date().toISOString(),
-            exported_at: new Date().toISOString(),
-            export_source: "neuralabs-frontend"
-          }
+          start_element: idMapping[startNode.id] || startNode.id
+        },
+        metadata: {
+          flow_name: metadata.name || "Exported Flow",
+          version: metadata.version || "1.0.0",
+          description: metadata.description || "Flow exported from Neuralabs",
+          author: metadata.author || "NeuraLabs",
+          tags: metadata.tags || ["exported"],
+          created_at: new Date().toISOString(),
+          exported_at: new Date().toISOString(),
+          export_source: "neuralabs-frontend"
         }
       };
 
-      // Convert to YAML string
+      // Convert to YAML string with custom schema to prevent 'y' from being quoted
       const yamlString = yaml.dump(flowDefinition, {
         indent: 2,
         lineWidth: 120,
         noRefs: true,
-        sortKeys: false
+        sortKeys: false,
+        quotingType: '"',
+        forceQuotes: false,
+        schema: yaml.JSON_SCHEMA // Use JSON schema to prevent 'y' from being interpreted as boolean
       });
 
       // Create a blob and URL
@@ -161,47 +208,100 @@ export const importFlowFromYAML = (yamlContent) => {
       }
 
       const flowDef = flowData.flow_definition;
-      const elements = flowDef.elements || {};
+      const elements = flowDef.nodes || flowDef.elements || {}; // Support both 'nodes' and 'elements' for backward compatibility
       const connections = flowDef.connections || [];
 
       // Convert elements to frontend nodes
       const nodes = Object.entries(elements).map(([elementId, element]) => {
+        // Convert parameters from object format to array format for UI
+        let parametersArray = [];
+        if (element.parameters && typeof element.parameters === 'object') {
+          parametersArray = Object.entries(element.parameters).map(([key, value]) => ({
+            name: key,
+            value: value,
+            type: typeof value === 'boolean' ? 'boolean' : 
+                  typeof value === 'number' ? 'number' : 'string',
+            editable: true
+          }));
+        }
+
+        // Generate a unique ID for the node (use original_id if available, otherwise generate new)
+        const nodeId = element.original_id || `node-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+
+        // Create a readable name based on element type
+        let nodeName = element.name;
+        if (!nodeName || nodeName === nodeId || nodeName.startsWith('node-')) {
+          // If no name or generic name, create one based on type
+          const nodeType = mapElementTypeToNodeType(element.type);
+          // Convert snake_case to Title Case with special handling for acronyms
+          nodeName = nodeType
+            .split('_')
+            .map(part => {
+              // Handle special cases
+              const specialCases = {
+                'llm': 'LLM',
+                'api': 'API',
+                'rest': 'REST',
+                'json': 'JSON'
+              };
+              return specialCases[part.toLowerCase()] || 
+                     part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+            })
+            .join(' ');
+        }
+
         return {
-          id: elementId,
+          id: nodeId,
           type: mapElementTypeToNodeType(element.type),
-          name: element.name || elementId,
+          name: nodeName,
           description: element.description || '',
-          x: element.position?.x || Math.random() * 400 + 100, // Use saved position or random
-          y: element.position?.y || Math.random() * 400 + 100,
+          x: Number(element.position?.x) || Math.random() * 400 + 100, // Use saved position or random
+          y: Number(element.position?.y) || Math.random() * 400 + 100,
           inputs: convertSchemaToInputs(element.input_schema || {}),
           outputs: convertSchemaToOutputs(element.output_schema || {}),
-          hyperparameters: extractHyperparameters(element),
+          parameters: parametersArray, // Array format for UI
+          parametersObject: element.parameters || {}, // Object format for storage
+          hyperparameters: extractHyperparameters(element), // Legacy support
           processing_message: element.processing_message || '',
+          processingMessage: element.processing_message || '', // Support both formats
           tags: element.tags || [],
           layer: element.layer || 0,
           code: element.code || '',
           metadata: {
-            originalElementId: elementId,
+            originalElementId: elementId, // Store the YAML key as metadata
             importedAt: new Date().toISOString()
-          }
+          },
+          // Preserve fieldAccess from the element data
+          fieldAccess: element.fieldAccess || element.field_access || {}
         };
+      });
+
+      // Create a mapping from YAML element IDs to actual node IDs
+      const elementToNodeId = {};
+      nodes.forEach(node => {
+        elementToNodeId[node.metadata.originalElementId] = node.id;
       });
 
       // Convert connections to frontend edges
       // Group connections by source-target pair to handle multiple mappings
       const edgeMap = new Map();
       
-      connections.forEach((conn, index) => {
-        const edgeKey = `${conn.from_id}-${conn.to_id}`;
+      connections.forEach((conn) => {
+        // Map YAML element IDs to actual node IDs
+        const sourceNodeId = elementToNodeId[conn.from_id] || conn.from_id;
+        const targetNodeId = elementToNodeId[conn.to_id] || conn.to_id;
+        
+        const edgeKey = `${sourceNodeId}-${targetNodeId}`;
         
         if (!edgeMap.has(edgeKey)) {
           edgeMap.set(edgeKey, {
             id: `edge_${edgeMap.size}`,
-            source: conn.from_id,
-            target: conn.to_id,
+            source: sourceNodeId,
+            target: targetNodeId,
             sourceName: '', // Will be set from first mapping or left empty
             targetName: '', // Will be set from first mapping or left empty
             mappings: [],
+            connectionType: 'both', // Default to both
             sourcePort: 0,
             targetPort: 0
           });
@@ -209,17 +309,36 @@ export const importFlowFromYAML = (yamlContent) => {
         
         const edge = edgeMap.get(edgeKey);
         
+        // Update connection type based on the connections we see
+        if (conn.connection_type === 'control') {
+          // If we haven't seen any data connections yet, set to control only
+          if (edge.mappings.length === 0) {
+            edge.connectionType = 'control';
+          }
+        } else if (conn.connection_type === 'data') {
+          // If we see a data connection, update type accordingly
+          if (edge.connectionType === 'control') {
+            edge.connectionType = 'both';
+          } else {
+            edge.connectionType = 'data';
+          }
+        }
+        
         // Add mapping if both output and input are specified
         if (conn.from_output && conn.to_input) {
+          // Extract the actual output/input names (remove the element ID prefix)
+          const fromOutput = conn.from_output.split(':').pop();
+          const toInput = conn.to_input.split(':').pop();
+          
           edge.mappings.push({
-            fromOutput: conn.from_output,
-            toInput: conn.to_input
+            fromOutput: fromOutput,
+            toInput: toInput
           });
           
           // Set sourceName/targetName from first mapping (for legacy compatibility)
           if (!edge.sourceName && !edge.targetName) {
-            edge.sourceName = conn.from_output;
-            edge.targetName = conn.to_input;
+            edge.sourceName = fromOutput;
+            edge.targetName = toInput;
           }
         }
       });
@@ -307,7 +426,11 @@ function convertInputsToSchema(inputs) {
     schema[input.name] = {
       type: input.type || 'string',
       description: input.description || '',
-      required: input.required !== false
+      required: input.required !== false,
+      // Preserve additional properties like editable, value, default
+      ...(input.editable !== undefined && { editable: input.editable }),
+      ...(input.value !== undefined && { value: input.value }),
+      ...(input.default !== undefined && { default: input.default })
     };
   });
   return schema;
@@ -322,7 +445,11 @@ function convertOutputsToSchema(outputs) {
     schema[output.name] = {
       type: output.type || 'string',
       description: output.description || '',
-      required: output.required !== false
+      required: output.required !== false,
+      // Preserve additional properties like editable, value, default
+      ...(output.editable !== undefined && { editable: output.editable }),
+      ...(output.value !== undefined && { value: output.value }),
+      ...(output.default !== undefined && { default: output.default })
     };
   });
   return schema;
@@ -336,7 +463,12 @@ function convertSchemaToInputs(schema) {
     name,
     type: config.type || 'string',
     description: config.description || '',
-    required: config.required !== false
+    required: config.required !== false,
+    editable: config.editable || false,
+    value: config.value,
+    default: config.default,
+    // Preserve any additional properties that might be needed
+    ...config
   }));
 }
 
@@ -348,7 +480,12 @@ function convertSchemaToOutputs(schema) {
     name,
     type: config.type || 'string',
     description: config.description || '',
-    required: config.required !== false
+    required: config.required !== false,
+    editable: config.editable || false,
+    value: config.value,
+    default: config.default,
+    // Preserve any additional properties that might be needed
+    ...config
   }));
 }
 
@@ -358,7 +495,8 @@ function convertSchemaToOutputs(schema) {
 function extractHyperparameters(element) {
   const standardFields = [
     'type', 'element_id', 'name', 'description', 'input_schema', 
-    'output_schema', 'processing_message', 'tags', 'layer', 'code'
+    'output_schema', 'processing_message', 'tags', 'layer', 'code',
+    'position', 'parameters', 'original_id', 'node_description' // Exclude all standard fields
   ];
   
   const hyperparameters = {};

@@ -1,0 +1,74 @@
+type: selector
+element_id: null  # Auto-generated at L2
+name: null  # Set by L2
+node_description: Extracts specific values from data structures using path-based selection
+description: null  # Customizable by L2
+input_schema:
+  data:
+    type: any
+    description: The data structure to select from
+    required: true
+output_schema:
+  selected_value:
+    type: any
+    description: The extracted value
+    required: true
+  found:
+    type: bool
+    description: Whether the path was found
+    required: false
+  path_used:
+    type: string
+    description: The path that was used
+    required: false
+parameter_schema_structure: 
+  key:
+    type: string
+    description: Path to the desired value (dot notation)
+  default_value:
+    type: any
+    description: Value to return if path not found
+  multiple_paths:
+    type: list
+    description: List of paths to try in order
+  error_on_missing:
+    type: bool
+    description: Throw error if path not found
+parameters:
+  key: ""
+  default_value: null
+  multiple_paths: []
+  error_on_missing: false
+processing_message: Selecting data...
+tags:
+- utility
+- data-extraction
+- transformation
+layer: null  # Set by L2
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: fixed
+  parameters.key:
+    access: edit
+  parameters.default_value:
+    access: edit
+  parameters.multiple_paths:
+    access: edit
+  parameters.error_on_missing:
+    access: edit
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit

@@ -1,30 +1,30 @@
 // frontend/src/components/common_components/WalletMethodSelector/WalletMethodSelector.jsx
 
-import React, { useEffect, useState } from 'react';
 import {
-  Box,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
-  Button,
-  VStack,
-  Text,
-  Flex,
-  useColorModeValue,
-  Divider,
-  useToast
-
+    Box,
+    Button,
+    Divider,
+    Flex,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalHeader,
+    ModalOverlay,
+    Text,
+    useColorModeValue,
+    useToast,
+    VStack
 } from '@chakra-ui/react';
-import { 
-  ConnectModal
+import {
+    ConnectModal,
+    useCurrentAccount,
+    useSignPersonalMessage
 } from '@mysten/dapp-kit';
+import { useEffect, useState } from 'react';
 import { FaGoogle } from 'react-icons/fa';
-import { useZkLogin } from '../../../contexts/ZkLoginContext';
-import { useSignPersonalMessage, useCurrentAccount } from '@mysten/dapp-kit';
 import * as WalletAuth from '../../../components/auth/WalletSignatureService';
+import { useZkLogin } from '../../../contexts/ZkLoginContext';
 
 
 const WalletMethodSelector = ({ isOpen, onClose }) => {
