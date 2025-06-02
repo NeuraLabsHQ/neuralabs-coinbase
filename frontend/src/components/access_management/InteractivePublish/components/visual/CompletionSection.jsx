@@ -41,14 +41,7 @@ const CompletionSection = ({ journeyData, config, onNewJourney }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
-        <motion.div 
-          className="completion-icon"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, duration: 0.5, type: "spring", stiffness: 200 }}
-        >
-          ✨
-        </motion.div>
+
         
         <h2>Publishing Journey Complete!</h2>
         <p>Your content has been successfully encrypted and stored on the decentralized network</p>
