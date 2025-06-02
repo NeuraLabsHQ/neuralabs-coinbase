@@ -19,27 +19,57 @@ export async function grantAccess(
   currentAccount: any,
   signAndExecute: any,
   params: GrantAccessParams
-): Promise<TransactionResult> {
+): Promise<TransactionResult> 
+
+{
   checkWalletConnection(currentAccount);
   
   const tx = new Transaction();
+  
+  // tx.moveCall({
+  //   target: `${config.PACKAGE_ID}::access::grant_access`,
+  //   arguments: [
+  //     tx.object(config.REGISTRY_ID),
+  //     tx.object(params.accessCapId),
+  //     tx.object(params.nftId),
+  //     tx.pure.address(params.recipientAddress),
+  //     tx.pure.u8(params.accessLevel),
+  //   ]
+  // });
   
   tx.moveCall({
     target: `${config.PACKAGE_ID}::access::grant_access`,
     arguments: [
       tx.object(config.ACCESS_REGISTRY_ID),
       tx.object(params.accessCapId),
-      tx.object(params.nftId),
+      tx.pure.id(params.nftId),
       tx.pure.address(params.recipientAddress),
       tx.pure.u8(params.accessLevel),
     ]
   });
-  
-  const result = await signAndExecute({
-    transaction: tx,
+
+
+  // Wrap the mutation in a promise since signAndExecute is a mutation function
+  const result = await new Promise((resolve, reject) => {
+    signAndExecute(
+      {
+        transaction: tx,
+      },
+      {
+        onSuccess: (result) => {
+          console.log('Grant access transaction result:', result);
+          resolve(result);
+        },
+        onError: (error) => {
+          console.error('Transaction error:', error);
+          reject(error);
+        },
+      }
+    );
   });
   
   if (!result || !result.digest) {
+    console.error('Transaction result missing digest:', result);
     throw new Error('Transaction failed');
   }
   
@@ -76,8 +106,23 @@ export async function revokeAccess(
     ]
   });
   
-  const result = await signAndExecute({
-    transaction: tx,
+  // Wrap the mutation in a promise since signAndExecute is a mutation function
+  const result = await new Promise((resolve, reject) => {
+    signAndExecute(
+      {
+        transaction: tx,
+      },
+      {
+        onSuccess: (result) => {
+          console.log('Revoke access transaction result:', result);
+          resolve(result);
+        },
+        onError: (error) => {
+          console.error('Revoke transaction error:', error);
+          reject(error);
+        },
+      }
+    );
   });
   
   if (!result || !result.digest) {
@@ -118,8 +163,23 @@ export async function changeAccessLevel(
     ]
   });
   
-  const result = await signAndExecute({
-    transaction: tx,
+  // Wrap the mutation in a promise since signAndExecute is a mutation function
+  const result = await new Promise((resolve, reject) => {
+    signAndExecute(
+      {
+        transaction: tx,
+      },
+      {
+        onSuccess: (result) => {
+          console.log('Change access level transaction result:', result);
+          resolve(result);
+        },
+        onError: (error) => {
+          console.error('Change access level transaction error:', error);
+          reject(error);
+        },
+      }
+    );
   });
   
   if (!result || !result.digest) {

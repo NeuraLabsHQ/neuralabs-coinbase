@@ -38,12 +38,14 @@ export const grantAccessToUser = async (params) =>
   const config = params.config || window.config
   const currentAccount = params.currentAccount || window.currentAccount
   
-  return _grantAccess(client, config, currentAccount, signAndExecute, {
+  const results = await _grantAccess(client, config, currentAccount, signAndExecute, {
     nftId: params.nftId,
     recipientAddress: params.userAddress,
     accessLevel: params.accessLevel,
     accessCapId: params.accessCapId
   })
+
+  return results
 }
 
 export const revokeUserAccess = async (params) => {

@@ -225,3 +225,27 @@ async def get_flow_details(agent_id: str, user_pub_key: str) -> Optional[Dict[st
     if result:
         return result[0]
     return None
+
+
+async def get_nft_access_list(nft_id: str) -> List[Dict[str, Any]]:
+    """
+    Get the list of users who have access to a specific NFT
+    
+    Args:
+        nft_id: ID of the NFT
+        
+    Returns:
+        List of users with their access levels
+    """
+    pg_conn = PostgresConnection()
+    query = """
+    SELECT na.user_id as address, na.access_level as level, na.timestamp as granted_date,
+           al.access_level_name, u.email
+    FROM NFT_ACCESS na
+    LEFT JOIN ACCESS_LEVEL_TABLE al ON na.access_level = al.access_level
+    LEFT JOIN USER_AUTH u ON na.user_id = u.user_pub_key
+    WHERE na.nft_id = %s
+    ORDER BY na.access_level DESC, na.timestamp DESC
+    """
+    result = await pg_conn.execute_query(query, (nft_id,))
+    return result
