@@ -45,7 +45,7 @@ const ProgressSection = ({ steps, currentStep, journeyData, renderStepIcon, onSt
   }
 
   return (
-    <div className="progress-section">
+    <div className="progress-section hide-scrollbar ">
       <div className="progress-track">
 
         

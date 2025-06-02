@@ -389,7 +389,7 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
             </div>
           ) : (
             // Show vertical stack: text + animation + action content + action
-            <div className="journey-right-stack">
+            <div className="journey-right-stack hide-scrollbar ">
               {/* Text Content Section */}
               <div className="text-section">
                 <motion.h2

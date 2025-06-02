@@ -30,7 +30,7 @@ const CompletionSection = ({ journeyData, config, onNewJourney }) => {
 
   return (
     <motion.div 
-      className="completion-area"
+      className="completion-area hide-scrollbar "
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}

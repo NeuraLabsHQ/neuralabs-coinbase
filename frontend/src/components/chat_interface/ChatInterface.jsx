@@ -558,35 +558,7 @@ const handleSendMessage = () => {
             </HStack>
 
             <HStack>
-            <Menu placement={isLanding ? "bottom-end" : "top-end"} gutter={4}>
-                <MenuButton
-                  as={Button}
-                  rightIcon={<FiChevronDown />}
-                  size="sm"
-                  variant="ghost"
-                  color={iconColor}
-                >
-                  {selectedModel.name}
-                </MenuButton>
-                <MenuList
-                  bg={bgSecondary}
-                  borderColor={borderColor}
-                  p={0}
-                  marginTop={isLanding ? "10px" : "0"} 
-                >
-                  {AI_MODELS.map((model) => (
-                    <MenuItem
-                      key={model.id}
-                      onClick={() => setSelectedModel(model)}
-                      _hover={{ bg: bgHover }}
-                    bg={bgSecondary}
 
-                    >
-                      {model.name}
-                    </MenuItem>
-                  ))}
-                </MenuList>
-              </Menu>
 
               <Tooltip label="Send message">
                 <IconButton
