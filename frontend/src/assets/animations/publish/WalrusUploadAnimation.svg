@@ -5,14 +5,14 @@
   <!-- Central file -->
   <g transform="translate(180, 180)">
     <rect x="-20" y="-30" width="40" height="60" rx="5" 
-      fill="rgba(255,255,255,0.1)" 
-      stroke="white" 
+      fill="rgba(0,0,0,0.1)" 
+      stroke="rgba(126, 112, 112, 0.43)" 
       stroke-width="2"
     />
-    <rect x="-15" y="-20" width="30" height="3" fill="rgba(255,255,255,0.5)"/>
-    <rect x="-15" y="-10" width="30" height="3" fill="rgba(255,255,255,0.5)"/>
-    <rect x="-15" y="0" width="30" height="3" fill="rgba(255,255,255,0.5)"/>
-    <rect x="-15" y="10" width="30" height="3" fill="rgba(255,255,255,0.5)"/>
+    <rect x="-15" y="-20" width="30" height="3" fill="rgba(0,0,0,0.5)"/>
+    <rect x="-15" y="-10" width="30" height="3" fill="rgba(0,0,0,0.5)"/>
+    <rect x="-15" y="0" width="30" height="3" fill="rgba(0,0,0,0.5)"/>
+    <rect x="-15" y="10" width="30" height="3" fill="rgba(0,0,0,0.5)"/>
   </g>
   
   <!-- Data shards that fly out -->
@@ -288,7 +288,7 @@
   </circle>
   
   <!-- Status text -->
-  <text x="200" y="380" text-anchor="middle" font-size="14" fill="rgba(255,255,255,0.8)">
+  <text x="200" y="380" text-anchor="middle" font-size="14" fill="rgba(0,0,0,0.8)">
     Distributing to Walrus Network...
   </text>
 </svg>
