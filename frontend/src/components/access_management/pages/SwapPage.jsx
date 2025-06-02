@@ -2,9 +2,14 @@ import { Box, Flex, Text, useColorModeValue } from '@chakra-ui/react';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import SUIToWALConverter from '../../../lib/blockchain_module/pages/SUIToWALConverter';
 import colors from '../../../color';
+import { useZkLogin } from '../../../contexts/ZkLoginContext';
 
 const SwapPage = () => {
   const account = useCurrentAccount();
+  const { zkLoginAddress } = useZkLogin();
+  
+  // Check if user is connected via wallet or zkLogin
+  const isConnected = !!(account || zkLoginAddress);
   
   const bgColor = useColorModeValue(colors.gray[50], colors.gray[900]);
   const cardBg = useColorModeValue('white', colors.gray[800]);
@@ -27,7 +32,7 @@ const SwapPage = () => {
           p={8}
           boxShadow="sm"
         >
-          {account ? (
+          {isConnected ? (
             <SUIToWALConverter />
           ) : (
             <Flex 

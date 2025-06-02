@@ -40,7 +40,7 @@ const ChatHistoryPanel = ({
   setNewTitle
 }) => {
   // Colors that adapt to light/dark mode
-  const bgColor = useColorModeValue(colors.chat.bgTertiary.light, colors.gray[800]);
+  const bgColor = useColorModeValue(colors.chat.bgTertiary.light, colors.chat.bgTertiary.dark);
   const borderColor = useColorModeValue(colors.chat.borderColor.light, colors.chat.borderColor.dark);
   const textColor = useColorModeValue(colors.chat.textPrimary.light, colors.chat.textPrimary.dark);
   const mutedTextColor = useColorModeValue(colors.chat.textMuted.light, colors.chat.textMuted.dark);

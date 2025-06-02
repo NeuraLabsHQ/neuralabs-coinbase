@@ -225,6 +225,7 @@ async def get_flow_detail(
             detail="You don't have permission to access this flow"
         )
     
+    
     flow_detail = await get_flow_details(agent_id, current_user)
     if not flow_detail:
         raise HTTPException(

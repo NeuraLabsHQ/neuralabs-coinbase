@@ -21,6 +21,7 @@ import { accessManagementApi } from '../../utils/access-api'; // Updated import 
 import SidebarItem from './SidebarItem';
 import { useCurrentAccount, useSuiClient } from '@mysten/dapp-kit';
 import { getSuiBalance, getWalBalance, formatBalance } from '../../lib/blockchain_module/exchange';
+import { useZkLogin } from '../../contexts/ZkLoginContext';
 
 
 const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = false }) => {
@@ -43,6 +44,10 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
   
   const account = useCurrentAccount();
   const client = useSuiClient();
+  const { zkLoginAddress, isAuthenticated: zkIsAuthenticated } = useZkLogin();
+  
+  // Get the active address from either wallet connection or zkLogin
+  const activeAddress = account?.address || zkLoginAddress;
   
   // WAL Token configuration  
   const WAL_TOKEN_TYPE = '0x8270feb7375eee355e64fdb69c50abb6b5f9393a722883c1cf45f8e26048810a::wal::WAL';
@@ -133,16 +138,27 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
   
   // Load balances
   const loadBalances = async () => {
-    if (!account || !client) return;
+
+    console.log('Loading balances...');
+    console.log('Account:', account);
+    console.log('zkLoginAddress:', zkLoginAddress);
+    console.log('activeAddress:', activeAddress);
+    console.log('Client:', client);
     
+    if (!activeAddress || !client) {
+      console.log('No active address or client available');
+      return;
+    }
+
     setLoadingBalances(true);
     try {
       // Get SUI balance
-      const suiBalanceData = await getSuiBalance(client, account.address);
+      const suiBalanceData = await getSuiBalance(client, activeAddress);
+      console.log('SUI Balance Data:', suiBalanceData);
       setSuiBalance(formatBalance(suiBalanceData.totalBalance, 9));
       
       // Get WAL balance
-      const walBalanceData = await getWalBalance(client, account.address, WAL_TOKEN_TYPE);
+      const walBalanceData = await getWalBalance(client, activeAddress, WAL_TOKEN_TYPE);
       setWalBalance(formatBalance(walBalanceData.totalBalance, 9));
     } catch (error) {
       console.error('Error loading balances:', error);
@@ -153,10 +169,10 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
   
   // Load balances on mount and when account changes
   useEffect(() => {
-    if (account && client) {
+    if (activeAddress && client) {
       loadBalances();
     }
-  }, [account, client]);
+  }, [activeAddress, client]);
 
   // Filter flows by search query
   const filterFlows = (flows) => {
@@ -416,7 +432,7 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
           variant="outline"
           colorScheme="blue"
           onClick={() => handleViewChange('swap')}
-          isDisabled={!account}
+          isDisabled={!activeAddress}
         >
           Swap SUI to WAL
         </Button>

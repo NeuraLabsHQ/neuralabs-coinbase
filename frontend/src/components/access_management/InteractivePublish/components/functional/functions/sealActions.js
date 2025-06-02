@@ -7,7 +7,14 @@ export const initializeSeal = async (state, updateState, config) => {
     const client = window.suiClient;
     const finalConfig = config || window.config;
     
+    console.log('Initializing Seal with client:', client);
+    
+    if (!client) {
+      throw new Error('SUI client not available. Please ensure wallet is connected.');
+    }
+    
     const sealClient = initializeSealClient(client);
+    console.log('Seal client initialized:', sealClient);
     
     // Just initialize the seal client, session key will be created in next step
     updateState({
@@ -17,8 +24,10 @@ export const initializeSeal = async (state, updateState, config) => {
     
     return { success: true };
   } catch (error) {
-    updateState({ error: error.message, loading: false });
-    return { success: false, error: error.message };
+    console.error('Error in initializeSeal:', error);
+    console.error('Error stack:', error.stack);
+    updateState({ error: error.message || 'Failed to initialize Seal', loading: false });
+    return { success: false, error: error.message || 'Failed to initialize Seal' };
   }
 };
 
@@ -39,7 +48,8 @@ export const createSessionKey = async (state, updateState, config) => {
     const sessionKey = createSealSessionKey({
       address: currentAccount.address,
       packageId: finalConfig.PACKAGE_ID,
-      ttlMin: 30
+      ttlMin: 30,
+      suiClient: window.suiClient
     });
 
     // Get the personal message that needs to be signed

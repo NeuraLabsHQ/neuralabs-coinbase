@@ -482,7 +482,7 @@ const colors = {
     },
     bgTertiary: {
       light: "#F2F3F4",
-      dark: "#131417",
+      dark: "#16181c",
     },
     bgInput: {
       light: "#FFFFFF",

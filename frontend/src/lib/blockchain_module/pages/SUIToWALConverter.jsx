@@ -28,6 +28,8 @@ import { useEffect, useState } from 'react';
 import { FiRefreshCw, FiArrowDown, FiInfo, FiCheckCircle } from 'react-icons/fi';
 import { getSuiBalance, getWalBalance, formatBalance } from '../exchange';
 import colors from '../../../color';
+import { useZkLogin } from '../../../contexts/ZkLoginContext';
+import ConversionConfirmationPopup from '../../../components/auth/ConversionConfirmationPopup';
 
 /**
  * SUI to WAL Token Converter Component
@@ -38,6 +40,11 @@ function SUIToWALConverter() {
   const client = useSuiClient();
   const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const toast = useToast();
+  const { zkLoginAddress, signTransaction: zkSignTransaction } = useZkLogin();
+  
+  // Get the active address from either wallet connection or zkLogin
+  const activeAddress = account?.address || zkLoginAddress;
+  const isZkLogin = !account && zkLoginAddress;
   
   const [suiBalance, setSuiBalance] = useState('0');
   const [walBalance, setWalBalance] = useState('0');
@@ -45,6 +52,7 @@ function SUIToWALConverter() {
   const [isConverting, setIsConverting] = useState(false);
   const [loadingBalances, setLoadingBalances] = useState(false);
   const [exchangeRate] = useState('1:1'); // Default rate
+  const [showConversionPopup, setShowConversionPopup] = useState(false);
 
   // Exchange contract configuration
   const EXCHANGE_CONFIG = {
@@ -65,16 +73,16 @@ function SUIToWALConverter() {
 
   // Load balances
   const loadBalances = async () => {
-    if (!account || !client) return;
+    if (!activeAddress || !client) return;
 
     setLoadingBalances(true);
     try {
       // Get SUI balance
-      const suiBalanceData = await getSuiBalance(client, account.address);
+      const suiBalanceData = await getSuiBalance(client, activeAddress);
       setSuiBalance(formatBalance(suiBalanceData.totalBalance, 9));
 
       // Get WAL balance
-      const walBalanceData = await getWalBalance(client, account.address, WAL_TOKEN_TYPE);
+      const walBalanceData = await getWalBalance(client, activeAddress, WAL_TOKEN_TYPE);
       setWalBalance(formatBalance(walBalanceData.totalBalance, 9));
     } catch (error) {
       console.error('Error loading balances:', error);
@@ -92,7 +100,7 @@ function SUIToWALConverter() {
 
   // Convert SUI to WAL
   const handleConvertSUIToWAL = async () => {
-    if (!account || !convertAmount) {
+    if (!activeAddress || !convertAmount) {
       toast({
         title: 'Please enter an amount to convert',
         status: 'warning',
@@ -114,19 +122,62 @@ function SUIToWALConverter() {
       return;
     }
 
+    // For zkLogin users, show confirmation popup
+    if (isZkLogin) {
+      setShowConversionPopup(true);
+      return;
+    }
+
+    // For regular wallet users, proceed directly
+    performConversion();
+  };
+
+  // Actual conversion logic
+  const performConversion = async () => {
     setIsConverting(true);
+    setShowConversionPopup(false);
+    
+    const amount = parseFloat(convertAmount);
     
     try {
       // Use the blockchain utility function directly
       const { convertSUIToWAL } = await import('../../../utils/blockchain');
       
+      // For zkLogin, we need to handle the transaction differently
+      let signAndExecuteFunc;
+      let currentAccountObj;
+      
+      if (isZkLogin) {
+        // For zkLogin, we need to create a wrapper for the sign function
+        signAndExecuteFunc = async ({ transaction }) => {
+          // The zkLogin signTransaction returns { transactionBytes, signature }
+          const { transactionBytes, signature } = await zkSignTransaction(transaction);
+          
+          // Execute the transaction
+          const result = await client.executeTransactionBlock({
+            transactionBlock: transactionBytes,
+            signature: signature,
+            options: {
+              showEffects: true,
+              showObjectChanges: true,
+            }
+          });
+          
+          return result;
+        };
+        currentAccountObj = { address: zkLoginAddress };
+      } else {
+        signAndExecuteFunc = signAndExecuteTransaction;
+        currentAccountObj = account;
+      }
+      
       const result = await convertSUIToWAL({
         amount,
-        senderAddress: account.address,
+        senderAddress: activeAddress,
         exchangeConfig: EXCHANGE_CONFIG,
         client,
-        signAndExecute: signAndExecuteTransaction,
-        currentAccount: account
+        signAndExecute: signAndExecuteFunc,
+        currentAccount: currentAccountObj
       });
 
       toast({
@@ -160,13 +211,13 @@ function SUIToWALConverter() {
 
   // Load balances on mount and when account changes
   useEffect(() => {
-    if (account && client) {
+    if (activeAddress && client) {
       loadBalances();
       // Refresh balances every 30 seconds
       const interval = setInterval(loadBalances, 30000);
       return () => clearInterval(interval);
     }
-  }, [account, client]);
+  }, [activeAddress, client]);
 
   const handleMaxClick = () => {
     setConvertAmount(suiBalance);
@@ -271,7 +322,7 @@ function SUIToWALConverter() {
               onClick={handleConvertSUIToWAL}
               isLoading={isConverting}
               loadingText="Converting..."
-              isDisabled={!account || !convertAmount || parseFloat(convertAmount) <= 0}
+              isDisabled={!activeAddress || !convertAmount || parseFloat(convertAmount) <= 0}
             >
               Convert SUI to WAL
             </Button>
@@ -378,6 +429,16 @@ function SUIToWALConverter() {
           </VStack>
         </CardBody>
       </Card>
+
+      {/* Conversion Confirmation Popup for zkLogin users */}
+      <ConversionConfirmationPopup
+        isOpen={showConversionPopup}
+        onClose={() => setShowConversionPopup(false)}
+        onConfirm={performConversion}
+        suiAmount={convertAmount}
+        walAmount={convertAmount} // 1:1 conversion rate
+        isConverting={isConverting}
+      />
     </VStack>
   );
 }

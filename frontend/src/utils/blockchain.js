@@ -103,10 +103,17 @@ export const initializeSealClient = (suiClient) => {
 }
 
 export const createSealSessionKey = (params) => {
+  const suiClient = params.suiClient || window.suiClient
+  
+  if (!suiClient) {
+    throw new Error('SUI client not available. Please ensure wallet is connected.')
+  }
+  
   return new SessionKey({
     address: params.address,
     packageId: params.packageId,
-    ttlMin: params.ttlMin || 10
+    ttlMin: params.ttlMin || 10,
+    suiClient: suiClient
   })
 }
 
