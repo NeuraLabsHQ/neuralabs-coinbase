@@ -128,8 +128,9 @@ class FlowDetailResponse(BaseModel):
     chain_explorer: Optional[str] = None
     access_level: Optional[int] = None
     access_level_name: Optional[str] = None
-    descriptions_and_permissions: Optional[Dict[str, Any]] = None
+    descriptions_and_permissions: Optional[Any] = None
     markdown_object: Optional[Dict[str, Any]] = None
+    other_data: Optional[Dict[str, Any]] = None
 
 
 # Create router

@@ -207,7 +207,7 @@ async def get_flow_details(agent_id: str, user_pub_key: str) -> Optional[Dict[st
            ba.version, ba.published_date, ba.published_hash, ba.contract_id, ba.nft_id,
            c.chain, c.chain_status, c.chain_explorer,
            al.access_level, al.access_level_name, al.descriptions_and_permissions,
-           m.markdown_object
+           m.markdown_object, ba.other_data
     FROM AGENT a
     LEFT JOIN PUBLISHED_AGENT pa ON a.agent_id = pa.agent_id
     LEFT JOIN UNPUBLISHED_AGENT ua ON a.agent_id = ua.agent_id
