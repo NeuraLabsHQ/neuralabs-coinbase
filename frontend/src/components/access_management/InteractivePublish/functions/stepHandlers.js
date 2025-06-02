@@ -89,7 +89,7 @@ export const handleStepActionWithData = async ({
         setAnimationPhase('completed')
         
         // Check if this is the final step
-        if (currentStep === INTERACTIVE_PUBLISH_STEPS.length - 1 && result.success) {
+        if (currentStep === INTERACTIVE_PUBLISH_STEPS.length - 1 && result.success && result.walrus_data) {
           // Save to backend before completing
           // Need to get the latest session storage data to ensure walrus data is captured
           const flowId = getFlowId()
@@ -99,7 +99,8 @@ export const handleStepActionWithData = async ({
           const finalData = {
             ...journeyData,
             ...actionData,
-            ...latestJourneyData
+            ...latestJourneyData,
+            ...result.walrus_data // Include walrus data if available
           }
           
           try {

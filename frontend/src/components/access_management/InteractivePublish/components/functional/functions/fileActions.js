@@ -170,7 +170,7 @@ export const storeFile = async (state, updateState, config) => {
     // Create the URL from the blob ID (same pattern as storeToWalrus)
     const finalConfig = config || window.config || {};
     const aggregatorUrl = finalConfig.WALRUS_AGGREGATOR || 'https://aggregator.walrus-testnet.walrus.space';
-    const walrusUrl = `${aggregatorUrl}/v1/${blobId}`;
+    const walrusUrl = `${aggregatorUrl}/v1/blobs/${blobId}`;
     
     updateState({
       walrusUrl: walrusUrl,
@@ -178,7 +178,11 @@ export const storeFile = async (state, updateState, config) => {
       loading: false,
     });
     
-    return { success: true };
+    return { success: true, walrus_data: {
+        walrusUrl: walrusUrl,
+        walrusBlobId: blobId,
+      } 
+    };
   } catch (error) {
     updateState({ error: error.message, loading: false });
     return { success: false, error: error.message };

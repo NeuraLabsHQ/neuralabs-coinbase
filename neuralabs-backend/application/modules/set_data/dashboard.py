@@ -279,9 +279,11 @@ async def move_workflow_to_published(pg_conn, agent_id, user_pub_key) -> Tuple[b
         """
         await pg_conn.execute_query(published_insert_query, (agent_id, datetime.now(), workflow_json, md5))
     
+    
+    # Dont change this, do not remove unpublished agent     
     # Delete from UNPUBLISHED_AGENT
-    delete_query = "DELETE FROM UNPUBLISHED_AGENT WHERE agent_id = %s"
-    await pg_conn.execute_query(delete_query, (agent_id,))
+    # delete_query = "DELETE FROM UNPUBLISHED_AGENT WHERE agent_id = %s"
+    # await pg_conn.execute_query(delete_query, (agent_id,))
     
     return True, None
 
