@@ -29,6 +29,27 @@ import {
   getFlowSummary 
 } from './components/functional/sessionStorage'
 
+// Extracted functions
+import { 
+  handleStepActionWithData, 
+  handleStepAction, 
+  checkStepPrerequisites,
+  moveToNextStep,
+  moveToPreviousStep
+} from './functions/stepHandlers'
+import { 
+  handleNFTFormSubmit, 
+  handleResetProgress,
+  handleNewJourney 
+} from './functions/nftFormHandlers'
+import { 
+  initializeBlockchainReferences,
+  loadSavedJourneyData,
+  setupAutoSave,
+  handleSignatureCallback
+} from './functions/initialization'
+import { savePublishDataToBackend } from './functions/backendSave'
+
 const InteractivePublish = ({ agentData, agentId, onComplete }) => {
   // Debug logging for agentData and agentId
   console.log('InteractivePublish - agentData received:', agentData);
@@ -40,12 +61,12 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
   
   // Create config from environment
   const config = {
-    walrusApiUrl: import.meta.env.VITE_WALRUS_API_URL || 'https://walrus-testnet.walrus.space',
-    network: import.meta.env.VITE_SUI_NETWORK || 'testnet',
-    PACKAGE_ID: import.meta.env.VITE_PACKAGE_ID || '0x0',
-    ACCESS_REGISTRY_ID: import.meta.env.VITE_ACCESS_REGISTRY_ID || '0x0',
-    WALRUS_PUBLISHER: import.meta.env.VITE_WALRUS_PUBLISHER || 'https://publisher.walrus-testnet.walrus.space',
-    WALRUS_AGGREGATOR: import.meta.env.VITE_WALRUS_AGGREGATOR || 'https://aggregator.walrus-testnet.walrus.space'
+    walrusApiUrl        : import.meta.env.VITE_WALRUS_API_URL     || 'https://walrus-testnet.walrus.space',
+    network             : import.meta.env.VITE_SUI_NETWORK        || 'testnet',
+    PACKAGE_ID          : import.meta.env.VITE_PACKAGE_ID         || '0x0',
+    ACCESS_REGISTRY_ID  : import.meta.env.VITE_ACCESS_REGISTRY_ID || '0x0',
+    WALRUS_PUBLISHER    : import.meta.env.VITE_WALRUS_PUBLISHER   || 'https://publisher.walrus-testnet.walrus.space',
+    WALRUS_AGGREGATOR   : import.meta.env.VITE_WALRUS_AGGREGATOR  || 'https://aggregator.walrus-testnet.walrus.space'
   }
   
   // Core state management
@@ -60,10 +81,10 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
     canProceed,
   } = useJourneyState()
   
-  const [flowId, setFlowIdState] = useState(() => getFlowId())
-  const [currentStep, setCurrentStepState] = useState(0)
-  const [isProcessing, setProcessingState] = useState(false)
-  const [animationPhase, setAnimationPhase] = useState('idle')
+  const [flowId, setFlowIdState]                              = useState(() => getFlowId())
+  const [currentStep, setCurrentStepState]                    = useState(0)
+  const [isProcessing, setProcessingState]                    = useState(false)
+  const [animationPhase, setAnimationPhase]                   = useState('idle')
   const [incompletePrerequisites, setIncompletePrerequisites] = useState([])
   
   // NFT form state
@@ -71,20 +92,11 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
   const [nftDescription, setNftDescription] = useState('')
   
   // Animation system
-  const {
-    renderStepIcon,
-    renderAnimation
-  } = useAnimationSystem()
+  const {renderStepIcon,renderAnimation} = useAnimationSystem()
   
   // Initialize global blockchain references
   useEffect(() => {
-    if (suiClient && account && signAndExecuteTransaction) {
-      // Set global references for blockchain.js
-      window.suiClient = suiClient
-      window.signAndExecute = signAndExecuteTransaction
-      window.config = config
-      window.currentAccount = account
-    }
+    initializeBlockchainReferences(suiClient, account, signAndExecuteTransaction, config)
   }, [suiClient, account, signAndExecuteTransaction, config])
 
   // Load saved data on component mount
@@ -139,17 +151,11 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
     updateJourneyData(updateData);
   }, [account, agentData, agentId, flowId])
   
-  // Save journey data whenever it changes
+  // Auto-save journey data whenever it changes
   useEffect(() => {
-    if (journeyData && Object.keys(journeyData).length > 0) {
-      saveJourneyData(flowId, journeyData)
-    }
-  }, [journeyData, flowId])
-  
-  // Save current step whenever it changes
-  useEffect(() => {
-    saveCurrentStep(flowId, currentStep)
-  }, [currentStep, flowId])
+    const timeoutId = setupAutoSave(flowId, journeyData, currentStep)
+    return () => clearTimeout(timeoutId)
+  }, [journeyData, currentStep, flowId])
   
   // Handle step navigation (from progress clicks or continue button)
   const handleStepNavigation = (targetStep, incompleteSteps = null) => {
@@ -178,174 +184,184 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
   
   // Handle action from content (for mint step with form data)
   const handleActionFromContent = async () => {
-    // Validate required fields
-    if (!versionNumber || !nftDescription) {
-      toast.error('Please fill in all required fields');
-      return;
+    handleNFTFormSubmit({
+      versionNumber,
+      nftDescription,
+      journeyData,
+      updateJourneyData,
+      agentId: agentId || agentData?.id || journeyData.agentId,
+      setAnimationPhase,
+      handleStepActionWithData: (data) => handleStepActionWithDataWrapper(data)
+    })
+  }
+  
+  // Wrapper functions for imported handlers
+  const handleStepActionWithDataWrapper = async (dataOverride = null) => {
+    return handleStepActionWithData({
+      dataOverride,
+      currentStep,
+      journeyData,
+      updateJourneyData,
+      config,
+      setProcessingState,
+      setAnimationPhase,
+      markStepComplete,
+      setError,
+      onComplete,
+      agentId,
+      agentData,
+      account
+    })
+  }
+  
+  const handleStepActionWrapper = async () => {
+    return handleStepAction({
+      currentStep,
+      journeyData,
+      updateJourneyData,
+      config,
+      setProcessingState,
+      setAnimationPhase,
+      markStepComplete,
+      setError,
+      onComplete,
+      agentId,
+      agentData,
+      account
+    })
+  }
+  
+  const handleResetProgressWrapper = () => {
+    handleResetProgress({
+      flowId,
+      clearFlowData,
+      setFlowId,
+      setFlowIdState,
+      resetJourney,
+      setCurrentStepState,
+      setAnimationPhase,
+      setIncompletePrerequisites
+    })
+  }
+  
+  const handleNewJourneyWrapper = () => {
+    handleNewJourney({
+      flowId,
+      clearFlowData,
+      setFlowId,
+      setFlowIdState,
+      resetJourney,
+      setCurrentStepState,
+      setAnimationPhase,
+      setIncompletePrerequisites
+    })
+  }
+  
+  // Handle resetting from a specific step (debug mode only)
+  const handleResetFromStep = (stepIndex) => {
+    console.log('Debug mode: Resetting from step', stepIndex)
+    console.log('Current journeyData before reset:', journeyData)
+    console.log('Steps to reset:', INTERACTIVE_PUBLISH_STEPS.slice(stepIndex))
+    
+    // Create the reset data object with specific fields to clear
+    const resetUpdates = {}
+    
+    // Always reset completedSteps array to only include steps before the reset point
+    if (journeyData.completedSteps) {
+      resetUpdates.completedSteps = journeyData.completedSteps.filter(step => step < stepIndex)
     }
     
-    // Construct full NFT name with neuralabs prefix
-    const currentAgentId = agentId || agentData?.id || journeyData.agentId || 'unknown'
-    const fullNftName = `neuralabs:${currentAgentId}:${versionNumber}`
-    
-    
-    // Create temporary state with form data for the blockchain action
-    const tempJourneyData = {
-      ...journeyData,
-      nftName: fullNftName,
-      versionNumber: versionNumber,
-      nftDescription: nftDescription
-    }
-    
-    // Update journey data and immediately trigger action with temp data
-    updateJourneyData({
-      nftName: fullNftName,
-      versionNumber: versionNumber,
-      nftDescription: nftDescription
+    // Reset completed steps for all steps from stepIndex onwards
+    INTERACTIVE_PUBLISH_STEPS.forEach((step, index) => {
+      if (index >= stepIndex) {
+        console.log(`Resetting step ${index}: ${step.id}`)
+        
+        // Remove completion data for this step based on its actual ID
+        switch(step.id) {
+          case 'wallet':
+            resetUpdates.walletConnected = false
+            resetUpdates.walletAddress = null
+            resetUpdates.account = null
+            break
+          case 'balances':
+            resetUpdates.suiBalance = null
+            resetUpdates.walBalance = null
+            break
+          case 'mint':
+            resetUpdates.nftId = null
+            resetUpdates.nftObjectId = null
+            resetUpdates.nftAddress = null
+            resetUpdates.nftName = ''
+            resetUpdates.nftDescription = ''
+            break
+          case 'accessCap':
+            resetUpdates.accessCapId = null
+            break
+          case 'grant':
+            // This step uses completedSteps array, which we already handled above
+            break
+          case 'verify':
+            resetUpdates.accessLevel = null
+            break
+          case 'seal':
+            resetUpdates.sealClient = null
+            break
+          case 'signature':
+            resetUpdates.sessionKey = null
+            resetUpdates.sessionKeySigned = false
+            resetUpdates.signatureCompleted = false
+            break
+          case 'file':
+            resetUpdates.selectedFile = null
+            break
+          case 'encrypt':
+            resetUpdates.encryptedData = null
+            break
+          case 'walrus':
+            resetUpdates.walrusBlobId = null
+            resetUpdates.walrusUrl = null
+            break
+          default:
+            console.warn(`Unknown step ID: ${step.id}`)
+        }
+      }
     })
     
-    // Call the action directly with the temp data
-    setAnimationPhase('idle')
-    setTimeout(() => {
-      handleStepActionWithData(tempJourneyData)
-    }, 100)
-  }
-  
-  // Handle step actions with optional data override
-  const handleStepActionWithData = async (dataOverride = null) => {
-    const step = INTERACTIVE_PUBLISH_STEPS[currentStep]
-    const actionData = dataOverride || journeyData
+    console.log('Reset updates to apply:', resetUpdates)
     
+    // Apply the updates
+    updateJourneyData(resetUpdates)
     
-    if (!step.action) {
-      console.log('No action defined for step:', step.id)
-      return
-    }
-    
-    const action = journeyActions[step.action]
-    if (!action) {
-      toast.error(`Action ${step.action} not implemented`)
-      return
-    }
-    
-    console.log('Executing action:', step.action)
-    setProcessingState(true)
-    
-    // Set step-specific animation phase
-    const animationPhases = {
-      'connectWallet': 'wallet-connecting',
-      'checkBalances': 'balance-checking', 
-      'mintNFT': 'nft-creating',
-      'createAccessCap': 'access-cap-creating',
-      'grantSelfAccess': 'grant-access',
-      'verifyAccess': 'access-verifying',
-      'initializeSeal': 'seal-initializing',
-      'createSessionKey': 'signing',
-      'selectFile': 'file-selecting',
-      'encryptFile': 'encrypting',
-      'storeFile': 'uploading'
-    }
-    setAnimationPhase(animationPhases[step.action] || 'processing')
-    
-    // Add 3-second delay for animations
-    await new Promise(resolve => setTimeout(resolve, 3000))
-    
-    try {
-      const result = await action(actionData, updateJourneyData, config)
-      console.log('Action result:', result)
-      
-      if (result.success) {
-        console.log('Action succeeded for step:', currentStep)
-        
-        // Special handling for signature step
-        if (step.action === 'createSessionKey' && result.needsSignature) {
-          console.log('Session key created, now requesting signature...')
-          
-          // Trigger the signature request
-          setTimeout(() => {
-            const signButton = document.getElementById('trigger-signature-btn')
-            if (signButton) {
-              signButton.click()
-            }
-          }, 500)
-          
-          // Don't mark as complete yet - wait for signature
-          setAnimationPhase('awaiting-signature')
-        } else {
-          // Normal completion flow
-          markStepComplete(currentStep)
-          
-          // Update completed steps in journeyData
-          const newCompletedSteps = [...(journeyData.completedSteps || []), currentStep]
-          updateJourneyData({ completedSteps: newCompletedSteps })
-          
-          setAnimationPhase('completed')
-          
-          // Check if this is the final step
-          if (currentStep === INTERACTIVE_PUBLISH_STEPS.length - 1 && result.success) {
-            // Call onComplete after successful final step
-            setTimeout(() => {
-              if (onComplete) {
-                onComplete()
-              }
-            }, 2000)
-          }
-          
-          // Don't auto-advance - wait for user to click continue
-          setTimeout(() => {
-            setAnimationPhase('step-completed')
-          }, 1500)
-        }
-      } else {
-        console.log('Action failed with result:', result)
-        setAnimationPhase('idle')
-      }
-    } catch (error) {
-      console.error('=== STEP ACTION ERROR ===');
-      console.error('Step:', step.id);
-      console.error('Action:', step.action);
-      console.error('Error:', error);
-      console.error('Error type:', error.name);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-      console.error('Journey data at error:', actionData);
-      
-      toast.error(error.message || 'An error occurred');
-      setError(error.message);
-      setAnimationPhase('idle');
-    } finally {
-      setProcessingState(false)
-    }
-  }
-  
-  // Handle step actions
-  const handleStepAction = async () => {
-    return handleStepActionWithData(null)
-  }
-  
-  // Reset progress and start new journey
-  const handleResetProgress = () => {
-    console.log('Resetting journey progress')
-    
-    // Clear session storage for current flow
-    clearFlowData(flowId)
-    
-    // Generate new flow ID
-    const newFlowId = setFlowId()
-    setFlowIdState(newFlowId)
-    
-    // Reset all state
-    resetJourney()
-    setCurrentStepState(0)
+    // Set current step to the reset step
+    setCurrentStepState(stepIndex)
     setAnimationPhase('idle')
     setIncompletePrerequisites([])
     
-    console.log('Started new journey with flow ID:', newFlowId)
+    // Save the updated state
+    const updatedData = { ...journeyData, ...resetUpdates }
+    saveJourneyData(flowId, updatedData)
+    saveCurrentStep(flowId, stepIndex)
+    
+    toast.success(`Reset from step ${stepIndex + 1}: ${INTERACTIVE_PUBLISH_STEPS[stepIndex].title}`)
   }
-  
-  const handleNewJourney = () => {
-    handleResetProgress()
-  }
+
+  // Handle signature callback for Seal session key
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data?.type === 'SEAL_SIGNATURE_COMPLETE' && event.data?.sessionKey) {
+        handleSignatureCallback(
+          event.data.sessionKey,
+          updateJourneyData,
+          markStepComplete,
+          currentStep,
+          setAnimationPhase
+        )
+      }
+    }
+    
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [currentStep, markStepComplete, updateJourneyData])
 
   return (
     <div className="journey-v2">
@@ -357,7 +373,8 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
             journeyData={journeyData}
             renderStepIcon={renderStepIcon}
             onStepClick={handleStepNavigation}
-            onResetProgress={handleResetProgress}
+            onResetProgress={handleResetProgressWrapper}
+            onResetFromStep={handleResetFromStep}
           />
 
           {/* Conditional layout based on completion status */}
@@ -367,7 +384,7 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
               <CompletionSection 
                 journeyData={journeyData}
                 config={config}
-                onNewJourney={handleNewJourney}
+                onNewJourney={handleNewJourneyWrapper}
               />
             </div>
           ) : (
@@ -417,7 +434,7 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
                 journeyData={journeyData}
                 isProcessing={isProcessing}
                 animationPhase={animationPhase}
-                onAction={handleStepAction}
+                onAction={handleStepActionWrapper}
                 onContinue={handleContinueToNext}
                 setAnimationPhase={setAnimationPhase}
               />

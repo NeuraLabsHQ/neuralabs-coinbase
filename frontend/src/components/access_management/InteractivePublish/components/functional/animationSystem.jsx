@@ -16,6 +16,9 @@ import GrantAccessAnimation from '../../../../../assets/animations/publish/compo
 import AccessVerificationAnimation from '../../../../../assets/animations/publish/components/AccessVerificationAnimation'
 import DataCubeAnimation from '../../../../../assets/animations/publish/components/DataCubeAnimation'
 
+import WorkflowGenerationAnimation from '../../../../../assets/animations/publish/components/WorkflowGenerationAnimation'
+
+
 // Import SVG animations from assets
 import BalanceCheckAnimation from '../../../../../assets/animations/publish/BalanceCheckAnimation.svg'
 
@@ -191,21 +194,23 @@ export const useAnimationSystem = () => {
         )
 
       case 'file-selecting':
-        return (
-          <motion.div className="animation-scene">
-            <div className="seal-init-container">
-              <img src={FileIcon} alt="Select File" style={svgStyles} />
-              <motion.div 
-                className="seal-text"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
-                <span className="main-text">Select File</span>
-              </motion.div>
-            </div>
-          </motion.div>
-        )
+        // return (
+        //   <motion.div className="animation-scene">
+        //     <div className="seal-init-container">
+        //       <img src={FileIcon} alt="Select File" style={svgStyles} />
+        //       <motion.div 
+        //         className="seal-text"
+        //         initial={{ opacity: 0 }}
+        //         animate={{ opacity: 1 }}
+        //         transition={{ delay: 0.5 }}
+        //       >
+        //         <span className="main-text">Select File</span>
+        //       </motion.div>
+        //     </div>
+        //   </motion.div>
+        // )
+
+        return <WorkflowGenerationAnimation colorMode={colorMode} />
 
       case 'encrypting':
         return <DataCubeAnimation colorMode={colorMode} />

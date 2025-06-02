@@ -13,9 +13,11 @@ from ..modules.get_data.dashboard import (
     get_under_development_flows,
     get_published_flows,
     get_shared_flows,
-    get_flow_details
+    get_flow_details,
+    get_nft_access_list
 )
 from ..modules.authentication import get_current_user, verify_access_permission
+from ..modules.database.postgresconn import PostgresConnection
 
 
 # Helper function to convert datetime objects to ISO format strings
@@ -128,8 +130,9 @@ class FlowDetailResponse(BaseModel):
     chain_explorer: Optional[str] = None
     access_level: Optional[int] = None
     access_level_name: Optional[str] = None
-    descriptions_and_permissions: Optional[Dict[str, Any]] = None
+    descriptions_and_permissions: Optional[Any] = None
     markdown_object: Optional[Dict[str, Any]] = None
+    other_data: Optional[Dict[str, Any]] = None
 
 
 # Create router
@@ -234,3 +237,46 @@ async def get_flow_detail(
     flow_detail = sanitize_data(flow_detail)
     
     return flow_detail
+
+
+@router.get("/nft/{nft_id}/access-list")
+async def get_nft_access(
+    request: Request,
+    nft_id: str = Path(..., description="ID of the NFT"),
+    current_user: str = Depends(get_current_user)
+):
+    """
+    Get the access list for a specific NFT
+    """
+    # First check if the user is the owner of this NFT
+    pg_conn = PostgresConnection()
+    
+    # Get the agent associated with this NFT
+    agent_query = """
+    SELECT a.owner 
+    FROM BLOCKCHAIN_AGENT_DATA ba
+    JOIN AGENT a ON ba.agent_id = a.agent_id
+    WHERE ba.nft_id = %s
+    """
+    result = await pg_conn.execute_query(agent_query, (nft_id,))
+    
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="NFT not found"
+        )
+    
+    # Check if the current user is the owner
+    if result[0]['owner'] != current_user:
+        raise HTTPException(
+            status_code=403,
+            detail="Only the NFT owner can view the access list"
+        )
+    
+    # Get the access list
+    access_list = await get_nft_access_list(nft_id)
+    
+    # Sanitize and format the response
+    sanitized_list = sanitize_data(access_list)
+    
+    return sanitized_list

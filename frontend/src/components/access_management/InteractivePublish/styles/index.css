@@ -140,15 +140,7 @@
   min-height: 500px;
 }
 
-.progress-fill {
-  position: absolute;
-  left: 14px;
-  top: 0;
-  width: 2px;
-  background: linear-gradient(180deg, #fff 0%, #444 100%);
-  transition: height 0.5s ease;
-  z-index: 1;
-}
+
 
 .progress-step {
   position: relative;

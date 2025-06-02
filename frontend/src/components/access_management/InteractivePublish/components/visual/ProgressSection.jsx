@@ -1,11 +1,14 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 
+// Check if debug mode is enabled
+const isDebugMode = import.meta.env.VITE_DEBUG_MODE === 'true'
+
 /**
  * Progress Section Component
  * Shows the journey progress with steps
  */
-const ProgressSection = ({ steps, currentStep, journeyData, renderStepIcon, onStepClick, onResetProgress }) => {
+const ProgressSection = ({ steps, currentStep, journeyData, renderStepIcon, onStepClick, onResetProgress, onResetFromStep }) => {
   
   // Check if a step can be clicked (all previous steps completed)
   const canClickStep = (stepIndex) => {
@@ -44,12 +47,7 @@ const ProgressSection = ({ steps, currentStep, journeyData, renderStepIcon, onSt
   return (
     <div className="progress-section">
       <div className="progress-track">
-        <motion.div 
-          className="progress-fill"
-          initial={{ height: '0%' }}
-          animate={{ height: `${(currentStep / (steps.length - 1)) * 100}%` }}
-          transition={{ duration: 0.5 }}
-        />
+
         
         {steps.map((step, index) => (
           <motion.div
@@ -78,6 +76,26 @@ const ProgressSection = ({ steps, currentStep, journeyData, renderStepIcon, onSt
                 </motion.div>
               )}
             </div>
+            
+            {/* Debug mode refresh button */}
+            {isDebugMode && step.completed(journeyData) && onResetFromStep && (
+              <motion.button
+                className="step-refresh-button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onResetFromStep(index)
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                title={`Reset from step ${index + 1}: ${step.title}`}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                </svg>
+              </motion.button>
+            )}
           </motion.div>
         ))}
         
