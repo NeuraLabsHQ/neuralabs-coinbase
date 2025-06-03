@@ -28,8 +28,8 @@ RUN ls -la
 # Run the build
 RUN npm run build
 
-# Debug: Check if dist directory was created
-RUN ls -la && ls -la dist/
+# Debug: Check if build directory was created
+RUN ls -la && ls -la build/
 
 # Production stage
 FROM nginx:alpine
@@ -37,8 +37,8 @@ FROM nginx:alpine
 # Remove default nginx static assets
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copy static assets from builder stage (Vite builds to 'dist' not 'build')
-COPY --from=build /app/dist /usr/share/nginx/html
+# Copy static assets from builder stage (Vite builds to 'build' as configured)
+COPY --from=build /app/build /usr/share/nginx/html
 
 # Copy nginx config
 # COPY nginx_config/custom-nginx.conf /etc/nginx/nginx.conf
