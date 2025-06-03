@@ -32,9 +32,23 @@ services:
       - "2016:80"
     networks:
       - neuralabs_network
+      - traefik-proxy
     restart: unless-stopped
     depends_on:
       - neuralabs-sui-backend
+    labels:
+      - "traefik.enable=true"
+      # Service
+      - "traefik.http.services.neuralabs-frontend-sui.loadbalancer.server.port=80"
+      
+      # Router config
+      - "traefik.http.routers.neuralabs-frontend-sui.rule=Host(`sui.neuralabs.org`)"
+      - "traefik.http.routers.neuralabs-frontend-sui.entrypoints=websecure"
+      - "traefik.http.routers.neuralabs-frontend-sui.tls=true"
+      - "traefik.http.routers.neuralabs-frontend-sui.tls.certresolver=letsencrypt"
+
+      # Connect router to service
+      - "traefik.http.routers.neuralabs-frontend-sui.service=neuralabs-frontend-sui"
 
 ## Backend Service
   neuralabs-sui-backend:
