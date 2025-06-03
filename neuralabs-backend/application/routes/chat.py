@@ -8,6 +8,8 @@ import websockets
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import Dict, Any, Optional
 import logging
+import yaml
+import os
 from ..modules.database.postgresconn import PostgresConnection
 from ..modules.authentication.jwt.token import JWTHandler
 
@@ -17,8 +19,17 @@ router = APIRouter()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Load configuration
+def load_config():
+    # Navigate to the config.yaml file from this route's location
+    config_path = os.path.join(os.path.dirname(__file__), "..", "..", "config.yaml")
+    with open(config_path, "r") as file:
+        return yaml.safe_load(file)
+
+config = load_config()
+
 # Configuration for HPC execution engine
-HPC_WEBSOCKET_URL = "ws://localhost:8000/ws/execute/{flow_id}"
+HPC_WEBSOCKET_URL = config.get("hpc", {}).get("websocket_url", "ws://localhost:8000/ws/execute/{flow_id}")
 
 class ConnectionManager:
     """Manages WebSocket connections"""
