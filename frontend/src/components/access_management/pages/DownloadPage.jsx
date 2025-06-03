@@ -11,7 +11,9 @@ import {
   useColorMode,
   useColorModeValue,
   useToast,
-  VStack
+  VStack,
+  useBreakpointValue,
+  Stack
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import { FiCode, FiDownload, FiFileText, FiImage } from 'react-icons/fi';
@@ -24,6 +26,7 @@ const DownloadPage = ({ agentData }) => {
   const [isExporting, setIsExporting] = useState(false);
   const toast = useToast();
   const { colorMode } = useColorMode();
+  const isMobile = useBreakpointValue({ base: true, md: false });
   
   const bgColor = useColorModeValue(colors.accessManagement.mainContent.bg.light, colors.accessManagement.mainContent.bg.dark);
   const cardBg = useColorModeValue(colors.accessManagement.flowCard.bg.light, colors.accessManagement.flowCard.bg.dark);
@@ -191,13 +194,13 @@ const DownloadPage = ({ agentData }) => {
   };
 
   return (
-    <Box p={6} bg={bgColor} h="100%" overflow="auto">
-      <VStack align="stretch" spacing={6}>
-        <Heading size="lg" color={textColor}>
+    <Box p={isMobile ? 3 : 6} bg={bgColor} h="100%" overflow="auto">
+      <VStack align="stretch" spacing={isMobile ? 4 : 6}>
+        <Heading size={isMobile ? "md" : "lg"} color={textColor}>
           Download & Export
         </Heading>
         
-        <Text color={mutedColor}>
+        <Text color={mutedColor} fontSize={isMobile ? "sm" : "md"}>
           Export your workflow for backup, sharing, or offline viewing.
         </Text>
         
@@ -214,33 +217,41 @@ const DownloadPage = ({ agentData }) => {
             onClick={handleExportPNG}
           >
             <CardBody>
-              <HStack spacing={4}>
+              <Stack 
+                direction={isMobile ? "column" : "row"} 
+                spacing={isMobile ? 3 : 4}
+                align={isMobile ? "stretch" : "center"}
+              >
                 <Box 
-                  p={3} 
+                  p={isMobile ? 2 : 3} 
                   bg={useColorModeValue(colors.blue[300], colors.blue[700])}
                   borderRadius="md"
+                  alignSelf={isMobile ? "center" : undefined}
                 >
-                  <Icon as={FiImage} boxSize={6} color={colors.blue[500]} />
+                  <Icon as={FiImage} boxSize={isMobile ? 5 : 6} color={colors.blue[500]} />
                 </Box>
-                <VStack align="start" flex={1} spacing={1}>
-                  <Text fontWeight="bold" color={textColor}>Export as PNG Image</Text>
-                  <Text fontSize="sm" color={mutedColor}>
+                <VStack align={isMobile ? "center" : "start"} flex={1} spacing={1}>
+                  <Text fontWeight="bold" color={textColor} fontSize={isMobile ? "sm" : "md"} textAlign={isMobile ? "center" : "left"}>
+                    Export as PNG Image
+                  </Text>
+                  <Text fontSize={isMobile ? "xs" : "sm"} color={mutedColor} textAlign={isMobile ? "center" : "left"}>
                     Download a visual representation of your workflow as a PNG image
                   </Text>
                 </VStack>
                 <Button
-                  leftIcon={<FiDownload />}
+                  leftIcon={!isMobile && <FiDownload />}
                   colorScheme="blue"
-                  size="sm"
+                  size={isMobile ? "sm" : "sm"}
                   isLoading={isExporting}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleExportPNG();
                   }}
+                  width={isMobile ? "full" : "auto"}
                 >
-                  Export PNG
+                  {isMobile ? "PNG" : "Export PNG"}
                 </Button>
-              </HStack>
+              </Stack>
             </CardBody>
           </Card>
           
@@ -255,33 +266,41 @@ const DownloadPage = ({ agentData }) => {
             onClick={handleExportJSON}
           >
             <CardBody>
-              <HStack spacing={4}>
+              <Stack 
+                direction={isMobile ? "column" : "row"} 
+                spacing={isMobile ? 3 : 4}
+                align={isMobile ? "stretch" : "center"}
+              >
                 <Box 
-                  p={3} 
+                  p={isMobile ? 2 : 3} 
                   bg={useColorModeValue(colors.green[300], colors.green[700])}
                   borderRadius="md"
+                  alignSelf={isMobile ? "center" : undefined}
                 >
-                  <Icon as={FiFileText} boxSize={6} color={colors.green[500]} />
+                  <Icon as={FiFileText} boxSize={isMobile ? 5 : 6} color={colors.green[500]} />
                 </Box>
-                <VStack align="start" flex={1} spacing={1}>
-                  <Text fontWeight="bold" color={textColor}>Export as JSON Data</Text>
-                  <Text fontSize="sm" color={mutedColor}>
+                <VStack align={isMobile ? "center" : "start"} flex={1} spacing={1}>
+                  <Text fontWeight="bold" color={textColor} fontSize={isMobile ? "sm" : "md"} textAlign={isMobile ? "center" : "left"}>
+                    Export as JSON Data
+                  </Text>
+                  <Text fontSize={isMobile ? "xs" : "sm"} color={mutedColor} textAlign={isMobile ? "center" : "left"}>
                     Download workflow configuration and metadata as a JSON file
                   </Text>
                 </VStack>
                 <Button
-                  leftIcon={<FiDownload />}
+                  leftIcon={!isMobile && <FiDownload />}
                   colorScheme="green"
-                  size="sm"
+                  size={isMobile ? "sm" : "sm"}
                   isLoading={isExporting}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleExportJSON();
                   }}
+                  width={isMobile ? "full" : "auto"}
                 >
-                  Export JSON
+                  {isMobile ? "JSON" : "Export JSON"}
                 </Button>
-              </HStack>
+              </Stack>
             </CardBody>
           </Card>
 
@@ -296,51 +315,61 @@ const DownloadPage = ({ agentData }) => {
             onClick={handleExportYAML}
           >
             <CardBody>
-              <HStack spacing={4}>
+              <Stack 
+                direction={isMobile ? "column" : "row"} 
+                spacing={isMobile ? 3 : 4}
+                align={isMobile ? "stretch" : "center"}
+              >
                 <Box 
-                  p={3} 
+                  p={isMobile ? 2 : 3} 
                   bg={useColorModeValue(colors.yellow[300], colors.yellow[700])}
                   borderRadius="md"
+                  alignSelf={isMobile ? "center" : undefined}
                 >
-                  <Icon as={FiCode} boxSize={6} color={colors.yellow[500]} />
+                  <Icon as={FiCode} boxSize={isMobile ? 5 : 6} color={colors.yellow[500]} />
                 </Box>
-                <VStack align="start" flex={1} spacing={1}>
-                  <Text fontWeight="bold" color={textColor}>Export as YAML Flow</Text>
-                  <Text fontSize="sm" color={mutedColor}>
+                <VStack align={isMobile ? "center" : "start"} flex={1} spacing={1}>
+                  <Text fontWeight="bold" color={textColor} fontSize={isMobile ? "sm" : "md"} textAlign={isMobile ? "center" : "left"}>
+                    Export as YAML Flow
+                  </Text>
+                  <Text fontSize={isMobile ? "xs" : "sm"} color={mutedColor} textAlign={isMobile ? "center" : "left"}>
                     Download execution-ready YAML format compatible with backend execution engine
                   </Text>
                 </VStack>
                 <Button
-                  leftIcon={<FiDownload />}
+                  leftIcon={!isMobile && <FiDownload />}
                   colorScheme="yellow"
-                  size="sm"
+                  size={isMobile ? "sm" : "sm"}
                   isLoading={isExporting}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleExportYAML();
                   }}
+                  width={isMobile ? "full" : "auto"}
                 >
-                  Export YAML
+                  {isMobile ? "YAML" : "Export YAML"}
                 </Button>
-              </HStack>
+              </Stack>
             </CardBody>
           </Card>
         </VStack>
         
         {/* Additional Information */}
-        <Box bg={cardBg} p={4} borderRadius="md" border="1px" borderColor={borderColor}>
+        <Box bg={cardBg} p={isMobile ? 3 : 4} borderRadius="md" border="1px" borderColor={borderColor}>
           <VStack align="start" spacing={2}>
-            <Text fontWeight="bold" color={textColor}>Export Information</Text>
-            <Text fontSize="sm" color={mutedColor}>
+            <Text fontWeight="bold" color={textColor} fontSize={isMobile ? "sm" : "md"}>
+              Export Information
+            </Text>
+            <Text fontSize={isMobile ? "xs" : "sm"} color={mutedColor}>
               • PNG exports create a visual representation of your workflow
             </Text>
-            <Text fontSize="sm" color={mutedColor}>
+            <Text fontSize={isMobile ? "xs" : "sm"} color={mutedColor}>
               • JSON exports include all workflow data and metadata
             </Text>
-            <Text fontSize="sm" color={mutedColor}>
+            <Text fontSize={isMobile ? "xs" : "sm"} color={mutedColor}>
               • YAML exports are execution-ready and compatible with the backend engine
             </Text>
-            <Text fontSize="sm" color={mutedColor}>
+            <Text fontSize={isMobile ? "xs" : "sm"} color={mutedColor}>
               • Exported files can be used for backup, sharing, or execution purposes
             </Text>
           </VStack>

@@ -1,4 +1,4 @@
-import { Flex, IconButton, useDisclosure, Drawer, DrawerOverlay, DrawerContent, DrawerCloseButton, useBreakpointValue, Box } from '@chakra-ui/react';
+import { Flex, IconButton, useDisclosure, Drawer, DrawerOverlay, DrawerContent, DrawerCloseButton, useBreakpointValue, Box, useColorModeValue } from '@chakra-ui/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FiMenu } from 'react-icons/fi';
 import NavPanel from '../common_components/NavPanel/NavelPanel';
@@ -11,6 +11,9 @@ const Layout = ({ children }) => {
   // Responsive values
   const isMobile = useBreakpointValue({ base: true, lg: false });
   const navWidth = useBreakpointValue({ base: '280px', lg: '80px' });
+  
+  // Background color for mobile header
+  const mobileBg = useColorModeValue('transparent', '#0A0C0F');
   
   // Navigate to different sections of the app
   const handleNavigation = (route) => {
@@ -56,16 +59,14 @@ const Layout = ({ children }) => {
       )}
       
       {/* Main Content Area */}
-      <Flex flex="1" overflow="hidden" position="relative" direction="column">
+      <Flex flex="1" overflow="auto" position="relative" direction="column">
         {/* Mobile Header with Menu Button */}
         {isMobile && (
           <Box 
-            position="fixed" 
-            top={0} 
-            left={0} 
+            position="relative" 
             p={4} 
             zIndex={10}
-            bg="transparent"
+            bg={mobileBg}
           >
             <IconButton
               icon={<FiMenu size={24} />}
@@ -79,7 +80,7 @@ const Layout = ({ children }) => {
         )}
         
         {/* Page Content */}
-        <Box flex="1" overflow="hidden">
+        <Box flex="1" overflow="auto">
           {children}
         </Box>
       </Flex>

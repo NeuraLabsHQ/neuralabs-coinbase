@@ -2,9 +2,20 @@
 import {
     Box,
     Button,
+    Drawer,
+    DrawerBody,
+    DrawerCloseButton,
+    DrawerContent,
+    DrawerHeader,
+    DrawerOverlay,
     Flex,
+    HStack,
+    IconButton,
+    Text,
     Tooltip,
+    useBreakpointValue,
     useColorModeValue,
+    useDisclosure,
     useToast,
     VStack,
 } from "@chakra-ui/react";
@@ -29,6 +40,7 @@ import {
     FiTag,
     FiUpload,
     FiUsers,
+    FiZap,
 } from "react-icons/fi";
 import colors from '../../color';
 import flowIcons from "../../utils/my-flow-icons.json";
@@ -38,6 +50,8 @@ const FlowActionPanel = ({ toggleSidebar, sidebarOpen, currentPage, onPageChange
   const [activeAction, setActiveAction] = useState('Summary');
   const { currentWallet } = useCurrentWallet();
   const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const isMobile = window.innerWidth < 1024; // Adjust breakpoint as needed
   
   // Update active action based on current page
 useEffect(() => {
@@ -65,11 +79,12 @@ useEffect(() => {
   }, [currentPage]);
 
 
-  const bgColor = useColorModeValue(colors.accessManagement.sidebar.bg.light, colors.accessManagement.sidebar.bg.dark);
-  const borderColor = useColorModeValue(colors.accessManagement.sidebar.border.light, colors.accessManagement.sidebar.border.dark);
-  const iconColor = useColorModeValue(colors.gray[900], colors.gray[400]);
-  const hoverBgColor = useColorModeValue(colors.accessManagement.sidebar.itemHover.light, colors.accessManagement.sidebar.itemHover.dark);
-  const activeColor = useColorModeValue(colors.blue[700], colors.blue[300]);
+  // Use NavPanel color scheme
+  const bgColor = useColorModeValue('navbar.body.light', 'navbar.body.dark');
+  const borderColor = useColorModeValue('navbar.border.light', 'navbar.border.dark');
+  const iconColor = useColorModeValue('navbar.icon.light', 'navbar.icon.dark');
+  const hoverBgColor = useColorModeValue('navbar.hover.light', 'navbar.hover.dark');
+  const activeColor = iconColor;
 
   const iconMapping = {
     FiHome: FiHome,
@@ -91,11 +106,12 @@ useEffect(() => {
     FiSend: FiSend,
   };
 
-  const getButtonStyle = (actionName = null) => ({
+  const getButtonStyle = (actionName = null, isMobileButton = false) => ({
     w: "100%",
-    h: "50px",
-    justifyContent: "center",
-    borderRadius: 0,
+    h: isMobileButton ? "48px" : "50px",
+    justifyContent: isMobileButton ? "flex-start" : "center",
+    px: isMobileButton ? 4 : 0,
+    borderRadius: isMobileButton ? "md" : 0,
     bg: actionName === activeAction ? hoverBgColor : "transparent",
     color: actionName === activeAction ? activeColor : iconColor,
     _hover: { bg: hoverBgColor },
@@ -135,6 +151,75 @@ useEffect(() => {
   };
 
 
+  // Render mobile menu button
+  if (isMobile) {
+    return (
+      <>
+        {/* Mobile Menu Button - positioned at top right */}
+        <Box position="absolute" top={4} right={4} zIndex={15}>
+          <IconButton
+            icon={<FiZap />}
+            onClick={onOpen}
+            variant="ghost"
+            color={iconColor}
+            size="lg"
+            aria-label="Open action menu"
+            _hover={{ bg: hoverBgColor }}
+          />
+        </Box>
+
+        {/* Mobile Drawer */}
+        <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="xs">
+          <DrawerOverlay />
+          <DrawerContent bg={bgColor}>
+            <DrawerCloseButton />
+            <DrawerHeader borderBottomWidth="1px" borderColor={borderColor}>
+              Flow Actions
+            </DrawerHeader>
+            <DrawerBody p={3} overflowY="auto">
+              <VStack spacing={2} align="stretch">
+                {/* Toggle Sidebar Button */}
+                <Button
+                  {...getButtonStyle(null, true)}
+                  onClick={() => {
+                    toggleSidebar();
+                    onClose();
+                  }}
+                  leftIcon={sidebarOpen ? <FaAngleDoubleLeft /> : <FaAngleDoubleRight />}
+                >
+                  <HStack spacing={3} w="100%">
+                    <Text fontSize="md">{sidebarOpen ? "Close Flow Panel" : "Open Flow Panel"}</Text>
+                  </HStack>
+                </Button>
+
+                {/* Flow Action Items with Labels */}
+                {flowIcons.sidebarOptions.map((option, index) => {
+                  const IconComponent = iconMapping[option.icon];
+                  return (
+                    <Button
+                      key={index}
+                      {...getButtonStyle(option.newName, true)}
+                      onClick={() => {
+                        handleActionClick(option.newName);
+                        onClose();
+                      }}
+                      leftIcon={IconComponent && <IconComponent />}
+                    >
+                      <HStack spacing={3} w="100%">
+                        <Text fontSize="md">{option.newName}</Text>
+                      </HStack>
+                    </Button>
+                  );
+                })}
+              </VStack>
+            </DrawerBody>
+          </DrawerContent>
+        </Drawer>
+      </>
+    );
+  }
+
+  // Desktop version (original layout)
   return (
     <Box
       w="56px"

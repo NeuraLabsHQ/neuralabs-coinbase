@@ -436,19 +436,11 @@ const AccessHomePage = ({ onSelectFlow }) => {
   return (
     <Box 
       bg={bgColor} 
-      h="100vh" 
+      h="100%" 
       width="100%" 
-      overflow="hidden"
-      display="flex"
-      flexDirection="column"
+      overflowY="auto"
+      overflowX="hidden"
     >
-      {/* Scrollable content wrapper */}
-      <Box 
-        flex="1" 
-        overflowY="auto"
-        overflowX="hidden"
-        className="hide-scrollbar"
-      >
         {/* Project title */}
         <Center pt={containerPadding} pb={containerPadding} marginTop={isMobile ? "20px" : "30px"}>
           <Heading size={headingSize} color={textColor}>
@@ -611,7 +603,7 @@ const AccessHomePage = ({ onSelectFlow }) => {
         {/* Flow list */}
         <Box
           mx={containerPadding}
-          mb={6}
+          mb={isMobile ? 20 : 6}
           borderWidth="1px"
           borderColor={borderColor}
           borderRadius="md"
@@ -676,13 +668,12 @@ const AccessHomePage = ({ onSelectFlow }) => {
         )}
       </Box>
 
-        {/* Create Agent Modal */}
-        <CreateAgentModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          onCreateAgent={handleCreateAgent}
-        />
-      </Box>
+      {/* Create Agent Modal */}
+      <CreateAgentModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreateAgent={handleCreateAgent}
+      />
     </Box>
   );
 };
