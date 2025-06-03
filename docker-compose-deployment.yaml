@@ -1,0 +1,165 @@
+version: '3.8'
+
+# NeuraLabs SUI Production Deployment
+# Run with: docker-compose -f docker-compose-deployment.yaml up -d
+#
+# Services and Port Assignments:
+# ┌─────────────────────┬──────┬─────────────────────────────────────┐
+# │ Service             │ Port │ URL/Access                          │
+# ├─────────────────────┼──────┼─────────────────────────────────────┤
+# │ Prover Frontend     │ 2015 │ https://prover.sui.neuralabs.org    │
+# │ Frontend            │ 2016 │ https://sui.neuralabs.org           │
+# │ Backend API         │ 2017 │ https://api.sui.neuralabs.org       │
+# │ Landing Page        │ 2018 │ https://neuralabs.org (separate)    │
+# │ Redis               │ 2019 │ Internal only                       │
+# │ PostgreSQL          │ 2020 │ Internal only                       │
+# │ Code Executor       │ 2021 │ Internal/API access                 │
+# ├─────────────────────┼──────┼─────────────────────────────────────┤
+# │ Internal Services   │      │                                     │
+# ├─────────────────────┼──────┼─────────────────────────────────────┤
+# │ Prover Backend      │ 8080 │ Internal only (zkLogin processing)  │
+# └─────────────────────┴──────┴─────────────────────────────────────┘
+
+services:
+
+## Frontend Service
+  neuralabs-sui-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: neuralabs-sui-frontend
+    ports:
+      - "2016:80"
+    networks:
+      - neuralabs_network
+    restart: unless-stopped
+    depends_on:
+      - neuralabs-sui-backend
+
+## Backend Service
+  neuralabs-sui-backend:
+    build:
+      context: ./neuralabs-backend
+      dockerfile: Dockerfile
+    container_name: neuralabs-sui-backend
+    ports:
+      - "2017:8000"
+    networks:
+      - neuralabs_network
+      - traefik-proxy
+    restart: unless-stopped
+    depends_on:
+      - neuralabs-sui-postgres
+      - neuralabs-sui-redis
+    environment:
+      - PYTHONPATH=/app
+
+## HPC Execution Engine
+  neuralabs-sui-executor:
+    build:
+      context: ./hpc-execution-node-backend/code_executor
+      dockerfile: Dockerfile
+    container_name: neuralabs-sui-executor
+    ports:
+      - "2021:8001"
+    networks:
+      - neuralabs_network
+    restart: unless-stopped
+    env_file:
+      - ./hpc-execution-node-backend/.env
+    environment:
+      - PYTHONPATH=/app
+    command: ["gunicorn", "--bind", "0.0.0.0:8001", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "app:app"]
+
+## Database Services
+  neuralabs-sui-postgres:
+    image: postgres:15
+    container_name: neuralabs-sui-postgres
+    env_file:
+      - ./database/.env
+    ports:
+      - "2020:5432"
+    volumes:
+      - ./database/data/postgres_data:/var/lib/postgresql/data
+    networks:
+      - neuralabs_network
+    restart: unless-stopped
+
+  neuralabs-sui-redis:
+    image: redis:7
+    container_name: neuralabs-sui-redis
+    env_file:
+      - ./database/.env
+    command: sh -c 'redis-server --requirepass "$$REDIS_PASSWORD" --appendonly yes'
+    ports:
+      - "2019:6379"
+    volumes:
+      - ./database/data/redis_data:/data
+    networks:
+      - neuralabs_network
+    restart: unless-stopped
+
+## Prover Services (Keep original naming as requested)
+  sui-prover-backend:
+    image: mysten/zklogin:prover-stable
+    container_name: sui-prover-backend
+    volumes:
+      - ./prover-service/zklogin-ceremony-contributions/zkLogin-main.zkey:/app/binaries/zkLogin.zkey
+    environment:
+      - ZKEY=/app/binaries/zkLogin.zkey
+      - WITNESS_BINARIES=/app/binaries
+    networks:
+      - neuralabs_network
+      - traefik-proxy
+    restart: unless-stopped
+
+  sui-prover-frontend:
+    image: mysten/zklogin:prover-fe-stable
+    container_name: sui-prover-frontend
+    command: '8080'
+    ports:
+      - "2015:8080"
+    environment:
+      - PROVER_URI=http://sui-prover-backend:8080/input
+      - NODE_ENV=production
+      - DEBUG=zkLogin:info,jwks
+      - PROVER_TIMEOUT=30
+    labels:
+      - "traefik.enable=true"
+      # Service
+      - "traefik.http.services.sui-prover-server.loadbalancer.server.port=8080"
+      # CORS middleware
+      # - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowmethods=*"
+
+      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowmethods=*"
+      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolalloworiginlist=*"
+      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowheaders=*"
+      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolmaxage=100"
+      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowcredentials=true"
+      
+      # config
+      - "traefik.http.routers.sui-prover.rule=Host(`prover.sui.neuralabs.org`)"
+      - "traefik.http.routers.sui-prover.entrypoints=websecure"
+      - "traefik.http.routers.sui-prover.tls=true"
+      - "traefik.http.routers.sui-prover.tls.certresolver=letsencrypt"
+
+      # connecting the router to the service and the middleware
+
+      - "traefik.http.routers.sui-prover.service=sui-prover-server"
+      - "traefik.http.routers.sui-prover.middlewares=sui-prover-cors"
+    networks:
+      - neuralabs_network
+      - traefik-proxy
+    restart: unless-stopped
+    depends_on:
+      - sui-prover-backend
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  neuralabs_network:
+    driver: bridge
+  traefik-proxy:
+    external: true

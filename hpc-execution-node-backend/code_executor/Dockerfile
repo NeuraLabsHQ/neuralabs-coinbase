@@ -1,11 +1,12 @@
-# Dockerfile
-FROM python:3.10-slim
+# Dockerfile for HPC Execution Engine
+FROM python:3.12-slim
 
 WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+    gcc \
     build-essential \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -21,7 +22,6 @@ COPY . .
 RUN mkdir -p logs
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8001
 
-# Run the application
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+# No CMD - will be defined in docker-compose
