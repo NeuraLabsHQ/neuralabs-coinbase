@@ -14,3 +14,9 @@ pytz
 starlette
 aiofiles 
 pydantic-settings
+psycopg2-binary
+PyYAML
+redis
+python-multipart
+cryptography>=3.4.8
+aiohttp
