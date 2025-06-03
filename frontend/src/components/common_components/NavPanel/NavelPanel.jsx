@@ -89,6 +89,19 @@ const NavPanel = ({
       }
     }
     
+    // Disable marketplace - show coming soon message
+    if (buttonName === 'marketplace') {
+      toast({
+        title: "Coming Soon",
+        description: "The Marketplace feature is currently under development and will be available soon.",
+        status: "info",
+        duration: 3000,
+        isClosable: true,
+        position: "top"
+      });
+      return;
+    }
+    
     // Navigate if route is provided
     if (route && onNavigate) {
       onNavigate(route);
@@ -103,7 +116,9 @@ const NavPanel = ({
   const getButtonStyles = (buttonName) => {
     const isButtonActive = isActive(buttonName);
     const isMobileCheck = typeof window !== 'undefined' ? window.innerWidth < 1024 : false;
-    const isDisabled = (viewOnlyMode && buttonName !== 'theme') || (isMobileCheck && buttonName === 'flow-builder');
+    const isDisabled = (viewOnlyMode && buttonName !== 'theme') || 
+                      (isMobileCheck && buttonName === 'flow-builder') ||
+                      (buttonName === 'marketplace');
     
     return {
       w: "100%",
@@ -188,6 +203,11 @@ const NavPanel = ({
           {/* Navigation Items */}
           {navItems.map((item) => {
             const Icon = item.icon;
+            const isDisabled = viewOnlyMode || 
+                              (isMobile && item.name === 'flow-builder') ||
+                              (item.name === 'marketplace');
+            const tooltipLabel = item.name === 'marketplace' ? 'Marketplace - Coming Soon' : item.label;
+            
             return (
               <Box key={item.name} as="li" position="relative" w="100%">
                 {isMobile ? (
@@ -195,7 +215,7 @@ const NavPanel = ({
                     {...getButtonStyles(item.name)}
                     onClick={() => handleButtonClick(item.name, null, item.route)}
                     aria-label={item.label}
-                    disabled={viewOnlyMode || (isMobile && item.name === 'flow-builder')}
+                    disabled={isDisabled}
                   >
                     <HStack spacing={3} w="100%">
                       <Icon size={20} />
@@ -204,7 +224,7 @@ const NavPanel = ({
                   </Button>
                 ) : (
                   <Tooltip 
-                    label={item.label} 
+                    label={tooltipLabel} 
                     placement="right" 
                     bg={colors.gray[900]} 
                     hasArrow
@@ -213,7 +233,7 @@ const NavPanel = ({
                       {...getButtonStyles(item.name)}
                       onClick={() => handleButtonClick(item.name, null, item.route)}
                       aria-label={item.label}
-                      disabled={viewOnlyMode || (isMobile && item.name === 'flow-builder')}
+                      disabled={isDisabled}
                     >
                       <Icon size={24} />
                     </Button>
