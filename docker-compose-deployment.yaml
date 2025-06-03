@@ -51,8 +51,30 @@ services:
     depends_on:
       - neuralabs-sui-postgres
       - neuralabs-sui-redis
+      - neuralabs-sui-executor
     environment:
       - PYTHONPATH=/app
+    command: ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "app:app"]
+    labels:
+      - "traefik.enable=true"
+      # Service
+      - "traefik.http.services.neuralabs-backend-sui.loadbalancer.server.port=8000"
+      # CORS middleware
+      - "traefik.http.middlewares.neuralabs-backend-sui-cors.headers.accesscontrolallowmethods=*"
+      - "traefik.http.middlewares.neuralabs-backend-sui-cors.headers.accesscontrolalloworiginlist=*"
+      - "traefik.http.middlewares.neuralabs-backend-sui-cors.headers.accesscontrolallowheaders=*"
+      - "traefik.http.middlewares.neuralabs-backend-sui-cors.headers.accesscontrolmaxage=100"
+      - "traefik.http.middlewares.neuralabs-backend-sui-cors.headers.accesscontrolallowcredentials=true"
+      
+      # Router config
+      - "traefik.http.routers.neuralabs-backend-sui.rule=Host(`api.sui.neuralabs.org`)"
+      - "traefik.http.routers.neuralabs-backend-sui.entrypoints=websecure"
+      - "traefik.http.routers.neuralabs-backend-sui.tls=true"
+      - "traefik.http.routers.neuralabs-backend-sui.tls.certresolver=letsencrypt"
+
+      # Connect router to service and middleware
+      - "traefik.http.routers.neuralabs-backend-sui.service=neuralabs-backend-sui"
+      - "traefik.http.routers.neuralabs-backend-sui.middlewares=neuralabs-backend-sui-cors"
 
 ## HPC Execution Engine
   neuralabs-sui-executor:
