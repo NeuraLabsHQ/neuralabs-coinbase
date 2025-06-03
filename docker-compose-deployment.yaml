@@ -68,7 +68,9 @@ services:
       - neuralabs-sui-executor
     environment:
       - PYTHONPATH=/app
-    command: ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "app:app"]
+    volumes:
+      - ./neuralabs-backend/logs:/app/logs
+    command: ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "--access-logfile", "logs/access.log", "--error-logfile", "logs/error.log", "app:app"]
     labels:
       - "traefik.enable=true"
       # Service
@@ -105,7 +107,9 @@ services:
       - ./hpc-execution-node-backend/.env
     environment:
       - PYTHONPATH=/app
-    command: ["gunicorn", "--bind", "0.0.0.0:8001", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "app:app"]
+    volumes:
+      - ./hpc-execution-node-backend/code_executor/logs:/app/logs
+    command: ["gunicorn", "--bind", "0.0.0.0:8001", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "--access-logfile", "logs/access.log", "--error-logfile", "logs/error.log", "app:app"]
 
 ## Database Services
   neuralabs-sui-postgres:

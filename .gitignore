@@ -4,8 +4,6 @@ build/
 .env
 config.yaml
 
-hpc-execution-node-backend/code_executor/logs
-
 
 hpc-execution-node-backend/notebooks/flow_outputs/**
 !hpc-execution-node-backend/notebooks/flow_outputs/__placeholder__

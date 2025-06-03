@@ -1,2 +1,15 @@
 config.yaml
 config_deployment.yaml
+
+# Logs
+logs/*.log
+logs/**
+logs/*.txt
+logs/*.json
+# Keep the placeholder file
+!logs/__placeholder__
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
