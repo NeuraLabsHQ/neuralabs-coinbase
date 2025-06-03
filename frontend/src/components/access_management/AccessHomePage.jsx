@@ -18,7 +18,13 @@ import {
     Text,
     Tr,
     useColorModeValue,
-    useToast
+    useToast,
+    Menu,
+    MenuButton,
+    MenuList,
+    MenuItem,
+    useBreakpointValue,
+    VStack
 } from "@chakra-ui/react";
 import { useEffect, useState } from 'react';
 import {
@@ -31,7 +37,8 @@ import {
     FiPieChart,
     FiPlus,
     FiSearch,
-    FiUpload
+    FiUpload,
+    FiChevronDown
 } from "react-icons/fi";
 import { useNavigate } from 'react-router-dom';
 import templateImage1 from "../../assets/template.png";
@@ -223,6 +230,7 @@ const AccessHomePage = ({ onSelectFlow }) => {
 
   const navigate = useNavigate();
   const toast = useToast();
+  const isMobile = useBreakpointValue({ base: true, lg: false });
 
   const bgColor = useColorModeValue(colors.accessManagement.mainContent.bg.light, colors.accessManagement.mainContent.bg.dark);
   const cardBgColor = useColorModeValue(colors.accessManagement.flowCard.bg.light, colors.accessManagement.flowCard.bg.dark);
@@ -297,9 +305,19 @@ const AccessHomePage = ({ onSelectFlow }) => {
         position: "top",
       });
 
-      // Navigate to flow builder with the new agent ID
+      // Navigate to flow builder with the new agent ID (only on desktop)
       if (response.agent_id) {
-        navigate(`/flow-builder/${response.agent_id}`);
+        if (isMobile) {
+          toast({
+            title: "Desktop Required",
+            description: "Flow Builder requires a desktop computer. The agent has been created successfully.",
+            status: "info",
+            duration: 5000,
+            isClosable: true,
+          });
+        } else {
+          navigate(`/flow-builder/${response.agent_id}`);
+        }
       } else {
         console.error("No agent_id returned from API");
         toast({
@@ -410,129 +428,195 @@ const AccessHomePage = ({ onSelectFlow }) => {
     }
   };
 
+  // Add responsive values
+  const searchBarMaxWidth = useBreakpointValue({ base: "90%", sm: "400px", md: "600px" });
+  const headingSize = useBreakpointValue({ base: "md", md: "lg" });
+  const containerPadding = useBreakpointValue({ base: 4, md: 6 });
+
   return (
-    <Box bg={bgColor} minH="100%" width={"100%"} mx="auto">
-      {/* Project title */}
-      <Center pt={8} pb={6} marginTop={"30px"}>
-        <Heading size="lg" color={textColor}>
-          Welcome to Neuralabs
-        </Heading>
-      </Center>
-
-      {/* Search bar */}
-      <Box maxW="600px" mx="auto" mb={8}>
-        <InputGroup>
-          <InputLeftElement pointerEvents="none">
-            <Icon as={FiSearch} color="gray.500" />
-          </InputLeftElement>
-          <Input
-            placeholder="Search Projects and Templates"
-            bg={searchbarcolor}
-            color={textColor}
-            borderColor="gray.700"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            _placeholder={{ color: "gray.500" }}
-            _hover={{ borderColor: "gray.600" }}
-            _focus={{ borderColor: "blue.500", boxShadow: "none" }}
-          />
-        </InputGroup>
-      </Box>
-
-      {/* Template section */}
-      <Box px={6} mb={10}>
-        <Text color={textColor} mb={5} fontSize="xl" fontWeight="medium">
-          Create new
-        </Text>
-        <SimpleGrid
-          columns={{ base: 2, md: 3, lg: 6 }}
-          spacing={9}
-        >
-          {templateCards}
-        </SimpleGrid>
-      </Box>
-
-      {/* Quick access section */}
-      <Box px={6} mb={4}>
-        <Flex justify="space-between" align="center" mb={4}>
-          <Text color={textColor} fontWeight="medium">
-            Quick access
-          </Text>
-        </Flex>
-
-        <Flex justify="space-between" mb={4}>
-          <HStack spacing={3} overflowX="auto" pb={2}>
-            <QuickAccessTab
-              label="Recently opened"
-              isActive={activeTab === "recent"}
-              count={flows.length}
-              onClick={() => setActiveTab("recent")}
-            />
-            <QuickAccessTab
-              label="Under Development"
-              isActive={activeTab === "development"}
-              count={flows.filter((f) => f.accessLevel === 0).length}
-              onClick={() => setActiveTab("development")}
-            />
-            <QuickAccessTab
-              label="Published"
-              isActive={activeTab === "published"}
-              count={flows.filter((f) => f.accessLevel > 0).length}
-              onClick={() => setActiveTab("published")}
-            />
-            <QuickAccessTab
-              label="Shared"
-              isActive={activeTab === "shared"}
-              count={flows.filter((f) => f.accessLevel >= 4).length}
-              onClick={() => setActiveTab("shared")}
-            />
-          </HStack>
-          <ButtonGroup size="sm" isAttached variant="outline">
-            <Button
-              leftIcon={<FiUpload />}
-              size="sm"
-              colorScheme="gray"
-              variant="ghost" 
-              onClick={() => console.log("Upload clicked")}
-              mr={2}
-            >
-              Upload
-            </Button>
-            <Box 
-              height="24px" 
-              width="1px" 
-              bg={useColorModeValue(colors.accessManagement.detailPanel.border.light, colors.accessManagement.detailPanel.border.dark)} 
-              mx={1}
-              my={1} 
-            />
-            
-            <IconButton
-              aria-label="List view"
-              icon={<FiList />}
-              variant="ghost" 
-              colorScheme={viewMode === "list" ? "blue" : "gray"}
-              onClick={() => setViewMode("list")}
-            />
-            <IconButton
-              aria-label="Grid view"
-              icon={<FiGrid />}
-              variant="ghost" 
-              colorScheme={viewMode === "grid" ? "blue" : "gray"}
-              onClick={() => setViewMode("grid")}
-            />
-          </ButtonGroup>
-        </Flex>
-      </Box>
-
-      {/* Flow list */}
-      <Box
-        mx={6}
-        mb={6}
-        borderWidth="1px"
-        borderColor={borderColor}
-        borderRadius="md"
-        overflow="hidden"
+    <Box 
+      bg={bgColor} 
+      h="100vh" 
+      width="100%" 
+      overflow="hidden"
+      display="flex"
+      flexDirection="column"
+    >
+      {/* Scrollable content wrapper */}
+      <Box 
+        flex="1" 
+        overflowY="auto"
+        overflowX="hidden"
+        className="hide-scrollbar"
       >
+        {/* Project title */}
+        <Center pt={containerPadding} pb={containerPadding} marginTop={isMobile ? "20px" : "30px"}>
+          <Heading size={headingSize} color={textColor}>
+            Welcome to Neuralabs
+          </Heading>
+        </Center>
+
+        {/* Search bar - responsive */}
+        <Box 
+          maxW={searchBarMaxWidth} 
+          mx="auto" 
+          mb={containerPadding}
+          px={containerPadding}
+        >
+          <InputGroup size={isMobile ? "md" : "lg"}>
+            <InputLeftElement pointerEvents="none">
+              <Icon as={FiSearch} color="gray.500" />
+            </InputLeftElement>
+            <Input
+              placeholder="Search Projects and Templates"
+              bg={searchbarcolor}
+              color={textColor}
+              borderColor="gray.700"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              _placeholder={{ color: "gray.500" }}
+              _hover={{ borderColor: "gray.600" }}
+              _focus={{ borderColor: "blue.500", boxShadow: "none" }}
+            />
+          </InputGroup>
+        </Box>
+
+        {/* Template section */}
+        <Box px={containerPadding} mb={10}>
+          <Text color={textColor} mb={5} fontSize={isMobile ? "lg" : "xl"} fontWeight="medium">
+            Create new
+          </Text>
+          <SimpleGrid
+            columns={{ base: 2, sm: 3, md: 4, lg: 6 }}
+            spacing={isMobile ? 4 : 9}
+          >
+            {templateCards}
+          </SimpleGrid>
+        </Box>
+
+        {/* Quick access section */}
+        <Box px={containerPadding} mb={4}>
+          <Flex 
+            justify="space-between" 
+            align="center" 
+            mb={4}
+            flexDirection={isMobile ? "row" : "row"}
+          >
+            <Text color={textColor} fontWeight="medium">
+              Quick access
+            </Text>
+            {isMobile && (
+              <Menu>
+                <MenuButton
+                  as={Button}
+                  rightIcon={<FiChevronDown />}
+                  size="sm"
+                  variant="ghost"
+                  color={textColor}
+                >
+                  {activeTab === "recent" && `Recently opened (${flows.length})`}
+                  {activeTab === "development" && `Under Development (${flows.filter((f) => f.accessLevel === 0).length})`}
+                  {activeTab === "published" && `Published (${flows.filter((f) => f.accessLevel > 0).length})`}
+                  {activeTab === "shared" && `Shared (${flows.filter((f) => f.accessLevel >= 4).length})`}
+                </MenuButton>
+                <MenuList>
+                  <MenuItem onClick={() => setActiveTab("recent")}>
+                    Recently opened ({flows.length})
+                  </MenuItem>
+                  <MenuItem onClick={() => setActiveTab("development")}>
+                    Under Development ({flows.filter((f) => f.accessLevel === 0).length})
+                  </MenuItem>
+                  <MenuItem onClick={() => setActiveTab("published")}>
+                    Published ({flows.filter((f) => f.accessLevel > 0).length})
+                  </MenuItem>
+                  <MenuItem onClick={() => setActiveTab("shared")}>
+                    Shared ({flows.filter((f) => f.accessLevel >= 4).length})
+                  </MenuItem>
+                </MenuList>
+              </Menu>
+            )}
+          </Flex>
+
+          <Flex 
+            justify="space-between" 
+            mb={4}
+            flexDirection={isMobile ? "column" : "row"}
+            gap={isMobile ? 3 : 0}
+          >
+            {!isMobile && (
+              <HStack spacing={3} overflowX="auto" pb={2}>
+                <QuickAccessTab
+                  label="Recently opened"
+                  isActive={activeTab === "recent"}
+                  count={flows.length}
+                  onClick={() => setActiveTab("recent")}
+                />
+                <QuickAccessTab
+                  label="Under Development"
+                  isActive={activeTab === "development"}
+                  count={flows.filter((f) => f.accessLevel === 0).length}
+                  onClick={() => setActiveTab("development")}
+                />
+                <QuickAccessTab
+                  label="Published"
+                  isActive={activeTab === "published"}
+                  count={flows.filter((f) => f.accessLevel > 0).length}
+                  onClick={() => setActiveTab("published")}
+                />
+                <QuickAccessTab
+                  label="Shared"
+                  isActive={activeTab === "shared"}
+                  count={flows.filter((f) => f.accessLevel >= 4).length}
+                  onClick={() => setActiveTab("shared")}
+                />
+              </HStack>
+            )}
+            <ButtonGroup size="sm" isAttached variant="outline" alignSelf={isMobile ? "flex-end" : "auto"}>
+              <Button
+                leftIcon={<FiUpload />}
+                size="sm"
+                colorScheme="gray"
+                variant="ghost" 
+                onClick={() => console.log("Upload clicked")}
+                mr={2}
+              >
+                Upload
+              </Button>
+              <Box 
+                height="24px" 
+                width="1px" 
+                bg={useColorModeValue(colors.accessManagement.detailPanel.border.light, colors.accessManagement.detailPanel.border.dark)} 
+                mx={1}
+                my={1} 
+              />
+              
+              <IconButton
+                aria-label="List view"
+                icon={<FiList />}
+                variant="ghost" 
+                colorScheme={viewMode === "list" ? "blue" : "gray"}
+                onClick={() => setViewMode("list")}
+              />
+              <IconButton
+                aria-label="Grid view"
+                icon={<FiGrid />}
+                variant="ghost" 
+                colorScheme={viewMode === "grid" ? "blue" : "gray"}
+                onClick={() => setViewMode("grid")}
+              />
+            </ButtonGroup>
+          </Flex>
+        </Box>
+
+        {/* Flow list */}
+        <Box
+          mx={containerPadding}
+          mb={6}
+          borderWidth="1px"
+          borderColor={borderColor}
+          borderRadius="md"
+          overflow="hidden"
+        >
         <Table variant="simple" size="sm">
           <Tbody>
             {paginatedFlows.map((flow) => (
@@ -563,8 +647,8 @@ const AccessHomePage = ({ onSelectFlow }) => {
                 <Td color={textColor}>
                   <Text fontWeight="medium">{flow.name}</Text>
                 </Td>
-                <Td color={mutedTextColor}>{flow.creationDate}</Td>
-                <Td>Access {flow.accessLevel}</Td>
+                <Td color={mutedTextColor} display={{ base: "none", md: "table-cell" }}>{flow.creationDate}</Td>
+                <Td display={{ base: "none", sm: "table-cell" }}>Access {flow.accessLevel}</Td>
               </Tr>
             ))}
             {filteredFlows.length === 0 && (
@@ -592,12 +676,13 @@ const AccessHomePage = ({ onSelectFlow }) => {
         )}
       </Box>
 
-      {/* Create Agent Modal */}
-      <CreateAgentModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onCreateAgent={handleCreateAgent}
-      />
+        {/* Create Agent Modal */}
+        <CreateAgentModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onCreateAgent={handleCreateAgent}
+        />
+      </Box>
     </Box>
   );
 };

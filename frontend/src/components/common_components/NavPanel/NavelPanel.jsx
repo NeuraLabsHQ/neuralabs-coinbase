@@ -8,7 +8,8 @@ import {
   Tooltip, 
   useColorModeValue,
   Text,
-  HStack
+  HStack,
+  useToast
 } from '@chakra-ui/react';
 import { 
   FiHome, 
@@ -35,6 +36,7 @@ const NavPanel = ({
   onClose // eslint-disable-line
 }) => {
   const { colorMode, toggleColorMode } = useColorMode();
+  const toast = useToast();
   
   const bgColor = useColorModeValue('navbar.body.light', 'navbar.body.dark');
   const borderColor = useColorModeValue('navbar.border.light', 'navbar.border.dark');
@@ -71,6 +73,19 @@ const NavPanel = ({
       return;
     }
     
+    // Show mobile restriction message for flow-builder
+    if (isMobile && buttonName === 'flow-builder') {
+      toast({
+        title: "Desktop Only",
+        description: "The Flow Builder requires a desktop or laptop computer for the best experience. Please access this page from a larger screen.",
+        status: "info",
+        duration: 4000,
+        isClosable: true,
+        position: "top"
+      });
+      return;
+    }
+    
     // Navigate if route is provided
     if (route && onNavigate) {
       onNavigate(route);
@@ -84,7 +99,7 @@ const NavPanel = ({
 
   const getButtonStyles = (buttonName) => {
     const isButtonActive = isActive(buttonName);
-    const isDisabled = viewOnlyMode && buttonName !== 'theme';
+    const isDisabled = (viewOnlyMode && buttonName !== 'theme') || (isMobile && buttonName === 'flow-builder');
     
     return {
       w: "100%",
@@ -96,17 +111,13 @@ const NavPanel = ({
       color: isDisabled ? disabledColor : (isButtonActive ? iconColor : iconColor),
       borderLeft: isButtonActive && !isMobile ? "none" : "none",
       borderColor: isButtonActive ? hoverBgColor : "transparent",
+      opacity: isDisabled ? 0.5 : 1,
       _hover: { 
         bg: isDisabled ? "transparent" : (isButtonActive ? (colorMode === 'dark' ? hoverBgColor : hoverBgColor) : hoverBgColor),
         cursor: isDisabled ? "not-allowed" : "pointer"
       }
     };
-  };
-  
-  // Navigation items configuration
-  const navItems = [
-    { name: 'home', label: 'Dashboard', icon: FiHome, route: '/dashboard' },
-    { name: 'chat', label: 'Chat', icon: FiMessageSquare, route: '/chat' },
+  };insn: FiMessageSquare, route: '/chat' },
     { name: 'access-management', label: 'Access Management', icon: FiKey, route: '/access-management' },
     { name: 'flow-builder', label: 'Flow Builder', icon: FiLayout, route: '/flow-builder' },
     { name: 'marketplace', label: 'Marketplace', icon: FiShoppingBag, route: '/marketplace' },
@@ -175,7 +186,7 @@ const NavPanel = ({
                     {...getButtonStyles(item.name)}
                     onClick={() => handleButtonClick(item.name, null, item.route)}
                     aria-label={item.label}
-                    disabled={viewOnlyMode}
+                    disabled={viewOnlyMode || (isMobile && item.name === 'flow-builder')}
                   >
                     <HStack spacing={3} w="100%">
                       <Icon size={20} />
@@ -193,7 +204,7 @@ const NavPanel = ({
                       {...getButtonStyles(item.name)}
                       onClick={() => handleButtonClick(item.name, null, item.route)}
                       aria-label={item.label}
-                      disabled={viewOnlyMode}
+                      disabled={viewOnlyMode || (isMobile && item.name === 'flow-builder')}
                     >
                       <Icon size={24} />
                     </Button>

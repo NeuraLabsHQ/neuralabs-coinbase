@@ -1,6 +1,7 @@
 // src/components/access_management/AccessPage.jsx
-import { Flex, useToast } from '@chakra-ui/react';
+import { Flex, useToast, useBreakpointValue, useDisclosure, IconButton, Box, Drawer, DrawerOverlay, DrawerContent, DrawerCloseButton } from '@chakra-ui/react';
 import { useState } from 'react';
+import { FiKey } from 'react-icons/fi';
 import { accessManagementApi } from '../../utils/access-api';
 import AccessDetailPanel from './AccessDetailPanel';
 import AccessHomePage from './AccessHomePage';
@@ -14,12 +15,20 @@ const AccessPage = () => {
   const [detailPanelOpen, setDetailPanelOpen] = useState(false);
   const [flowAccessDetails, setFlowAccessDetails] = useState(null);
   const toast = useToast();
+  
+  // Responsive values
+  const isMobile = useBreakpointValue({ base: true, lg: false });
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   // Handle view change from sidebar
   const handleViewChange = (newView) => {
     setView(newView);
     setDetailPanelOpen(false);
     setSelectedFlow(null);
+    // Close drawer on mobile after navigation
+    if (isMobile) {
+      onClose();
+    }
   };
     
   // Handle selection of a flow in the main content or home page
@@ -52,10 +61,54 @@ const AccessPage = () => {
 
   return (
     <Flex h="100%" w="100%" overflow="hidden">
-      <AccessSidebar 
-        onViewChange={handleViewChange}
-        currentView={view}
-      />
+      {/* Desktop Sidebar */}
+      {!isMobile && (
+        <AccessSidebar 
+          onViewChange={handleViewChange}
+          currentView={view}
+          isMobile={false}
+        />
+      )}
+      
+      {/* Mobile Sidebar Drawer */}
+      {isMobile && (
+        <Drawer
+          isOpen={isOpen}
+          placement="right"
+          onClose={onClose}
+          size="xs"
+        >
+          <DrawerOverlay />
+          <DrawerContent maxW="280px">
+            <DrawerCloseButton />
+            <AccessSidebar 
+              onViewChange={handleViewChange}
+              currentView={view}
+              isMobile={true}
+              onClose={onClose}
+            />
+          </DrawerContent>
+        </Drawer>
+      )}
+      
+      {/* Mobile Menu Button */}
+      {isMobile && (
+        <Box 
+          position="fixed" 
+          top={4} 
+          right={4} 
+          zIndex={10}
+        >
+          <IconButton
+            icon={<FiKey size={24} />}
+            onClick={onOpen}
+            variant="ghost"
+            aria-label="Open access menu"
+            colorScheme="gray"
+            size="lg"
+          />
+        </Box>
+      )}
       
       {detailPanelOpen ? (
         <AccessDetailPanel 

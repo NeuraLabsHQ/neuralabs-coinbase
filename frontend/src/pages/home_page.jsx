@@ -1,11 +1,13 @@
-import { Box, Heading, Text, VStack, Button, Image, useColorModeValue, Flex } from '@chakra-ui/react';
+import { Box, Heading, Text, VStack, Button, Image, useColorModeValue, Flex, useBreakpointValue, useToast } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import homepageBackground from '../assets/homepage.png';
 import homepageCode from '../assets/homepage-code.png';
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const toast = useToast();
   const textColor = useColorModeValue('gray.800', 'gray.100');
+  const isMobile = useBreakpointValue({ base: true, lg: false });
 
   return (
     <Box 
@@ -73,7 +75,19 @@ const HomePage = () => {
           <Button 
             colorScheme="blue" 
             size="lg" 
-            onClick={() => navigate('/flow-builder')}
+            onClick={() => {
+              if (isMobile) {
+                toast({
+                  title: "Desktop Required",
+                  description: "Flow Builder requires a desktop or laptop computer for the best experience.",
+                  status: "info",
+                  duration: 5000,
+                  isClosable: true,
+                });
+              } else {
+                navigate('/flow-builder');
+              }
+            }}
             bgColor="white"
           >
             <Text color="black">Start Building</Text>

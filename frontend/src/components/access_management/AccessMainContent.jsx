@@ -28,6 +28,8 @@ import {
     Thead,
     Tr,
     useColorModeValue,
+    useBreakpointValue,
+    useToast,
     VStack
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
@@ -42,6 +44,8 @@ const AccessMainContent = ({ currentView }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+  const toast = useToast();
+  const isMobile = useBreakpointValue({ base: true, lg: false });
   
   const bgColor = useColorModeValue(colors.accessManagement.mainContent.bg.light, colors.accessManagement.mainContent.bg.dark);
   const borderColor = useColorModeValue(colors.accessManagement.sidebar.border.light, colors.accessManagement.sidebar.border.dark);
@@ -310,7 +314,23 @@ const AccessMainContent = ({ currentView }) => {
                 }
               </Text>
               {!searchQuery && (currentView === 'myFlows-made' || currentView === 'myFlows-dev') && (
-                <Button colorScheme="blue" size="sm" onClick={() => navigate('/flow-builder')}>
+                <Button 
+                  colorScheme="blue" 
+                  size="sm" 
+                  onClick={() => {
+                    if (isMobile) {
+                      toast({
+                        title: "Desktop Required",
+                        description: "Flow Builder requires a desktop computer for the best experience.",
+                        status: "info",
+                        duration: 5000,
+                        isClosable: true,
+                      });
+                    } else {
+                      navigate('/flow-builder');
+                    }
+                  }}
+                >
                   Create New Flow
                 </Button>
               )}

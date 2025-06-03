@@ -24,7 +24,7 @@ import { getSuiBalance, getWalBalance, formatBalance } from '../../lib/blockchai
 import { useZkLogin } from '../../contexts/ZkLoginContext';
 
 
-const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = false }) => {
+const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = false, isMobile = false, onClose }) => {
   const [myFlows, setMyFlows] = useState([]);
   const [otherFlows, setOtherFlows] = useState({});
   const [publishedFlows, setPublishedFlows] = useState([]);
@@ -234,11 +234,11 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
 
   return (
     <Box 
-      // w="280px"
-      minWidth={"280px"} 
+      w={isMobile ? "100%" : "280px"}
+      minWidth={isMobile ? "unset" : "280px"} 
       h="100%" 
       bg={bgColor} 
-      borderRight="1px" 
+      borderRight={!isMobile ? "1px" : "none"} 
       borderColor={borderColor}
       position="relative"
       display="flex"

@@ -19,13 +19,11 @@ const FlowBuilderPage = ({
 }) => {
   const { agentId } = useParams();
   const [agentData, setAgentData] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
     const fetchAgentData = async () => {
       if (agentId) {
-        setIsLoading(true);
         try {
           const data = await agentAPI.getAgent(agentId);
           setAgentData(data);
@@ -38,8 +36,6 @@ const FlowBuilderPage = ({
             duration: 5000,
             isClosable: true,
           });
-        } finally {
-          setIsLoading(false);
         }
       }
     };
