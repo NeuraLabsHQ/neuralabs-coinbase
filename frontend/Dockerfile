@@ -12,6 +12,7 @@ COPY public/ ./public
 COPY src/ ./src
 COPY index.html ./
 COPY vite.config.js ./
+COPY vitest.config.js ./
 COPY tailwind.config.js ./
 COPY postcss.config.js ./
 COPY tsconfig.json ./
@@ -21,7 +22,14 @@ COPY production.env .env
 
 ENV GENERATE_SOURCEMAP=false
 
+# Debug: List files before build
+RUN ls -la
+
+# Run the build
 RUN npm run build
+
+# Debug: Check if dist directory was created
+RUN ls -la && ls -la dist/
 
 # Production stage
 FROM nginx:alpine
