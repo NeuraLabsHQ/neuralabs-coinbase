@@ -1,155 +1,105 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useColorModeValue } from '@chakra-ui/react';
 
 const ParticlesBackground = () => {
-  const particlesRef = useRef(null);
   const particleColor = useColorModeValue('#000000', '#ffffff');
   const lineColor = useColorModeValue('#000000', '#ffffff');
 
   useEffect(() => {
-    // Import particles.js from node_modules
-    const loadParticles = async () => {
+    const loadTsParticles = async () => {
       try {
-        // Import the installed particles.js
-        await import('particles.js');
-        
-        // Wait a bit for the script to initialize
-        setTimeout(() => {
-          initParticles();
-        }, 100);
-      } catch (error) {
-        console.error('Failed to load particles.js:', error);
-        // Fallback to CDN
-        loadFromCDN();
-      }
-    };
+        // Dynamic import of tsparticles
+        const { tsParticles } = await import('tsparticles-engine');
+        const { loadSlim } = await import('tsparticles-slim');
 
-    const loadFromCDN = () => {
-      if (window.particlesJS) {
-        initParticles();
-        return;
-      }
+        // Load slim preset (includes basic functionality)
+        await loadSlim(tsParticles);
 
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js';
-      script.onload = () => {
-        setTimeout(() => {
-          initParticles();
-        }, 100);
-      };
-      document.head.appendChild(script);
-    };
-
-    const initParticles = () => {
-      console.log('initParticles called, particlesJS available:', !!window.particlesJS, 'ref current:', !!particlesRef.current);
-      if (!window.particlesJS || !particlesRef.current) return;
-
-      // Clear any existing particles
-      if (window.pJSDom && window.pJSDom.length > 0) {
-        window.pJSDom.forEach(pjs => {
-          if (pjs && pjs.pJS && pjs.pJS.fn && pjs.pJS.fn.vendors) {
-            pjs.pJS.fn.vendors.destroypJS();
+        // Initialize particles
+        await tsParticles.load('tsparticles', {
+          particles: {
+            number: {
+              value: 50,
+              density: {
+                enable: true,
+                value_area: 800
+              }
+            },
+            color: {
+              value: particleColor
+            },
+            shape: {
+              type: "circle"
+            },
+            opacity: {
+              value: 0.3,
+              random: false
+            },
+            size: {
+              value: 2,
+              random: true
+            },
+            links: {
+              enable: true,
+              distance: 150,
+              color: lineColor,
+              opacity: 0.2,
+              width: 1
+            },
+            move: {
+              enable: true,
+              speed: 1,
+              direction: "none",
+              random: false,
+              straight: false,
+              outMode: "out",
+              bounce: false,
+              attract: {
+                enable: false,
+                rotateX: 600,
+                rotateY: 1200
+              }
+            }
+          },
+          interactivity: {
+            detectsOn: "canvas",
+            events: {
+              onHover: {
+                enable: false,
+                mode: "repulse"
+              },
+              onClick: {
+                enable: false,
+                mode: "push"
+              },
+              resize: true
+            }
+          },
+          detectRetina: true,
+          background: {
+            color: "transparent"
           }
         });
-        window.pJSDom = [];
+      } catch (error) {
+        console.error('Failed to load tsparticles:', error);
       }
-
-      window.particlesJS(particlesRef.current.id, {
-        particles: {
-          number: {
-            value: 50,
-            density: {
-              enable: true,
-              value_area: 800
-            }
-          },
-          color: {
-            value: particleColor
-          },
-          shape: {
-            type: "circle",
-            stroke: {
-              width: 0,
-              color: particleColor
-            }
-          },
-          opacity: {
-            value: 0.3,
-            random: false,
-            anim: {
-              enable: false,
-              speed: 1,
-              opacity_min: 0.1,
-              sync: false
-            }
-          },
-          size: {
-            value: 2,
-            random: true,
-            anim: {
-              enable: false,
-              speed: 40,
-              size_min: 0.1,
-              sync: false
-            }
-          },
-          line_linked: {
-            enable: true,
-            distance: 150,
-            color: lineColor,
-            opacity: 0.2,
-            width: 1
-          },
-          move: {
-            enable: true,
-            speed: 1,
-            direction: "none",
-            random: false,
-            straight: false,
-            out_mode: "out",
-            bounce: false,
-            attract: {
-              enable: false,
-              rotateX: 600,
-              rotateY: 1200
-            }
-          }
-        },
-        interactivity: {
-          detect_on: "canvas",
-          events: {
-            onhover: {
-              enable: false,
-              mode: "repulse"
-            },
-            onclick: {
-              enable: false,
-              mode: "push"
-            },
-            resize: true
-          }
-        },
-        retina_detect: true
-      });
     };
 
-    loadParticles();
-
-    console.log('ParticlesBackground: Component mounted, particleColor:', particleColor, 'lineColor:', lineColor);
+    loadTsParticles();
 
     // Cleanup function
     return () => {
-      if (window.pJSDom && window.pJSDom[0]) {
-        window.pJSDom[0].pJS.fn.vendors.destroypJS();
-        window.pJSDom = [];
+      // tsParticles automatically cleans up when the container is removed
+      const container = document.getElementById('tsparticles');
+      if (container) {
+        container.innerHTML = '';
       }
     };
   }, [particleColor, lineColor]);
 
   return (
     <div
-      id="particles-js"
-      ref={particlesRef}
+      id="tsparticles"
       style={{
         position: 'absolute',
         top: 0,

@@ -80,7 +80,7 @@ const HomePage = () => {
         // boxShadow="xl"
         transform="scale(0.9)"
         transformOrigin="center"
-        // zIndex={1}
+        zIndex={10}
         position="relative"
       >
         <Heading as="h1" size="2xl" color={textColor}>Welcome to Neuralabs</Heading>

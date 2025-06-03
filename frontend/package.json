@@ -30,7 +30,6 @@
     "js-yaml": "^4.1.0",
     "jwt-decode": "^4.0.0",
     "konva": "^9.3.19",
-    "particles.js": "^2.0.0",
     "petra-plugin-wallet-adapter": "^0.4.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -40,6 +39,8 @@
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.4.0",
     "remark-gfm": "^4.0.1",
+    "tsparticles-engine": "^2.12.0",
+    "tsparticles-slim": "^2.12.0",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
