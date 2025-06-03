@@ -1,13 +1,25 @@
 import { Box, Heading, Text, VStack, Button, Image, useColorModeValue, Flex, useBreakpointValue, useToast } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import homepageBackground from '../assets/homepage.png';
-import homepageCode from '../assets/homepage-code.png';
+import productLight from '../assets/product.png';
+import productDark from '../assets/product_dark.png';
+import ParticlesBackground from '../components/common_components/ParticlesBackground';
 
 const HomePage = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const isMobile = useBreakpointValue({ base: true, lg: false });
+  const productImage = useColorModeValue(productLight, productDark);
+  const imageFilter = useColorModeValue('none', 'brightness(0.6)');
+  const vignetteOpacity = useColorModeValue('0', '0.6');
+  
+  // Button colors
+  const primaryButtonBg = useColorModeValue('black', 'white');
+  const primaryButtonText = useColorModeValue('white', 'black');
+  const secondaryButtonBorder = useColorModeValue('blue.500', 'blue.300');
+  const secondaryButtonText = useColorModeValue('blue.500', 'blue.300');
+  const bgColor = useColorModeValue('white', 'black');
 
   return (
     <Box 
@@ -26,8 +38,8 @@ const HomePage = () => {
         right: 0,
         bottom: 0,
         left: 0,
-        backgroundImage: `url(${homepageBackground})`,
-        backgroundSize: 'cover',
+        // backgroundImage: `url(${homepageBackground})`,
+        // backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         opacity: 0.6,
@@ -40,10 +52,13 @@ const HomePage = () => {
         right: 0,
         bottom: 0,
         left: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: bgColor,
         zIndex: -1,
       }}
     >
+      {/* Particles background */}
+      <ParticlesBackground />
+      
       <Box
         position="absolute"
         top="0"
@@ -62,9 +77,11 @@ const HomePage = () => {
         textAlign="center"
         p={9} // Reduced from 10
         borderRadius="xl"
-        boxShadow="xl"
+        // boxShadow="xl"
         transform="scale(0.9)"
         transformOrigin="center"
+        // zIndex={1}
+        position="relative"
       >
         <Heading as="h1" size="2xl" color={textColor}>Welcome to Neuralabs</Heading>
         <Text fontSize="lg" color={textColor}> {/* Reduced from xl */}
@@ -73,7 +90,6 @@ const HomePage = () => {
         
         <Flex gap={4} justifyContent="center" wrap="wrap">
           <Button 
-            colorScheme="blue" 
             size="lg" 
             onClick={() => {
               if (isMobile) {
@@ -88,15 +104,33 @@ const HomePage = () => {
                 navigate('/flow-builder');
               }
             }}
-            bgColor="white"
+            bg={primaryButtonBg}
+            color={primaryButtonText}
+            _hover={{ bg: useColorModeValue('blue.600', 'blue.700') }}
           >
-            <Text color="black">Start Building</Text>
+            Start Building
           </Button>
           <Button 
-            colorScheme="teal" 
             size="lg" 
             variant="outline"
-            onClick={() => navigate('/marketplace')}
+            onClick={() => {
+              toast({
+                title: "Coming Soon",
+                description: "The Marketplace feature is currently under development and will be available soon.",
+                status: "info",
+                duration: 3000,
+                isClosable: true,
+              });
+            }}
+            borderColor={secondaryButtonBorder}
+            color={secondaryButtonText}
+            opacity={0.5}
+            cursor="not-allowed"
+            _hover={{ 
+              opacity: 0.5,
+              borderColor: secondaryButtonBorder,
+              color: secondaryButtonText
+            }}
           >
             Explore Marketplace
           </Button>
@@ -110,12 +144,12 @@ const HomePage = () => {
         >
           <Box
             position="absolute"
-            top="-9px" // Reduced from -10px
-            bottom="-9px" // Reduced from -10px
-            left="9" // Reduced from 10
-            right="9" // Reduced from 10
-            boxShadow="0 0 360px 2.7px rgba(255, 255, 255, 0.3)" // Reduced from 400px 3px
-            filter="blur(13.5px)" // Reduced from 15px
+            top="-5px"
+            bottom="-5px"
+            left="5"
+            right="5"
+            boxShadow="0 0 180px 1px rgba(255, 255, 255, 0.2)"
+            filter="blur(8px)"
             zIndex="1"
             pointerEvents="none"
           />
@@ -129,11 +163,11 @@ const HomePage = () => {
             zIndex="2"
           >
             <Image 
-              src={homepageCode} 
-              alt="Code visualization" 
+              src={productImage} 
+              alt="Product visualization" 
               width="100%" 
               objectFit="contain"
-              filter="brightness(0.6)"
+              filter={imageFilter}
             />
 
             {/* Existing vignette effect */}
@@ -143,7 +177,7 @@ const HomePage = () => {
               left="0"
               right="0"
               bottom="0"
-              boxShadow="inset 0 0 45px 9px rgba(0,0,0,0.6)" // Reduced from 50px 10px
+              boxShadow={`inset 0 0 45px 9px rgba(0,0,0,${vignetteOpacity})`}
               zIndex="3"
               pointerEvents="none"
             />
