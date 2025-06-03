@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from 'react';
 
-const API_BASE_URL = process.env.VITE_BACKEND_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.VITE_BACKEND_URL || 'http://localhost:8001';
 const WS_BASE_URL = API_BASE_URL.replace('http', 'ws');
 
 export class FlowExecutionAPI {
