@@ -1,29 +1,87 @@
-import { Flex } from '@chakra-ui/react';
+import { Flex, IconButton, useDisclosure, Drawer, DrawerOverlay, DrawerContent, DrawerCloseButton, useBreakpointValue, Box } from '@chakra-ui/react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { FiMenu } from 'react-icons/fi';
 import NavPanel from '../common_components/NavPanel/NavelPanel';
 
 const Layout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  
+  // Responsive values
+  const isMobile = useBreakpointValue({ base: true, lg: false });
+  const navWidth = useBreakpointValue({ base: '280px', lg: '80px' });
   
   // Navigate to different sections of the app
   const handleNavigation = (route) => {
     if (route !== location.pathname) {
       navigate(route);
+      // Close drawer on mobile after navigation
+      if (isMobile) {
+        onClose();
+      }
     }
   };
 
   return (
     <Flex className="app" h="100vh" w="100vw" overflow="hidden">
-      {/* Navigation Panel - common for all routes */}
-      <NavPanel 
-        onNavigate={handleNavigation}
-        currentPath={location.pathname}
-      />
+      {/* Desktop Navigation Panel */}
+      {!isMobile && (
+        <NavPanel 
+          onNavigate={handleNavigation}
+          currentPath={location.pathname}
+          isMobile={false}
+        />
+      )}
+      
+      {/* Mobile Navigation Drawer */}
+      {isMobile && (
+        <Drawer
+          isOpen={isOpen}
+          placement="left"
+          onClose={onClose}
+          size="xs"
+        >
+          <DrawerOverlay />
+          <DrawerContent maxW={navWidth}>
+            <DrawerCloseButton />
+            <NavPanel 
+              onNavigate={handleNavigation}
+              currentPath={location.pathname}
+              isMobile={true}
+              onClose={onClose}
+            />
+          </DrawerContent>
+        </Drawer>
+      )}
       
       {/* Main Content Area */}
-      <Flex flex="1" overflow="hidden" position="relative">
-        {children}
+      <Flex flex="1" overflow="hidden" position="relative" direction="column">
+        {/* Mobile Header with Menu Button */}
+        {isMobile && (
+          <Box 
+            position="fixed" 
+            top={0} 
+            left={0} 
+            p={4} 
+            zIndex={10}
+            bg="transparent"
+          >
+            <IconButton
+              icon={<FiMenu size={24} />}
+              onClick={onOpen}
+              variant="ghost"
+              aria-label="Open navigation menu"
+              colorScheme="gray"
+              size="lg"
+            />
+          </Box>
+        )}
+        
+        {/* Page Content */}
+        <Box flex="1" overflow="hidden">
+          {children}
+        </Box>
       </Flex>
     </Flex>
   );

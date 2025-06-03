@@ -1,5 +1,6 @@
-import { Flex, useColorMode, useDisclosure } from '@chakra-ui/react';
+import { Flex, useColorMode, useDisclosure, IconButton, Box, useBreakpointValue, Drawer, DrawerOverlay, DrawerContent, DrawerCloseButton } from '@chakra-ui/react';
 import { useEffect, useState, useRef } from 'react';
+import { FiList } from 'react-icons/fi';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { useZkLogin } from '../../../contexts/ZkLoginContext';
 import useUiColors from '../../../utils/uiColors';
@@ -42,8 +43,13 @@ const ChatPage = () => {
   const streamBufferRef = useRef('');
   const messageStreamBuffers = useRef({});
 
-  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: false });
+  const { isOpen, onToggle, onClose } = useDisclosure({ defaultIsOpen: false });
   const { toggleColorMode } = useColorMode();
+  
+  // Responsive values
+  const isMobile = useBreakpointValue({ base: true, lg: false });
+  const drawerPlacement = useBreakpointValue({ base: 'bottom', lg: 'left' });
+  const drawerSize = useBreakpointValue({ base: 'sm', lg: 'xs' });
   
   useEffect(() => {
     const initialChats = [
@@ -469,21 +475,84 @@ const ChatPage = () => {
 
   return (
     <Flex h="100%" w="100%" overflow="hidden" bg={colors.bgPrimary}>
-      <ChatHistoryPanel
-        isOpen={isOpen}
-        chats={chats}
-        selectedChatId={selectedChatId}
-        onChatSelect={handleChatSelect}
-        onNewChat={handleNewChat}
-        onDeleteChat={handleDeleteChat}
-        onEditChatTitle={handleEditChatTitle}
-        onToggleSidebar={onToggle}
-        editingChatId={editingChatId}
-        setEditingChatId={setEditingChatId}
-        newTitle={newTitle}
-        setNewTitle={setNewTitle}
-      />
+      {/* Desktop Chat History Panel */}
+      {!isMobile && (
+        <ChatHistoryPanel
+          isOpen={isOpen}
+          chats={chats}
+          selectedChatId={selectedChatId}
+          onChatSelect={handleChatSelect}
+          onNewChat={handleNewChat}
+          onDeleteChat={handleDeleteChat}
+          onEditChatTitle={handleEditChatTitle}
+          onToggleSidebar={onToggle}
+          editingChatId={editingChatId}
+          setEditingChatId={setEditingChatId}
+          newTitle={newTitle}
+          setNewTitle={setNewTitle}
+          isMobile={false}
+        />
+      )}
+      
+      {/* Mobile Chat History Drawer */}
+      {isMobile && (
+        <Drawer
+          isOpen={isOpen}
+          placement={drawerPlacement}
+          onClose={onClose}
+          size={drawerSize}
+        >
+          <DrawerOverlay />
+          <DrawerContent
+            maxH={drawerPlacement === 'bottom' ? '70vh' : '100vh'}
+            borderTopRadius={drawerPlacement === 'bottom' ? 'xl' : '0'}
+          >
+            <DrawerCloseButton />
+            <ChatHistoryPanel
+              isOpen={true}
+              chats={chats}
+              selectedChatId={selectedChatId}
+              onChatSelect={(chatId) => {
+                handleChatSelect(chatId);
+                onClose();
+              }}
+              onNewChat={() => {
+                handleNewChat();
+                onClose();
+              }}
+              onDeleteChat={handleDeleteChat}
+              onEditChatTitle={handleEditChatTitle}
+              onToggleSidebar={onToggle}
+              editingChatId={editingChatId}
+              setEditingChatId={setEditingChatId}
+              newTitle={newTitle}
+              setNewTitle={setNewTitle}
+              isMobile={true}
+            />
+          </DrawerContent>
+        </Drawer>
+      )}
+      
       <Flex flex="1" direction="column" h="100%" position="relative" justifyContent="center">
+        {/* Mobile Chat History Button */}
+        {isMobile && (
+          <Box 
+            position="fixed" 
+            top={4} 
+            right={4} 
+            zIndex={10}
+          >
+            <IconButton
+              icon={<FiList size={24} />}
+              onClick={onToggle}
+              variant="ghost"
+              aria-label="Open chat history"
+              colorScheme="gray"
+              size="lg"
+            />
+          </Box>
+        )}
+        
         <ChatInterface
           messages={messages}
           onSendMessage={handleSendMessage}
@@ -491,6 +560,7 @@ const ChatPage = () => {
           thinkingState={thinkingState}
           messageThinkingStates={messageThinkingStates}
           onToggleColorMode={toggleColorMode}
+          isMobile={isMobile}
         />
       </Flex>
     </Flex>

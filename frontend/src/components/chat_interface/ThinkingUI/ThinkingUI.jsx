@@ -9,23 +9,33 @@ import {
     Text,
     useColorModeValue,
     VStack,
+    useBreakpointValue,
+    Collapse,
+    IconButton,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from 'react';
+import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { FiCheck } from "react-icons/fi";
 import colors from "../../../color";
 import thinkingStepTemplates from "../../../utils/thinkingStepTemplates.json";
 import thinkresponse from "../../../utils/thinkresponse.json";
 
 
-const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true }) => {
+const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile: isMobileProp }) => {
   const { isThinking, steps = [], currentStep, searchResults, timeElapsed, onTypingComplete, executionSteps = [] } = thinkingState;
   
   console.log('ThinkingUI render - isThinking:', isThinking, 'executionSteps:', executionSteps.length, 'thinkingState:', thinkingState);
 
   const [responseData, setResponseData] = useState(null);
   const [wasThinking, setWasThinking] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const scrollableRef = useRef(null);
+  
+  // Responsive values
+  const isMobile = isMobileProp !== undefined ? isMobileProp : useBreakpointValue({ base: true, md: false });
+  const sidebarWidth = useBreakpointValue({ base: "100%", md: "250px" });
+  const maxBoxWidth = useBreakpointValue({ base: "100%", md: "900px" });
 
   // Typing effect states
   const [previousStep, setPreviousStep] = useState(null);
@@ -242,25 +252,43 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true }) => {
       border="1px solid"
       borderColor={borderColor}
       bg={bgColor}
-      maxW="900px"
-      mx="auto"
-      mb={8}
+      maxW={maxBoxWidth}
+      mx={isMobile ? 0 : "auto"}
+      mb={isMobile ? 4 : 8}
     >
-      <Flex>
-        <Box w="250px" p={4} borderRight="1px solid" borderColor={borderColor}>
-          <Flex align="center" mb={4}>
-            <SearchIcon mr={2} />
-            <Text fontWeight="medium" color={textColor}>
-              {executionSteps.length > 0 && executionSteps.some(step => step.status === 'completed' && step.elementName === 'End Block')
-                ? "Completed"
-                : "Thinking"}
-            </Text>
-            <Text fontSize="sm" color={secondaryColor} ml={2}>
-              {timeElapsed}s
-            </Text>
+      <Flex direction={isMobile ? "column" : "row"}>
+        <Box 
+          w={sidebarWidth} 
+          p={isMobile ? 3 : 4} 
+          borderRight={isMobile ? "none" : "1px solid"} 
+          borderBottom={isMobile ? "1px solid" : "none"}
+          borderColor={borderColor}
+        >
+          <Flex align="center" justify="space-between" mb={isMobile ? 2 : 4}>
+            <Flex align="center">
+              <SearchIcon mr={2} size={isMobile ? "14px" : "16px"} />
+              <Text fontWeight="medium" color={textColor} fontSize={isMobile ? "sm" : "md"}>
+                {executionSteps.length > 0 && executionSteps.some(step => step.status === 'completed' && step.elementName === 'End Block')
+                  ? "Completed"
+                  : "Thinking"}
+              </Text>
+              <Text fontSize={isMobile ? "xs" : "sm"} color={secondaryColor} ml={2}>
+                {timeElapsed}s
+              </Text>
+            </Flex>
+            {isMobile && (
+              <IconButton
+                icon={isExpanded ? <FiChevronUp /> : <FiChevronDown />}
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsExpanded(!isExpanded)}
+                aria-label={isExpanded ? "Collapse" : "Expand"}
+              />
+            )}
           </Flex>
 
-          <List spacing={3}>
+          <Collapse in={!isMobile || isExpanded} animateOpacity>
+            <List spacing={isMobile ? 2 : 3}>
             {executionSteps.map((step, index) => {
               return (
                 <motion.div
@@ -287,23 +315,24 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true }) => {
                         <Spinner size="xs" color={spinnerColor} />
                       )}
                     </Box>
-                    <Text color={textColor} fontSize="sm">{step.elementName}</Text>
+                    <Text color={textColor} fontSize={isMobile ? "xs" : "sm"}>{step.elementName}</Text>
                   </ListItem>
                 </motion.div>
               );
             })}
-          </List>
+            </List>
+          </Collapse>
         </Box>
 
         <Box 
           flex="1" 
-          p={4} 
+          p={isMobile ? 3 : 4} 
           color={textColor}
           position="relative"
           display="flex"
           flexDirection="column"
         >
-          <Text fontSize="lg" fontWeight="medium" mb={4}>
+          <Text fontSize={isMobile ? "md" : "lg"} fontWeight="medium" mb={isMobile ? 2 : 4}>
             {!isThinking && wasThinking
               ? "Analysis Complete"
               : executionSteps.length > 0 && executionSteps[executionSteps.length - 1]?.elementName || "Thinking"}
@@ -311,7 +340,7 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true }) => {
 
           <Box
             overflow="auto"
-            maxHeight="400px"
+            maxHeight={isMobile ? "250px" : "400px"}
             position="relative"
             css={{
               '&::-webkit-scrollbar': {
@@ -338,13 +367,13 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true }) => {
                   style={{ width: "100%" }}
                 >
                   <Box w="100%">
-                    <Text fontSize="sm" fontWeight="medium" color={secondaryColor} mb={1}>
+                    <Text fontSize={isMobile ? "xs" : "sm"} fontWeight="medium" color={secondaryColor} mb={1}>
                       {step.description}
                     </Text>
                     
                     {/* Show outputs if available and step is completed */}
                     {step.status === 'completed' && step.outputs && Object.keys(step.outputs).length > 0 && (
-                      <Box bg={sourceBgColor} p={3} borderRadius="md" mt={2}>
+                      <Box bg={sourceBgColor} p={isMobile ? 2 : 3} borderRadius="md" mt={2}>
                         {Object.entries(step.outputs).map(([key, value]) => (
                           <Box key={key} mb={2}>
                             <Text fontSize="xs" fontWeight="bold" color={secondaryColor} mb={1}>
@@ -376,8 +405,8 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true }) => {
                   transition={{ duration: 0.5 }}
                   style={{ width: "100%" }}
                 >
-                  <Box bg={sourceBgColor} p={3} borderRadius="md" w="100%">
-                    <Text fontSize="sm">Analysis completed for: "{query}"</Text>
+                  <Box bg={sourceBgColor} p={isMobile ? 2 : 3} borderRadius="md" w="100%">
+                    <Text fontSize={isMobile ? "xs" : "sm"}>Analysis completed for: "{query}"</Text>
                   </Box>
                 </motion.div>
               )}

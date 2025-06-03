@@ -6,7 +6,9 @@ import {
   Flex, 
   useColorMode, 
   Tooltip, 
-  useColorModeValue
+  useColorModeValue,
+  Text,
+  HStack
 } from '@chakra-ui/react';
 import { 
   FiHome, 
@@ -28,7 +30,9 @@ import colors from '../../../color';
 const NavPanel = ({ 
   onNavigate,
   currentPath,
-  viewOnlyMode = false
+  viewOnlyMode = false,
+  isMobile = false,
+  onClose // eslint-disable-line
 }) => {
   const { colorMode, toggleColorMode } = useColorMode();
   
@@ -84,12 +88,13 @@ const NavPanel = ({
     
     return {
       w: "100%",
-      h: "56px",
-      justifyContent: "center",
-      borderRadius: 0,
+      h: isMobile ? "48px" : "56px",
+      justifyContent: isMobile ? "flex-start" : "center",
+      px: isMobile ? 4 : 0,
+      borderRadius: isMobile ? "md" : 0,
       bg: isButtonActive ? (colorMode === 'dark' ? hoverBgColor : hoverBgColor) : "transparent", 
       color: isDisabled ? disabledColor : (isButtonActive ? iconColor : iconColor),
-      borderLeft: isButtonActive ? "none" : "none",
+      borderLeft: isButtonActive && !isMobile ? "none" : "none",
       borderColor: isButtonActive ? hoverBgColor : "transparent",
       _hover: { 
         bg: isDisabled ? "transparent" : (isButtonActive ? (colorMode === 'dark' ? hoverBgColor : hoverBgColor) : hoverBgColor),
@@ -97,16 +102,25 @@ const NavPanel = ({
       }
     };
   };
+  
+  // Navigation items configuration
+  const navItems = [
+    { name: 'home', label: 'Dashboard', icon: FiHome, route: '/dashboard' },
+    { name: 'chat', label: 'Chat', icon: FiMessageSquare, route: '/chat' },
+    { name: 'access-management', label: 'Access Management', icon: FiKey, route: '/access-management' },
+    { name: 'flow-builder', label: 'Flow Builder', icon: FiLayout, route: '/flow-builder' },
+    { name: 'marketplace', label: 'Marketplace', icon: FiShoppingBag, route: '/marketplace' },
+  ];
 
   return (
     <>
       <Box 
         as="nav" 
         position="relative"
-        w="80px" 
+        w={isMobile ? "100%" : "80px"} 
         h="100%" 
         bg={bgColor} 
-        borderRight="1px solid" 
+        borderRight={!isMobile ? "1px solid" : "none"} 
         borderColor={borderColor}
         display="flex"
         flexDirection="column"
@@ -117,12 +131,14 @@ const NavPanel = ({
           listStyleType="none" 
           m={0} 
           p={0}
-          py={15} 
+          py={isMobile ? 5 : 15} 
+          px={isMobile ? 3 : 0}
           h="100%" 
-          spacing={0}
+          spacing={isMobile ? 2 : 0}
         >
-          <Box as="li" position="relative" w="100%" display="flex" justifyContent="center" py={3} marginBottom={"15px"}>
-            <Flex 
+          <Box as="li" position="relative" w="100%" display="flex" justifyContent={isMobile ? "flex-start" : "center"} py={3} marginBottom={"15px"} px={isMobile ? 4 : 0}>
+            <HStack spacing={3}>
+              <Flex 
               w="32px" 
               h="32px" 
               bg={colors.gray[500]}
@@ -140,109 +156,76 @@ const NavPanel = ({
                   <img src={neura_icon_dark} alt="Neura Icon" />
                 )
               }
-            </Flex>
+              </Flex>
+              {/* {isMobile && (
+                <Text fontSize="lg" fontWeight="bold" color={iconColor}>
+                  NeuraLabs
+                </Text>
+              )} */}
+            </HStack>
           </Box>
           
-          <Box as="li" position="relative" w="100%">
-            <Tooltip 
-              label={"Dashboard"} 
-              placement="right" 
-              bg={colors.gray[900]} 
-              hasArrow
-            >
-              <Button 
-                {...getButtonStyles('home')}
-                onClick={() => handleButtonClick('home', null, '/dashboard')}
-                aria-label="Dashboard"
-                disabled={viewOnlyMode}
-              >
-                <FiHome size={24} />
-              </Button>
-            </Tooltip>
-          </Box>
-
-          <Box as="li" position="relative" w="100%">
-            <Tooltip 
-              label={"Chat"} 
-              placement="right" 
-              bg={colors.gray[900]} 
-              hasArrow
-            >
-              <Button 
-                {...getButtonStyles('chat')}
-                onClick={() => handleButtonClick('chat', null, '/chat')}
-                aria-label="Chat Interface"
-                disabled={viewOnlyMode}
-              >
-                <FiMessageSquare size={24} />
-              </Button>
-            </Tooltip>
-          </Box>
-          
-          <Box as="li" position="relative" w="100%">
-            <Tooltip 
-              label={"Access Management"} 
-              placement="right" 
-              bg={colors.gray[900]} 
-              hasArrow
-            >
-              <Button 
-                {...getButtonStyles('access-management')}
-                onClick={() => handleButtonClick('access-management', null, '/access-management')}
-                aria-label="Access Management"
-                disabled={viewOnlyMode}
-              >
-                <FiKey size={24} />
-              </Button>
-            </Tooltip>
-          </Box>
-          
-          <Box as="li" position="relative" w="100%">
-            <Tooltip 
-              label={"Flow Builder"} 
-              placement="right" 
-              bg={colors.gray[900]} 
-              hasArrow
-            >
-              <Button 
-                {...getButtonStyles('flow-builder')}
-                onClick={() => handleButtonClick('flow-builder', null, '/flow-builder')}
-                aria-label="Flow Builder"
-                disabled={viewOnlyMode}
-              >
-                <FiLayout size={24} />
-              </Button>
-            </Tooltip>
-          </Box>
-          
-          <Box as="li" position="relative" w="100%">
-            <Tooltip 
-              label={"Marketplace"} 
-              placement="right" 
-              bg={colors.gray[900]} 
-              hasArrow
-            >
-              <Button 
-                {...getButtonStyles('marketplace')}
-                onClick={() => handleButtonClick('marketplace', null, '/marketplace')}
-                aria-label="Marketplace"
-                disabled={viewOnlyMode}
-              >
-                <FiShoppingBag size={24} />
-              </Button>
-            </Tooltip>
-          </Box>
+          {/* Navigation Items */}
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Box key={item.name} as="li" position="relative" w="100%">
+                {isMobile ? (
+                  <Button 
+                    {...getButtonStyles(item.name)}
+                    onClick={() => handleButtonClick(item.name, null, item.route)}
+                    aria-label={item.label}
+                    disabled={viewOnlyMode}
+                  >
+                    <HStack spacing={3} w="100%">
+                      <Icon size={20} />
+                      <Text fontSize="md">{item.label}</Text>
+                    </HStack>
+                  </Button>
+                ) : (
+                  <Tooltip 
+                    label={item.label} 
+                    placement="right" 
+                    bg={colors.gray[900]} 
+                    hasArrow
+                  >
+                    <Button 
+                      {...getButtonStyles(item.name)}
+                      onClick={() => handleButtonClick(item.name, null, item.route)}
+                      aria-label={item.label}
+                      disabled={viewOnlyMode}
+                    >
+                      <Icon size={24} />
+                    </Button>
+                  </Tooltip>
+                )}
+              </Box>
+            );
+          })}
           
           <Box as="li" position="relative" w="100%" mt="auto">
-            <Tooltip label="Toggle Theme" placement="right" bg={colors.gray[900]} hasArrow>
+            {isMobile ? (
               <Button 
                 {...getButtonStyles('theme')}
                 onClick={() => handleButtonClick('theme', toggleColorMode)}
                 aria-label="Toggle Theme"
               >
-                {colorMode === 'light' ? <FiMoon size={24} /> : <FiSun size={24} />}
+                <HStack spacing={3} w="100%">
+                  {colorMode === 'light' ? <FiMoon size={20} /> : <FiSun size={20} />}
+                  <Text fontSize="md">Theme</Text>
+                </HStack>
               </Button>
-            </Tooltip>
+            ) : (
+              <Tooltip label="Toggle Theme" placement="right" bg={colors.gray[900]} hasArrow>
+                <Button 
+                  {...getButtonStyles('theme')}
+                  onClick={() => handleButtonClick('theme', toggleColorMode)}
+                  aria-label="Toggle Theme"
+                >
+                  {colorMode === 'light' ? <FiMoon size={24} /> : <FiSun size={24} />}
+                </Button>
+              </Tooltip>
+            )}
           </Box>
           
           {/* Wallet Button - Using our custom component */}
@@ -251,26 +234,40 @@ const NavPanel = ({
               iconColor={iconColor} 
               hoverBgColor={hoverBgColor}
               viewOnlyMode={viewOnlyMode}
-              
+              isMobile={isMobile}
             />
           </Box>
           
           <Box as="li" position="relative" w="100%" mb={3}>
-            <Tooltip 
-              label={"Settings"} 
-              placement="right" 
-              bg={colors.gray[900]} 
-              hasArrow
-            >
+            {isMobile ? (
               <Button 
                 {...getButtonStyles('settings')}
                 onClick={() => handleButtonClick('settings', null, '/settings')}
                 aria-label="Settings"
                 disabled={viewOnlyMode}
               >
-                <FiSettings size={24} />
+                <HStack spacing={3} w="100%">
+                  <FiSettings size={20} />
+                  <Text fontSize="md">Settings</Text>
+                </HStack>
               </Button>
-            </Tooltip>
+            ) : (
+              <Tooltip 
+                label={"Settings"} 
+                placement="right" 
+                bg={colors.gray[900]} 
+                hasArrow
+              >
+                <Button 
+                  {...getButtonStyles('settings')}
+                  onClick={() => handleButtonClick('settings', null, '/settings')}
+                  aria-label="Settings"
+                  disabled={viewOnlyMode}
+                >
+                  <FiSettings size={24} />
+                </Button>
+              </Tooltip>
+            )}
           </Box>
         </VStack>
       </Box>

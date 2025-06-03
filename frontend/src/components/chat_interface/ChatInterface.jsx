@@ -51,7 +51,7 @@ const AI_MODELS = [
 //   { id: 'code', name: 'Code', icon: FiCode }
 // ];
 
-const Message = ({ message }) => {
+const Message = ({ message, isMobile }) => {
   const isUser = message.role === "user";
 
   const userMessageBg = useColorModeValue(colors.chat.userMessageBg.light, colors.chat.userMessageBg.dark);
@@ -60,10 +60,10 @@ const Message = ({ message }) => {
   const iconColor = useColorModeValue(colors.chat.iconColor.light, colors.chat.iconColor.dark);
 
   return (
-    <Flex w="100%" maxW="900px" mx="auto" direction="column" mb={8}>
+    <Flex w="100%" maxW={isMobile ? "100%" : "900px"} mx="auto" direction="column" mb={isMobile ? 4 : 8}>
       <Flex justify={isUser ? "flex-end" : "flex-start"}>
         <Box
-          maxW={isUser ? "300px" : "70%"}
+          maxW={isUser ? (isMobile ? "80%" : "300px") : (isMobile ? "90%" : "70%")}
           p={3}
           borderRadius="lg"
           bg={isUser ? userMessageBg : assistantMessageBg}
@@ -124,6 +124,7 @@ const ChatInterface = ({
   thinkingState = { isThinking: false },
   messageThinkingStates = {},
   onToggleColorMode,
+  isMobile = false,
 }) => {
   const [input, setInput] = useState("");
   const [mentionActive, setMentionActive] = useState(false);
@@ -315,18 +316,21 @@ const handleSendMessage = () => {
   return (
     <Flex
       direction="column"
-      h={messages.length > 0 ? "100%" : "auto"} // Dynamic height
+      h="100%"
       bg={bgPrimary}
       color={textPrimary}
+      justify={isLanding && !isMobile ? "center" : "flex-start"}
       transition="height 0.3s ease" // Smooth transition for height change
     >
       {isLanding ? (
         <Flex
-          flex="1"
+          flex={isMobile ? "1" : "0"}
           direction="column"
           justify="center"
           align="center"
           px={4}
+          pt={isMobile ? 20 : 0}
+          mb={isMobile ? 0 : 4}
         >
           <Text fontSize="2xl" fontWeight="medium">
             Good afternoon, User.
@@ -336,12 +340,18 @@ const handleSendMessage = () => {
           </Text>
         </Flex>
       ) : (
-<Box flex="1" overflowY="auto" px={6} py={10}>
+<Box 
+  flex="1" 
+  overflowY="auto" 
+  px={isMobile ? 4 : 6} 
+  py={isMobile ? 16 : 10}
+  pb={isMobile ? 140 : 10}
+>
   {/* Render messages with ThinkingUI positioned after the last user message */}
   {messages.map((message, index) => {
     // First render the current message
     const messageElement = (
-      <Message key={message.id} message={message} />
+      <Message key={message.id} message={message} isMobile={isMobile} />
     );
     
     // Check if this is the very last user message in the entire conversation
@@ -360,7 +370,8 @@ const handleSendMessage = () => {
           <ThinkingUI 
             thinkingState={messageThinkingState} 
             query={message.content} 
-            shouldPersist={true} 
+            shouldPersist={true}
+            isMobile={isMobile} 
           />
         </Fragment>
       );
@@ -400,7 +411,18 @@ const handleSendMessage = () => {
       )} */}
 
       {/* Footer with input */}
-      <Box p={5} pb={10} > {/* Add position relative here */}
+      <Box 
+        p={isMobile ? 3 : 5} 
+        pb={isMobile ? 3 : 10}
+        position={(isMobile && isLanding) ? "fixed" : "relative"}
+        bottom={(isMobile && isLanding) ? 0 : "auto"}
+        left={(isMobile && isLanding) ? 0 : "auto"}
+        right={(isMobile && isLanding) ? 0 : "auto"}
+        bg={bgPrimary}
+        borderTop={(isMobile && isLanding) ? "1px solid" : "none"}
+        borderColor={borderColor}
+        w="100%"
+      >
         <Flex
           direction="column"
           borderRadius="lg"
@@ -408,7 +430,7 @@ const handleSendMessage = () => {
           border="1px solid"
           borderColor={borderColor}
           p={2}
-          maxW={isLanding ? "600px" : "900px"}
+          maxW={isLanding ? (isMobile ? "100%" : "600px") : (isMobile ? "100%" : "900px")}
           mx="auto"
           boxShadow="sm"
         //   position="relative" // Add position relative here without disturbing layout
@@ -444,8 +466,8 @@ const handleSendMessage = () => {
             <Box
               position="absolute"
               // Position based on chat state: below input for new chat, above input for existing chat
-              top={isLanding ? "58%" : "auto"}
-              bottom={isLanding ? "auto" : "16%"}
+              top={isLanding ? (isMobile ? "auto" : "58%") : "auto"}
+              bottom={isLanding ? (isMobile ? "100%" : "auto") : (isMobile ? "100%" : "16%")}
             //   left="50%"
             //   transform="translateX(-40%)"
               width="50%"

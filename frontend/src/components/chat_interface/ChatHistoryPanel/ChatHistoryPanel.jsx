@@ -37,7 +37,8 @@ const ChatHistoryPanel = ({
   editingChatId,
   setEditingChatId,
   newTitle,
-  setNewTitle
+  setNewTitle,
+  isMobile = false
 }) => {
   // Colors that adapt to light/dark mode
   const bgColor = useColorModeValue(colors.chat.bgTertiary.light, colors.chat.bgTertiary.dark);
@@ -66,8 +67,8 @@ const ChatHistoryPanel = ({
     setEditingChatId(null);
   };
 
-  // Collapsed sidebar view
-  if (!isOpen) {
+  // Collapsed sidebar view (not shown on mobile)
+  if (!isOpen && !isMobile) {
     return (
       <Box
         w="56px"
@@ -127,7 +128,7 @@ const ChatHistoryPanel = ({
   // Expanded sidebar view
   return (
     <Box
-      w="280px"
+      w={isMobile ? "100%" : "280px"}
       h="100%"
       borderRight="1px solid"
       borderColor={borderColor}
@@ -135,35 +136,66 @@ const ChatHistoryPanel = ({
       transition="width 0.3s ease"
       overflow="hidden"
       position="relative"
+      borderTopRadius={isMobile ? "xl" : "0"}
     >
-      <Flex direction="column" h="100%">
+      <Flex direction="column" h="100%" >
+        {/* Mobile drawer handle */}
+        {isMobile && (
+          <Flex justify="center" py={2}>
+            <Box
+              w="40px"
+              h="4px"
+              bg={borderColor}
+              borderRadius="full"
+              
+            />
+          </Flex>
+        )}
+        
         <Flex p={4} borderBottom="1px solid" borderColor={borderColor} align="center" justify="space-between">
           <Text fontWeight="bold" color={textColor}>Neural Chat</Text>
-          <IconButton
-            icon={<FaAngleDoubleLeft size="16px" />}
-            aria-label="Collapse sidebar"
-            variant="ghost"
-            size="sm"
-            color={iconColor}
-            _hover={{ color: textColor }}
-            onClick={onToggleSidebar}
-          />
+          {isMobile ? (
+            <Button 
+              leftIcon={<FiPlus />} 
+              onClick={onNewChat} 
+              size="sm"
+              bg={buttonBgColor}
+              color={textColor}
+              _hover={{ bg: buttonHoverBgColor }}
+              boxShadow="sm"
+              borderRadius="md"
+            >
+              New Chat
+            </Button>
+          ) : (
+            <IconButton
+              icon={<FaAngleDoubleLeft size="16px" />}
+              aria-label="Collapse sidebar"
+              variant="ghost"
+              size="sm"
+              color={iconColor}
+              _hover={{ color: textColor }}
+              onClick={onToggleSidebar}
+            />
+          )}
         </Flex>
         
-        <Box p={3}>
-          <Button 
-            leftIcon={<FiPlus />} 
-            onClick={onNewChat} 
-            width="100%" 
-            bg={buttonBgColor}
-            color={textColor}
-            _hover={{ bg: buttonHoverBgColor }}
-            boxShadow="sm"
-            borderRadius="md"
-          >
-            New Chat
-          </Button>
-        </Box>
+        {!isMobile && (
+          <Box p={3}>
+            <Button 
+              leftIcon={<FiPlus />} 
+              onClick={onNewChat} 
+              width="100%" 
+              bg={buttonBgColor}
+              color={textColor}
+              _hover={{ bg: buttonHoverBgColor }}
+              boxShadow="sm"
+              borderRadius="md"
+            >
+              New Chat
+            </Button>
+          </Box>
+        )}
         
         <Box px={3} py={2}>
           <Text fontSize="xs" fontWeight="medium" color={mutedTextColor} textTransform="uppercase">
@@ -247,7 +279,7 @@ const ChatHistoryPanel = ({
                 >
                   <Flex align="center">
                     <Box as={FiMessageCircle} mr={2} color={iconColor} />
-                    <Text color={textColor} fontSize="sm" isTruncated maxW="180px">{chat.title}</Text>
+                    <Text color={textColor} fontSize="sm" isTruncated maxW={isMobile ? "250px" : "180px"}>{chat.title}</Text>
                   </Flex>
                   <Flex 
                     visibility="hidden" 

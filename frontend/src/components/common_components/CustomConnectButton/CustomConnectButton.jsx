@@ -6,7 +6,9 @@ import {
   Button, 
   useColorModeValue,
   Tooltip,
-  useColorMode
+  useColorMode,
+  HStack,
+  Text
 } from '@chakra-ui/react';
 import { 
   useCurrentAccount, 
@@ -23,7 +25,8 @@ import * as WalletAuth from '../../../components/auth/WalletSignatureService';
 const CustomConnectButton = ({ 
   iconColor, 
   hoverBgColor, 
-  viewOnlyMode = false
+  viewOnlyMode = false,
+  isMobile = false
 }) => {
   // Use dApp Kit hooks
   const currentAccount = useCurrentAccount();
@@ -98,11 +101,11 @@ const CustomConnectButton = ({
   // Button styles
   const buttonStyles = {
     w: "100%",
-    h: "56px",
-    justifyContent: "center",
+    h: isMobile ? "48px" : "56px",
+    justifyContent: isMobile ? "flex-start" : "center",
     alignItems: "center",
     display: "flex",
-    borderRadius: 0,
+    borderRadius: isMobile ? "md" : 0,
     bg: "transparent", 
     color: iconColor,
     _hover: { 
@@ -113,23 +116,20 @@ const CustomConnectButton = ({
 
   return (
     <>
-      <Tooltip 
-        label={walletTooltip}
-        placement="right" 
-        bg={useColorModeValue("gray.900", "gray.900")} 
-        hasArrow
-      >
+      {isMobile ? (
         <Button 
           {...buttonStyles}
           onClick={handleWalletAction}
           aria-label={connected ? "Disconnect Wallet" : "Connect Wallet"}
           disabled={viewOnlyMode || isDisconnecting}
+          px={4}
         >
-          {isDisconnecting ? (
+          <HStack spacing={3} w="100%">
+            {isDisconnecting ? (
             <Box 
               position="relative" 
-              w="24px" 
-              h="24px" 
+              w="20px" 
+              h="20px" 
               display="flex" 
               alignItems="center" 
               justifyContent="center"
@@ -139,15 +139,17 @@ const CustomConnectButton = ({
                 border="2px solid"
                 borderColor={iconColor}
                 borderRadius="full"
-                width="24px"
-                height="24px"
+                width="20px"
+                height="20px"
                 borderBottomColor="transparent"
                 animation="spin 1s linear infinite"
               />
             </Box>
           ) : (
-            <img src={getWalletIcon()} alt="Wallet Icon" width="25px" height="25px" />
-          )}
+            <img src={getWalletIcon()} alt="Wallet Icon" width="20px" height="20px" />
+            )}
+            <Text fontSize="md">SUI Wallet</Text>
+          </HStack>
           
           {connected && (
             <Box 
@@ -161,7 +163,57 @@ const CustomConnectButton = ({
             />
           )}
         </Button>
-      </Tooltip>
+      ) : (
+        <Tooltip 
+          label={walletTooltip}
+          placement="right" 
+          bg={useColorModeValue("gray.900", "gray.900")} 
+          hasArrow
+        >
+          <Button 
+            {...buttonStyles}
+            onClick={handleWalletAction}
+            aria-label={connected ? "Disconnect Wallet" : "Connect Wallet"}
+            disabled={viewOnlyMode || isDisconnecting}
+          >
+            {isDisconnecting ? (
+              <Box 
+                position="relative" 
+                w="24px" 
+                h="24px" 
+                display="flex" 
+                alignItems="center" 
+                justifyContent="center"
+              >
+                <Box 
+                  position="absolute"
+                  border="2px solid"
+                  borderColor={iconColor}
+                  borderRadius="full"
+                  width="24px"
+                  height="24px"
+                  borderBottomColor="transparent"
+                  animation="spin 1s linear infinite"
+                />
+              </Box>
+            ) : (
+              <img src={getWalletIcon()} alt="Wallet Icon" width="25px" height="25px" />
+            )}
+            
+            {connected && (
+              <Box 
+                position="absolute"
+                bottom="12px"
+                right="12px"
+                w="8px"
+                h="8px"
+                bg="green.400"
+                borderRadius="full"
+              />
+            )}
+          </Button>
+        </Tooltip>
+      )}
       
       {/* Our custom wallet method selector */}
       <WalletMethodSelector
