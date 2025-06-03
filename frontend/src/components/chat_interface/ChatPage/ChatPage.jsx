@@ -134,7 +134,7 @@ const ChatPage = () => {
     }, 1000);
 
     // Connect to NeuraLabs backend WebSocket (port 8001)
-    const backendUrl = import.meta.env.REACT_APP_API_URL || 'http://localhost:8001';
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8001';
     const wsUrl = backendUrl.replace('http://', 'ws://').replace('https://', 'wss://') + `/api/chat/execute/${agentId}`;
     console.log('Attempting WebSocket connection to NeuraLabs backend:', wsUrl);
     
