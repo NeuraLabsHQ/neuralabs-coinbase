@@ -34,7 +34,7 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
   
   // Responsive values
   const isMobile = isMobileProp !== undefined ? isMobileProp : useBreakpointValue({ base: true, md: false });
-  const sidebarWidth = useBreakpointValue({ base: "100%", md: "250px" });
+  const sidebarWidth = isMobile ? "100%" : "250px";
   const maxBoxWidth = useBreakpointValue({ base: "100%", md: "900px" });
 
   // Typing effect states
