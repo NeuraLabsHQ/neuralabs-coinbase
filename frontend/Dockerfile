@@ -2,19 +2,22 @@ FROM node:22-alpine3.18 as build
 
 WORKDIR /app
 
-
-# Copy only necessary files for npm install
+# Copy package files for dependency installation
 COPY package*.json ./
-# COPY config-overrides.js ./
 
+RUN npm install
 
-
-RUN npm install --force
-
-# Copy only necessary source files
+# Copy source files and configuration
 COPY public/ ./public
 COPY src/ ./src
-copy *.js ./
+COPY index.html ./
+COPY vite.config.js ./
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
+COPY tsconfig.json ./
+
+# Copy production environment file as .env
+COPY production.env .env
 
 ENV GENERATE_SOURCEMAP=false
 
@@ -26,8 +29,8 @@ FROM nginx:alpine
 # Remove default nginx static assets
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copy static assets from builder stage
-COPY --from=build /app/build /usr/share/nginx/html
+# Copy static assets from builder stage (Vite builds to 'dist' not 'build')
+COPY --from=build /app/dist /usr/share/nginx/html
 
 # Copy nginx config
 # COPY nginx_config/custom-nginx.conf /etc/nginx/nginx.conf
