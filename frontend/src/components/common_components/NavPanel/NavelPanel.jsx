@@ -74,16 +74,19 @@ const NavPanel = ({
     }
     
     // Show mobile restriction message for flow-builder
-    if (isMobile && buttonName === 'flow-builder') {
-      toast({
-        title: "Desktop Only",
-        description: "The Flow Builder requires a desktop or laptop computer for the best experience. Please access this page from a larger screen.",
-        status: "info",
-        duration: 4000,
-        isClosable: true,
-        position: "top"
-      });
-      return;
+    if (buttonName === 'flow-builder') {
+      const isMobileCheck = window.innerWidth < 1024;
+      if (isMobileCheck) {
+        toast({
+          title: "Desktop Only",
+          description: "The Flow Builder requires a desktop or laptop computer for the best experience. Please access this page from a larger screen.",
+          status: "info",
+          duration: 4000,
+          isClosable: true,
+          position: "top"
+        });
+        return;
+      }
     }
     
     // Navigate if route is provided
@@ -99,7 +102,8 @@ const NavPanel = ({
 
   const getButtonStyles = (buttonName) => {
     const isButtonActive = isActive(buttonName);
-    const isDisabled = (viewOnlyMode && buttonName !== 'theme') || (isMobile && buttonName === 'flow-builder');
+    const isMobileCheck = typeof window !== 'undefined' ? window.innerWidth < 1024 : false;
+    const isDisabled = (viewOnlyMode && buttonName !== 'theme') || (isMobileCheck && buttonName === 'flow-builder');
     
     return {
       w: "100%",
@@ -117,7 +121,12 @@ const NavPanel = ({
         cursor: isDisabled ? "not-allowed" : "pointer"
       }
     };
-  };insn: FiMessageSquare, route: '/chat' },
+  };
+  
+  // Navigation items configuration
+  const navItems = [
+    { name: 'home', label: 'Dashboard', icon: FiHome, route: '/dashboard' },
+    { name: 'chat', label: 'Chat', icon: FiMessageSquare, route: '/chat' },
     { name: 'access-management', label: 'Access Management', icon: FiKey, route: '/access-management' },
     { name: 'flow-builder', label: 'Flow Builder', icon: FiLayout, route: '/flow-builder' },
     { name: 'marketplace', label: 'Marketplace', icon: FiShoppingBag, route: '/marketplace' },

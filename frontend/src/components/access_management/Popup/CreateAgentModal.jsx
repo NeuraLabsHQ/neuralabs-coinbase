@@ -141,14 +141,37 @@ const CreateAgentModal = ({ isOpen, onClose, onCreateAgent }) => {
 
   const isFormValid = formData.name.trim() && formData.description.trim();
 
+  // Check if mobile (screen width less than 768px)
+  const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
+
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} isCentered size="lg">
+    <Modal 
+      isOpen={isOpen} 
+      onClose={handleClose} 
+      isCentered={!isMobile}
+      size={isMobile ? "full" : "lg"}
+    >
       <ModalOverlay />
-      <ModalContent bg={bgColor} color={textColor} borderRadius="md" maxW="600px">
-        <ModalHeader fontSize="lg" fontWeight="bold">
+      <ModalContent 
+        bg={bgColor} 
+        color={textColor} 
+        borderRadius={isMobile ? "none" : "md"} 
+        maxW={isMobile ? "100%" : "600px"}
+        h={isMobile ? "100vh" : "auto"}
+        m={isMobile ? 0 : undefined}
+      >
+        <ModalHeader 
+          fontSize="lg" 
+          fontWeight="bold"
+          p={isMobile ? 4 : 6}
+        >
           Create New Agent
         </ModalHeader>
-        <ModalBody>
+        <ModalBody 
+          p={isMobile ? 4 : 6}
+          overflowY={isMobile ? "auto" : "visible"}
+          flex="1"
+        >
           <VStack spacing={4} align="stretch">
             {/* Prerequisites Section */}
             <Box>
@@ -335,13 +358,19 @@ const CreateAgentModal = ({ isOpen, onClose, onCreateAgent }) => {
           </VStack>
         </ModalBody>
 
-        <ModalFooter>
+        <ModalFooter 
+          p={isMobile ? 4 : 6}
+          flexDirection={isMobile ? "column" : "row"}
+          gap={isMobile ? 3 : 0}
+        >
           <Button
             variant="outline"
             colorScheme="gray"
-            mr={3}
+            mr={isMobile ? 0 : 3}
             onClick={handleClose}
             size="sm"
+            w={isMobile ? "100%" : "auto"}
+            order={isMobile ? 2 : 1}
           >
             Cancel
           </Button>
@@ -352,6 +381,8 @@ const CreateAgentModal = ({ isOpen, onClose, onCreateAgent }) => {
             isLoading={isLoading}
             loadingText="Creating..."
             isDisabled={!isFormValid}
+            w={isMobile ? "100%" : "auto"}
+            order={isMobile ? 1 : 2}
           >
             Create Agent
           </Button>
