@@ -63,13 +63,11 @@ const Layout = ({ children }) => {
         {/* Mobile Header with Menu Button */}
         {isMobile && (
           <Box 
-            position="relative" 
-            pt={4}
-            pr={4}
-            pl={4}
+            position={location.pathname === '/dashboard' ? 'fixed' : 'relative'}
+            p={4}
             // pb={0} 
             zIndex={10}
-            bg={mobileBg}
+            bg={location.pathname === '/dashboard' ? 'transparent' : mobileBg}
           >
             <IconButton
               icon={<FiMenu size={24} />}
