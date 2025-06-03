@@ -64,7 +64,10 @@ const Layout = ({ children }) => {
         {isMobile && (
           <Box 
             position="relative" 
-            p={4} 
+            pt={4}
+            pr={4}
+            pl={4}
+            // pb={0} 
             zIndex={10}
             bg={mobileBg}
           >

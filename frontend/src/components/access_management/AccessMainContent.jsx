@@ -33,7 +33,7 @@ import {
     VStack
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { FiFile, FiFilter, FiMoreHorizontal, FiSearch } from 'react-icons/fi';
+import { FiFile, FiFilter, FiMoreHorizontal, FiSearch, FiCheck, FiAlertTriangle } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import colors from '../../color';
 import { accessManagementApi } from '../../utils/access-api';
@@ -239,23 +239,32 @@ const AccessMainContent = ({ currentView }) => {
     >
       {/* Header Section */}
       <Flex 
+        direction={isMobile ? "column" : "row"}
         justify="space-between" 
-        align="center" 
-        p={6}
+        align={isMobile ? "stretch" : "center"} 
+        p={isMobile ? 4 : 6}
+        gap={isMobile ? 4 : 0}
         borderBottom="1px"
         borderColor={borderColor}
       >
         <Heading 
           as="h1" 
-          size="lg" 
+          size={isMobile ? "md" : "lg"} 
           color={headingColor}
+          mb={isMobile ? 2 : 0}
         >
           {getHeadingText()}
         </Heading>
         
-        <HStack spacing={4}>
+        <Flex 
+          direction="row"
+          spacing={4}
+          gap={4}
+          w={isMobile ? "100%" : "auto"}
+          align="center"
+        >
           {/* Search Input */}
-          <InputGroup size="md" maxW="400px">
+          <InputGroup size={isMobile ? "sm" : "md"} flex="1">
             <InputLeftElement pointerEvents="none">
               <FiSearch color={colors.gray[500]} />
             </InputLeftElement>
@@ -276,6 +285,8 @@ const AccessMainContent = ({ currentView }) => {
               icon={<FiFilter />}
               variant="outline"
               aria-label="Filter"
+              size={isMobile ? "sm" : "md"}
+              flexShrink={0}
             />
             <MenuList>
               <MenuItem>All Flows</MenuItem>
@@ -284,11 +295,11 @@ const AccessMainContent = ({ currentView }) => {
               <MenuItem>Recently Modified</MenuItem>
             </MenuList>
           </Menu>
-        </HStack>
+        </Flex>
       </Flex>
 
       {/* Table Section */}
-      <Box flex="1" overflowY="auto" p={6}>
+      <Box flex="1" overflowY="auto" p={isMobile ? 4 : 6}>
         {/* Loading State */}
         {isLoading && (
           <Center h="full" py={10}>
@@ -346,17 +357,18 @@ const AccessMainContent = ({ currentView }) => {
             borderRadius="lg"
             overflow="hidden"
           >
-            <Table variant="simple" size="md">
-              <Thead bg={tableHeaderBg}>
-                <Tr>
-                  <Th color={textColor}>Name</Th>
-                  <Th color={textColor}>Description</Th>
-                  <Th color={textColor}>Access Level</Th>
-                  <Th color={textColor}>Date Created</Th>
-                  <Th color={textColor}>Status</Th>
-                  <Th width="50px"></Th>
-                </Tr>
-              </Thead>
+            <Box overflowX="auto">
+              <Table variant="simple" size={isMobile ? "sm" : "md"}>
+                <Thead bg={tableHeaderBg}>
+                  <Tr>
+                    <Th color={textColor} minW="200px">Name</Th>
+                    {!isMobile && <Th color={textColor}>Description</Th>}
+                    <Th color={textColor} display={isMobile ? "none" : "table-cell"}>Access Level</Th>
+                    <Th color={textColor} display={isMobile ? "none" : "table-cell"}>Date Created</Th>
+                    <Th color={textColor}>Status</Th>
+                    <Th width="50px"></Th>
+                  </Tr>
+                </Thead>
               <Tbody>
               {filteredFlows.map((flow) => (
                 <Tr 
@@ -364,26 +376,28 @@ const AccessMainContent = ({ currentView }) => {
                   _hover={{ bg: hoverBg, cursor: 'pointer' }}
                   onClick={() => handleFlowClick(flow)}
                 >
-                  <Td>
+                  <Td minW="200px">
                     <HStack spacing={3}>
                       <Box
                         as={FiFile}
                         color="blue.500"
-                        fontSize="20px"
+                        fontSize={isMobile ? "16px" : "20px"}
                       />
                       <VStack align="start" spacing={0}>
-                        <Text fontWeight="medium" color={headingColor}>
+                        <Text fontWeight="medium" color={headingColor} fontSize={isMobile ? "sm" : "md"}>
                           {flow.name || 'Unnamed Flow'}
                         </Text>
                       </VStack>
                     </HStack>
                   </Td>
-                  <Td>
-                    <Text fontSize="sm" color={textColor} noOfLines={1}>
-                      {flow.description || '-'}
-                    </Text>
-                  </Td>
-                  <Td>
+                  {!isMobile && (
+                    <Td>
+                      <Text fontSize="sm" color={textColor} noOfLines={1}>
+                        {flow.description || '-'}
+                      </Text>
+                    </Td>
+                  )}
+                  <Td display={isMobile ? "none" : "table-cell"}>
                     {flow.access_level_name ? (
                       <Badge size="sm" colorScheme="blue">
                         {flow.access_level_name}
@@ -392,18 +406,26 @@ const AccessMainContent = ({ currentView }) => {
                       <Text fontSize="sm" color={textColor}>-</Text>
                     )}
                   </Td>
-                  <Td>
+                  <Td display={isMobile ? "none" : "table-cell"}>
                     <Text fontSize="sm" color={textColor}>
                       {formatDate(flow.creation_date)}
                     </Text>
                   </Td>
                   <Td>
-                    <Badge 
-                      colorScheme={getStatusColor(flow.status)}
-                      size="sm"
-                    >
-                      {flow.status === 'Active' ? 'Published' : flow.status || 'Draft'}
-                    </Badge>
+                    {isMobile ? (
+                      <Box
+                        as={flow.status === 'Active' ? FiCheck : FiAlertTriangle}
+                        color={flow.status === 'Active' ? 'green.500' : 'orange.500'}
+                        fontSize="18px"
+                      />
+                    ) : (
+                      <Badge 
+                        colorScheme={getStatusColor(flow.status)}
+                        size="sm"
+                      >
+                        {flow.status === 'Active' ? 'Published' : flow.status || 'Draft'}
+                      </Badge>
+                    )}
                   </Td>
                   <Td>
                     <Menu>
@@ -440,6 +462,7 @@ const AccessMainContent = ({ currentView }) => {
               ))}
               </Tbody>
             </Table>
+            </Box>
           </Box>
         )}
       </Box>

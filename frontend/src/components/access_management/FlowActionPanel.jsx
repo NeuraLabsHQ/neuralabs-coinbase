@@ -48,13 +48,29 @@ import flowIcons from "../../utils/my-flow-icons.json";
 
 const FlowActionPanel = ({ toggleSidebar, sidebarOpen, currentPage, onPageChange }) => {
   const [activeAction, setActiveAction] = useState('Summary');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const { currentWallet } = useCurrentWallet();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const isMobile = window.innerWidth < 1024; // Adjust breakpoint as needed
   
+  // Handle window resize for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    window.addEventListener('resize', handleResize);
+    
+    // Initial check
+    handleResize();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   // Update active action based on current page
-useEffect(() => {
+  useEffect(() => {
     const pageToAction = {
       'summary': 'Home',
       'chat': 'Chat',
@@ -79,8 +95,9 @@ useEffect(() => {
   }, [currentPage]);
 
 
-  // Use NavPanel color scheme
-  const bgColor = useColorModeValue('navbar.body.light', 'navbar.body.dark');
+  // Use NavPanel color scheme with custom desktop background
+  const desktopBgColor = useColorModeValue('navbar.body.light', '#131417');
+  const mobileBgColor = useColorModeValue('navbar.body.light', 'navbar.body.dark');
   const borderColor = useColorModeValue('navbar.border.light', 'navbar.border.dark');
   const iconColor = useColorModeValue('navbar.icon.light', 'navbar.icon.dark');
   const hoverBgColor = useColorModeValue('navbar.hover.light', 'navbar.hover.dark');
@@ -171,7 +188,7 @@ useEffect(() => {
         {/* Mobile Drawer */}
         <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="xs">
           <DrawerOverlay />
-          <DrawerContent bg={bgColor}>
+          <DrawerContent bg={mobileBgColor}>
             <DrawerCloseButton />
             <DrawerHeader borderBottomWidth="1px" borderColor={borderColor}>
               Flow Actions
@@ -224,7 +241,7 @@ useEffect(() => {
     <Box
       w="56px"
       h="100%"
-      bg={bgColor}
+      bg={desktopBgColor}
       borderRight="1px solid"
       borderColor={borderColor}
       display="flex"
