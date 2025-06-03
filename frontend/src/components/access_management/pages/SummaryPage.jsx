@@ -1,5 +1,6 @@
 // src/components/access_management/pages/SummaryPage.jsx
 import { Box, useColorModeValue } from '@chakra-ui/react';
+import { useState, useEffect } from 'react';
 import FlowDetailComponent from '../FlowDetailComponent';
 import colors from '../../../color';
 
@@ -70,9 +71,24 @@ const SummaryPage = ({ agentData }) => {
     monetization: agentData.monetization || 'None',
   };
 
+  // State for mobile detection with resize listener
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Check if window is available (client-side)
+    if (typeof window !== 'undefined') {
+      const checkMobile = () => window.innerWidth < 768;
+      setIsMobile(checkMobile());
+      
+      const handleResize = () => setIsMobile(checkMobile());
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
+
   return (
     <Box 
-      p={6} 
+      p={isMobile ? 4 : 6} 
       bg={bgColor} 
       h="100%" 
       overflow="auto"

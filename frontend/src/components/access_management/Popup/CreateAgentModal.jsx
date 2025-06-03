@@ -23,7 +23,7 @@ import {
     useColorModeValue,
     VStack,
 } from "@chakra-ui/react";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiPlus, FiX } from "react-icons/fi";
 
 const CreateAgentModal = ({ isOpen, onClose, onCreateAgent }) => {
@@ -141,8 +141,20 @@ const CreateAgentModal = ({ isOpen, onClose, onCreateAgent }) => {
 
   const isFormValid = formData.name.trim() && formData.description.trim();
 
-  // Check if mobile (screen width less than 768px)
-  const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
+  // State for mobile detection with resize listener
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Check if window is available (client-side)
+    if (typeof window !== 'undefined') {
+      const checkMobile = () => window.innerWidth < 768;
+      setIsMobile(checkMobile());
+      
+      const handleResize = () => setIsMobile(checkMobile());
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
 
   return (
     <Modal 

@@ -9,7 +9,8 @@ import {
   Textarea,
   useColorModeValue,
   useToast,
-  VStack
+  VStack,
+  useBreakpointValue
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import { FiEdit, FiEye, FiSave } from 'react-icons/fi';
@@ -52,9 +53,10 @@ Add contribution guidelines...
 ${agentData.license || 'MIT'} License
 `);
   const [isLoading, setIsLoading] = useState(false);
-  const [viewMode, setViewMode] = useState('split'); // 'edit', 'preview', 'split'
+  const [viewMode, setViewMode] = useState('edit'); // 'edit', 'preview', 'split'
   
   const toast = useToast();
+  const isMobile = useBreakpointValue({ base: true, md: false });
   
   const bgColor = useColorModeValue(colors.accessManagement.mainContent.bg.light, colors.accessManagement.mainContent.bg.dark);
   const cardBg = useColorModeValue(colors.accessManagement.flowCard.bg.light, colors.accessManagement.flowCard.bg.dark);
@@ -102,47 +104,60 @@ ${agentData.license || 'MIT'} License
   };
 
   return (
-    <Box p={6} bg={bgColor} h="100%" overflow="hidden" display="flex" flexDirection="column">
+    <Box p={isMobile ? 3 : 6} bg={bgColor} h="100%" overflow="hidden" display="flex" flexDirection="column">
       <VStack align="stretch" spacing={4} flex="1" minH={0}>
-        <HStack justify="space-between">
-          <Heading size="lg" color={textColor}>
+        <Flex 
+          justify="space-between" 
+          align={isMobile ? "stretch" : "center"}
+          direction={isMobile ? "column" : "row"}
+          gap={isMobile ? 3 : 0}
+        >
+          <Heading size={isMobile ? "md" : "lg"} color={textColor}>
             Agent Documentation
           </Heading>
-          <HStack>
+          <HStack spacing={isMobile ? 2 : 3} wrap={isMobile ? "wrap" : "nowrap"}>
             <Button
-              size="sm"
+              size={isMobile ? "xs" : "sm"}
               variant={viewMode === 'edit' ? 'solid' : 'outline'}
               onClick={() => setViewMode('edit')}
               leftIcon={<FiEdit />}
+              flex={isMobile ? 1 : undefined}
+              minW={isMobile ? "auto" : undefined}
             >
               Edit
             </Button>
+            {!isMobile && (
+              <Button
+                size="sm"
+                variant={viewMode === 'split' ? 'solid' : 'outline'}
+                onClick={() => setViewMode('split')}
+              >
+                Split
+              </Button>
+            )}
             <Button
-              size="sm"
-              variant={viewMode === 'split' ? 'solid' : 'outline'}
-              onClick={() => setViewMode('split')}
-            >
-              Split
-            </Button>
-            <Button
-              size="sm"
+              size={isMobile ? "xs" : "sm"}
               variant={viewMode === 'preview' ? 'solid' : 'outline'}
               onClick={() => setViewMode('preview')}
               leftIcon={<FiEye />}
+              flex={isMobile ? 1 : undefined}
+              minW={isMobile ? "auto" : undefined}
             >
               Preview
             </Button>
             <Button
               leftIcon={<FiSave />}
               colorScheme="blue"
-              size="sm"
+              size={isMobile ? "xs" : "sm"}
               onClick={handleSave}
               isLoading={isLoading}
+              flex={isMobile ? "1 0 100%" : undefined}
+              minW={isMobile ? "auto" : undefined}
             >
-              Save Changes
+              {isMobile ? "Save" : "Save Changes"}
             </Button>
           </HStack>
-        </HStack>
+        </Flex>
         
         <Flex flex="1" gap={4} minH={0}>
           {/* Editor */}

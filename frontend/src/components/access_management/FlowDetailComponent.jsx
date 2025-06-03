@@ -11,6 +11,7 @@ import {
   useColorModeValue,
   Tooltip,
 } from "@chakra-ui/react";
+import { useState, useEffect } from "react";
 import { InfoIcon } from "@chakra-ui/icons";
 import { FaTwitter, FaGithub } from "react-icons/fa"; 
 import colors from '../../color';
@@ -106,6 +107,21 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
     }
   };
 
+  // State for mobile detection with resize listener
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Check if window is available (client-side)
+    if (typeof window !== 'undefined') {
+      const checkMobile = () => window.innerWidth < 768;
+      setIsMobile(checkMobile());
+      
+      const handleResize = () => setIsMobile(checkMobile());
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
+
   // Helper function to render field with tooltip
   const renderField = (key, label) => (
     <Flex
@@ -114,8 +130,10 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
       key={key}
       onMouseEnter={() => handleHover(key)}
       onMouseLeave={handleLeave}
+      direction={isMobile ? "column" : "row"}
+      gap={isMobile ? 1 : 0}
     >
-      <Flex align="center" w="180px">
+      <Flex align="center" w={isMobile ? "100%" : "180px"} minW={isMobile ? "auto" : "180px"}>
         {tooltips[key] && (
           <Tooltip
             label={tooltips[key]}
@@ -136,11 +154,19 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
             />
           </Tooltip>
         )}
-        <Text fontWeight="medium" color={mutedTextColor}>
+        <Text fontWeight="medium" color={mutedTextColor} fontSize={isMobile ? "sm" : "md"}>
           {label}
         </Text>
       </Flex>
-      <Text color={textColor}>{data[key]}</Text>
+      <Text 
+        color={textColor} 
+        wordBreak="break-word" 
+        overflow="hidden"
+        fontSize={isMobile ? "sm" : "md"}
+        flex="1"
+      >
+        {data[key]}
+      </Text>
     </Flex>
   );
 
@@ -148,18 +174,19 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
     <Box>
       <Heading
         as="h1"
-        size="xl"
+        size={isMobile ? "lg" : "xl"}
         color={textColor}
         mb={4}
         onMouseEnter={() => handleHover("flowName")}
         onMouseLeave={handleLeave}
+        wordBreak="break-word"
       >
         {data.name}
       </Heading>
 
       <Heading
         as="h2"
-        size="md"
+        size={isMobile ? "sm" : "md"}
         color={sectionTitleColor}
         mb={3}
         onMouseEnter={() => handleHover("generalWorkflow")}
@@ -173,20 +200,26 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
           w="100%"
           onMouseEnter={() => handleHover("description")}
           onMouseLeave={handleLeave}
+          direction={isMobile ? "column" : "row"}
+          gap={isMobile ? 1 : 0}
         >
-          <Text fontWeight="medium" mr={2} color={mutedTextColor}>
+          <Text fontWeight="medium" mr={isMobile ? 0 : 2} color={mutedTextColor} fontSize={isMobile ? "sm" : "md"}>
             Description:
           </Text>
-          <Text color={textColor}>{data.description}</Text>
+          <Text color={textColor} wordBreak="break-word" fontSize={isMobile ? "sm" : "md"}>
+            {data.description}
+          </Text>
         </Flex>
 
         <Flex
           w="100%"
           onMouseEnter={() => handleHover("tags")}
           onMouseLeave={handleLeave}
-          align="center"
+          direction={isMobile ? "column" : "row"}
+          align={isMobile ? "start" : "center"}
+          gap={isMobile ? 1 : 0}
         >
-          <Text fontWeight="medium" mr={2} color={mutedTextColor}>
+          <Text fontWeight="medium" mr={isMobile ? 0 : 2} color={mutedTextColor} fontSize={isMobile ? "sm" : "md"}>
             Tags:
           </Text>
           <Flex gap={2} wrap="wrap">
@@ -200,7 +233,7 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
                   py={1}
                   borderRadius="md"
                   textTransform="uppercase"
-                  fontSize="xs"
+                  fontSize={isMobile ? "xs" : "xs"}
                 >
                   {tag}
                 </Badge>
@@ -213,7 +246,7 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
       </VStack>
 
       {/* Creation & Related Info Section */}
-      <Box w="100%" py={3} px={4} bg={rowBgColor} borderRadius="md" mb={3}>
+      <Box w="100%" py={isMobile ? 2 : 3} px={isMobile ? 2 : 4} bg={rowBgColor} borderRadius="md" mb={3}>
         <VStack align="start" spacing={4}>
           {/* Creation Details */}
           <VStack align="start" spacing={2} w="100%">
@@ -247,7 +280,7 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
       {/* Deployment Summary Section */}
       <Heading
         as="h2"
-        size="md"
+        size={isMobile ? "sm" : "md"}
         color={sectionTitleColor}
         mb={3}
         onMouseEnter={() => handleHover("deploymentSummary")}
@@ -256,7 +289,7 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
         Deployment Summary
       </Heading>
 
-      <Box w="100%" py={3} px={4} bg={rowBgColor} borderRadius="md" mb={3}>
+      <Box w="100%" py={isMobile ? 2 : 3} px={isMobile ? 2 : 4} bg={rowBgColor} borderRadius="md" mb={3}>
         <VStack align="start" spacing={4}>
           {/* Deployment Details */}
           <VStack align="start" spacing={2} w="100%">

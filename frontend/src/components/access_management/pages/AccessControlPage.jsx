@@ -29,7 +29,8 @@ import {
   Tr,
   useColorModeValue,
   useToast,
-  VStack
+  VStack,
+  Flex
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { FiExternalLink, FiPlus, FiTrash2 } from 'react-icons/fi';
@@ -62,6 +63,21 @@ const AccessControlPage = ({ agentData }) => {
   
   const isPublished = agentData.status === 'Active';
   const nftId       = agentData.nft_id || agentData.blockchain_data?.nft_id;
+  
+  // State for mobile detection with resize listener
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Check if window is available (client-side)
+    if (typeof window !== 'undefined') {
+      const checkMobile = () => window.innerWidth < 768;
+      setIsMobile(checkMobile());
+      
+      const handleResize = () => setIsMobile(checkMobile());
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
   
   // Fetch existing access caps and access list on component mount
   useEffect(() => {
@@ -274,15 +290,19 @@ const AccessControlPage = ({ agentData }) => {
   };
 
   return (
-    <Box p={6} bg={bgColor} h="100%" overflow="auto">
-      <VStack align="stretch" spacing={6}>
-        <HStack justify="space-between">
+    <Box p={isMobile ? 4 : 6} bg={bgColor} h="100%" overflow="auto">
+      <VStack align="stretch" spacing={isMobile ? 4 : 6}>
+        <Flex 
+          justify="space-between" 
+          direction={isMobile ? "column" : "row"}
+          gap={isMobile ? 3 : 0}
+        >
           <VStack align="start" spacing={0}>
-            <Heading size="lg" color={textColor}>
+            <Heading size={isMobile ? "md" : "lg"} color={textColor}>
               Blockchain Access Control
             </Heading>
             {nftId && (
-              <Text fontSize="sm" color={mutedColor}>
+              <Text fontSize="sm" color={mutedColor} wordBreak="break-all">
                 NFT ID: {nftId.slice(0, 8)}...{nftId.slice(-6)}
               </Text>
             )}
@@ -292,10 +312,11 @@ const AccessControlPage = ({ agentData }) => {
             colorScheme="blue"
             size="sm"
             onClick={handleAddAccess}
+            alignSelf={isMobile ? "stretch" : "auto"}
           >
             Add Access
           </Button>
-        </HStack>
+        </Flex>
         
         {!isPublished && (
           <Alert status="warning" borderRadius="md">
@@ -307,17 +328,22 @@ const AccessControlPage = ({ agentData }) => {
         )}
         
         {/* Blockchain Details */}
-        <Box bg={cardBg} p={4} borderRadius="md" border="1px" borderColor={borderColor}>
+        <Box bg={cardBg} p={isMobile ? 3 : 4} borderRadius="md" border="1px" borderColor={borderColor}>
           <VStack align="stretch" spacing={3}>
-            <HStack justify="space-between">
-              <Text fontWeight="medium" color={mutedColor}>Chain:</Text>
-              <Text color={textColor}>SUI Testnet</Text>
-            </HStack>
+            <Flex justify="space-between" direction={isMobile ? "column" : "row"} gap={isMobile ? 1 : 0}>
+              <Text fontWeight="medium" color={mutedColor} fontSize={isMobile ? "sm" : "md"}>Chain:</Text>
+              <Text color={textColor} fontSize={isMobile ? "sm" : "md"}>SUI Testnet</Text>
+            </Flex>
             <Divider />
-            <HStack justify="space-between">
-              <Text fontWeight="medium" color={mutedColor}>Contract Address:</Text>
-              <HStack>
-                <Text color={textColor} fontSize="sm" isTruncated maxW="300px">
+            <Flex justify="space-between" direction={isMobile ? "column" : "row"} gap={isMobile ? 1 : 0}>
+              <Text fontWeight="medium" color={mutedColor} fontSize={isMobile ? "sm" : "md"}>Contract Address:</Text>
+              <HStack spacing={2} w={isMobile ? "100%" : "auto"}>
+                <Text 
+                  color={textColor} 
+                  fontSize="sm" 
+                  wordBreak="break-all"
+                  flex="1"
+                >
                   {agentData.contract_id || agentData.blockchain_data?.contract_id || 'Not deployed'}
                 </Text>
                 {(agentData.contract_id || agentData.blockchain_data?.contract_id) && (
@@ -329,34 +355,33 @@ const AccessControlPage = ({ agentData }) => {
                   />
                 )}
               </HStack>
-            </HStack>
+            </Flex>
             <Divider />
-            <HStack justify="space-between">
-              <Text fontWeight="medium" color={mutedColor}>Chain ID:</Text>
-              <Text color={textColor}>0x1</Text>
-            </HStack>
+            <Flex justify="space-between" direction={isMobile ? "column" : "row"} gap={isMobile ? 1 : 0}>
+              <Text fontWeight="medium" color={mutedColor} fontSize={isMobile ? "sm" : "md"}>Chain ID:</Text>
+              <Text color={textColor} fontSize={isMobile ? "sm" : "md"}>0x1</Text>
+            </Flex>
             <Divider />
-            <HStack justify="space-between">
-              <Text fontWeight="medium" color={mutedColor}>Deployment Status:</Text>
-              <Badge colorScheme={isPublished ? 'green' : 'orange'}>
+            <Flex justify="space-between" direction={isMobile ? "column" : "row"} gap={isMobile ? 1 : 0}>
+              <Text fontWeight="medium" color={mutedColor} fontSize={isMobile ? "sm" : "md"}>Deployment Status:</Text>
+              <Badge colorScheme={isPublished ? 'green' : 'orange'} fontSize={isMobile ? "xs" : "sm"}>
                 {isPublished ? 'Active' : 'Not Published'}
               </Badge>
-            </HStack>
+            </Flex>
             <Divider />
-
-          <HStack justify="space-between">
-              <Text fontWeight="medium" color={mutedColor}>Access Cap:</Text>
-                  <Text color={textColor} fontSize="sm" isTruncated maxW="300px">
-                  {accessCapId}
-                </Text>
-            </HStack>
+            <Flex justify="space-between" direction={isMobile ? "column" : "row"} gap={isMobile ? 1 : 0}>
+              <Text fontWeight="medium" color={mutedColor} fontSize={isMobile ? "sm" : "md"}>Access Cap:</Text>
+              <Text color={textColor} fontSize="sm" wordBreak="break-all">
+                {accessCapId || 'Not initialized'}
+              </Text>
+            </Flex>
           </VStack>
         </Box>
         
         {/* Access List */}
         <Box>
-          <HStack justify="space-between" mb={4}>
-            <Heading size="md" color={textColor}>
+          <Flex justify="space-between" mb={4} direction={isMobile ? "column" : "row"} gap={isMobile ? 2 : 0}>
+            <Heading size={isMobile ? "sm" : "md"} color={textColor}>
               Access Permissions
             </Heading>
             {isPublished && nftId && (
@@ -390,42 +415,49 @@ const AccessControlPage = ({ agentData }) => {
                 Refresh
               </Button>
             )}
-          </HStack>
-          <Box bg={cardBg} borderRadius="md" border="1px" borderColor={borderColor} overflow="hidden">
-            <Table variant="simple">
+          </Flex>
+          <Box bg={cardBg} borderRadius="md" border="1px" borderColor={borderColor} overflow={isMobile ? "auto" : "hidden"}>
+            <Table variant="simple" size={isMobile ? "sm" : "md"}>
               <Thead bg={useColorModeValue(colors.gray[50], colors.gray[800])}>
                 <Tr>
-                  <Th>Address</Th>
-                  <Th>Access Level</Th>
-                  <Th>Granted Date</Th>
-                  <Th width="100px">Actions</Th>
+                  <Th fontSize={isMobile ? "xs" : "sm"}>Address</Th>
+                  <Th fontSize={isMobile ? "xs" : "sm"} display={{ base: "none", sm: "table-cell" }}>Access Level</Th>
+                  <Th fontSize={isMobile ? "xs" : "sm"} display={{ base: "none", md: "table-cell" }}>Granted Date</Th>
+                  <Th fontSize={isMobile ? "xs" : "sm"} width="100px">Actions</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {accessList.length === 0 ? (
                   <Tr>
                     <Td colSpan={4} textAlign="center" py={8}>
-                      <Text color={mutedColor}>No access permissions granted yet</Text>
+                      <Text color={mutedColor} fontSize={isMobile ? "sm" : "md"}>No access permissions granted yet</Text>
                     </Td>
                   </Tr>
                 ) : (
                   accessList.map((access, index) => (
                     <Tr key={index}>
                       <Td>
-                        <HStack>
-                          <Text fontSize="sm" isTruncated maxW="300px">{access.address}</Text>
-                          <IconButton
-                            icon={<FiExternalLink />}
-                            size="xs"
-                            variant="ghost"
-                            onClick={() => window.open(`https://explorer.sui.io/address/${access.address}?network=testnet`, '_blank')}
-                          />
-                        </HStack>
+                        <VStack align="start" spacing={1}>
+                          <HStack>
+                            <Text fontSize={isMobile ? "xs" : "sm"} wordBreak="break-all">
+                              {isMobile ? `${access.address.slice(0, 10)}...${access.address.slice(-8)}` : access.address}
+                            </Text>
+                            <IconButton
+                              icon={<FiExternalLink />}
+                              size="xs"
+                              variant="ghost"
+                              onClick={() => window.open(`https://explorer.sui.io/address/${access.address}?network=testnet`, '_blank')}
+                            />
+                          </HStack>
+                          {isMobile && (
+                            <Badge colorScheme="blue" size="sm">Level {access.level}</Badge>
+                          )}
+                        </VStack>
                       </Td>
-                      <Td>
+                      <Td display={{ base: "none", sm: "table-cell" }}>
                         <Badge colorScheme="blue">Level {access.level}</Badge>
                       </Td>
-                      <Td>
+                      <Td display={{ base: "none", md: "table-cell" }}>
                         <Text fontSize="sm" color={mutedColor}>
                           {new Date(access.granted_date).toLocaleDateString()}
                         </Text>
@@ -433,7 +465,7 @@ const AccessControlPage = ({ agentData }) => {
                       <Td>
                         <IconButton
                           icon={<FiTrash2 />}
-                          size="sm"
+                          size={isMobile ? "xs" : "sm"}
                           variant="ghost"
                           colorScheme="red"
                           onClick={() => handleRevokeAccess(access.address)}
@@ -450,9 +482,16 @@ const AccessControlPage = ({ agentData }) => {
       </VStack>
       
       {/* Add Access Modal */}
-      <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)}>
+      <Modal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)}
+        size={isMobile ? "full" : "md"}
+      >
         <ModalOverlay />
-        <ModalContent>
+        <ModalContent 
+          margin={isMobile ? 0 : undefined}
+          borderRadius={isMobile ? "none" : "md"}
+        >
           <ModalHeader>Grant Access Permission</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
