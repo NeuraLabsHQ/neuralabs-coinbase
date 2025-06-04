@@ -10,7 +10,7 @@
     "@mizuwallet-sdk/core": "^1.4.0",
     "@mysten/bcs": "^1.6.0",
     "@mysten/dapp-kit": "^0.16.3",
-    "@mysten/seal": "^0.4.5",
+    "@mysten/seal": "^0.4.6",
     "@mysten/sui": "^1.29.1",
     "@mysten/walrus": "^0.1.1",
     "@pontem/wallet-adapter-plugin": "^0.2.1",
