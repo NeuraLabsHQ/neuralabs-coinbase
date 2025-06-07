@@ -45,6 +45,10 @@
   - [Seal Threshold Encryption](#seal-threshold-encryption)
   - [Concrete Implementation Patterns](#concrete-implementation-patterns)
   - [Security Features](#security-features)
+- [AWS Bedrock Integration](#aws-bedrock-integration)
+  - [Model Support and Selection](#model-support-and-selection)
+  - [Setup and Configuration](#setup-and-configuration)
+  - [Performance and Cost Optimization](#performance-and-cost-optimization)
 - [Components that we have used for cryptography](#components-that-we-have-used-for-cryptography)
   - [Setting up Salt serve](#setting-up-salt-serve)
   - [Setting up Prover service](#setting-up-prover-service)
@@ -531,6 +535,284 @@ execution_flow:
 ```
 
 This demonstrates how the engine handles complex dependency resolution automatically while maintaining efficient execution.
+
+This demonstrates how the engine handles complex dependency resolution automatically while maintaining efficient execution.
+
+# AWS Bedrock Integration
+
+The HPC Neura Execution Engine seamlessly integrates with AWS Bedrock to provide access to state-of-the-art language models from leading AI companies through a unified interface. Our integration supports multiple providers and advanced features like streaming responses and dynamic model selection.
+
+## Model Support and Selection
+
+We provide comprehensive support for multiple AI model providers through AWS Bedrock:
+
+```mermaid
+graph TB
+    subgraph "NeuraLabs HPC Engine"
+        FLOW[Flow Definition]
+        NODE[LLM Nodes]
+        CONFIG[Model Configuration]
+    end
+    
+    subgraph "AWS Bedrock"
+        API[Bedrock API]
+        MODELS[Foundation Models]
+        PROFILES[Inference Profiles]
+    end
+    
+    subgraph "Model Providers"
+        ANTHROPIC[Anthropic Claude<br/>3 Haiku, Sonnet, Opus]
+        DEEPSEEK[DeepSeek R1<br/>Advanced Reasoning]
+        META[Meta Llama<br/>8B, 70B variants]
+        MISTRAL[Mistral AI<br/>7B, Mixtral 8x7B]
+        OTHERS[AI21, Cohere<br/>Stability AI]
+    end
+    
+    FLOW --> NODE
+    NODE --> CONFIG
+    CONFIG --> API
+    
+    API --> MODELS
+    API --> PROFILES
+    
+    MODELS --> ANTHROPIC
+    PROFILES --> DEEPSEEK
+    MODELS --> META
+    MODELS --> MISTRAL
+    MODELS --> OTHERS
+```
+
+### Supported Model Categories
+
+| Provider | Models | Best For | Special Features |
+|----------|--------|----------|-----------------|
+| **Anthropic Claude** | Haiku, Sonnet, Opus | General AI tasks, analysis | 200K context, balanced performance |
+| **DeepSeek** | R1 (Reasoning) | Complex reasoning, math | Chain-of-thought, inference profiles |
+| **Meta Llama** | 8B, 70B Instruct | Cost-effective, open-source | Good general performance |
+| **Mistral AI** | 7B, Mixtral 8x7B | Multilingual, coding | Mixture of experts architecture |
+| **Others** | AI21, Cohere, Stability | Specialized use cases | Domain-specific capabilities |
+
+### Dynamic Model Selection
+
+Our system supports multiple levels of model configuration:
+
+1. **Environment Defaults**: Global model settings in `.env`
+2. **Flow Definition**: Per-node model specification
+3. **Runtime Overrides**: Dynamic model selection via API
+4. **Cost Optimization**: Automatic model selection based on complexity
+
+```yaml
+# Flow definition with multiple models
+nodes:
+  fast_processor:
+    type: llm_text
+    model: anthropic.claude-3-haiku-20240307-v1:0  # Fast, cost-effective
+    temperature: 0.7
+    
+  complex_analyzer:
+    type: llm_structured
+    model: anthropic.claude-3-opus-20240229-v1:0   # High capability
+    temperature: 0.3
+    
+  reasoning_engine:
+    type: llm_text
+    # DeepSeek requires full inference profile ARN
+    model: arn:aws:bedrock:us-east-2:559050205657:inference-profile/us.deepseek.r1-v1:0
+    max_tokens: 8000
+```
+
+## Setup and Configuration
+
+### Prerequisites and IAM Setup
+
+AWS Bedrock integration requires proper IAM configuration and model access requests:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream",
+        "bedrock:ListFoundationModels",
+        "bedrock:GetFoundationModel"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:GetModelInferenceProfile",
+        "bedrock:ListModelInferenceProfiles"
+      ],
+      "Resource": "arn:aws:bedrock:*:*:inference-profile/*"
+    }
+  ]
+}
+```
+
+### Environment Configuration
+
+Complete configuration setup for production deployment:
+
+```bash
+# Core AWS Configuration
+AWS_REGION=us-east-2
+AWS_ACCESS_KEY_ID=your_access_key_id
+AWS_SECRET_ACCESS_KEY=your_secret_access_key
+
+# Default Model Settings
+DEFAULT_MODEL_ID=anthropic.claude-3-haiku-20240307-v1:0
+DEFAULT_TEMPERATURE=0.7
+DEFAULT_MAX_TOKENS=1000
+
+# Streaming Configuration
+BEDROCK_STREAMING_ENABLED=true
+BEDROCK_STREAM_CHUNK_SIZE=256
+
+# Performance Optimization
+BEDROCK_MAX_RETRIES=3
+BEDROCK_CONNECTION_TIMEOUT=30
+BEDROCK_READ_TIMEOUT=300
+BEDROCK_MAX_POOL_CONNECTIONS=50
+
+# Cost Control
+BEDROCK_DAILY_TOKEN_LIMIT=1000000
+BEDROCK_ALERT_THRESHOLD_USD=100
+```
+
+### Model Access Management
+
+Before using any model, you must request access through AWS Console:
+
+1. **Navigate to Amazon Bedrock Console**
+2. **Model Access** → **Manage model access**
+3. **Select desired models**:
+   - Anthropic Claude (Haiku, Sonnet, Opus)
+   - DeepSeek R1 (if available)
+   - Meta Llama variants
+   - Mistral AI models
+4. **Submit request** (usually instant approval)
+
+### Regional Considerations
+
+| Region | Code | Model Coverage | Best For |
+|--------|------|----------------|----------|
+| US East (N. Virginia) | `us-east-1` | Most comprehensive | General use, widest selection |
+| US East (Ohio) | `us-east-2` | Most models | Lower cost, good coverage |
+| US West (Oregon) | `us-west-2` | Most models | West coast users |
+| Europe (Frankfurt) | `eu-central-1` | Limited selection | EU compliance |
+
+## Performance and Cost Optimization
+
+### Performance Characteristics
+
+Our integration provides optimized performance across different model types:
+
+| Model | Response Time | Context Window | Cost/1K tokens | Best Use Case |
+|-------|--------------|----------------|----------------|---------------|
+| Claude 3 Haiku | ~1-2s | 200K | $ | High-volume, fast responses |
+| Claude 3 Sonnet | ~2-4s | 200K | $ | Balanced workloads |
+| Claude 3 Opus | ~4-8s | 200K | $$ | Complex analysis |
+| DeepSeek R1 | ~3-6s | 64K | $ | Advanced reasoning |
+| Llama 3 8B | ~1-2s | 8K | $ | Cost-sensitive applications |
+
+### Streaming Implementation
+
+Advanced streaming support with special handling for reasoning models:
+
+```python
+# Standard streaming for most models
+async def stream_response(model_id, prompt):
+    response = bedrock_runtime.invoke_model_with_response_stream(
+        modelId=model_id,
+        body=json.dumps({
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 1000,
+            "temperature": 0.7
+        })
+    )
+    
+    for event in response['body']:
+        chunk = json.loads(event['chunk']['bytes'].decode())
+        if 'delta' in chunk:
+            yield chunk['delta']['text']
+
+# Special handling for DeepSeek reasoning
+async def stream_deepseek_reasoning(prompt):
+    # DeepSeek provides reasoning traces in <think></think> tags
+    # and final answers in <answer></answer> tags
+    reasoning_buffer = []
+    answer_buffer = []
+    
+    async for chunk in stream_response(deepseek_model_id, prompt):
+        if '<think>' in chunk:
+            # Process reasoning section
+            reasoning_buffer.append(chunk)
+        elif '<answer>' in chunk:
+            # Stream final answer to user
+            answer_buffer.append(chunk)
+            yield chunk
+```
+
+### Cost Optimization Strategies
+
+1. **Model Selection by Complexity**
+   - Simple tasks: Claude 3 Haiku or Llama 3 8B
+   - Balanced needs: Claude 3 Sonnet
+   - Complex analysis: Claude 3 Opus or DeepSeek R1
+
+2. **Smart Caching**
+   - Cache responses for repeated queries
+   - Implement response deduplication
+   - Use Redis for session-based caching
+
+3. **Token Management**
+   - Set appropriate `max_tokens` limits
+   - Optimize prompts for conciseness
+   - Use structured outputs for efficiency
+
+4. **Batch Processing**
+   - Group similar requests when possible
+   - Implement request queuing for non-urgent tasks
+   - Use parallel processing for independent requests
+
+### Runtime Configuration
+
+Dynamic configuration support for different execution contexts:
+
+```python
+# Runtime model overrides
+execution_config = {
+    "model_overrides": {
+        "classifier_node": "anthropic.claude-3-haiku-20240307-v1:0",  # Fast classification
+        "analyzer_node": "anthropic.claude-3-opus-20240229-v1:0",    # Deep analysis
+        "reasoner_node": "arn:aws:bedrock:us-east-2:559050205657:inference-profile/us.deepseek.r1-v1:0"
+    },
+    "parameter_overrides": {
+        "analyzer_node": {
+            "temperature": 0.2,  # More deterministic for analysis
+            "max_tokens": 4000
+        }
+    },
+    "cost_limits": {
+        "max_tokens_per_request": 2000,
+        "max_total_cost_usd": 10.0
+    }
+}
+```
+
+### Integration with HPC Engine
+
+The Bedrock integration seamlessly works with our HPC execution engine:
+
+- **Automatic Model Detection**: System detects model type and applies appropriate formatting
+- **Error Handling**: Comprehensive retry logic with exponential backoff
+- **Performance Monitoring**: Real-time metrics for token usage and response times
+- **Cost Tracking**: Automatic cost calculation and budget alerts
+- **Streaming Support**: Full SSE integration for real-time responses
 
 # Storage Infrastructure
 
@@ -1114,6 +1396,7 @@ entry fun seal_approve(
 | Access Grant | ~0.0005 SUI | O(1) | Single permission update |
 | Access Check | ~0.0001 SUI | O(1) | Read-only operation |
 | Seal Approve | ~0.0003 SUI | O(1) | Verification + approval |
+
 
 ## Setting up Salt Server
 
