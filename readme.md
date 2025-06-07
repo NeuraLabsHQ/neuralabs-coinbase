@@ -223,6 +223,56 @@ Blockchain provides the trustless infrastructure necessary for autonomous AI age
 
 ---
 
+# Components that we have used for cryptography
+
+Our cryptographic infrastructure consists of three main components working together to provide secure, decentralized authentication and encryption:
+
+## zkLogin Authentication System
+- **OAuth Integration**: Support for Google, Facebook, Apple, and custom OAuth2 providers
+- **Zero-Knowledge Proofs**: Privacy-preserving authentication without exposing Web2 credentials
+- **Salt Servers**: Deterministic address generation with rainbow table attack prevention
+- **Custom Prover Service**: Testnet-ready proof generation infrastructure at `https://prover.neuralabs.io`
+
+## Seal Threshold Encryption
+- **Distributed Key Generation (DKG)**: Trustless key management across multiple servers
+- **Threshold Cryptography**: t-out-of-n encryption for fault tolerance
+- **Smart Contract Integration**: `seal_approve` functions for access control
+- **Multiple Access Patterns**: Allowlist, subscription, and NFT-based access control
+
+## Walrus Decentralized Storage
+- **Content-Addressed Storage**: Immutable references for AI workflow definitions
+- **Encrypted Data Blobs**: Client-side encryption before storage with Seal integration
+- **Built-in Redundancy**: Distributed storage across multiple nodes with erasure coding
+- **Capability-Based Access**: Integration with Seal for encrypted blob access control
+- **Multi-Pattern Storage**: Support for AI models, workflows, datasets, and execution results
+
+---
+
+# Components that we have used for cryptography
+
+Our cryptographic infrastructure consists of three main components working together to provide secure, decentralized authentication and encryption:
+
+## zkLogin Authentication System
+- **OAuth Integration**: Support for Google, Facebook, Apple, and custom OAuth2 providers
+- **Zero-Knowledge Proofs**: Privacy-preserving authentication without exposing Web2 credentials
+- **Salt Servers**: Deterministic address generation with rainbow table attack prevention
+- **Custom Prover Service**: Testnet-ready proof generation infrastructure at `https://prover.neuralabs.io`
+
+## Seal Threshold Encryption
+- **Distributed Key Generation (DKG)**: Trustless key management across multiple servers
+- **Threshold Cryptography**: t-out-of-n encryption for fault tolerance
+- **Smart Contract Integration**: `seal_approve` functions for access control
+- **Multiple Access Patterns**: Allowlist, subscription, and NFT-based access control
+
+## Walrus Decentralized Storage
+- **Content-Addressed Storage**: Immutable references for AI workflow definitions
+- **Encrypted Data Blobs**: Client-side encryption before storage with Seal integration
+- **Built-in Redundancy**: Distributed storage across multiple nodes with erasure coding
+- **Capability-Based Access**: Integration with Seal for encrypted blob access control
+- **Multi-Pattern Storage**: Support for AI models, workflows, datasets, and execution results
+
+---
+
 # How to get started 
 
 - Docker Compose Codes
