@@ -1,5 +1,22 @@
 # NeuraLabs - Autonomous AI Agent Orchestration Platform
 
+<div align="center">
+  <img src="./assets/homepage.png" alt="NeuraLabs Logo" width="800"/>
+</div>
+
+<h2> Links </h2>
+
+ Landing Page : https://neuralabs.org/
+
+ Application Page : https://sui.neuralabs.org/dashboard
+
+ Demo Video : https://vimeo.com/1087247694/b4b80dc3ce?share=copy
+
+ Pitch Deck : https://drive.google.com/drive/folders/1W2VlQn1N9066GlI458ypqhCbuLQl1i2e?usp=sharing
+
+  <br> 
+  <h1> Introduction to NeuraLabs </h1>
+
 - [NeuraLabs - Autonomous AI Agent Orchestration Platform](#neuralabs---autonomous-ai-agent-orchestration-platform)
   - [Overview](#overview)
     - [Core Vision: Democratizing AI Ownership](#core-vision-democratizing-ai-ownership)
