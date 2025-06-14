@@ -8,39 +8,21 @@ import DashboardPage from './pages/home_page';
 import MarketplacePage from './pages/marketplace_page';
 import ChatInterfacePage from './pages/chat_interface_page';
 import AccessManagementPage from './pages/access_management_page';
-import ZkLoginCallback from './components/auth/ZkLoginCallback';
 import theme from './theme';
-import { createNetworkConfig, SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
-import { getFullnodeUrl } from '@mysten/sui/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import '@mysten/dapp-kit/dist/index.css';
-import { ZkLoginContextProvider } from './contexts/ZkLoginContext';
 import { Buffer } from 'buffer';
 
 
-// Required for SUI operations
+// Required for buffer operations
 window.Buffer = window.Buffer || Buffer;
 
-// Config options for the networks you want to connect to
-const { networkConfig } = createNetworkConfig({
-  testnet: { url: getFullnodeUrl('testnet') },
-  mainnet: { url: getFullnodeUrl('mainnet') },
-  devnet: { url: getFullnodeUrl('devnet') }, // Added for zkLogin testing
-});
-
 const queryClient = new QueryClient();
-
-// Google OAuth Client ID - Replace with your actual client ID
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CREDENTIALS;
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-        <SuiClientProvider networks={networkConfig} defaultNetwork={import.meta.env.VITE_SUI_NETWORK}>        
-          <WalletProvider autoConnect={true} preferredWallets={['Slush']}>
-          <ZkLoginContextProvider googleClientId={GOOGLE_CLIENT_ID}>
-            <ChakraProvider theme={theme}>
-              <ColorModeScript initialColorMode={theme.config.initialColorMode} />
+      <ChakraProvider theme={theme}>
+        <ColorModeScript initialColorMode={theme.config.initialColorMode} />
               <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -87,14 +69,9 @@ function App() {
                       <AccessManagementPage />
                     </Layout>
                   } />
-                  {/* Add zkLogin callback route */}
-                  <Route path="/auth/callback" element={<ZkLoginCallback />} />
                 </Routes>
               </BrowserRouter>
-            </ChakraProvider>
-          </ZkLoginContextProvider>
-        </WalletProvider>
-      </SuiClientProvider>
+      </ChakraProvider>
     </QueryClientProvider>
   );
 }

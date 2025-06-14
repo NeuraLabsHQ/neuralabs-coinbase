@@ -1,6 +1,6 @@
 // frontend/src/components/common_components/CustomConnectButton/CustomConnectButton.jsx
 
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Box, 
   Button, 
@@ -8,19 +8,20 @@ import {
   Tooltip,
   useColorMode,
   HStack,
-  Text
+  Text,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton
 } from '@chakra-ui/react';
-import { 
-  useCurrentAccount, 
-  useCurrentWallet, 
-  useDisconnectWallet
-} from '@mysten/dapp-kit';
-import sui_connected from '../../../assets/icons/sui_connected.svg';
-import sui_light from '../../../assets/icons/sui_light_2.svg';
-import sui_dark from '../../../assets/icons/sui_dark_2.svg';
-import WalletMethodSelector from '../WalletMethodSelector/WalletMethodSelector';
-import { useZkLogin } from '../../../contexts/ZkLoginContext';
-import * as WalletAuth from '../../../components/auth/WalletSignatureService';
+import { getAccount, watchAccount } from '@wagmi/core';
+import { config } from '../../../config/wagmi';
+import CoinbaseWalletConnect from '../CoinbaseWalletConnect/CoinbaseWalletConnect';
+import coinbaseConnected from '../../../assets/icons/coinbase-connected.svg';
+import coinbaseLight from '../../../assets/icons/coinbase-light.svg';
+import coinbaseDark from '../../../assets/icons/coinbase-dark.svg';
 
 const CustomConnectButton = ({ 
   iconColor, 
@@ -28,51 +29,86 @@ const CustomConnectButton = ({
   viewOnlyMode = false,
   isMobile = false
 }) => {
-  // Use dApp Kit hooks
-  const currentAccount = useCurrentAccount();
-  const { wallet } = useCurrentWallet();
-  const { mutate: disconnect, isPending: disconnecting } = useDisconnectWallet();
-  
-  
-  // Use zkLogin hook
-  const { isAuthenticated: isZkLoggedIn, zkLoginAddress, logout: zkLogout } = useZkLogin();
+  // State for wallet connection
+  const [walletAccount, setWalletAccount] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
   
   // Get color mode (light/dark)
   const { colorMode } = useColorMode();
   
   // State for modals
   const [methodSelectorOpen, setMethodSelectorOpen] = useState(false);
-  const [isDisconnecting, setIsDisconnecting] = useState(false);
   
-  // Check if any wallet is connected (either dapp-kit or zkLogin)
-  const connected = !!currentAccount || isZkLoggedIn;
+  // Color mode values
+  const bgColor = useColorModeValue('white', '#18191b');
+  const textColor = useColorModeValue('gray.800', 'white');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
   
-  // Get appropriate wallet address
-  const walletAddress = currentAccount?.address || zkLoginAddress || '';
+  // Check wallet connection status
+  useEffect(() => {
+    const checkConnection = () => {
+      const account = getAccount(config);
+      console.log('CustomConnectButton - Current account:', account);
+      
+      // More robust connection check - account must exist, have address, and be connected
+      const isWalletConnected = account && 
+                               account.address && 
+                               account.address.length > 0 && 
+                               account.isConnected === true;
+      
+      if (isWalletConnected) {
+        setWalletAccount(account);
+        setIsConnected(true);
+        console.log('CustomConnectButton - Wallet connected:', account.address);
+      } else {
+        setWalletAccount(null);
+        setIsConnected(false);
+        console.log('CustomConnectButton - Wallet disconnected');
+      }
+    };
+    
+    checkConnection();
+    
+    // Watch for account changes
+    const unwatch = watchAccount(config, {
+      onChange: (account) => {
+        console.log('CustomConnectButton - Account changed:', account);
+        
+        // More robust connection check
+        const isWalletConnected = account && 
+                                 account.address && 
+                                 account.address.length > 0 && 
+                                 account.isConnected === true;
+        
+        if (isWalletConnected) {
+          setWalletAccount(account);
+          setIsConnected(true);
+          console.log('CustomConnectButton - Wallet connected via onChange:', account.address);
+        } else {
+          setWalletAccount(null);
+          setIsConnected(false);
+          console.log('CustomConnectButton - Wallet disconnected via onChange');
+        }
+      },
+    });
+    
+    return () => unwatch();
+  }, []);
+  
+  // Check if wallet is connected (use actual wallet account presence)
+  const connected = !!(walletAccount && walletAccount.address && walletAccount.isConnected);
+  
+  // Get wallet address
+  const walletAddress = walletAccount?.address || '';
   
   // Handle wallet action
   const handleWalletAction = async () => {
     if (connected) {
-      // Disconnect appropriate wallet
-      setIsDisconnecting(true);
-      
-      try {
-        if (currentAccount) {
-          // Disconnect dapp-kit wallet
-          await disconnect();
-          await WalletAuth.logout();
- 
-        } else if (isZkLoggedIn) {
-          // Disconnect zkLogin
-          zkLogout();
-        }
-      } catch (error) {
-        console.error("Error disconnecting wallet:", error);
-      } finally {
-        setIsDisconnecting(false);
-      }
+      // Show the connection status/management modal
+      setMethodSelectorOpen(true);
     } else {
-      // Open the wallet method selector
+      // Open the wallet connection modal
       setMethodSelectorOpen(true);
     }
   };
@@ -84,17 +120,19 @@ const CustomConnectButton = ({
     
   // Set wallet tooltip text
   const walletTooltip = connected 
-    ? isZkLoggedIn 
-      ? `Connected: zkLogin (${formattedAddress})` 
-      : `Connected: ${wallet?.name || 'Wallet'} (${formattedAddress})` 
+    ? `Connected: Coinbase Smart Wallet (${formattedAddress})` 
     : "Connect Wallet";
+    
+  // Debug logging
+  console.log('CustomConnectButton render - Connected:', connected, 'WalletAccount:', walletAccount, 'Address:', walletAddress);
   
   // Determine which icon to show based on connection state and color mode
   const getWalletIcon = () => {
-    if (connected) {
-      return sui_connected;
+    // Use walletAccount presence and connection status as the definitive check
+    if (walletAccount && walletAccount.address && walletAccount.isConnected) {
+      return coinbaseConnected;
     } else {
-      return colorMode === 'light' ? sui_light : sui_dark;
+      return colorMode === 'light' ? coinbaseLight : coinbaseDark;
     }
   };
   
@@ -148,7 +186,7 @@ const CustomConnectButton = ({
           ) : (
             <img src={getWalletIcon()} alt="Wallet Icon" width="20px" height="20px" />
             )}
-            <Text fontSize="md">SUI Wallet</Text>
+            <Text fontSize="md">Coinbase Wallet</Text>
           </HStack>
           
           {connected && (
@@ -215,11 +253,24 @@ const CustomConnectButton = ({
         </Tooltip>
       )}
       
-      {/* Our custom wallet method selector */}
-      <WalletMethodSelector
-        isOpen={methodSelectorOpen}
-        onClose={() => setMethodSelectorOpen(false)}
-      />
+      {/* Custom wallet connection modal */}
+      <Modal isOpen={methodSelectorOpen} onClose={() => setMethodSelectorOpen(false)} isCentered size="md">
+        <ModalOverlay backdropFilter="blur(4px)" />
+        <ModalContent bg={bgColor} color={textColor} borderRadius="lg">
+          <ModalHeader borderBottomWidth="1px" borderColor={borderColor}>
+            {connected ? 'Wallet Connected' : 'Connect to NeuraLabs'}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6} pt={4}>
+            <CoinbaseWalletConnect 
+              viewOnlyMode={viewOnlyMode}
+              isMobile={isMobile}
+              iconColor={iconColor}
+              hoverBgColor={hoverBgColor}
+            />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </>
   );
 };

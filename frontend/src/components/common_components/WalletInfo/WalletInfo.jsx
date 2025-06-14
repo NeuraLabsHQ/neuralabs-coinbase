@@ -7,40 +7,89 @@ import {
   useColorModeValue,
   Badge,
   Tooltip,
-  HStack
+  HStack,
+  useColorMode
 } from '@chakra-ui/react';
 import { FiExternalLink, FiCopy, FiLogOut } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
 import { 
-  useCurrentAccount, 
-  useCurrentWallet, 
-  useDisconnectWallet,
-  useSuiClientQuery
-} from '@mysten/dapp-kit';
+  getAccount, 
+  getBalance, 
+  disconnect,
+  watchAccount,
+  getChainId,
+  getConnections
+} from '@wagmi/core';
+import { config } from '../../../config/wagmi';
+import { formatEther } from 'viem';
+import coinbaseConnected from '../../../assets/icons/coinbase-connected.svg';
+import coinbaseLight from '../../../assets/icons/coinbase-light.svg';
+import coinbaseDark from '../../../assets/icons/coinbase-dark.svg';
 
 const WalletInfo = () => {
-  const currentAccount = useCurrentAccount();
-  const { wallet } = useCurrentWallet();
-  const { mutate: disconnect } = useDisconnectWallet();
+  const [walletAccount, setWalletAccount] = useState(null);
+  const [balance, setBalance] = useState(null);
+  const [chainId, setChainId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const { colorMode } = useColorMode();
   
   const bgColor = useColorModeValue('white', '#18191b');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const textMutedColor = useColorModeValue('gray.600', 'gray.400');
   
-  // Get wallet address
-  const walletAddress = currentAccount?.address || '';
+  // Check wallet connection and get data
+  useEffect(() => {
+    const checkConnection = async () => {
+      const account = getAccount(config);
+      if (account.address) {
+        setWalletAccount(account);
+        setChainId(getChainId(config));
+        await updateBalance(account.address);
+      } else {
+        setWalletAccount(null);
+        setBalance(null);
+        setChainId(null);
+      }
+    };
+    
+    checkConnection();
+    
+    // Watch for account changes
+    const unwatch = watchAccount(config, {
+      onChange: async (account) => {
+        if (account.address) {
+          setWalletAccount(account);
+          setChainId(getChainId(config));
+          await updateBalance(account.address);
+        } else {
+          setWalletAccount(null);
+          setBalance(null);
+          setChainId(null);
+        }
+      },
+    });
+    
+    return () => unwatch();
+  }, []);
   
-  // Get wallet balance
-  const { data: balanceData, isPending } = useSuiClientQuery(
-    'getBalance',
-    {
-      owner: walletAddress,
-      coinType: '0x2::sui::SUI'
-    },
-    {
-      enabled: !!walletAddress
+  const updateBalance = async (address) => {
+    try {
+      setIsLoading(true);
+      const balanceData = await getBalance(config, {
+        address,
+      });
+      setBalance(balanceData);
+    } catch (err) {
+      console.error('Error fetching balance:', err);
+    } finally {
+      setIsLoading(false);
     }
-  );
+  };
+  
+  // Get wallet address
+  const walletAddress = walletAccount?.address || '';
   
   // Format wallet address for display
   const formattedAddress = walletAddress 
@@ -57,22 +106,63 @@ const WalletInfo = () => {
   
   // Open explorer link
   const openExplorer = () => {
-    // Explorer for Sui
-    const baseUrl = 'https://suiscan.xyz/testnet/account/';
-    
-    if (walletAddress) {
-      window.open(`${baseUrl}${walletAddress}`, '_blank');
+    if (walletAddress && chainId) {
+      let explorerUrl = '';
+      switch (chainId) {
+        case 1: // Mainnet
+          explorerUrl = `https://etherscan.io/address/${walletAddress}`;
+          break;
+        case 137: // Polygon
+          explorerUrl = `https://polygonscan.com/address/${walletAddress}`;
+          break;
+        case 8453: // Base
+          explorerUrl = `https://basescan.org/address/${walletAddress}`;
+          break;
+        case 42161: // Arbitrum
+          explorerUrl = `https://arbiscan.io/address/${walletAddress}`;
+          break;
+        default:
+          explorerUrl = `https://etherscan.io/address/${walletAddress}`;
+      }
+      window.open(explorerUrl, '_blank');
+    }
+  };
+  
+  const getChainName = (id) => {
+    switch (id) {
+      case 1: return 'Ethereum';
+      case 137: return 'Polygon';
+      case 8453: return 'Base';
+      case 42161: return 'Arbitrum';
+      default: return 'Unknown';
+    }
+  };
+  
+  // Get Coinbase icon based on color mode and connection state
+  const getCoinbaseIcon = () => {
+    if (walletAccount) {
+      return coinbaseConnected;
+    } else {
+      return colorMode === 'light' ? coinbaseLight : coinbaseDark;
     }
   };
 
   // Format balance for display
-  const balance = balanceData ? Number(balanceData.totalBalance) / 1000000000 : null;
-  const formattedBalance = balance !== null 
-    ? `${balance.toFixed(4)} SUI` 
-    : isPending ? 'Loading...' : '0 SUI';
+  const formattedBalance = balance 
+    ? `${parseFloat(formatEther(balance.value)).toFixed(4)} ${balance.symbol}` 
+    : isLoading ? 'Loading...' : '0 ETH';
+
+  // Handle disconnect
+  const handleDisconnect = async () => {
+    console.log('WalletInfo - Starting disconnect...')
+    
+    // For now, just trigger a page refresh to clear the wallet connection
+    // This is a temporary solution until we resolve the wagmi disconnect API issue
+    window.location.reload()
+  }
 
   // If no wallet is connected, don't render
-  if (!currentAccount) {
+  if (!walletAccount) {
     return null;
   }
 
@@ -88,26 +178,19 @@ const WalletInfo = () => {
     >
       <Flex justifyContent="space-between" alignItems="center" mb={3}>
         <HStack spacing={2}>
-          <Box 
-            w="24px" 
-            h="24px" 
-            bg="gray.500" 
-            color="white" 
-            borderRadius="full"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            fontWeight="bold"
-          >
-            {(wallet?.name || 'W').charAt(0)}
-          </Box>
+          <img 
+            src={getCoinbaseIcon()} 
+            alt="Coinbase" 
+            width="24" 
+            height="24" 
+          />
           <Text fontWeight="bold" color={textColor}>
-            {wallet?.name || 'Sui Wallet'}
+            Coinbase Smart Wallet
           </Text>
         </HStack>
         
         <Badge colorScheme="purple">
-          Testnet
+          {chainId ? getChainName(chainId) : 'Unknown'}
         </Badge>
       </Flex>
       
@@ -161,7 +244,8 @@ const WalletInfo = () => {
         variant="outline" 
         size="sm" 
         width="100%"
-        onClick={() => disconnect()}
+        onClick={handleDisconnect}
+        disabled={!walletAccount}
       >
         Disconnect
       </Button>
