@@ -13,6 +13,13 @@ import {
 import { config } from '../config/wagmi';
 import { formatEther } from 'viem';
 import { useToast } from '@chakra-ui/react';
+import { 
+  authenticateWallet, 
+  logout as authLogout, 
+  getStoredAuthToken, 
+  getStoredUserId,
+  isAuthenticated as checkIsAuthenticated 
+} from '../components/auth/WalletSignatureService.js';
 
 // Create the context
 const WalletContext = createContext(null);
@@ -25,6 +32,10 @@ export const WalletContextProvider = ({ children }) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authToken, setAuthToken] = useState(null);
+  const [userId, setUserId] = useState(null);
   const toast = useToast();
 
   // Update balance
@@ -39,9 +50,22 @@ export const WalletContextProvider = ({ children }) => {
     }
   }, []);
 
+  // Check authentication status
+  const checkAuthStatus = useCallback(() => {
+    const token = getStoredAuthToken();
+    const storedUserId = getStoredUserId();
+    const authenticated = checkIsAuthenticated();
+    
+    setAuthToken(token);
+    setUserId(storedUserId);
+    setIsAuthenticated(authenticated);
+    
+    return authenticated;
+  }, []);
+
   // Initialize and watch account changes
   useEffect(() => {
-    // Check initial connection
+    // Check initial connection and auth
     const checkConnection = async () => {
       const accountData = getAccount(config);
       
@@ -50,11 +74,17 @@ export const WalletContextProvider = ({ children }) => {
         setIsConnected(true);
         setChainId(getChainId(config));
         await updateBalance(accountData.address);
+        
+        // Check if already authenticated
+        checkAuthStatus();
       } else {
         setAccount(null);
         setIsConnected(false);
         setBalance(null);
         setChainId(null);
+        setIsAuthenticated(false);
+        setAuthToken(null);
+        setUserId(null);
       }
     };
 
@@ -70,20 +100,26 @@ export const WalletContextProvider = ({ children }) => {
           setIsConnected(true);
           setChainId(getChainId(config));
           await updateBalance(newAccount.address);
+          
+          // Check auth status on account change
+          checkAuthStatus();
         } else {
           // Clear all state when disconnected
           setAccount(null);
           setIsConnected(false);
           setBalance(null);
           setChainId(null);
+          setIsAuthenticated(false);
+          setAuthToken(null);
+          setUserId(null);
         }
       },
     });
 
     return () => unwatch();
-  }, [updateBalance]);
+  }, [updateBalance, checkAuthStatus]);
 
-  // Connect wallet
+  // Connect wallet and authenticate
   const connect = useCallback(async () => {
     setIsConnecting(true);
     
@@ -97,7 +133,7 @@ export const WalletContextProvider = ({ children }) => {
         throw new Error('Coinbase Wallet connector not found');
       }
 
-      // Connect
+      // Step 1: Connect wallet
       const result = await wagmiConnect(config, {
         connector: coinbaseConnector
       });
@@ -108,22 +144,55 @@ export const WalletContextProvider = ({ children }) => {
 
       // Update state
       const currentChainId = getChainId(config);
+      const walletAddress = result.accounts[0];
+      
       setAccount({ 
-        address: result.accounts[0], 
+        address: walletAddress, 
         isConnected: true,
         chain: result.chain || { id: currentChainId } 
       });
       setIsConnected(true);
       setChainId(currentChainId);
-      await updateBalance(result.accounts[0]);
+      await updateBalance(walletAddress);
 
       toast({
         title: 'Wallet Connected',
-        description: 'Successfully connected to Coinbase Smart Wallet',
-        status: 'success',
-        duration: 3000,
+        description: 'Now authenticating with backend...',
+        status: 'info',
+        duration: 2000,
         isClosable: true,
       });
+
+      // Step 2: Authenticate with backend
+      setIsAuthenticating(true);
+      try {
+        const authResult = await authenticateWallet(walletAddress);
+        
+        setAuthToken(authResult.access_token);
+        setUserId(authResult.user_id);
+        setIsAuthenticated(true);
+        
+        toast({
+          title: 'Authentication Successful',
+          description: 'You are now logged in',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (authError) {
+        console.error('Authentication failed:', authError);
+        
+        // Show warning but don't disconnect wallet
+        toast({
+          title: 'Authentication Warning',
+          description: 'Wallet connected but authentication failed. Some features may be limited.',
+          status: 'warning',
+          duration: 5000,
+          isClosable: true,
+        });
+      } finally {
+        setIsAuthenticating(false);
+      }
 
       return result;
     } catch (err) {
@@ -143,11 +212,17 @@ export const WalletContextProvider = ({ children }) => {
     }
   }, [toast, updateBalance]);
 
-  // Disconnect wallet
+  // Disconnect wallet and logout
   const disconnect = useCallback(async () => {
     setIsDisconnecting(true);
     
     try {
+      // Step 1: Logout from backend
+      if (isAuthenticated) {
+        authLogout();
+      }
+      
+      // Step 2: Disconnect wallet
       await wagmiDisconnect(config);
       
       // Clear all state
@@ -155,10 +230,13 @@ export const WalletContextProvider = ({ children }) => {
       setIsConnected(false);
       setBalance(null);
       setChainId(null);
+      setIsAuthenticated(false);
+      setAuthToken(null);
+      setUserId(null);
       
       toast({
-        title: 'Wallet Disconnected',
-        description: 'Successfully disconnected from wallet',
+        title: 'Disconnected',
+        description: 'Wallet disconnected and logged out',
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -171,6 +249,9 @@ export const WalletContextProvider = ({ children }) => {
       setIsConnected(false);
       setBalance(null);
       setChainId(null);
+      setIsAuthenticated(false);
+      setAuthToken(null);
+      setUserId(null);
       
       toast({
         title: 'Disconnected',
@@ -182,7 +263,7 @@ export const WalletContextProvider = ({ children }) => {
     } finally {
       setIsDisconnecting(false);
     }
-  }, [toast]);
+  }, [toast, isAuthenticated]);
 
   // Switch chain (keeping for future use, but only Sepolia is available)
   const handleSwitchChain = useCallback(async (newChainId) => {
@@ -218,6 +299,10 @@ export const WalletContextProvider = ({ children }) => {
     isConnecting,
     isDisconnecting,
     isConnected,
+    isAuthenticating,
+    isAuthenticated,
+    authToken,
+    userId,
     
     // Actions
     connect,

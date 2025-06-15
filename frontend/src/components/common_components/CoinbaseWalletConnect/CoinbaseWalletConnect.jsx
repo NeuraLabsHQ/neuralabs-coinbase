@@ -10,9 +10,12 @@ import {
   useColorModeValue,
   Flex,
   Tooltip,
-  useColorMode
+  useColorMode,
+  Alert,
+  AlertIcon,
+  AlertDescription
 } from '@chakra-ui/react';
-import { FiExternalLink, FiCopy } from 'react-icons/fi';
+import { FiExternalLink, FiCopy, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import { useWallet } from '../../../contexts/WalletContextProvider';
 import coinbaseConnected from '../../../assets/icons/coinbase-connected.svg';
 import coinbaseLight from '../../../assets/icons/coinbase-light.svg';
@@ -29,10 +32,13 @@ export default function CoinbaseWalletConnect({
     isConnected,
     isConnecting,
     isDisconnecting,
+    isAuthenticating,
+    isAuthenticated,
     account,
     formattedAddress,
     formattedBalance,
     chainId,
+    userId,
     connect,
     disconnect
   } = useWallet();
@@ -50,9 +56,9 @@ export default function CoinbaseWalletConnect({
     
     try {
       await connect();
-      // Close modal on successful connection
+      // Close modal on successful connection and authentication
       if (onClose) {
-        setTimeout(() => onClose(), 500);
+        setTimeout(() => onClose(), 1000);
       }
     } catch (err) {
       // Error is handled in the context
@@ -115,6 +121,7 @@ export default function CoinbaseWalletConnect({
   return (
     <Box width="100%">
       <VStack spacing={4} align="stretch">
+        {/* Connection Status */}
         <Flex justify="space-between" align="center">
           <HStack>
             <img src={getCoinbaseIcon()} alt="Coinbase" width="24" height="24" />
@@ -123,6 +130,34 @@ export default function CoinbaseWalletConnect({
           <Badge colorScheme="green">Connected</Badge>
         </Flex>
         
+        {/* Authentication Status */}
+        {isAuthenticating ? (
+          <Alert status="info" borderRadius="md">
+            <Spinner size="sm" mr={2} />
+            <AlertDescription>Authenticating with backend...</AlertDescription>
+          </Alert>
+        ) : isAuthenticated ? (
+          <Alert status="success" borderRadius="md">
+            <AlertIcon as={FiCheckCircle} />
+            <AlertDescription>
+              <VStack align="start" spacing={0}>
+                <Text fontSize="sm" fontWeight="medium">Authenticated</Text>
+                {userId && (
+                  <Text fontSize="xs" color={textMutedColor}>User ID: {userId}</Text>
+                )}
+              </VStack>
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <Alert status="warning" borderRadius="md">
+            <AlertIcon as={FiAlertCircle} />
+            <AlertDescription fontSize="sm">
+              Wallet connected but not authenticated. Some features may be limited.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {/* Wallet Address */}
         <Box p={3} bg={bgColor} borderRadius="md" border="1px solid" borderColor={borderColor}>
           <VStack align="stretch" spacing={2}>
             <Flex justify="space-between">
@@ -144,6 +179,7 @@ export default function CoinbaseWalletConnect({
           </VStack>
         </Box>
         
+        {/* Balance */}
         {formattedBalance && (
           <Box p={3} bg={bgColor} borderRadius="md" border="1px solid" borderColor={borderColor}>
             <VStack align="stretch" spacing={2}>
@@ -153,6 +189,7 @@ export default function CoinbaseWalletConnect({
           </Box>
         )}
         
+        {/* Network */}
         <Box p={3} bg={bgColor} borderRadius="md" border="1px solid" borderColor={borderColor}>
           <VStack align="stretch" spacing={2}>
             <Text fontSize="sm" color={textMutedColor}>Network</Text>
@@ -164,6 +201,7 @@ export default function CoinbaseWalletConnect({
         </Box>
       </VStack>
       
+      {/* Disconnect Button */}
       <Button 
         onClick={handleDisconnect}
         colorScheme="red" 
@@ -174,7 +212,7 @@ export default function CoinbaseWalletConnect({
         isLoading={isDisconnecting}
         loadingText="Disconnecting..."
       >
-        Disconnect
+        Disconnect & Logout
       </Button>
     </Box>
   );

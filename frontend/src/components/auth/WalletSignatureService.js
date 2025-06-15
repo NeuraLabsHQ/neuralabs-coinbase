@@ -1,5 +1,8 @@
 // frontend/src/services/WalletSignatureService.js
 
+import { signMessage } from '@wagmi/core';
+import { config } from '../../config/wagmi';
+
 /**
  * Generate authentication message for signing
  * @param {string} walletAddress - The wallet address
@@ -12,42 +15,32 @@ export const generateAuthMessage = (walletAddress) => {
 };
 
 /**
- * Sign message using wallet
+ * Sign message using Coinbase Wallet via wagmi
  * @param {string} walletAddress - The wallet address
- * @param {Function} signPersonalMessage - The signing function from dapp-kit
  * @returns {Promise<Object>} - Signature result
  */
-export const signAuthMessage = (walletAddress, signPersonalMessage) => {
-  return new Promise((resolve, reject) => {
-    try {
-      const message = generateAuthMessage(walletAddress);
-      const messageBytes = new TextEncoder().encode(message);
+export const signAuthMessage = async (walletAddress) => {
+  try {
+    const message = generateAuthMessage(walletAddress);
+    console.log('Signing message:', message);
 
-      console.log('Signing message:', message);
+    // Use wagmi's signMessage
+    const signature = await signMessage(config, {
+      message: message,
+    });
 
-      signPersonalMessage(
-        { message: messageBytes },
-        {
-          onSuccess: (result) => {
-            console.log('Message signed successfully:', result);
-            resolve({
-              success: true,
-              signature: result.signature,
-              message: message,
-              address: walletAddress
-            });
-          },
-          onError: (error) => {
-            console.error('Signing error:', error);
-            reject(new Error('Failed to sign message: ' + error.message));
-          }
-        }
-      );
-    } catch (error) {
-      console.error('Authentication setup error:', error);
-      reject(error);
-    }
-  });
+    console.log('Message signed successfully:', signature);
+    
+    return {
+      success: true,
+      signature: signature,
+      message: message,
+      address: walletAddress
+    };
+  } catch (error) {
+    console.error('Signing error:', error);
+    throw new Error('Failed to sign message: ' + error.message);
+  }
 };
 
 /**
@@ -92,13 +85,12 @@ export const authenticateWithBackend = async (signatureData) => {
 /**
  * Complete wallet authentication (sign + backend call)
  * @param {string} walletAddress - The wallet address
- * @param {Function} signPersonalMessage - The signing function from dapp-kit
  * @returns {Promise<Object>} - Complete authentication result
  */
-export const authenticateWallet = async (walletAddress, signPersonalMessage) => {
+export const authenticateWallet = async (walletAddress) => {
   try {
     // Step 1: Sign message
-    const signResult = await signAuthMessage(walletAddress, signPersonalMessage);
+    const signResult = await signAuthMessage(walletAddress);
     
     if (!signResult.success) {
       throw new Error('Failed to sign message');
@@ -180,7 +172,6 @@ export const makeAuthenticatedRequest = async (url, options = {}) => {
  * Logout and clear stored data
  */
 export const logout = () => {
-
   const token = getStoredAuthToken();
   if (token) {
     fetch(import.meta.env.VITE_BACKEND_URL + '/api/auth/logout', {
