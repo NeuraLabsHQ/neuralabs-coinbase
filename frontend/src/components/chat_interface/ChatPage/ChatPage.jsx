@@ -1,8 +1,7 @@
 import { Flex, useColorMode, useDisclosure, IconButton, Box, useBreakpointValue, Drawer, DrawerOverlay, DrawerContent, DrawerCloseButton } from '@chakra-ui/react';
 import { useEffect, useState, useRef } from 'react';
 import { FiList } from 'react-icons/fi';
-import { useCurrentAccount } from '@mysten/dapp-kit';
-import { useZkLogin } from '../../../contexts/ZkLoginContext';
+import { useWallet } from '../../../contexts/WalletContextProvider';
 import useUiColors from '../../../utils/uiColors';
 import ChatHistoryPanel from '../ChatHistoryPanel/ChatHistoryPanel';
 import ChatInterface from '../ChatInterface';
@@ -11,11 +10,7 @@ const ChatPage = () => {
   const colors = useUiColors();
   
   // Wallet context
-  const currentAccount = useCurrentAccount();
-  const { isAuthenticated: isZkLoggedIn, zkLoginAddress } = useZkLogin();
-  
-  // Get wallet address from either dapp-kit or zkLogin
-  const walletAddress = currentAccount?.address || zkLoginAddress || null;
+  const { address: walletAddress } = useWallet();
   
   const [chats, setChats] = useState([]);
   const [selectedChatId, setSelectedChatId] = useState(null);
@@ -77,7 +72,7 @@ const ChatPage = () => {
     console.log('Connecting to NeuraLabs backend with agent:', agentId);
     console.log('User message:', userMessage);
     console.log('Message ID:', messageId);
-    console.log('Wallet address:', walletAddress);
+    console.log('Wallet address:', walletAddress || 'anonymous');
     
     // Set active message ID
     setActiveMessageId(messageId);

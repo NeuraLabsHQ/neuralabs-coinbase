@@ -37,7 +37,7 @@ import { FiExternalLink, FiPlus, FiTrash2 } from 'react-icons/fi';
 import colors from '../../../color';
 import { agentAPI } from '../../../utils/agent-api';
 import { grantAccessToUser, revokeUserAccess, createAccessCap, getAccessCaps } from '../../../utils/blockchain';
-import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit';
+import { useWallet } from '../../../contexts/WalletContextProvider';
 
 
 const AccessControlPage = ({ agentData }) => {
@@ -49,9 +49,7 @@ const AccessControlPage = ({ agentData }) => {
   const [accessCapId,       setAccessCapId]       = useState(null);
   const [isRefreshing,      setIsRefreshing]      = useState(false);
   
-  const currentAccount                            = useCurrentAccount();
-  const { mutate: signAndExecuteTransaction }     = useSignAndExecuteTransaction();
-  const suiClient                                 = useSuiClient();
+  const { address: walletAddress } = useWallet();
   
   const toast                                     = useToast();
   

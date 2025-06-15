@@ -19,7 +19,7 @@ import {
     useToast,
     VStack,
 } from "@chakra-ui/react";
-import { useCurrentWallet } from "@mysten/dapp-kit";
+import { useWallet } from '../../contexts/WalletContextProvider';
 import { useState,useEffect } from 'react';
 import { FaAngleDoubleLeft, FaAngleDoubleRight } from "react-icons/fa";
 import {
@@ -49,7 +49,7 @@ import flowIcons from "../../utils/my-flow-icons.json";
 const FlowActionPanel = ({ toggleSidebar, sidebarOpen, currentPage, onPageChange }) => {
   const [activeAction, setActiveAction] = useState('Summary');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
-  const { currentWallet } = useCurrentWallet();
+  const { address: walletAddress } = useWallet();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   

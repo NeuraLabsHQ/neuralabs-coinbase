@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
+import { useWallet } from '../../../contexts/WalletContextProvider'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import './styles/themed-index.css'
@@ -55,9 +55,7 @@ const InteractivePublish = ({ agentData, agentId, onComplete }) => {
   console.log('InteractivePublish - agentData received:', agentData);
   console.log('InteractivePublish - agentId received:', agentId);
   
-  const account = useCurrentAccount()
-  const suiClient = useSuiClient()
-  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction()
+  const { address: walletAddress } = useWallet()
   
   // Create config from environment
   const config = {

@@ -10,21 +10,16 @@ import {
     Tooltip,
     useColorModeValue,
     VStack,
-    HStack,
-    Button
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { FiHome, FiList, FiSearch, FiRefreshCw } from 'react-icons/fi';
-import { RiExchangeLine } from 'react-icons/ri';
+import { FiHome, FiList, FiSearch } from 'react-icons/fi';
 import colors from '../../color';
 import { accessManagementApi } from '../../utils/access-api'; // Updated import path
 import SidebarItem from './SidebarItem';
-import { useCurrentAccount, useSuiClient } from '@mysten/dapp-kit';
-import { getSuiBalance, getWalBalance, formatBalance } from '../../lib/blockchain_module/exchange';
-import { useZkLogin } from '../../contexts/ZkLoginContext';
+import { useWallet } from '../../contexts/WalletContextProvider';
 
 
-const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = false, isMobile = false, onClose }) => {
+const AccessSidebar = ({ onViewChange, loading = false, isMobile = false }) => {
   const [myFlows, setMyFlows] = useState([]);
   const [otherFlows, setOtherFlows] = useState({});
   const [publishedFlows, setPublishedFlows] = useState([]);
@@ -34,34 +29,17 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
     myFlows: true,
     otherFlows: true
   });
-  const [expandedLevels, setExpandedLevels] = useState({});
-  const [view, setView] = useState('home'); // 'home', 'all', 'myFlows', 'otherFlows', etc.
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [suiBalance, setSuiBalance] = useState('0');
-  const [walBalance, setWalBalance] = useState('0');
-  const [loadingBalances, setLoadingBalances] = useState(false);
-  
-  const account = useCurrentAccount();
-  const client = useSuiClient();
-  const { zkLoginAddress, isAuthenticated: zkIsAuthenticated } = useZkLogin();
-  
-  // Get the active address from either wallet connection or zkLogin
-  const activeAddress = account?.address || zkLoginAddress;
-  
-  // WAL Token configuration  
-  const WAL_TOKEN_TYPE = '0x8270feb7375eee355e64fdb69c50abb6b5f9393a722883c1cf45f8e26048810a::wal::WAL';
+  const { address: walletAddress } = useWallet();
 
   const bgColor = useColorModeValue(colors.accessManagement.sidebar.bg.light, colors.accessManagement.sidebar.bg.dark);
   const borderColor = useColorModeValue(colors.accessManagement.sidebar.border.light, colors.accessManagement.sidebar.border.dark);
-  const hoverBgColor = useColorModeValue(colors.accessManagement.sidebar.itemHover.light, colors.accessManagement.sidebar.itemHover.dark);
-  const balanceBoxBg = useColorModeValue(colors.gray[50], colors.gray[800]);
-  const balanceTextColor = useColorModeValue(colors.gray[700], colors.gray[200]);
 
   // Check authentication status
   useEffect(() => {
     const checkAuth = () => {
-      const token = sessionStorage.getItem('wallet_auth_token') || sessionStorage.getItem('zklogin_jwt_token');
+      const token = sessionStorage.getItem('wallet_auth_token');
       setIsAuthenticated(!!token);
       
       // Clear flows data if not authenticated
@@ -77,7 +55,7 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
     
     // Listen for storage changes (logout from other tabs)
     const handleStorageChange = (e) => {
-      if (e.key === 'wallet_auth_token' || e.key === 'zklogin_jwt_token') {
+      if (e.key === 'wallet_auth_token') {
         checkAuth();
       }
     };
@@ -119,12 +97,6 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
         if (data.other_flows) {
           setOtherFlows(data.other_flows);
           
-          // Initialize expanded state for levels
-          const initialExpandedLevels = {};
-          Object.keys(data.other_flows).forEach(level => {
-            initialExpandedLevels[level] = false;
-          });
-          setExpandedLevels(initialExpandedLevels);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -135,44 +107,6 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
     
     fetchData();
   }, [isAuthenticated]);
-  
-  // Load balances
-  const loadBalances = async () => {
-
-    console.log('Loading balances...');
-    console.log('Account:', account);
-    console.log('zkLoginAddress:', zkLoginAddress);
-    console.log('activeAddress:', activeAddress);
-    console.log('Client:', client);
-    
-    if (!activeAddress || !client) {
-      console.log('No active address or client available');
-      return;
-    }
-
-    setLoadingBalances(true);
-    try {
-      // Get SUI balance
-      const suiBalanceData = await getSuiBalance(client, activeAddress);
-      console.log('SUI Balance Data:', suiBalanceData);
-      setSuiBalance(formatBalance(suiBalanceData.totalBalance, 9));
-      
-      // Get WAL balance
-      const walBalanceData = await getWalBalance(client, activeAddress, WAL_TOKEN_TYPE);
-      setWalBalance(formatBalance(walBalanceData.totalBalance, 9));
-    } catch (error) {
-      console.error('Error loading balances:', error);
-    } finally {
-      setLoadingBalances(false);
-    }
-  };
-  
-  // Load balances on mount and when account changes
-  useEffect(() => {
-    if (activeAddress && client) {
-      loadBalances();
-    }
-  }, [activeAddress, client]);
 
   // Filter flows by search query
   const filterFlows = (flows) => {
@@ -183,18 +117,6 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
     );
   };
 
-  // Apply search filter to all flows
-  const filteredMyFlows = filterFlows(myFlows);
-  const filteredPublishedFlows = filterFlows(publishedFlows);
-  const filteredUnderDevelopmentFlows = filterFlows(underDevelopmentFlows);
-  
-  const filteredOtherFlows = {};
-  Object.entries(otherFlows).forEach(([level, flows]) => {
-    const filtered = filterFlows(flows);
-    if (filtered.length > 0) {
-      filteredOtherFlows[level] = filtered;
-    }
-  });
   
   // Toggle section expansion
   const toggleSection = (section) => {
@@ -204,13 +126,6 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
     }));
   };
 
-  // Toggle level expansion
-  const toggleLevel = (levelId) => {
-    setExpandedLevels(prev => ({
-      ...prev,
-      [levelId]: !prev[levelId]
-    }));
-  };
 
   // Handle search input change
   const handleSearchChange = (e) => {
@@ -222,13 +137,6 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
   const handleViewChange = (newView) => {
     if (onViewChange) {
       onViewChange(newView);
-    }
-  };
-  
-  // Handle flow selection
-  const handleSelectFlow = (flow) => {
-    if (onSelectFlow) {
-      onSelectFlow(flow);
     }
   };
 
@@ -272,7 +180,7 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
           {/* Home */}
           <SidebarItem 
             label="Home" 
-            isActive={view === 'home'} 
+            isActive={false} 
             onClick={() => handleViewChange('home')}
             icon={FiHome}
           />
@@ -280,7 +188,7 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
           {/* All Flows */}
           <SidebarItem 
             label="All Flows" 
-            isActive={view === 'all'} 
+            isActive={false} 
             onClick={() => handleViewChange('all')}
             icon={FiList}
           />
@@ -298,13 +206,13 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
               <SidebarItem 
                 label="Made by me" 
                 indentLevel={1}
-                isActive={view === 'myFlows-made'}
+                isActive={false}
                 onClick={() => handleViewChange('myFlows-made')}
               />
               <SidebarItem 
                 label="Under Development" 
                 indentLevel={1}
-                isActive={view === 'myFlows-dev'}
+                isActive={false}
                 onClick={() => handleViewChange('myFlows-dev')}
               />
             </>
@@ -323,37 +231,37 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
               <SidebarItem 
                 label="Access Level 6"
                 indentLevel={1}
-                isActive={view === 'level-Access Level 6'}
+                isActive={false}
                 onClick={() => handleViewChange('level-Access Level 6')}
               />
               <SidebarItem 
                 label="Access Level 5"
                 indentLevel={1}
-                isActive={view === 'level-Access Level 5'}
+                isActive={false}
                 onClick={() => handleViewChange('level-Access Level 5')}
               />
               <SidebarItem 
                 label="Access Level 4"
                 indentLevel={1}
-                isActive={view === 'level-Access Level 4'}
+                isActive={false}
                 onClick={() => handleViewChange('level-Access Level 4')}
               />
               <SidebarItem 
                 label="Access Level 3"
                 indentLevel={1}
-                isActive={view === 'level-Access Level 3'}
+                isActive={false}
                 onClick={() => handleViewChange('level-Access Level 3')}
               />
               <SidebarItem 
                 label="Access Level 2"
                 indentLevel={1}
-                isActive={view === 'level-Access Level 2'}
+                isActive={false}
                 onClick={() => handleViewChange('level-Access Level 2')}
               />
               <SidebarItem 
                 label="Access Level 1"
                 indentLevel={1}
-                isActive={view === 'level-Access Level 1'}
+                isActive={false}
                 onClick={() => handleViewChange('level-Access Level 1')}
               />
             </>
@@ -378,64 +286,6 @@ const AccessSidebar = ({ selectedFlow, onSelectFlow, onViewChange, loading = fal
             <Spinner size="sm" color={colors.blue[500]} />
           </Flex>
         )}
-      </Box>
-      
-      {/* Balance Box and Swap Button - fixed at bottom */}
-      <Box 
-        p={4} 
-        borderTop="1px"
-        borderColor={borderColor} 
-        bg={bgColor}
-      >
-        <Box
-          p={3}
-          bg={balanceBoxBg}
-          borderRadius="md"
-          border="1px"
-          borderColor={borderColor}
-          mb={3}
-        >
-          <HStack justify="space-between" mb={2}>
-            <Text fontSize="sm" fontWeight="medium" color={balanceTextColor}>
-              Wallet Balances
-            </Text>
-            <Icon
-              as={FiRefreshCw}
-              fontSize="sm"
-              color={colors.gray[500]}
-              cursor="pointer"
-              onClick={loadBalances}
-              className={loadingBalances ? 'animate-spin' : ''}
-              _hover={{ color: colors.blue[500] }}
-            />
-          </HStack>
-          <VStack align="stretch" spacing={2}>
-            <HStack justify="space-between">
-              <Text fontSize="xs" color={colors.gray[500]}>SUI</Text>
-              <Text fontSize="sm" fontWeight="semibold" color={balanceTextColor}>
-                {loadingBalances ? '...' : suiBalance}
-              </Text>
-            </HStack>
-            <HStack justify="space-between">
-              <Text fontSize="xs" color={colors.gray[500]}>WAL</Text>
-              <Text fontSize="sm" fontWeight="semibold" color={balanceTextColor}>
-                {loadingBalances ? '...' : walBalance}
-              </Text>
-            </HStack>
-          </VStack>
-        </Box>
-        
-        <Button
-          leftIcon={<RiExchangeLine />}
-          size="sm"
-          w="100%"
-          variant="outline"
-          colorScheme="blue"
-          onClick={() => handleViewChange('swap')}
-          isDisabled={!activeAddress}
-        >
-          Swap SUI to WAL
-        </Button>
       </Box>
     </Box>
   );

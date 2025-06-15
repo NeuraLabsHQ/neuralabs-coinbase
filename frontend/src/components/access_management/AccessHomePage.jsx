@@ -246,6 +246,9 @@ const AccessHomePage = ({ onSelectFlow }) => {
   const activeBgColor = useColorModeValue(colors.accessManagement.sidebar.selected.light, colors.accessManagement.sidebar.selected.dark);
   const listhoverBgColor = useColorModeValue(colors.accessManagement.sidebar.itemHover.light, colors.accessManagement.sidebar.itemHover.dark);
   const searchbarcolor = useColorModeValue(colors.accessManagement.detailPanel.bg.light, colors.accessManagement.detailPanel.bg.dark);
+  const separatorBgColor = useColorModeValue(colors.accessManagement.detailPanel.border.light, colors.accessManagement.detailPanel.border.dark);
+  const flowIconBgColor = useColorModeValue(colors.accessManagement.flowCard.iconBg.light, colors.accessManagement.flowCard.iconBg.dark);
+  const flowIconTextColor = useColorModeValue(colors.accessManagement.flowCard.iconText.light, colors.accessManagement.flowCard.iconText.dark);
 
 
 
@@ -577,7 +580,7 @@ const AccessHomePage = ({ onSelectFlow }) => {
               <Box 
                 height="24px" 
                 width="1px" 
-                bg={useColorModeValue(colors.accessManagement.detailPanel.border.light, colors.accessManagement.detailPanel.border.dark)} 
+                bg={separatorBgColor} 
                 mx={1}
                 my={1} 
               />
@@ -622,8 +625,8 @@ const AccessHomePage = ({ onSelectFlow }) => {
                   <Box
                     p={2}
                     borderRadius="md"
-                    bg={useColorModeValue(colors.accessManagement.flowCard.iconBg.light, colors.accessManagement.flowCard.iconBg.dark)}
-                    color={useColorModeValue(colors.accessManagement.flowCard.iconText.light, colors.accessManagement.flowCard.iconText.dark)}
+                    bg={flowIconBgColor}
+                    color={flowIconTextColor}
                     display="inline-flex"
                     alignItems="center"
                     justifyContent="center"
