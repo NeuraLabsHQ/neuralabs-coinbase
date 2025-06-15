@@ -77,26 +77,14 @@ const WalletMethodSelector = ({ isOpen, onClose }) => {
           <ModalCloseButton />
           <ModalBody pb={6} pt={4}>
             {isConnected ? (
-              // Show connected wallet info
-              <VStack spacing={4} align="stretch">
-                <Text fontSize="lg" fontWeight="bold" textAlign="center">
-                  Wallet Connected
+              <VStack spacing={4}>
+                <Text fontSize="sm" color={textColor}>
+                  You are connected with Coinbase Smart Wallet
                 </Text>
-                <CoinbaseWalletConnect 
-                  isMobile={false}
-                />
+                <CoinbaseWalletConnect />
               </VStack>
             ) : (
-              // Show connection options
-              <VStack spacing={4} align="stretch">
-                <CoinbaseWalletConnect 
-                  isMobile={false}
-                />
-                
-                <Text fontSize="xs" color="gray.500" mt={1} textAlign="center">
-                  Connect with Coinbase Smart Wallet for secure blockchain interactions
-                </Text>
-              </VStack>
+              <CoinbaseWalletConnect />
             )}
           </ModalBody>
         </ModalContent>

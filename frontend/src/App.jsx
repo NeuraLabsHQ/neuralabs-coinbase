@@ -10,6 +10,7 @@ import ChatInterfacePage from './pages/chat_interface_page';
 import AccessManagementPage from './pages/access_management_page';
 import theme from './theme';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { WalletContextProvider } from './contexts/WalletContextProvider';
 import { Buffer } from 'buffer';
 
 
@@ -23,6 +24,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ChakraProvider theme={theme}>
         <ColorModeScript initialColorMode={theme.config.initialColorMode} />
+           <WalletContextProvider>
               <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -71,6 +73,7 @@ function App() {
                   } />
                 </Routes>
               </BrowserRouter>
+              </WalletContextProvider>
       </ChakraProvider>
     </QueryClientProvider>
   );

@@ -1,13 +1,10 @@
 import { createConfig, http } from '@wagmi/core'
-import { mainnet, polygon, arbitrum, base } from '@wagmi/core/chains'
+import { sepolia } from '@wagmi/core/chains'
 import { coinbaseWallet } from '@wagmi/connectors'
 
-// Define supported chains
-const supportedChains = [mainnet, polygon, arbitrum, base]
-
-// Create wagmi config with only Coinbase Wallet
+// Create wagmi config with only Coinbase Wallet on Sepolia
 export const config = createConfig({
-  chains: supportedChains,
+  chains: [sepolia],
   connectors: [
     coinbaseWallet({
       appName: 'NeuraLabs',
@@ -15,15 +12,12 @@ export const config = createConfig({
     })
   ],
   transports: {
-    [mainnet.id]: http(),
-    [polygon.id]: http(),
-    [arbitrum.id]: http(),
-    [base.id]: http(),
+    [sepolia.id]: http(),
   },
 })
 
 // Export for debugging
 if (typeof window !== 'undefined') {
   window.wagmiConfig = config
-  console.log('Wagmi config initialized:', config)
+  console.log('Wagmi config initialized for Sepolia:', config)
 }
