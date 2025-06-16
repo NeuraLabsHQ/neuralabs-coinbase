@@ -1,8 +1,0 @@
-{
-  "label": "Encryption",
-  "position": 3,
-  "link": {
-    "type": "generated-index",
-    "description": "Threshold encryption with SUI Seal for secure data management and access control."
-  }
-}

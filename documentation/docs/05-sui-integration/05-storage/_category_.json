@@ -1,8 +1,0 @@
-{
-  "label": "Storage",
-  "position": 4,
-  "link": {
-    "type": "generated-index",
-    "description": "Decentralized blob storage with Walrus for encrypted AI workflow data."
-  }
-}
