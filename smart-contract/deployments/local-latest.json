@@ -1,0 +1,62 @@
+{
+  "network": "local",
+  "timestamp": "2025-06-17T17:49:26.774Z",
+  "deployer": "0xF89c84795bc68C050be1c3b8Ea7aeac4F7FB4768",
+  "contracts": {
+    "MasterAccessControl": {
+      "address": "0xe8bE62D53383e046eD1C769FbdAfed637fa9C6bA",
+      "constructorArgs": [],
+      "gasUsed": 0
+    },
+    "NFTAccessControl": {
+      "address": "0xad18e6612875F60aDd3D892F3eE26A0cAE431406",
+      "constructorArgs": [
+        "0xe8bE62D53383e046eD1C769FbdAfed637fa9C6bA"
+      ],
+      "gasUsed": 0
+    },
+    "NFTMetadata": {
+      "address": "0x379B4fE5928d31C35D24eCe3EA6116316A45DA5F",
+      "constructorArgs": [
+        "0xe8bE62D53383e046eD1C769FbdAfed637fa9C6bA",
+        "0xad18e6612875F60aDd3D892F3eE26A0cAE431406"
+      ],
+      "gasUsed": 0
+    },
+    "AIServiceAgreementManagement": {
+      "address": "0xC65e66B0FAE933Bc95eC6E698D673189eFdD0F27",
+      "constructorArgs": [
+        "0xe8bE62D53383e046eD1C769FbdAfed637fa9C6bA",
+        "0xad18e6612875F60aDd3D892F3eE26A0cAE431406"
+      ],
+      "gasUsed": 0
+    },
+    "NFTContract": {
+      "address": "0xB94643541D8f775371f372962EaF1667997E1B29",
+      "constructorArgs": [
+        "0xe8bE62D53383e046eD1C769FbdAfed637fa9C6bA",
+        "0xad18e6612875F60aDd3D892F3eE26A0cAE431406",
+        "0x379B4fE5928d31C35D24eCe3EA6116316A45DA5F",
+        "0x0000000000000000000000000000000000000000"
+      ],
+      "gasUsed": 0
+    },
+    "Monetization": {
+      "address": "0xBA762B8f7AFA50f73880c005c731018487A69f15",
+      "constructorArgs": [
+        "0xe8bE62D53383e046eD1C769FbdAfed637fa9C6bA",
+        "0xB94643541D8f775371f372962EaF1667997E1B29",
+        "0xad18e6612875F60aDd3D892F3eE26A0cAE431406",
+        "0x379B4fE5928d31C35D24eCe3EA6116316A45DA5F",
+        "0xC65e66B0FAE933Bc95eC6E698D673189eFdD0F27"
+      ],
+      "gasUsed": 0
+    }
+  },
+  "summary": {
+    "totalContracts": 6,
+    "success": true,
+    "totalGasUsed": 0,
+    "estimatedCostETH": "0.0000"
+  }
+}

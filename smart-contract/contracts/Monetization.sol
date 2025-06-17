@@ -74,7 +74,7 @@ contract Monetization {
 
     // Events
     event CommitmentTimeSet(uint256 indexed nftId, uint256 timestamp);
-    event NoticeBeforeUnlockSet(uint256 indexed nftId, uint256 seconds);
+    event NoticeBeforeUnlockSet(uint256 indexed nftId, uint256 noticePeriod);
     event MonetizationEnabled(uint256 indexed nftId, uint8 optionIndex);
     event MonetizationDisabled(uint256 indexed nftId, uint8 optionIndex);
     event AllMonetizationOptionsSet(uint256 indexed nftId, uint8 combination);
@@ -628,12 +628,34 @@ contract Monetization {
     ) external onlyNFTOwner(_nftId) {
         // Set commitment and notice if provided
         if (_commitmentTimestamp > 0) {
-            setCommitmentTime(_nftId, _commitmentTimestamp);
+            this.setCommitmentTime(_nftId, _commitmentTimestamp);
         }
         if (_noticeSeconds > 0) {
-            setNoticeBeforeUnlockCommitment(_nftId, _noticeSeconds);
+            this.setNoticeBeforeUnlockCommitment(_nftId, _noticeSeconds);
         }
         
+        // Process monetization options in separate function to avoid stack too deep
+        _processMonetizationOptions(
+            _nftId,
+            _payPerUse,
+            _subscription,
+            _buyAccess,
+            _buyOwnership,
+            _buyReplica
+        );
+    }
+    
+    /**
+     * @dev Internal function to process monetization options
+     */
+    function _processMonetizationOptions(
+        uint256 _nftId,
+        PayPerUseParams memory _payPerUse,
+        SubscriptionParams memory _subscription,
+        BuyAccessParams memory _buyAccess,
+        BuyOwnershipParams memory _buyOwnership,
+        BuyReplicaParams memory _buyReplica
+    ) private {
         // Get IP type
         NFTMetadata.Metadata memory metadata = nftMetadata.getMetadata(_nftId);
         bool isDataType = keccak256(bytes(metadata.intellectual_property_type)) == keccak256(bytes("data"));
@@ -663,19 +685,19 @@ contract Monetization {
         
         // Set data for enabled options
         if (_payPerUse.enabled) {
-            enablePayPerUse(_nftId, _payPerUse.costPerUse, _payPerUse.platformCostPaidBy);
+            this.enablePayPerUse(_nftId, _payPerUse.costPerUse, _payPerUse.platformCostPaidBy);
         }
         if (_subscription.enabled) {
-            enableSubscription(_nftId, _subscription.cost, _subscription.time, _subscription.limit, _subscription.limitTime);
+            this.enableSubscription(_nftId, _subscription.cost, _subscription.time, _subscription.limit, _subscription.limitTime);
         }
         if (_buyAccess.enabled) {
-            enableBuyAccess(_nftId, _buyAccess.accessLevel, _buyAccess.accessTime, _buyAccess.cost);
+            this.enableBuyAccess(_nftId, _buyAccess.accessLevel, _buyAccess.accessTime, _buyAccess.cost);
         }
         if (_buyOwnership.enabled) {
-            enableBuyOwnership(_nftId, _buyOwnership.cost, _buyOwnership.ownershipLevel);
+            this.enableBuyOwnership(_nftId, _buyOwnership.cost, _buyOwnership.ownershipLevel);
         }
         if (_buyReplica.enabled) {
-            enableBuyReplica(_nftId, _buyReplica.cost, _buyReplica.ownershipLevel);
+            this.enableBuyReplica(_nftId, _buyReplica.cost, _buyReplica.ownershipLevel);
         }
         
         emit AllMonetizationOptionsSet(_nftId, monetization_combination[_nftId]);
@@ -741,11 +763,11 @@ contract Monetization {
             // Need to enable
         } else if (!_shouldBeEnabled && _currentlyEnabled) {
             // Need to disable
-            if (_optionIndex == 0) disablePayPerUse(_nftId);
-            else if (_optionIndex == 1) disableSubscription(_nftId);
-            else if (_optionIndex == 2) disableBuyAccess(_nftId);
-            else if (_optionIndex == 3) disableBuyOwnership(_nftId);
-            else if (_optionIndex == 4) disableBuyReplica(_nftId);
+            if (_optionIndex == 0) this.disablePayPerUse(_nftId);
+            else if (_optionIndex == 1) this.disableSubscription(_nftId);
+            else if (_optionIndex == 2) this.disableBuyAccess(_nftId);
+            else if (_optionIndex == 3) this.disableBuyOwnership(_nftId);
+            else if (_optionIndex == 4) this.disableBuyReplica(_nftId);
         }
     }
 

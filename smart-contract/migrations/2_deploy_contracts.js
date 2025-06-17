@@ -42,59 +42,107 @@ module.exports = async function(deployer, network, accounts) {
   try {
     // 1. Deploy MasterAccessControl
     console.log("\n1. Deploying MasterAccessControl...");
-    const masterAccessTx = await deployer.deploy(MasterAccessControl, { from: deployerAccount });
+    await deployer.deploy(MasterAccessControl, { from: deployerAccount });
     const masterAccessControl = await MasterAccessControl.deployed();
-    totalGasUsed += masterAccessTx.receipt.gasUsed;
+    
+    // Get gas usage from the deployment
+    let masterAccessGasUsed = 0;
+    try {
+      const deploymentTxHash = masterAccessControl.transactionHash;
+      if (deploymentTxHash) {
+        const receipt = await web3.eth.getTransactionReceipt(deploymentTxHash);
+        masterAccessGasUsed = receipt ? parseInt(receipt.gasUsed) : 0;
+      }
+    } catch (e) {
+      console.log("Could not fetch gas usage for MasterAccessControl");
+    }
+    totalGasUsed += masterAccessGasUsed;
     
     deploymentData.contracts.MasterAccessControl = {
       address: masterAccessControl.address,
       constructorArgs: [],
-      gasUsed: masterAccessTx.receipt.gasUsed
+      gasUsed: masterAccessGasUsed
     };
-    console.log("✓ MasterAccessControl deployed at:", masterAccessControl.address);
+    console.log("✓ MasterAccessControl deployed at:", masterAccessControl.address, `(gas: ${masterAccessGasUsed})`);
 
     // 2. Deploy NFTAccessControl
     console.log("\n2. Deploying NFTAccessControl...");
-    const nftAccessTx = await deployer.deploy(NFTAccessControl, masterAccessControl.address, { from: deployerAccount });
+    await deployer.deploy(NFTAccessControl, masterAccessControl.address, { from: deployerAccount });
     const nftAccessControl = await NFTAccessControl.deployed();
-    totalGasUsed += nftAccessTx.receipt.gasUsed;
+    
+    // Get gas usage from the deployment
+    let nftAccessGasUsed = 0;
+    try {
+      const deploymentTxHash = nftAccessControl.transactionHash;
+      if (deploymentTxHash) {
+        const receipt = await web3.eth.getTransactionReceipt(deploymentTxHash);
+        nftAccessGasUsed = receipt ? parseInt(receipt.gasUsed) : 0;
+      }
+    } catch (e) {
+      console.log("Could not fetch gas usage for NFTAccessControl");
+    }
+    totalGasUsed += nftAccessGasUsed;
     
     deploymentData.contracts.NFTAccessControl = {
       address: nftAccessControl.address,
       constructorArgs: [masterAccessControl.address],
-      gasUsed: nftAccessTx.receipt.gasUsed
+      gasUsed: nftAccessGasUsed
     };
-    console.log("✓ NFTAccessControl deployed at:", nftAccessControl.address);
+    console.log("✓ NFTAccessControl deployed at:", nftAccessControl.address, `(gas: ${nftAccessGasUsed})`);
 
     // 3. Deploy NFTMetadata
     console.log("\n3. Deploying NFTMetadata...");
-    const nftMetadataTx = await deployer.deploy(NFTMetadata, masterAccessControl.address, nftAccessControl.address, { from: deployerAccount });
+    await deployer.deploy(NFTMetadata, masterAccessControl.address, nftAccessControl.address, { from: deployerAccount });
     const nftMetadata = await NFTMetadata.deployed();
-    totalGasUsed += nftMetadataTx.receipt.gasUsed;
+    
+    // Get gas usage from the deployment
+    let nftMetadataGasUsed = 0;
+    try {
+      const deploymentTxHash = nftMetadata.transactionHash;
+      if (deploymentTxHash) {
+        const receipt = await web3.eth.getTransactionReceipt(deploymentTxHash);
+        nftMetadataGasUsed = receipt ? parseInt(receipt.gasUsed) : 0;
+      }
+    } catch (e) {
+      console.log("Could not fetch gas usage for NFTMetadata");
+    }
+    totalGasUsed += nftMetadataGasUsed;
     
     deploymentData.contracts.NFTMetadata = {
       address: nftMetadata.address,
       constructorArgs: [masterAccessControl.address, nftAccessControl.address],
-      gasUsed: nftMetadataTx.receipt.gasUsed
+      gasUsed: nftMetadataGasUsed
     };
-    console.log("✓ NFTMetadata deployed at:", nftMetadata.address);
+    console.log("✓ NFTMetadata deployed at:", nftMetadata.address, `(gas: ${nftMetadataGasUsed})`);
 
     // 4. Deploy AIServiceAgreementManagement
     console.log("\n4. Deploying AIServiceAgreementManagement...");
-    const aiServiceTx = await deployer.deploy(AIServiceAgreementManagement, masterAccessControl.address, nftAccessControl.address, { from: deployerAccount });
+    await deployer.deploy(AIServiceAgreementManagement, masterAccessControl.address, nftAccessControl.address, { from: deployerAccount });
     const aiServiceAgreementManagement = await AIServiceAgreementManagement.deployed();
-    totalGasUsed += aiServiceTx.receipt.gasUsed;
+    
+    // Get gas usage from the deployment
+    let aiServiceGasUsed = 0;
+    try {
+      const deploymentTxHash = aiServiceAgreementManagement.transactionHash;
+      if (deploymentTxHash) {
+        const receipt = await web3.eth.getTransactionReceipt(deploymentTxHash);
+        aiServiceGasUsed = receipt ? parseInt(receipt.gasUsed) : 0;
+      }
+    } catch (e) {
+      console.log("Could not fetch gas usage for AIServiceAgreementManagement");
+    }
+    totalGasUsed += aiServiceGasUsed;
     
     deploymentData.contracts.AIServiceAgreementManagement = {
       address: aiServiceAgreementManagement.address,
       constructorArgs: [masterAccessControl.address, nftAccessControl.address],
-      gasUsed: aiServiceTx.receipt.gasUsed
+      gasUsed: aiServiceGasUsed
     };
-    console.log("✓ AIServiceAgreementManagement deployed at:", aiServiceAgreementManagement.address);
+    console.log("✓ AIServiceAgreementManagement deployed at:", aiServiceAgreementManagement.address, `(gas: ${aiServiceGasUsed})`);
 
     // 5. Deploy NFTContract (without monetization initially)
     console.log("\n5. Deploying NFTContract...");
-    const nftContractTx = await deployer.deploy(
+    await deployer.deploy(
       NFTContract,
       masterAccessControl.address,
       nftAccessControl.address,
@@ -103,7 +151,19 @@ module.exports = async function(deployer, network, accounts) {
       { from: deployerAccount }
     );
     const nftContract = await NFTContract.deployed();
-    totalGasUsed += nftContractTx.receipt.gasUsed;
+    
+    // Get gas usage from the deployment
+    let nftContractGasUsed = 0;
+    try {
+      const deploymentTxHash = nftContract.transactionHash;
+      if (deploymentTxHash) {
+        const receipt = await web3.eth.getTransactionReceipt(deploymentTxHash);
+        nftContractGasUsed = receipt ? parseInt(receipt.gasUsed) : 0;
+      }
+    } catch (e) {
+      console.log("Could not fetch gas usage for NFTContract");
+    }
+    totalGasUsed += nftContractGasUsed;
     
     deploymentData.contracts.NFTContract = {
       address: nftContract.address,
@@ -113,13 +173,13 @@ module.exports = async function(deployer, network, accounts) {
         nftMetadata.address,
         "0x0000000000000000000000000000000000000000"
       ],
-      gasUsed: nftContractTx.receipt.gasUsed
+      gasUsed: nftContractGasUsed
     };
-    console.log("✓ NFTContract deployed at:", nftContract.address);
+    console.log("✓ NFTContract deployed at:", nftContract.address, `(gas: ${nftContractGasUsed})`);
 
     // 6. Deploy Monetization
     console.log("\n6. Deploying Monetization...");
-    const monetizationTx = await deployer.deploy(
+    await deployer.deploy(
       Monetization,
       masterAccessControl.address,
       nftContract.address,
@@ -129,7 +189,19 @@ module.exports = async function(deployer, network, accounts) {
       { from: deployerAccount }
     );
     const monetization = await Monetization.deployed();
-    totalGasUsed += monetizationTx.receipt.gasUsed;
+    
+    // Get gas usage from the deployment
+    let monetizationGasUsed = 0;
+    try {
+      const deploymentTxHash = monetization.transactionHash;
+      if (deploymentTxHash) {
+        const receipt = await web3.eth.getTransactionReceipt(deploymentTxHash);
+        monetizationGasUsed = receipt ? parseInt(receipt.gasUsed) : 0;
+      }
+    } catch (e) {
+      console.log("Could not fetch gas usage for Monetization");
+    }
+    totalGasUsed += monetizationGasUsed;
     
     deploymentData.contracts.Monetization = {
       address: monetization.address,
@@ -140,9 +212,9 @@ module.exports = async function(deployer, network, accounts) {
         nftMetadata.address,
         aiServiceAgreementManagement.address
       ],
-      gasUsed: monetizationTx.receipt.gasUsed
+      gasUsed: monetizationGasUsed
     };
-    console.log("✓ Monetization deployed at:", monetization.address);
+    console.log("✓ Monetization deployed at:", monetization.address, `(gas: ${monetizationGasUsed})`);
 
   // Post-deployment initialization
   console.log("\n=== Post-Deployment Initialization ===");
