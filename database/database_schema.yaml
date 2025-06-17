@@ -12,15 +12,16 @@ postgres:
           description: "Public key of the user, primary identifier"
         username:
           type: VARCHAR(100)
-          nullable: false
+          nullable: true
           description: "User's display name"
         email:
           type: VARCHAR(255)
           nullable: true
           description: "Optional email for the user"
         chain_id:
-          type: INTEGER
+          type: VARCHAR(255)
           references: CHAIN_DETAILS.chain_id
+          nullable: true
           description: "Reference to the blockchain the user is associated with"
         created_at:
           type: TIMESTAMP
@@ -31,7 +32,7 @@ postgres:
     AGENT:
       columns:
         agent_id:
-          type: VARCHAR(64)
+          type: VARCHAR(255)
           primary_key: true
           description: "SHA256 hash of user_public_key and time_created"
         creation_date:
@@ -45,6 +46,7 @@ postgres:
         status:
           type: VARCHAR(20)
           check: "IN ('Active', 'Not Published')"
+          nullable: true
           description: "Current status of the agent"
         tags:
           type: JSONB
@@ -70,14 +72,15 @@ postgres:
           type: VARCHAR(255)
           description: "Agent name"
         chain_id:
-          type: INTEGER
+          type: VARCHAR(255)
           references: CHAIN_DETAILS.chain_id
+          nullable: true
           description: "Blockchain reference"
     
     UNPUBLISHED_AGENT:
       columns:
         agent_id:
-          type: VARCHAR(64)
+          type: VARCHAR(255)
           primary_key: true
           references: AGENT.agent_id
           description: "References AGENT table"
@@ -95,7 +98,7 @@ postgres:
     PUBLISHED_AGENT:
       columns:
         agent_id:
-          type: VARCHAR(64)
+          type: VARCHAR(255)
           primary_key: true
           references: AGENT.agent_id
           description: "References AGENT table"
@@ -113,7 +116,7 @@ postgres:
     METADATA:
       columns:
         agent_id:
-          type: VARCHAR(64)
+          type: VARCHAR(255)
           primary_key: true
           references: AGENT.agent_id
           description: "References AGENT table"
@@ -125,7 +128,7 @@ postgres:
     BLOCKCHAIN_AGENT_DATA:
       columns:
         agent_id:
-          type: VARCHAR(64)
+          type: VARCHAR(255)
           primary_key: true
           references: AGENT.agent_id
           description: "References AGENT table"
@@ -136,17 +139,18 @@ postgres:
           type: TIMESTAMP
           description: "When published to blockchain"
         published_hash:
-          type: VARCHAR(64)
+          type: VARCHAR(255)
           description: "Last updated blockchain hash"
         contract_id:
-          type: VARCHAR(64)
+          type: VARCHAR(255)
           references: CONTRACT_DETAILS.contract_id
+          nullable: true
           description: "Smart contract reference"
         nft_id:
-          type: VARCHAR(64)
+          type: VARCHAR(255)
           description: "NFT identifier"
         nft_mint_trx_id:
-          type: VARCHAR(64)
+          type: VARCHAR(255)
           description: "Transaction ID for NFT minting"
         other_data:
           type: JSONB
@@ -156,7 +160,7 @@ postgres:
     CHAIN_DETAILS:
       columns:
         chain_id:
-          type: INTEGER
+          type: VARCHAR(255)
           primary_key: true
           description: "Chain identifier"
         chain:
@@ -172,12 +176,13 @@ postgres:
     CONTRACT_DETAILS:
       columns:
         contract_id:
-          type: VARCHAR(64)
+          type: VARCHAR(255)
           primary_key: true
           description: "Contract identifier"
         chain_id:
-          type: INTEGER
+          type: VARCHAR(255)
           references: CHAIN_DETAILS.chain_id
+          nullable: true
           description: "References CHAIN_DETAILS"
         contract_name:
           type: VARCHAR(100)
@@ -194,11 +199,12 @@ postgres:
           references: USER_AUTH.user_pub_key
           description: "User with access"
         nft_id:
-          type: VARCHAR(64)
+          type: VARCHAR(255)
           description: "NFT granting access"
         access_level:
           type: INTEGER
           references: ACCESS_LEVEL_TABLE.access_level
+          nullable: true
           description: "Permission level"
         timestamp:
           type: TIMESTAMP
@@ -255,7 +261,7 @@ postgres:
           check: "IN ('user', 'assistant')"
           description: "Either 'user' or 'assistant'"
         agent_id:
-          type: VARCHAR(64)
+          type: VARCHAR(255)
           references: AGENT.agent_id
           nullable: true
           description: "Optional reference to an agent"
@@ -266,6 +272,113 @@ postgres:
           type: TIMESTAMP
           default: "CURRENT_TIMESTAMP"
           description: "Message timestamp"
+    
+    # Flowbuilder Blocks
+    FLOWBUILDER_BLOCKS:
+      columns:
+        id:
+          type: SERIAL
+          primary_key: true
+          description: "Auto-incremented primary key"
+        type:
+          type: VARCHAR(255)
+          unique: true
+          description: "Block type identifier"
+        element_id:
+          type: VARCHAR(255)
+          nullable: true
+          description: "Element identifier"
+        name:
+          type: VARCHAR(255)
+          nullable: true
+          description: "Block name"
+        node_description:
+          type: TEXT
+          description: "Description of the node"
+        description:
+          type: TEXT
+          nullable: true
+          description: "Additional description"
+        input_schema:
+          type: JSONB
+          description: "JSON schema for input validation"
+        output_schema:
+          type: JSONB
+          description: "JSON schema for output validation"
+        parameter_schema_structure:
+          type: JSONB
+          default: "{}"
+          description: "Schema structure for parameters"
+        parameters:
+          type: JSONB
+          default: "{}"
+          description: "Default parameters"
+        processing_message:
+          type: TEXT
+          nullable: true
+          description: "Message shown during processing"
+        tags:
+          type: JSONB
+          default: "[]"
+          description: "Tags for categorization"
+        layer:
+          type: VARCHAR(100)
+          nullable: true
+          description: "Layer information"
+        hyperparameters:
+          type: JSONB
+          default: "{}"
+          description: "Hyperparameters configuration"
+        input_data:
+          type: JSONB
+          nullable: true
+          description: "Input data structure"
+        output_data:
+          type: JSONB
+          nullable: true
+          description: "Output data structure"
+        code:
+          type: TEXT
+          nullable: true
+          description: "Code content for custom blocks"
+        flow_control:
+          type: JSONB
+          nullable: true
+          description: "Flow control configuration"
+        icon:
+          type: VARCHAR(100)
+          description: "Icon identifier"
+        category:
+          type: VARCHAR(100)
+          description: "Block category"
+        created_at:
+          type: TIMESTAMP
+          default: "CURRENT_TIMESTAMP"
+          description: "Creation timestamp"
+        updated_at:
+          type: TIMESTAMP
+          default: "CURRENT_TIMESTAMP"
+          description: "Last update timestamp"
+      indexes:
+        - name: idx_flowbuilder_blocks_category
+          columns: ["category"]
+        - name: idx_flowbuilder_blocks_type
+          columns: ["type"]
+    
+    # Salt Email Table
+    SALT_EMAIL:
+      columns:
+        email:
+          type: VARCHAR(255)
+          primary_key: true
+          description: "Email address"
+        salt:
+          type: VARCHAR(255)
+          description: "Salt for password hashing"
+        created_at:
+          type: TIMESTAMP
+          default: "CURRENT_TIMESTAMP"
+          description: "Creation timestamp"
 
 # Redis Database Schema
 redis:

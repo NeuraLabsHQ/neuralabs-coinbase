@@ -2,8 +2,10 @@
 """
 Database Population Script for NeuraLabs Flowbuilder Blocks
 
-This script creates and populates the flowbuilder_blocks table using data
-extracted from YAML configuration files in the element_structure directory.
+This script populates the flowbuilder_blocks table using data extracted from 
+YAML configuration files in the element_structure directory.
+
+NOTE: Table creation is now handled by initiate.py. This script only populates data.
 """
 import os
 import sys
@@ -36,40 +38,23 @@ def get_db_connection():
         port=os.getenv('POSTGRES_PORT')
     )
 
-def create_flowbuilder_blocks_table(cursor):
-    """Create the flowbuilder_blocks table"""
+def verify_flowbuilder_blocks_table(cursor):
+    """Verify that the flowbuilder_blocks table exists"""
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS flowbuilder_blocks (
-            id SERIAL PRIMARY KEY,
-            type VARCHAR(255) NOT NULL UNIQUE,
-            element_id VARCHAR(255),
-            name VARCHAR(255),
-            node_description TEXT NOT NULL,
-            description TEXT,
-            input_schema JSONB NOT NULL,
-            output_schema JSONB NOT NULL,
-            parameter_schema_structure JSONB NOT NULL DEFAULT '{}',
-            parameters JSONB NOT NULL DEFAULT '{}',
-            processing_message TEXT,
-            tags JSONB NOT NULL DEFAULT '[]',
-            layer VARCHAR(100),
-            hyperparameters JSONB NOT NULL DEFAULT '{}',
-            input_data JSONB DEFAULT NULL,
-            output_data JSONB DEFAULT NULL,
-            code TEXT DEFAULT NULL,
-            flow_control JSONB DEFAULT NULL,
-            icon VARCHAR(100) NOT NULL,
-            category VARCHAR(100) NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name = 'flowbuilder_blocks'
         );
     """)
+    exists = cursor.fetchone()[0]
     
-    # Create indexes
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_flowbuilder_blocks_category ON flowbuilder_blocks(category);")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_flowbuilder_blocks_type ON flowbuilder_blocks(type);")
+    if not exists:
+        print("❌ flowbuilder_blocks table does not exist!")
+        print("   Please run initiate.py first to create all database tables.")
+        raise Exception("Required table 'flowbuilder_blocks' not found")
     
-    print("✅ Created flowbuilder_blocks table and indexes")
+    print("✅ Verified flowbuilder_blocks table exists")
 
 def populate_flowbuilder_blocks(cursor):
     """Populate the table with blocks extracted from YAML files"""
@@ -87,11 +72,8 @@ def populate_flowbuilder_blocks(cursor):
     except Exception as e:
         print(f"❌ Error extracting blocks from YAML: {e}")
         print("Falling back to hardcoded blocks...")
-        all_blocks = get_fallback_blocks()
+        return None
     
-    if not all_blocks:
-        print("❌ No blocks found. Using fallback blocks.")
-        all_blocks = get_fallback_blocks()
     
     print(f"📊 Found {len(all_blocks)} blocks to populate")
     
@@ -156,16 +138,16 @@ def populate_flowbuilder_blocks(cursor):
     
     print(f"\n📊 Summary: {successful_inserts} successful, {failed_inserts} failed")
 
-def run_migration():
-    """Run the complete migration"""
+def run_population():
+    """Run the complete population process"""
     try:
-        print("🚀 Starting flowbuilder_blocks migration...")
+        print("🚀 Starting flowbuilder_blocks population...")
         
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Create table
-        create_flowbuilder_blocks_table(cursor)
+        # Verify table exists
+        verify_flowbuilder_blocks_table(cursor)
         
         # Populate data
         populate_flowbuilder_blocks(cursor)
@@ -176,7 +158,7 @@ def run_migration():
         # Verify insertion
         cursor.execute("SELECT COUNT(*) FROM flowbuilder_blocks")
         count = cursor.fetchone()[0]
-        print(f"\n🎉 Migration completed successfully! Total blocks in database: {count}")
+        print(f"\n🎉 Population completed successfully! Total blocks in database: {count}")
         
         # Show category breakdown
         cursor.execute("""
@@ -195,121 +177,13 @@ def run_migration():
         conn.close()
         
     except Exception as e:
-        print(f"❌ Migration failed: {e}")
+        print(f"❌ Population failed: {e}")
         if 'conn' in locals():
             conn.rollback()
             conn.close()
         raise
 
-def get_fallback_blocks():
-    """Return fallback blocks if YAML extraction fails"""
-    return [
-        {
-            'type': 'Start',
-            'element_id': None,
-            'name': None,
-            'node_description': 'Entry point of a flow',
-            'description': None,
-            'input_schema': {},
-            'output_schema': {},
-            'parameter_schema_structure': {},
-            'parameters': {},
-            'processing_message': 'Starting flow...',
-            'tags': ['flow-control', 'required'],
-            'layer': None,
-            'hyperparameters': {},
-            'input_data': None,
-            'output_data': None,
-            'code': None,
-            'flow_control': None,
-            'icon': 'FiPlay',
-            'category': 'Flow Control'
-        },
-        {
-            'type': 'End',
-            'element_id': None,
-            'name': None,
-            'node_description': 'Exit point of a flow',
-            'description': None,
-            'input_schema': {"text_input": {"type": "string", "description": "Text input to be output", "required": False}},
-            'output_schema': {"text_output": {"type": "string", "description": "Final text output", "required": False}},
-            'parameter_schema_structure': {},
-            'parameters': {},
-            'processing_message': 'Completing flow...',
-            'tags': ['flow-control', 'required'],
-            'layer': None,
-            'hyperparameters': {},
-            'input_data': None,
-            'output_data': None,
-            'code': None,
-            'flow_control': None,
-            'icon': 'FiSquare',
-            'category': 'Flow Control'
-        },
-        {
-            'type': 'ChatInput',
-            'element_id': None,
-            'name': None,
-            'node_description': 'Capture user input text from chat interface',
-            'description': None,
-            'input_schema': {},
-            'output_schema': {"chat_input": {"type": "string", "description": "User input text", "required": True}},
-            'parameter_schema_structure': {},
-            'parameters': {},
-            'processing_message': 'Receiving input...',
-            'tags': ['input', 'user-interaction'],
-            'layer': None,
-            'hyperparameters': {},
-            'input_data': None,
-            'output_data': None,
-            'code': None,
-            'flow_control': None,
-            'icon': 'FiMessageCircle',
-            'category': 'Input'
-        },
-        {
-            'type': 'LLMText',
-            'element_id': None,
-            'name': None,
-            'node_description': 'Generate free-form text using Large Language Models',
-            'description': None,
-            'input_schema': {"prompt": {"type": "string", "description": "Main prompt for text generation", "required": True}},
-            'output_schema': {"llm_output": {"type": "string", "description": "Generated text from the LLM", "required": True}},
-            'parameter_schema_structure': {"model": {"type": "string"}, "temperature": {"type": "float"}},
-            'parameters': {"model": "llama-3.3-70b", "temperature": 0.7},
-            'processing_message': 'AI is generating response...',
-            'tags': ['ai', 'llm'],
-            'layer': None,
-            'hyperparameters': {},
-            'input_data': None,
-            'output_data': None,
-            'code': None,
-            'flow_control': None,
-            'icon': 'FiType',
-            'category': 'AI'
-        },
-        {
-            'type': 'Custom',
-            'element_id': None,
-            'name': None,
-            'node_description': 'Execute custom Python code',
-            'description': None,
-            'input_schema': {},
-            'output_schema': {},
-            'parameter_schema_structure': {},
-            'parameters': {},
-            'processing_message': 'Executing custom code...',
-            'tags': ['custom', 'code'],
-            'layer': None,
-            'hyperparameters': {},
-            'input_data': None,
-            'output_data': None,
-            'code': '',
-            'flow_control': None,
-            'icon': 'FiTerminal',
-            'category': 'Custom'
-        }
-    ]
+
 
 if __name__ == "__main__":
-    run_migration()
+    run_population()
