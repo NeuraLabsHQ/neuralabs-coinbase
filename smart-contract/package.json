@@ -4,7 +4,23 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "truffle test",
+    "test:local": "truffle test --network development",
+    "compile": "truffle compile",
+    "migrate": "truffle migrate",
+    "migrate:reset": "truffle migrate --reset",
+    "deploy:local": "TRUFFLE_NETWORK=local node scripts/deploy.js",
+    "deploy:testnet": "TRUFFLE_NETWORK=testnet node scripts/deploy.js",
+    "deploy:mainnet": "TRUFFLE_NETWORK=mainnet node scripts/deploy.js",
+    "deploy:examples": "TRUFFLE_NETWORK=local node scripts/deploy.js --examples",
+    "deploy:dry-run": "TRUFFLE_NETWORK=local node scripts/deploy.js --dry-run",
+    "verify:testnet": "TRUFFLE_NETWORK=testnet node scripts/verify.js",
+    "verify:mainnet": "TRUFFLE_NETWORK=mainnet node scripts/verify.js",
+    "verify:contract": "node scripts/verify.js --contract=",
+    "console": "truffle console",
+    "console:testnet": "truffle console --network testnet",
+    "console:mainnet": "truffle console --network mainnet",
+    "flatten": "truffle-flattener contracts/**/*.sol > flattened.sol"
   },
   "keywords": [],
   "author": "",
@@ -12,6 +28,12 @@
   "type": "commonjs",
   "dependencies": {
     "@openzeppelin/contracts": "^5.3.0",
+    "@truffle/hdwallet-provider": "^2.1.15",
+    "dotenv": "^16.3.1",
     "truffle": "^5.11.5"
+  },
+  "devDependencies": {
+    "truffle-plugin-verify": "^0.6.7",
+    "truffle-flattener": "^1.6.0"
   }
 }
