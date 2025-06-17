@@ -1,64 +1,9 @@
 version: '1.0'
 
 
-# run multip services with docker compose : docker compose up -d postgres redis sui-backend sui-frontend sui-prover-backend sui-prover-frontend
+# run multip services with docker compose : docker compose up -d postgres redis coinbase-backend coinbase-frontend coinbase-prover-backend coinbase-prover-frontend
 
 services:
-
-## Prover Service
-
-  sui-prover-backend:
-    image: mysten/zklogin:prover-stable
-    volumes:
-      # The ZKEY environment variable must be set to the path of the zkey file.
-      - ./prover-service/zklogin-ceremony-contributions/zkLogin-main.zkey:/app/binaries/zkLogin.zkey
-    environment:
-      - ZKEY=/app/binaries/zkLogin.zkey
-      - WITNESS_BINARIES=/app/binaries
-    
-    networks:
-      - neuralabs_sui_network
-      - traefik-proxy
-
-  sui-prover-frontend:
-    image: mysten/zklogin:prover-fe-stable
-    command: '8080'
-    ports:
-      # The PROVER_PORT environment variable must be set to the desired port.
-      - '2015:8080'
-    environment:
-      - PROVER_URI=http://sui-prover-backend:8080/input
-      - NODE_ENV=production
-      - DEBUG=zkLogin:info,jwks
-      - PROVER_TIMEOUT=30
-    labels:
-      - "traefik.enable=true"
-      # Service
-      - "traefik.http.services.sui-prover-server.loadbalancer.server.port=8080"
-      # CORS middleware
-      # - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowmethods=*"
-
-      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowmethods=*"
-      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolalloworiginlist=*"
-      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowheaders=*"
-      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolmaxage=100"
-      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowcredentials=true"
-      
-      # config
-      - "traefik.http.routers.sui-prover.rule=Host(`prover.sui.neuralabs.org`)"
-      - "traefik.http.routers.sui-prover.entrypoints=websecure"
-      - "traefik.http.routers.sui-prover.tls=true"
-      - "traefik.http.routers.sui-prover.tls.certresolver=letsencrypt"
-
-      # connecting the router to the service and the middleware
-
-      - "traefik.http.routers.sui-prover.service=sui-prover-server"
-      - "traefik.http.routers.sui-prover.middlewares=sui-prover-cors"
-    
-    networks:
-      - neuralabs_sui_network
-      - traefik-proxy
-
 
 
 ## Database Services
@@ -72,7 +17,7 @@ services:
     volumes:
       - ./database/data/postgres_data:/var/lib/postgresql/data
     networks:
-      - neuralabs_sui_network
+      - neuralabs_coinbase_network
     restart: unless-stopped
 
   redis:
@@ -89,11 +34,11 @@ services:
     # Use sh -c to evaluate the variable inside the container
     command: sh -c 'redis-server --requirepass "$$REDIS_PASSWORD" --appendonly yes'
     networks:
-      - neuralabs_sui_network
+      - neuralabs_coinbase_network
     restart: unless-stopped
 
 networks:
-  neuralabs_sui_network:
+  neuralabs_coinbase_network:
     driver: bridge
   traefik-proxy:
     external: true

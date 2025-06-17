@@ -1,33 +1,31 @@
 version: '3.8'
 
-# NeuraLabs SUI Production Deployment
+# NeuraLabs coinbase Production Deployment
 # Run with: docker-compose -f docker-compose-deployment.yaml up -d
 #
 # Services and Port Assignments:
 # ┌─────────────────────┬──────┬─────────────────────────────────────┐
 # │ Service             │ Port │ URL/Access                          │
 # ├─────────────────────┼──────┼─────────────────────────────────────┤
-# │ Prover Frontend     │ 2015 │ https://prover.sui.neuralabs.org    │
-# │ Frontend            │ 2016 │ https://sui.neuralabs.org           │
-# │ Backend API         │ 2017 │ https://api.sui.neuralabs.org       │
+# │ Frontend            │ 2016 │ https://coinbase.neuralabs.org      │
+# │ Backend API         │ 2017 │ https://api.coinbase.neuralabs.org  │
 # │ Landing Page        │ 2018 │ https://neuralabs.org (separate)    │
-# │ Redis               │ 2019 │ Internal only                       │
-# │ PostgreSQL          │ 2020 │ Internal only                       │
-# │ Code Executor       │ 2021 │ Internal/API access                 │
 # ├─────────────────────┼──────┼─────────────────────────────────────┤
 # │ Internal Services   │      │                                     │
 # ├─────────────────────┼──────┼─────────────────────────────────────┤
-# │ Prover Backend      │ 8080 │ Internal only (zkLogin processing)  │
+# │ Redis               │ 2019 │ Internal only                       │
+# │ PostgreSQL          │ 2020 │ Internal only                       │
+# │ Code Executor       │ 2021 │ Internal/API access[Akash Network]  │
 # └─────────────────────┴──────┴─────────────────────────────────────┘
 
 services:
 
 ## Frontend Service
-  neuralabs-sui-frontend:
+  neuralabs-coinbase-frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: neuralabs-sui-frontend
+    container_name: neuralabs-coinbase-frontend
     ports:
       - "2016:80"
     networks:
@@ -35,27 +33,27 @@ services:
       - traefik-proxy
     restart: unless-stopped
     depends_on:
-      - neuralabs-sui-backend
+      - neuralabs-coinbase-backend
     labels:
       - "traefik.enable=true"
       # Service
-      - "traefik.http.services.neuralabs-frontend-sui.loadbalancer.server.port=80"
+      - "traefik.http.services.neuralabs-frontend-coinbase.loadbalancer.server.port=80"
       
       # Router config
-      - "traefik.http.routers.neuralabs-frontend-sui.rule=Host(`sui.neuralabs.org`)"
-      - "traefik.http.routers.neuralabs-frontend-sui.entrypoints=websecure"
-      - "traefik.http.routers.neuralabs-frontend-sui.tls=true"
-      - "traefik.http.routers.neuralabs-frontend-sui.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.neuralabs-frontend-coinbase.rule=Host(`coinbase.neuralabs.org`)"
+      - "traefik.http.routers.neuralabs-frontend-coinbase.entrypoints=websecure"
+      - "traefik.http.routers.neuralabs-frontend-coinbase.tls=true"
+      - "traefik.http.routers.neuralabs-frontend-coinbase.tls.certresolver=letsencrypt"
 
       # Connect router to service
-      - "traefik.http.routers.neuralabs-frontend-sui.service=neuralabs-frontend-sui"
+      - "traefik.http.routers.neuralabs-frontend-coinbase.service=neuralabs-frontend-coinbase"
 
 ## Backend Service
-  neuralabs-sui-backend:
+  neuralabs-coinbase-backend:
     build:
       context: ./neuralabs-backend
       dockerfile: Dockerfile
-    container_name: neuralabs-sui-backend
+    container_name: neuralabs-coinbase-backend
     ports:
       - "2017:8000"
     networks:
@@ -63,9 +61,9 @@ services:
       - traefik-proxy
     restart: unless-stopped
     depends_on:
-      - neuralabs-sui-postgres
-      - neuralabs-sui-redis
-      - neuralabs-sui-executor
+      - neuralabs-coinbase-postgres
+      - neuralabs-coinbase-redis
+      - neuralabs-coinbase-executor
     environment:
       - PYTHONPATH=/app
     volumes:
@@ -74,30 +72,30 @@ services:
     labels:
       - "traefik.enable=true"
       # Service
-      - "traefik.http.services.neuralabs-backend-sui.loadbalancer.server.port=8000"
+      - "traefik.http.services.neuralabs-backend-coinbase.loadbalancer.server.port=8000"
       # CORS middleware
-      - "traefik.http.middlewares.neuralabs-backend-sui-cors.headers.accesscontrolallowmethods=*"
-      - "traefik.http.middlewares.neuralabs-backend-sui-cors.headers.accesscontrolalloworiginlist=*"
-      - "traefik.http.middlewares.neuralabs-backend-sui-cors.headers.accesscontrolallowheaders=*"
-      - "traefik.http.middlewares.neuralabs-backend-sui-cors.headers.accesscontrolmaxage=100"
-      - "traefik.http.middlewares.neuralabs-backend-sui-cors.headers.accesscontrolallowcredentials=true"
+      - "traefik.http.middlewares.neuralabs-backend-coinbase-cors.headers.accesscontrolallowmethods=*"
+      - "traefik.http.middlewares.neuralabs-backend-coinbase-cors.headers.accesscontrolalloworiginlist=*"
+      - "traefik.http.middlewares.neuralabs-backend-coinbase-cors.headers.accesscontrolallowheaders=*"
+      - "traefik.http.middlewares.neuralabs-backend-coinbase-cors.headers.accesscontrolmaxage=100"
+      - "traefik.http.middlewares.neuralabs-backend-coinbase-cors.headers.accesscontrolallowcredentials=true"
       
       # Router config
-      - "traefik.http.routers.neuralabs-backend-sui.rule=Host(`api.sui.neuralabs.org`)"
-      - "traefik.http.routers.neuralabs-backend-sui.entrypoints=websecure"
-      - "traefik.http.routers.neuralabs-backend-sui.tls=true"
-      - "traefik.http.routers.neuralabs-backend-sui.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.neuralabs-backend-coinbase.rule=Host(`api.coinbase.neuralabs.org`)"
+      - "traefik.http.routers.neuralabs-backend-coinbase.entrypoints=websecure"
+      - "traefik.http.routers.neuralabs-backend-coinbase.tls=true"
+      - "traefik.http.routers.neuralabs-backend-coinbase.tls.certresolver=letsencrypt"
 
       # Connect router to service and middleware
-      - "traefik.http.routers.neuralabs-backend-sui.service=neuralabs-backend-sui"
-      - "traefik.http.routers.neuralabs-backend-sui.middlewares=neuralabs-backend-sui-cors"
+      - "traefik.http.routers.neuralabs-backend-coinbase.service=neuralabs-backend-coinbase"
+      - "traefik.http.routers.neuralabs-backend-coinbase.middlewares=neuralabs-backend-coinbase-cors"
 
 ## HPC Execution Engine
-  neuralabs-sui-executor:
+  neuralabs-coinbase-executor:
     build:
       context: ./hpc-execution-node-backend/code_executor
       dockerfile: Dockerfile
-    container_name: neuralabs-sui-executor
+    container_name: neuralabs-coinbase-executor
     ports:
       - "2021:8001"
     networks:
@@ -112,9 +110,9 @@ services:
     command: ["gunicorn", "--bind", "0.0.0.0:8001", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "--access-logfile", "logs/access.log", "--error-logfile", "logs/error.log", "app:app"]
 
 ## Database Services
-  neuralabs-sui-postgres:
+  neuralabs-coinbase-postgres:
     image: postgres:15
-    container_name: neuralabs-sui-postgres
+    container_name: neuralabs-coinbase-postgres
     env_file:
       - ./database/.env
     ports:
@@ -125,9 +123,9 @@ services:
       - neuralabs_network
     restart: unless-stopped
 
-  neuralabs-sui-redis:
+  neuralabs-coinbase-redis:
     image: redis:7
-    container_name: neuralabs-sui-redis
+    container_name: neuralabs-coinbase-redis
     env_file:
       - ./database/.env
     command: sh -c 'redis-server --requirepass "$$REDIS_PASSWORD" --appendonly yes'
@@ -139,60 +137,6 @@ services:
       - neuralabs_network
     restart: unless-stopped
 
-## Prover Services (Keep original naming as requested)
-  sui-prover-backend:
-    image: mysten/zklogin:prover-stable
-    container_name: sui-prover-backend
-    volumes:
-      - ./prover-service/zklogin-ceremony-contributions/zkLogin-main.zkey:/app/binaries/zkLogin.zkey
-    environment:
-      - ZKEY=/app/binaries/zkLogin.zkey
-      - WITNESS_BINARIES=/app/binaries
-    networks:
-      - neuralabs_network
-      - traefik-proxy
-    restart: unless-stopped
-
-  sui-prover-frontend:
-    image: mysten/zklogin:prover-fe-stable
-    container_name: sui-prover-frontend
-    command: '8080'
-    ports:
-      - "2015:8080"
-    environment:
-      - PROVER_URI=http://sui-prover-backend:8080/input
-      - NODE_ENV=production
-      - DEBUG=zkLogin:info,jwks
-      - PROVER_TIMEOUT=30
-    labels:
-      - "traefik.enable=true"
-      # Service
-      - "traefik.http.services.sui-prover-server.loadbalancer.server.port=8080"
-      # CORS middleware
-      # - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowmethods=*"
-
-      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowmethods=*"
-      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolalloworiginlist=*"
-      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowheaders=*"
-      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolmaxage=100"
-      - "traefik.http.middlewares.sui-prover-cors.headers.accesscontrolallowcredentials=true"
-      
-      # config
-      - "traefik.http.routers.sui-prover.rule=Host(`prover.sui.neuralabs.org`)"
-      - "traefik.http.routers.sui-prover.entrypoints=websecure"
-      - "traefik.http.routers.sui-prover.tls=true"
-      - "traefik.http.routers.sui-prover.tls.certresolver=letsencrypt"
-
-      # connecting the router to the service and the middleware
-
-      - "traefik.http.routers.sui-prover.service=sui-prover-server"
-      - "traefik.http.routers.sui-prover.middlewares=sui-prover-cors"
-    networks:
-      - neuralabs_network
-      - traefik-proxy
-    restart: unless-stopped
-    depends_on:
-      - sui-prover-backend
 
 volumes:
   postgres_data:
