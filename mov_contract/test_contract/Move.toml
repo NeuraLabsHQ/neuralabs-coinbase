@@ -1,9 +1,0 @@
-[package]
-name = "TestContract"
-edition = "2024.beta"
-version = "0.0.1"
-
-[dependencies]
-
-[addresses]
-test_contract = "0x0"
