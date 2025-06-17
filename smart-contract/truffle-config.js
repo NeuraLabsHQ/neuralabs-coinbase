@@ -42,6 +42,57 @@
  */
 
 require('dotenv').config();
+const HDWalletProvider = require('@truffle/hdwallet-provider');
+
+// Helper function to get account provider
+function getProvider(network) {
+  const networkUpper = network.toUpperCase();
+  
+  // Check for network-specific mnemonic first
+  const networkMnemonic = process.env[`${networkUpper}_MNEMONIC`];
+  if (networkMnemonic) {
+    const rpcUrl = process.env[`${networkUpper}_RPC_URL`];
+    if (!rpcUrl) {
+      throw new Error(`Missing ${networkUpper}_RPC_URL in .env file`);
+    }
+    // Different account counts based on network
+    const accountCount = network === 'local' ? 10 : network === 'testnet' ? 5 : 3;
+    return new HDWalletProvider({
+      mnemonic: networkMnemonic,
+      providerOrUrl: rpcUrl,
+      numberOfAddresses: accountCount
+    });
+  }
+  
+  // Check for global mnemonic
+  const globalMnemonic = process.env.MNEMONIC;
+  if (globalMnemonic) {
+    const rpcUrl = process.env[`${networkUpper}_RPC_URL`];
+    if (!rpcUrl) {
+      throw new Error(`Missing ${networkUpper}_RPC_URL in .env file`);
+    }
+    return new HDWalletProvider(globalMnemonic, rpcUrl);
+  }
+  
+  // Check for private key
+  const privateKey = process.env[`${networkUpper}_PRIVATE_KEY`];
+  if (privateKey) {
+    const rpcUrl = process.env[`${networkUpper}_RPC_URL`];
+    if (!rpcUrl) {
+      throw new Error(`Missing ${networkUpper}_RPC_URL in .env file`);
+    }
+    return new HDWalletProvider(privateKey, rpcUrl);
+  }
+  
+  throw new Error(`No account configuration found for ${network}. Please set ${networkUpper}_MNEMONIC, MNEMONIC, or ${networkUpper}_PRIVATE_KEY`);
+}
+
+// Get gas price for network
+function getGasPrice(network) {
+  const networkUpper = network.toUpperCase();
+  const gasPriceKey = `GAS_PRICE_${networkUpper}`;
+  return process.env[gasPriceKey] ? parseInt(process.env[gasPriceKey]) : 20000000000; // Default 20 gwei
+}
 
 module.exports = {
   /**
@@ -65,55 +116,40 @@ module.exports = {
       host: "127.0.0.1",     // Localhost (default: none)
       port: 8545,            // Standard Ethereum port (default: none)
       network_id: "*",       // Any network (default: none)
-      gas: 6721975,         // Gas limit
-      gasPrice: 20000000000  // 20 gwei
+      gas: process.env.GAS_LIMIT ? parseInt(process.env.GAS_LIMIT) : 8000000,
+      gasPrice: getGasPrice('local')
     },
-
-    // Ganache local network
-    ganache: {
-      host: "127.0.0.1",
-      port: 7545,           // Default Ganache GUI port
+    
+    // Local network with HDWallet provider (for consistent addresses)
+    local: {
+      provider: () => getProvider('local'),
       network_id: "*",
-      gas: 6721975,
-      gasPrice: 20000000000
+      gas: process.env.GAS_LIMIT ? parseInt(process.env.GAS_LIMIT) : 8000000,
+      gasPrice: getGasPrice('local')
     },
 
-    // Sepolia testnet (example configuration)
-    sepolia: {
-      provider: () => {
-        const HDWalletProvider = require('@truffle/hdwallet-provider');
-        const mnemonic = process.env.MNEMONIC;
-        const infuraKey = process.env.INFURA_KEY;
-        if (!mnemonic || !infuraKey) {
-          throw new Error('Please set MNEMONIC and INFURA_KEY in your .env file');
-        }
-        return new HDWalletProvider(mnemonic, `https://sepolia.infura.io/v3/${infuraKey}`);
-      },
+
+    // Testnet configuration (Sepolia)
+    testnet: {
+      provider: () => getProvider('testnet'),
       network_id: 11155111,  // Sepolia's network id
-      gas: 4000000,
-      gasPrice: 10000000000, // 10 gwei
+      gas: process.env.GAS_LIMIT ? parseInt(process.env.GAS_LIMIT) : 8000000,
+      gasPrice: getGasPrice('testnet'),
       confirmations: 2,      // # of confirmations to wait between deployments
       timeoutBlocks: 200,    // # of blocks before a deployment times out
       skipDryRun: true       // Skip dry run before migrations
     },
 
-    // Mainnet configuration (example)
+    // Mainnet configuration
     mainnet: {
-      provider: () => {
-        const HDWalletProvider = require('@truffle/hdwallet-provider');
-        const mnemonic = process.env.MNEMONIC;
-        const infuraKey = process.env.INFURA_KEY;
-        if (!mnemonic || !infuraKey) {
-          throw new Error('Please set MNEMONIC and INFURA_KEY in your .env file');
-        }
-        return new HDWalletProvider(mnemonic, `https://mainnet.infura.io/v3/${infuraKey}`);
-      },
+      provider: () => getProvider('mainnet'),
       network_id: 1,         // Mainnet's id
-      gas: 4000000,
-      gasPrice: 50000000000, // 50 gwei
+      gas: process.env.GAS_LIMIT ? parseInt(process.env.GAS_LIMIT) : 8000000,
+      gasPrice: getGasPrice('mainnet'),
       confirmations: 2,
       timeoutBlocks: 200,
-      skipDryRun: false
+      skipDryRun: false,
+      production: true       // Treat as production network
     }
   },
 
@@ -156,4 +192,14 @@ module.exports = {
   //     }
   //   }
   // }
+  
+  // Truffle plugins for contract verification
+  plugins: [
+    'truffle-plugin-verify'
+  ],
+  
+  // API keys for contract verification
+  api_keys: {
+    etherscan: process.env.ETHERSCAN_API_KEY
+  }
 };
