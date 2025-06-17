@@ -1,0 +1,56 @@
+type: End
+element_id: null
+name: null
+node_description: Exit point of a flow that collects final outputs including text
+  and optional blockchain transactions
+description: null
+input_schema:
+  text_input:
+    type: string
+    description: Final text output of the flow
+    required: true
+  proposed_transaction:
+    type: json
+    description: Transaction data for blockchain interaction
+    required: false
+output_schema:
+  text_output:
+    type: string
+    description: Final text output
+    required: true
+  proposed_transaction:
+    type: json
+    description: Final transaction payload
+    required: false
+parameter_schema_structure: {}
+parameters: {}
+processing_message: Completing flow...
+tags:
+- flow-control
+- required
+layer: null
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: fixed
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit
+input_data: null
+output_data: null
+code: null
+flow_control: null
+icon: FiSquare
+category: Flow Control

@@ -1,0 +1,42 @@
+type: Constants
+element_id: null
+name: null
+node_description: Provides static key-value pairs for configuration and settings
+description: null
+input_schema: {}
+output_schema: {}
+parameter_schema_structure: null
+parameters: {}
+processing_message: Loading constants...
+tags:
+- input
+- configuration
+- static-data
+layer: null
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: edit
+  parameters:
+    access: edit
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit
+input_data: null
+output_data: null
+code: null
+flow_control: null
+icon: FiLock
+category: Input

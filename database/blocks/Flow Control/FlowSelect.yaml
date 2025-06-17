@@ -1,0 +1,52 @@
+type: FlowSelect
+element_id: null
+name: null
+node_description: Path selection element that chooses between multiple flow execution
+  paths
+description: null
+input_schema: {}
+output_schema:
+  chosen_flow:
+    type: string
+    description: ID of the selected flow
+    required: true
+parameter_schema_structure:
+  flows_to_switch:
+    type: list
+    description: List of flow IDs representing possible paths
+parameters:
+  flows_to_switch: []
+processing_message: Selecting execution path...
+tags:
+- flow-control
+- routing
+layer: null
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: fixed
+  parameters.flows_to_switch:
+    access: edit
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit
+input_data: null
+output_data: null
+code: null
+flow_control:
+  type: flow_select
+  enabled: true
+icon: FiShuffle
+category: Flow Control

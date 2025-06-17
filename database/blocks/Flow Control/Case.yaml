@@ -1,0 +1,56 @@
+type: Case
+element_id: null
+name: null
+node_description: Conditional branching element that evaluates conditions and controls
+  downstream execution paths
+description: null
+input_schema:
+  variables:
+    type: json
+    description: Dictionary of values to compare
+    required: true
+output_schema:
+  result:
+    type: json
+    description: Dictionary of case IDs to boolean results
+    required: true
+parameter_schema_structure:
+  cases:
+    type: list
+    description: List of case configurations with conditions
+parameters:
+  cases: []
+processing_message: Evaluating conditions...
+tags:
+- flow-control
+- conditional
+layer: null
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: fixed
+  parameters.cases:
+    access: edit
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit
+input_data: null
+output_data: null
+code: null
+flow_control:
+  type: case
+  enabled: true
+icon: FiGitBranch
+category: Flow Control

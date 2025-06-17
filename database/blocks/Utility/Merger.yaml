@@ -1,0 +1,51 @@
+type: Merger
+element_id: null
+name: null
+node_description: Combines multiple data inputs into a single output
+description: null
+input_schema:
+  data1:
+    type: any
+    description: First data input
+    required: true
+  data2:
+    type: any
+    description: Second data input
+    required: true
+output_schema:
+  merged_data:
+    type: any
+    description: Combined data result
+    required: true
+parameter_schema_structure: {}
+parameters: {}
+processing_message: Merging data...
+tags:
+- utility
+- data-manipulation
+layer: null
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: fixed
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit
+input_data: null
+output_data: null
+code: null
+flow_control: null
+icon: FiGitMerge
+category: Utility
