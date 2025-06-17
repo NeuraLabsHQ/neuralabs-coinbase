@@ -196,45 +196,20 @@ async function deploy() {
     }
   };
 
+  console.log('Starting deployment...\n');
+
+  // Run truffle migrate
+  const resetFlag = options.reset ? '--reset' : '';
+  const migrateCmd = `npx truffle migrate --network ${options.network} ${resetFlag}`.trim();
+  console.log(`Executing: ${migrateCmd}`);
+  
+  let stdout, stderr;
   try {
-    console.log('Starting deployment...\n');
-
-    // Run truffle migrate
-    const migrateCmd = `npx truffle migrate --network ${options.network}`;
-    console.log(`Executing: ${migrateCmd}`);
-    
-    const { stdout, stderr } = await execAsync(migrateCmd);
-    
-    if (stderr && !stderr.includes('Warning')) {
-      throw new Error(stderr);
-    }
-
-    console.log(stdout);
-
-    // Parse deployment results from stdout
-    // This is a simplified version - you would need to parse the actual truffle output
-    // to extract addresses and gas usage
-
-    // For now, we'll create a success record
-    deploymentData.summary.success = true;
-    deploymentData.summary.totalContracts = CORE_CONTRACTS.length;
-
-    // Save deployment record
-    const recordFile = createDeploymentRecord(deploymentData);
-    console.log(`\nDeployment record saved: ${recordFile}`);
-
-    // Verify contracts if requested
-    if (options.verify) {
-      console.log('\nStarting contract verification...');
-      try {
-        await execAsync(`node ${path.join(__dirname, 'verify.js')} --network ${options.network}`);
-        console.log('Contract verification completed.');
-      } catch (error) {
-        console.error('Contract verification failed:', error.message);
-      }
-    }
-
+    const result = await execAsync(migrateCmd);
+    stdout = result.stdout;
+    stderr = result.stderr;
   } catch (error) {
+    // If the command failed with a non-zero exit code
     console.error('\nDeployment failed:', error.message);
     deploymentData.summary.success = false;
     deploymentData.error = error.message;
@@ -242,6 +217,41 @@ async function deploy() {
     const errorFile = createDeploymentRecord(deploymentData, true);
     console.error(`Error details saved: ${errorFile}`);
     process.exit(1);
+  }
+  
+  // Truffle outputs progress to stderr, which is not an error
+  // Only show stderr if it contains actual warnings/errors
+  if (stderr && stderr.includes('Error')) {
+    console.warn('Deployment warnings:', stderr);
+  }
+
+  console.log(stdout);
+
+  // Read the deployment data created by the migration
+  const latestDeploymentFile = path.join(__dirname, '../deployments', `${options.network}-latest.json`);
+  if (fs.existsSync(latestDeploymentFile)) {
+    const migrationData = JSON.parse(fs.readFileSync(latestDeploymentFile, 'utf8'));
+    // Use the migration's deployment data
+    Object.assign(deploymentData, migrationData);
+    console.log(`\nDeployment record already saved by migration: ${latestDeploymentFile}`);
+  } else {
+    // Fallback to creating a basic record
+    deploymentData.summary.success = true;
+    deploymentData.summary.totalContracts = CORE_CONTRACTS.length;
+    // Save deployment record
+    const recordFile = createDeploymentRecord(deploymentData);
+    console.log(`\nDeployment record saved: ${recordFile}`);
+  }
+
+  // Verify contracts if requested
+  if (options.verify) {
+    console.log('\nStarting contract verification...');
+    try {
+      await execAsync(`node ${path.join(__dirname, 'verify.js')} --network ${options.network}`);
+      console.log('Contract verification completed.');
+    } catch (error) {
+      console.error('Contract verification failed:', error.message);
+    }
   }
 
   console.log('\nDeployment completed successfully!');

@@ -85,7 +85,7 @@ npm run deploy:local
 
 Or using Truffle directly:
 ```bash
-truffle migrate --network development
+npx truffle migrate --network development
 ```
 
 ### Testnet Deployment (Sepolia)
@@ -224,30 +224,69 @@ npm run test:local
 
 ## Development Commands
 
-### Compilation
+### Compilation & Building
 ```bash
-npm run compile  # Compile contracts
+npm run compile           # Compile all contracts
+npm run flatten          # Create flattened.sol for verification
 ```
 
-### Console Access
+### Testing
 ```bash
-npm run console           # Local console
-npm run console:testnet   # Testnet console
-npm run console:mainnet   # Mainnet console
+npm test                 # Run all tests
+npm run test:local       # Run tests on local network
+```
+
+### Migration & Deployment
+```bash
+# Basic migrations
+npm run migrate          # Run migrations on development network
+npm run migrate:reset    # Reset and re-run all migrations
+
+# Deployment with custom scripts
+npm run deploy:local     # Deploy to local network
+npm run deploy:testnet   # Deploy to Sepolia testnet
+npm run deploy:mainnet   # Deploy to Ethereum mainnet
+
+# Additional deployment options
+npm run deploy:examples  # Deploy with example contracts
+npm run deploy:dry-run   # Test deployment without executing
 ```
 
 ### Contract Verification
 ```bash
-# Verify all contracts
-npm run verify:testnet
+# Verify all contracts on network
+npm run verify:testnet   # Verify on Sepolia
+npm run verify:mainnet   # Verify on mainnet
 
 # Verify specific contract
 npm run verify:contract -- --contract=NFTContract --network=testnet
 ```
 
-### Flatten Contracts
+### Console Access
 ```bash
-npm run flatten  # Creates flattened.sol for verification
+npm run console          # Local development console
+npm run console:testnet  # Sepolia testnet console
+npm run console:mainnet  # Mainnet console
+```
+
+### Direct Script Access
+```bash
+# Deploy with specific options
+node scripts/deploy.js --network testnet --verify
+node scripts/deploy.js --network mainnet --reset --dry-run
+
+# Verify contracts manually
+node scripts/verify.js --network=testnet
+node scripts/verify.js --network=mainnet --contract=Monetization
+```
+
+### Environment Management
+```bash
+# Copy example environment file
+cp .env.example .env
+
+# Edit environment variables
+nano .env  # or your preferred editor
 ```
 
 ## Security Considerations
