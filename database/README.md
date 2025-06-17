@@ -112,17 +112,17 @@ python populate.py --auto
 ============================================================
 
 ✅ Created (3 blocks):
-  - CustomBlock
-  - NewUtility
-  - TestBlock
+  - Custom:CustomBlock
+  - Utility:NewUtility
+  - AI:TestBlock
 
 🔄 Modified (2 blocks):
-  - LLMStructured
-  - BuildTransaction
+  - AI:LLMStructured
+  - Blockchain:BuildTransaction
 
 ⏸️  Unchanged (14 blocks):
-  - ChatInput
-  - Constants
+  - Input:ChatInput
+  - Input:Constants
   - ...
 ```
 

@@ -196,7 +196,7 @@ def populate_flowbuilder_blocks(cursor, auto_confirm=False):
     existing_blocks = get_existing_blocks(cursor)
     print(f"📊 Found {len(existing_blocks)} existing blocks in database")
     
-    # Track changes
+    # Track changes with category information
     created = []
     modified = []
     unchanged = []
@@ -204,11 +204,13 @@ def populate_flowbuilder_blocks(cursor, auto_confirm=False):
     
     for block in all_blocks:
         block_type = block['type']
+        block_category = block['category']
+        block_display = f"{block_category}:{block_type}"
         
         if block_type in existing_blocks:
             # Block exists - check if it needs updating
             if compare_blocks(existing_blocks[block_type], block):
-                unchanged.append(block_type)
+                unchanged.append(block_display)
                 print(f"\n✅ {block_type}: No changes needed")
             else:
                 # Block has changes
@@ -260,13 +262,13 @@ def populate_flowbuilder_blocks(cursor, auto_confirm=False):
                             block['category'],
                             block_type
                         ))
-                        modified.append(block_type)
+                        modified.append(block_display)
                         print(f"  ✅ Updated {block_type}")
                     except Exception as e:
                         print(f"  ❌ Failed to update {block_type}: {e}")
-                        skipped.append(block_type)
+                        skipped.append(block_display)
                 else:
-                    skipped.append(block_type)
+                    skipped.append(block_display)
                     print(f"  ⏭️  Skipped {block_type}")
         else:
             # New block
@@ -300,13 +302,13 @@ def populate_flowbuilder_blocks(cursor, auto_confirm=False):
                         block['icon'],
                         block['category']
                     ))
-                    created.append(block_type)
+                    created.append(block_display)
                     print(f"  ✅ Created {block_type}")
                 except Exception as e:
                     print(f"  ❌ Failed to create {block_type}: {e}")
-                    skipped.append(block_type)
+                    skipped.append(block_display)
             else:
-                skipped.append(block_type)
+                skipped.append(block_display)
                 print(f"  ⏭️  Skipped {block_type}")
     
     # Print summary tables
