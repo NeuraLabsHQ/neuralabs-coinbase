@@ -41,22 +41,26 @@ contract("AIServiceAgreementManagement", (accounts) => {
         const tx = await aiServiceAgreement.recordAccessSale(
           tokenId,
           user1,
-          expiryTime,
+          web3.utils.toWei('1', 'ether'), // amount
+          duration, // duration in seconds
+          5, // AccessLevel.EditData
           { from: monetizationContract }
         );
 
+        const expectedExpiry = currentTime.add(new BN(duration));
         expectEvent(tx, 'AccessSaleRecorded', {
-          tokenId: tokenId.toString(),
+          nftId: tokenId.toString(),
           user: user1,
-          expiry: expiryTime
+          amount: web3.utils.toWei('1', 'ether'),
+          expiry: expectedExpiry
         });
 
         // Verify sale was recorded
-        const hasPaidAccess = await aiServiceAgreement.hasPaidAccess(tokenId, user1);
-        assert.equal(hasPaidAccess, true, "User should have paid access");
+        const hasAccess = await aiServiceAgreement.hasActiveAccess(tokenId, user1);
+        assert.equal(hasAccess, true, "User should have active access");
 
         // Verify active count increased
-        const activeCount = await aiServiceAgreement.activeAccessSalesCount(tokenId);
+        const activeCount = await aiServiceAgreement.total_active_access_sales(tokenId);
         assert.equal(activeCount.toNumber(), 1, "Active access sales count should be 1");
       });
 
@@ -64,45 +68,48 @@ contract("AIServiceAgreementManagement", (accounts) => {
         const tx = await aiServiceAgreement.recordAccessSale(
           tokenId,
           user1,
-          0, // Permanent access
+          web3.utils.toWei('2', 'ether'), // amount
+          0, // duration 0 = permanent
+          6, // AccessLevel.AbsoluteOwnership
           { from: monetizationContract }
         );
 
         expectEvent(tx, 'AccessSaleRecorded', {
-          tokenId: tokenId.toString(),
+          nftId: tokenId.toString(),
           user: user1,
+          amount: web3.utils.toWei('2', 'ether'),
           expiry: '0'
         });
 
         // Verify permanent access
-        const accessSale = await aiServiceAgreement.accessSales(tokenId, user1);
-        assert.equal(accessSale.exists, true);
-        assert.equal(accessSale.expiry.toNumber(), 0);
-        assert.equal(accessSale.isActive, true);
+        const accessSale = await aiServiceAgreement.getAccessSaleDetails(tokenId, user1);
+        assert.equal(accessSale.active, true);
+        assert.equal(accessSale.expiry_date.toNumber(), 0);
+        assert.equal(accessSale.amount.toString(), web3.utils.toWei('2', 'ether'));
       });
 
       it("should prevent unauthorized caller from recording sale", async () => {
         await expectRevert(
-          aiServiceAgreement.recordAccessSale(tokenId, user1, 0, { from: unauthorized }),
-          "Unauthorized: Caller is not authorized"
+          aiServiceAgreement.recordAccessSale(tokenId, user1, web3.utils.toWei('1', 'ether'), 0, 5, { from: unauthorized }),
+          "AIServiceAgreementManagement: Caller not authorized"
         );
       });
 
       it("should update existing access sale", async () => {
         // Record initial sale
         const firstExpiry = (await time.latest()).add(new BN(duration));
-        await aiServiceAgreement.recordAccessSale(tokenId, user1, firstExpiry, { from: monetizationContract });
+        await aiServiceAgreement.recordAccessSale(tokenId, user1, web3.utils.toWei('1', 'ether'), duration, 5, { from: monetizationContract });
 
         // Update with new expiry
         const newExpiry = firstExpiry.add(new BN(duration));
-        await aiServiceAgreement.recordAccessSale(tokenId, user1, newExpiry, { from: monetizationContract });
+        await aiServiceAgreement.recordAccessSale(tokenId, user1, web3.utils.toWei('2', 'ether'), duration * 2, 5, { from: monetizationContract });
 
-        // Verify updated expiry
-        const accessSale = await aiServiceAgreement.accessSales(tokenId, user1);
-        assert.equal(accessSale.expiry.toString(), newExpiry.toString());
+        // Verify updated access sale details
+        const accessSale = await aiServiceAgreement.getAccessSaleDetails(tokenId, user1);
+        assert.equal(accessSale.amount.toString(), web3.utils.toWei('2', 'ether'));
 
         // Active count should still be 1
-        const activeCount = await aiServiceAgreement.activeAccessSalesCount(tokenId);
+        const activeCount = await aiServiceAgreement.total_active_access_sales(tokenId);
         assert.equal(activeCount.toNumber(), 1);
       });
     });
@@ -116,7 +123,9 @@ contract("AIServiceAgreementManagement", (accounts) => {
         await aiServiceAgreement.recordAccessSale(
           tokenId,
           user1,
-          currentTime.add(new BN(86400)),
+          web3.utils.toWei('1', 'ether'),
+          86400, // 1 day in seconds
+          5, // AccessLevel.EditData
           { from: monetizationContract }
         );
         
@@ -124,7 +133,9 @@ contract("AIServiceAgreementManagement", (accounts) => {
         await aiServiceAgreement.recordAccessSale(
           tokenId,
           user2,
-          currentTime.add(new BN(604800)),
+          web3.utils.toWei('1', 'ether'),
+          604800, // 7 days in seconds
+          5, // AccessLevel.EditData
           { from: monetizationContract }
         );
         
@@ -132,7 +143,9 @@ contract("AIServiceAgreementManagement", (accounts) => {
         await aiServiceAgreement.recordAccessSale(
           tokenId,
           user3,
-          0,
+          web3.utils.toWei('1', 'ether'),
+          0, // 0 duration = permanent
+          5, // AccessLevel.EditData
           { from: monetizationContract }
         );
       });
@@ -142,50 +155,54 @@ contract("AIServiceAgreementManagement", (accounts) => {
         await time.increase(time.duration.days(2));
 
         // User1's access should be expired
-        const user1Access = await aiServiceAgreement.accessSales(tokenId, user1);
-        const user1HasAccess = await aiServiceAgreement.hasPaidAccess(tokenId, user1);
-        assert.equal(user1Access.isActive, true, "Still marked as active until reevaluated");
+        const user1HasAccess = await aiServiceAgreement.hasActiveAccess(tokenId, user1);
         assert.equal(user1HasAccess, false, "Should not have access after expiry");
 
         // User2's access should still be valid
-        const user2HasAccess = await aiServiceAgreement.hasPaidAccess(tokenId, user2);
+        const user2HasAccess = await aiServiceAgreement.hasActiveAccess(tokenId, user2);
         assert.equal(user2HasAccess, true, "Should still have access");
 
         // User3's permanent access should be valid
-        const user3HasAccess = await aiServiceAgreement.hasPaidAccess(tokenId, user3);
+        const user3HasAccess = await aiServiceAgreement.hasActiveAccess(tokenId, user3);
         assert.equal(user3HasAccess, true, "Should have permanent access");
       });
 
-      it("should reevaluate single user access", async () => {
+      it("should handle batch reevaluation for expired access", async () => {
         // Fast forward 2 days
         await time.increase(time.duration.days(2));
 
-        const tx = await aiServiceAgreement.reevaluateAccess(tokenId, user1, { from: deployer });
+        // Grant NFT ownership to deployer for testing
+        await nftAccess.grantAccess(tokenId, deployer, 6, { from: deployer }); // AbsoluteOwnership
+
+        const tx = await aiServiceAgreement.batchReevaluate(tokenId, [user1, user2, user3], { from: deployer });
 
         expectEvent(tx, 'AccessExpired', {
-          tokenId: tokenId.toString(),
+          nftId: tokenId.toString(),
           user: user1
         });
 
-        // Verify access is now inactive
-        const accessSale = await aiServiceAgreement.accessSales(tokenId, user1);
-        assert.equal(accessSale.isActive, false, "Should be marked inactive");
+        // Verify user1 access is now inactive
+        const user1Details = await aiServiceAgreement.getAccessSaleDetails(tokenId, user1);
+        assert.equal(user1Details.active, false, "User1 should be marked inactive");
 
         // Verify active count decreased
-        const activeCount = await aiServiceAgreement.activeAccessSalesCount(tokenId);
+        const activeCount = await aiServiceAgreement.total_active_access_sales(tokenId);
         assert.equal(activeCount.toNumber(), 2, "Active count should decrease");
       });
 
-      it("should not affect non-expired access during reevaluation", async () => {
-        const tx = await aiServiceAgreement.reevaluateAccess(tokenId, user2, { from: deployer });
+      it("should not affect non-expired access during batch reevaluation", async () => {
+        // Grant NFT ownership to deployer for testing
+        await nftAccess.grantAccess(tokenId, deployer, 6, { from: deployer }); // AbsoluteOwnership
+        
+        const tx = await aiServiceAgreement.batchReevaluate(tokenId, [user2], { from: deployer });
 
         // Should not emit AccessExpired event
         const expiredEvents = tx.logs.filter(log => log.event === 'AccessExpired');
         assert.equal(expiredEvents.length, 0, "Should not expire active access");
 
         // Verify still active
-        const accessSale = await aiServiceAgreement.accessSales(tokenId, user2);
-        assert.equal(accessSale.isActive, true, "Should remain active");
+        const accessSale = await aiServiceAgreement.getAccessSaleDetails(tokenId, user2);
+        assert.equal(accessSale.active, true, "Should remain active");
       });
     });
   });
@@ -201,22 +218,25 @@ contract("AIServiceAgreementManagement", (accounts) => {
         const tx = await aiServiceAgreement.recordSubscriptionSale(
           tokenId,
           user1,
-          expiryTime,
+          web3.utils.toWei('0.1', 'ether'), // amount
+          2592000, // 30 days duration in seconds
           { from: monetizationContract }
         );
 
+        const expectedEndDate = currentTime.add(new BN(2592000));
         expectEvent(tx, 'SubscriptionRecorded', {
-          tokenId: tokenId.toString(),
+          nftId: tokenId.toString(),
           user: user1,
-          expiry: expiryTime
+          amount: web3.utils.toWei('0.1', 'ether'),
+          endDate: expectedEndDate
         });
 
-        // Verify subscription was recorded
-        const hasActiveSubscription = await aiServiceAgreement.hasActiveSubscription(tokenId, user1);
-        assert.equal(hasActiveSubscription, true, "User should have active subscription");
+        // Verify subscription was recorded via hasActiveAccess
+        const hasAccess = await aiServiceAgreement.hasActiveAccess(tokenId, user1);
+        assert.equal(hasAccess, true, "User should have active access via subscription");
 
         // Verify active count
-        const activeCount = await aiServiceAgreement.activeSubscriptionsCount(tokenId);
+        const activeCount = await aiServiceAgreement.total_active_subscriptions(tokenId);
         assert.equal(activeCount.toNumber(), 1, "Active subscription count should be 1");
       });
 
@@ -225,18 +245,18 @@ contract("AIServiceAgreementManagement", (accounts) => {
         const firstExpiry = currentTime.add(new BN(2592000));
         
         // Record initial subscription
-        await aiServiceAgreement.recordSubscriptionSale(tokenId, user1, firstExpiry, { from: monetizationContract });
+        await aiServiceAgreement.recordSubscriptionSale(tokenId, user1, web3.utils.toWei('0.1', 'ether'), 2592000, { from: monetizationContract });
         
         // Extend subscription
         const newExpiry = firstExpiry.add(new BN(2592000));
-        await aiServiceAgreement.recordSubscriptionSale(tokenId, user1, newExpiry, { from: monetizationContract });
+        await aiServiceAgreement.recordSubscriptionSale(tokenId, user1, web3.utils.toWei('0.2', 'ether'), 5184000, { from: monetizationContract }); // 60 days
 
-        // Verify updated expiry
-        const subscription = await aiServiceAgreement.subscriptions(tokenId, user1);
-        assert.equal(subscription.expiry.toString(), newExpiry.toString());
+        // Verify updated subscription details
+        const subscription = await aiServiceAgreement.getSubscriptionDetails(tokenId, user1);
+        assert.equal(subscription.amount.toString(), web3.utils.toWei('0.2', 'ether'));
 
         // Active count should still be 1
-        const activeCount = await aiServiceAgreement.activeSubscriptionsCount(tokenId);
+        const activeCount = await aiServiceAgreement.total_active_subscriptions(tokenId);
         assert.equal(activeCount.toNumber(), 1);
       });
 
@@ -244,26 +264,29 @@ contract("AIServiceAgreementManagement", (accounts) => {
         const currentTime = await time.latest();
         const expiryTime = currentTime.add(new BN(86400)); // 1 day
         
-        await aiServiceAgreement.recordSubscriptionSale(tokenId, user1, expiryTime, { from: monetizationContract });
+        await aiServiceAgreement.recordSubscriptionSale(tokenId, user1, web3.utils.toWei('0.1', 'ether'), 86400, { from: monetizationContract }); // 1 day
 
         // Fast forward 2 days
         await time.increase(time.duration.days(2));
 
         // Check subscription status
-        const hasActiveSubscription = await aiServiceAgreement.hasActiveSubscription(tokenId, user1);
-        assert.equal(hasActiveSubscription, false, "Subscription should be expired");
+        const hasAccess = await aiServiceAgreement.hasActiveAccess(tokenId, user1);
+        assert.equal(hasAccess, false, "Subscription should be expired");
 
+        // Grant NFT ownership to deployer for testing batch reevaluate
+        await nftAccess.grantAccess(tokenId, deployer, 6, { from: deployer }); // AbsoluteOwnership
+        
         // Reevaluate
-        const tx = await aiServiceAgreement.reevaluateSubscription(tokenId, user1, { from: deployer });
+        const tx = await aiServiceAgreement.batchReevaluate(tokenId, [user1], { from: deployer });
 
         expectEvent(tx, 'SubscriptionExpired', {
-          tokenId: tokenId.toString(),
+          nftId: tokenId.toString(),
           user: user1
         });
 
         // Verify marked as inactive
-        const subscription = await aiServiceAgreement.subscriptions(tokenId, user1);
-        assert.equal(subscription.isActive, false);
+        const subscription = await aiServiceAgreement.getSubscriptionDetails(tokenId, user1);
+        assert.equal(subscription.active, false);
       });
     });
 
@@ -275,7 +298,7 @@ contract("AIServiceAgreementManagement", (accounts) => {
 
         // Add subscription
         const expiry = (await time.latest()).add(new BN(2592000));
-        await aiServiceAgreement.recordSubscriptionSale(tokenId, user1, expiry, { from: monetizationContract });
+        await aiServiceAgreement.recordSubscriptionSale(tokenId, user1, web3.utils.toWei('0.1', 'ether'), 2592000, { from: monetizationContract });
 
         hasActive = await aiServiceAgreement.hasActiveSubscriptions(tokenId);
         assert.equal(hasActive, true, "Should have active subscriptions");
@@ -293,7 +316,9 @@ contract("AIServiceAgreementManagement", (accounts) => {
       await aiServiceAgreement.recordAccessSale(
         tokenId,
         user1,
-        currentTime.add(new BN(604800)), // 7 days
+        web3.utils.toWei('1', 'ether'),
+        604800, // 7 days
+        5, // AccessLevel.EditData
         { from: monetizationContract }
       );
       
@@ -301,7 +326,8 @@ contract("AIServiceAgreementManagement", (accounts) => {
       await aiServiceAgreement.recordSubscriptionSale(
         tokenId,
         user2,
-        currentTime.add(new BN(2592000)), // 30 days
+        web3.utils.toWei('0.1', 'ether'),
+        2592000, // 30 days
         { from: monetizationContract }
       );
     });
@@ -335,13 +361,10 @@ contract("AIServiceAgreementManagement", (accounts) => {
       });
     });
 
-    describe("hasPaidAccess", () => {
-      it("should check only access sales, not subscriptions", async () => {
-        const user1HasPaid = await aiServiceAgreement.hasPaidAccess(tokenId, user1);
-        const user2HasPaid = await aiServiceAgreement.hasPaidAccess(tokenId, user2);
-
-        assert.equal(user1HasPaid, true, "User1 should have paid access");
-        assert.equal(user2HasPaid, false, "User2 should not have paid access (has subscription)");
+    describe("getTotalActiveAccess", () => {
+      it("should return sum of access sales and subscriptions", async () => {
+        const totalActive = await aiServiceAgreement.getTotalActiveAccess(tokenId);
+        assert.equal(totalActive.toNumber(), 2, "Should have 2 total active access (1 sale + 1 subscription)");
       });
     });
   });
@@ -357,87 +380,45 @@ contract("AIServiceAgreementManagement", (accounts) => {
       await aiServiceAgreement.recordAccessSale(
         tokenId,
         users[0],
-        currentTime.add(new BN(86400)), // Expires in 1 day
+        web3.utils.toWei('1', 'ether'),
+        86400, // Expires in 1 day
+        5, // AccessLevel.EditData
         { from: monetizationContract }
       );
       
       await aiServiceAgreement.recordAccessSale(
         tokenId,
         users[1],
-        currentTime.add(new BN(172800)), // Expires in 2 days
+        web3.utils.toWei('1', 'ether'),
+        172800, // Expires in 2 days
+        5, // AccessLevel.EditData
         { from: monetizationContract }
       );
       
       await aiServiceAgreement.recordSubscriptionSale(
         tokenId,
         users[2],
-        currentTime.add(new BN(86400)), // Expires in 1 day
+        web3.utils.toWei('0.1', 'ether'),
+        86400, // Expires in 1 day
         { from: monetizationContract }
       );
       
       await aiServiceAgreement.recordSubscriptionSale(
         tokenId,
         users[3],
-        currentTime.add(new BN(604800)), // Expires in 7 days
+        web3.utils.toWei('0.1', 'ether'),
+        604800, // Expires in 7 days
         { from: monetizationContract }
       );
     });
 
-    describe("batchReevaluateAccess", () => {
-      it("should reevaluate multiple users' access", async () => {
-        // Fast forward 1.5 days
-        await time.increase(time.duration.days(1.5));
-
-        const tx = await aiServiceAgreement.batchReevaluateAccess(
-          tokenId,
-          [users[0], users[1]],
-          { from: deployer }
-        );
-
-        // Should expire users[0] but not users[1]
-        const expiredEvents = tx.logs.filter(log => log.event === 'AccessExpired');
-        assert.equal(expiredEvents.length, 1, "Should expire one access");
-        assert.equal(expiredEvents[0].args.user, users[0], "Should expire correct user");
-
-        // Verify states
-        const user0Access = await aiServiceAgreement.accessSales(tokenId, users[0]);
-        const user1Access = await aiServiceAgreement.accessSales(tokenId, users[1]);
-        assert.equal(user0Access.isActive, false, "User0 should be inactive");
-        assert.equal(user1Access.isActive, true, "User1 should still be active");
+    describe("batchReevaluate with ownership", () => {
+      beforeEach(async () => {
+        // Grant NFT ownership to deployer for testing
+        await nftAccess.grantAccess(tokenId, deployer, 6, { from: deployer }); // AbsoluteOwnership
       });
 
-      it("should handle empty user array", async () => {
-        const tx = await aiServiceAgreement.batchReevaluateAccess(tokenId, [], { from: deployer });
-        assert.equal(tx.logs.length, 0, "Should not emit any events");
-      });
-    });
-
-    describe("batchReevaluateSubscriptions", () => {
-      it("should reevaluate multiple subscriptions", async () => {
-        // Fast forward 1.5 days
-        await time.increase(time.duration.days(1.5));
-
-        const tx = await aiServiceAgreement.batchReevaluateSubscriptions(
-          tokenId,
-          [users[2], users[3]],
-          { from: deployer }
-        );
-
-        // Should expire users[2] but not users[3]
-        const expiredEvents = tx.logs.filter(log => log.event === 'SubscriptionExpired');
-        assert.equal(expiredEvents.length, 1, "Should expire one subscription");
-        assert.equal(expiredEvents[0].args.user, users[2], "Should expire correct user");
-
-        // Verify states
-        const user2Sub = await aiServiceAgreement.subscriptions(tokenId, users[2]);
-        const user3Sub = await aiServiceAgreement.subscriptions(tokenId, users[3]);
-        assert.equal(user2Sub.isActive, false, "User2 should be inactive");
-        assert.equal(user3Sub.isActive, true, "User3 should still be active");
-      });
-    });
-
-    describe("batchReevaluate", () => {
-      it("should reevaluate both access sales and subscriptions", async () => {
+      it("should reevaluate multiple users' access and subscriptions", async () => {
         // Fast forward 1.5 days
         await time.increase(time.duration.days(1.5));
 
@@ -455,19 +436,23 @@ contract("AIServiceAgreementManagement", (accounts) => {
         assert.equal(subExpiredEvents.length, 1, "Should expire one subscription");
 
         // Verify active counts
-        const activeAccessCount = await aiServiceAgreement.activeAccessSalesCount(tokenId);
-        const activeSubCount = await aiServiceAgreement.activeSubscriptionsCount(tokenId);
+        const activeAccessCount = await aiServiceAgreement.total_active_access_sales(tokenId);
+        const activeSubCount = await aiServiceAgreement.total_active_subscriptions(tokenId);
         
         assert.equal(activeAccessCount.toNumber(), 1, "Should have 1 active access sale");
         assert.equal(activeSubCount.toNumber(), 1, "Should have 1 active subscription");
       });
     });
+
   });
 
   describe("Edge Cases and Security", () => {
     it("should handle reevaluation of non-existent records", async () => {
+      // Grant NFT ownership to deployer for testing
+      await nftAccess.grantAccess(1, deployer, 6, { from: deployer }); // AbsoluteOwnership
+      
       // Should not revert
-      const tx = await aiServiceAgreement.reevaluateAccess(1, user1, { from: deployer });
+      const tx = await aiServiceAgreement.batchReevaluate(1, [user1], { from: deployer });
       
       // Should not emit any events
       assert.equal(tx.logs.length, 0, "Should not emit events for non-existent records");
@@ -480,7 +465,9 @@ contract("AIServiceAgreementManagement", (accounts) => {
       await aiServiceAgreement.recordAccessSale(
         largeTokenId,
         user1,
-        expiry,
+        web3.utils.toWei('1', 'ether'),
+        86400, // 1 day duration
+        5, // AccessLevel.EditData
         { from: monetizationContract }
       );
 
@@ -493,23 +480,20 @@ contract("AIServiceAgreementManagement", (accounts) => {
       const currentTime = await time.latest();
       
       // Initial state
-      await aiServiceAgreement.recordAccessSale(tokenId, user1, currentTime.add(new BN(86400)), { from: monetizationContract });
-      await aiServiceAgreement.recordSubscriptionSale(tokenId, user1, currentTime.add(new BN(172800)), { from: monetizationContract });
+      await aiServiceAgreement.recordAccessSale(tokenId, user1, web3.utils.toWei('1', 'ether'), 86400, 5, { from: monetizationContract });
+      await aiServiceAgreement.recordSubscriptionSale(tokenId, user1, web3.utils.toWei('0.1', 'ether'), 172800, { from: monetizationContract });
       
-      // Verify both are active
-      assert.equal(await aiServiceAgreement.hasPaidAccess(tokenId, user1), true);
-      assert.equal(await aiServiceAgreement.hasActiveSubscription(tokenId, user1), true);
+      // Verify both are active via hasActiveAccess
+      assert.equal(await aiServiceAgreement.hasActiveAccess(tokenId, user1), true);
       
       // Update access to expire earlier
-      await aiServiceAgreement.recordAccessSale(tokenId, user1, currentTime.add(new BN(3600)), { from: monetizationContract });
+      await aiServiceAgreement.recordAccessSale(tokenId, user1, web3.utils.toWei('1', 'ether'), 3600, 5, { from: monetizationContract });
       
       // Fast forward 2 hours
       await time.increase(time.duration.hours(2));
       
-      // Access should be expired, subscription still active
-      assert.equal(await aiServiceAgreement.hasPaidAccess(tokenId, user1), false);
-      assert.equal(await aiServiceAgreement.hasActiveSubscription(tokenId, user1), true);
-      assert.equal(await aiServiceAgreement.hasActiveAccess(tokenId, user1), true); // Still has subscription
+      // Should still have active access via subscription
+      assert.equal(await aiServiceAgreement.hasActiveAccess(tokenId, user1), true);
     });
 
     it("should prevent unauthorized access to all functions", async () => {
@@ -517,13 +501,13 @@ contract("AIServiceAgreementManagement", (accounts) => {
       const expiry = (await time.latest()).add(new BN(86400));
       
       await expectRevert(
-        aiServiceAgreement.recordAccessSale(tokenId, user1, expiry, { from: unauthorized }),
-        "Unauthorized: Caller is not authorized"
+        aiServiceAgreement.recordAccessSale(tokenId, user1, web3.utils.toWei('1', 'ether'), 86400, 5, { from: unauthorized }),
+        "AIServiceAgreementManagement: Caller not authorized"
       );
       
       await expectRevert(
-        aiServiceAgreement.recordSubscriptionSale(tokenId, user1, expiry, { from: unauthorized }),
-        "Unauthorized: Caller is not authorized"
+        aiServiceAgreement.recordSubscriptionSale(tokenId, user1, web3.utils.toWei('0.1', 'ether'), 86400, { from: unauthorized }),
+        "AIServiceAgreementManagement: Caller not authorized"
       );
     });
   });

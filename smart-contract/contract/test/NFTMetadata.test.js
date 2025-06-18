@@ -44,7 +44,7 @@ contract("NFTMetadata", (accounts) => {
 
   describe("Deployment", () => {
     it("should set correct initial values", async () => {
-      const masterAccessAddr = await nftMetadata.masterAccessControl();
+      const masterAccessAddr = await nftMetadata.accessControl();
       const nftAccessAddr = await nftMetadata.nftAccessControl();
       
       assert.equal(masterAccessAddr, masterAccess.address, "MasterAccessControl should be set");
@@ -68,154 +68,143 @@ contract("NFTMetadata", (accounts) => {
 
     describe("createMetadata", () => {
       it("should create metadata with valid parameters", async () => {
+        // Grant NFT absolute ownership to simulate NFT contract creating metadata
+        await nftAccess.grantAccess(tokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+        
+        const metadataStruct = {
+          image: validMetadata.imageUrl,
+          intellectual_property_type: validMetadata.ipType,
+          encrypted: validMetadata.encrypted,
+          encryption_id: validMetadata.encryptionId,
+          intellectual_property_id: validMetadata.ipId,
+          intellectual_property_storage: validMetadata.storageType,
+          md5: validMetadata.md5Hash,
+          version: validMetadata.version
+        };
+        
         const tx = await nftMetadata.createMetadata(
           tokenId,
-          user1,
-          validMetadata.ipType,
-          validMetadata.ipId,
-          validMetadata.imageUrl,
-          validMetadata.storageType,
-          validMetadata.storageId,
-          validMetadata.encrypted,
-          validMetadata.encryptionId,
-          validMetadata.md5Hash,
-          validMetadata.version,
+          metadataStruct,
           { from: nftContract }
         );
 
         expectEvent(tx, 'MetadataCreated', {
-          tokenId: tokenId.toString(),
-          creator: user1,
-          ipType: validMetadata.ipType,
-          ipId: validMetadata.ipId
+          nftId: tokenId.toString()
         });
 
         // Verify metadata was stored correctly
         const metadata = await nftMetadata.getMetadata(tokenId);
-        assert.equal(metadata.creator, user1, "Creator should be set");
-        assert.equal(metadata.ipType, validMetadata.ipType, "IP type should be set");
-        assert.equal(metadata.ipId, validMetadata.ipId, "IP ID should be set");
-        assert.equal(metadata.imageUrl, validMetadata.imageUrl, "Image URL should be set");
-        assert.equal(metadata.storageType, validMetadata.storageType, "Storage type should be set");
-        assert.equal(metadata.storageId, validMetadata.storageId, "Storage ID should be set");
+        assert.equal(metadata.image, validMetadata.imageUrl, "Image URL should be set");
+        assert.equal(metadata.intellectual_property_type, validMetadata.ipType, "IP type should be set");
+        assert.equal(metadata.intellectual_property_id, validMetadata.ipId, "IP ID should be set");
+        assert.equal(metadata.intellectual_property_storage, validMetadata.storageType, "Storage type should be set");
         assert.equal(metadata.encrypted, validMetadata.encrypted, "Encrypted flag should be set");
-        assert.equal(metadata.encryptionId, validMetadata.encryptionId, "Encryption ID should be set");
-        assert.equal(metadata.md5Hash, validMetadata.md5Hash, "MD5 hash should be set");
+        assert.equal(metadata.encryption_id, validMetadata.encryptionId, "Encryption ID should be set");
+        assert.equal(metadata.md5, validMetadata.md5Hash, "MD5 hash should be set");
         assert.equal(metadata.version, validMetadata.version, "Version should be set");
       });
 
       it("should prevent creating metadata for existing token", async () => {
-        await nftMetadata.createMetadata(
-          tokenId,
-          user1,
-          validMetadata.ipType,
-          validMetadata.ipId,
-          validMetadata.imageUrl,
-          validMetadata.storageType,
-          validMetadata.storageId,
-          validMetadata.encrypted,
-          validMetadata.encryptionId,
-          validMetadata.md5Hash,
-          validMetadata.version,
-          { from: nftContract }
-        );
+        // Grant NFT absolute ownership
+        await nftAccess.grantAccess(tokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+        
+        const metadataStruct = {
+          image: validMetadata.imageUrl,
+          intellectual_property_type: validMetadata.ipType,
+          encrypted: validMetadata.encrypted,
+          encryption_id: validMetadata.encryptionId,
+          intellectual_property_id: validMetadata.ipId,
+          intellectual_property_storage: validMetadata.storageType,
+          md5: validMetadata.md5Hash,
+          version: validMetadata.version
+        };
+        
+        await nftMetadata.createMetadata(tokenId, metadataStruct, { from: nftContract });
 
         await expectRevert(
-          nftMetadata.createMetadata(
-            tokenId,
-            user1,
-            validMetadata.ipType,
-            validMetadata.ipId,
-            validMetadata.imageUrl,
-            validMetadata.storageType,
-            validMetadata.storageId,
-            validMetadata.encrypted,
-            validMetadata.encryptionId,
-            validMetadata.md5Hash,
-            validMetadata.version,
-            { from: nftContract }
-          ),
-          "Metadata already exists for this token"
+          nftMetadata.createMetadata(tokenId, metadataStruct, { from: nftContract }),
+          "NFTMetadata: Metadata already exists"
         );
       });
 
       it("should validate IP type", async () => {
+        // Grant NFT absolute ownership
+        await nftAccess.grantAccess(tokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+        
+        const invalidMetadata = {
+          image: validMetadata.imageUrl,
+          intellectual_property_type: "invalid-type",
+          encrypted: validMetadata.encrypted,
+          encryption_id: validMetadata.encryptionId,
+          intellectual_property_id: validMetadata.ipId,
+          intellectual_property_storage: validMetadata.storageType,
+          md5: validMetadata.md5Hash,
+          version: validMetadata.version
+        };
+        
         await expectRevert(
-          nftMetadata.createMetadata(
-            tokenId,
-            user1,
-            "invalid-type",
-            validMetadata.ipId,
-            validMetadata.imageUrl,
-            validMetadata.storageType,
-            validMetadata.storageId,
-            validMetadata.encrypted,
-            validMetadata.encryptionId,
-            validMetadata.md5Hash,
-            validMetadata.version,
-            { from: nftContract }
-          ),
-          "Invalid IP type"
+          nftMetadata.createMetadata(tokenId, invalidMetadata, { from: nftContract }),
+          "NFTMetadata: Invalid IP type. Must be flow, model, or data"
         );
       });
 
       it("should validate storage type", async () => {
+        // Grant NFT absolute ownership
+        await nftAccess.grantAccess(tokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+        
+        const invalidMetadata = {
+          image: validMetadata.imageUrl,
+          intellectual_property_type: validMetadata.ipType,
+          encrypted: validMetadata.encrypted,
+          encryption_id: validMetadata.encryptionId,
+          intellectual_property_id: validMetadata.ipId,
+          intellectual_property_storage: "invalid-storage",
+          md5: validMetadata.md5Hash,
+          version: validMetadata.version
+        };
+        
         await expectRevert(
-          nftMetadata.createMetadata(
-            tokenId,
-            user1,
-            validMetadata.ipType,
-            validMetadata.ipId,
-            validMetadata.imageUrl,
-            "invalid-storage",
-            validMetadata.storageId,
-            validMetadata.encrypted,
-            validMetadata.encryptionId,
-            validMetadata.md5Hash,
-            validMetadata.version,
-            { from: nftContract }
-          ),
-          "Invalid storage type"
+          nftMetadata.createMetadata(tokenId, invalidMetadata, { from: nftContract }),
+          "NFTMetadata: Invalid storage type. Must be neuralabs, neuralabs-decentralized, or custom"
         );
       });
 
       it("should require encryption ID when encrypted is true", async () => {
+        // Grant NFT absolute ownership
+        await nftAccess.grantAccess(tokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+        
+        const invalidMetadata = {
+          image: validMetadata.imageUrl,
+          intellectual_property_type: validMetadata.ipType,
+          encrypted: true,
+          encryption_id: "", // empty encryption ID
+          intellectual_property_id: validMetadata.ipId,
+          intellectual_property_storage: validMetadata.storageType,
+          md5: validMetadata.md5Hash,
+          version: validMetadata.version
+        };
+        
         await expectRevert(
-          nftMetadata.createMetadata(
-            tokenId,
-            user1,
-            validMetadata.ipType,
-            validMetadata.ipId,
-            validMetadata.imageUrl,
-            validMetadata.storageType,
-            validMetadata.storageId,
-            true, // encrypted
-            "", // empty encryption ID
-            validMetadata.md5Hash,
-            validMetadata.version,
-            { from: nftContract }
-          ),
-          "Encryption ID required when encrypted"
+          nftMetadata.createMetadata(tokenId, invalidMetadata, { from: nftContract }),
+          "NFTMetadata: Encryption ID required when encrypted"
         );
       });
 
       it("should prevent unauthorized caller from creating metadata", async () => {
+        const metadataStruct = {
+          image: validMetadata.imageUrl,
+          intellectual_property_type: validMetadata.ipType,
+          encrypted: validMetadata.encrypted,
+          encryption_id: validMetadata.encryptionId,
+          intellectual_property_id: validMetadata.ipId,
+          intellectual_property_storage: validMetadata.storageType,
+          md5: validMetadata.md5Hash,
+          version: validMetadata.version
+        };
+        
         await expectRevert(
-          nftMetadata.createMetadata(
-            tokenId,
-            user1,
-            validMetadata.ipType,
-            validMetadata.ipId,
-            validMetadata.imageUrl,
-            validMetadata.storageType,
-            validMetadata.storageId,
-            validMetadata.encrypted,
-            validMetadata.encryptionId,
-            validMetadata.md5Hash,
-            validMetadata.version,
-            { from: unauthorized }
-          ),
-          "Unauthorized: Caller is not authorized"
+          nftMetadata.createMetadata(tokenId, metadataStruct, { from: unauthorized }),
+          "NFTMetadata: Caller not authorized"
         );
       });
     });
@@ -224,60 +213,61 @@ contract("NFTMetadata", (accounts) => {
       const newTokenId = 2;
 
       beforeEach(async () => {
-        await nftMetadata.createMetadata(
-          tokenId,
-          user1,
-          validMetadata.ipType,
-          validMetadata.ipId,
-          validMetadata.imageUrl,
-          validMetadata.storageType,
-          validMetadata.storageId,
-          validMetadata.encrypted,
-          validMetadata.encryptionId,
-          validMetadata.md5Hash,
-          validMetadata.version,
-          { from: nftContract }
-        );
+        // Grant NFT absolute ownership
+        await nftAccess.grantAccess(tokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+        
+        const metadataStruct = {
+          image: validMetadata.imageUrl,
+          intellectual_property_type: validMetadata.ipType,
+          encrypted: validMetadata.encrypted,
+          encryption_id: validMetadata.encryptionId,
+          intellectual_property_id: validMetadata.ipId,
+          intellectual_property_storage: validMetadata.storageType,
+          md5: validMetadata.md5Hash,
+          version: validMetadata.version
+        };
+        
+        await nftMetadata.createMetadata(tokenId, metadataStruct, { from: nftContract });
       });
 
       it("should replicate metadata to new token", async () => {
-        const tx = await nftMetadata.replicateNFT(tokenId, newTokenId, user2, { from: nftContract });
+        const tx = await nftMetadata.replicateNFT(tokenId, newTokenId, { from: nftContract });
 
-        expectEvent(tx, 'MetadataReplicated', {
-          originalTokenId: tokenId.toString(),
-          newTokenId: newTokenId.toString(),
-          newOwner: user2
+        expectEvent(tx, 'ReplicaCreated', {
+          nftId: tokenId.toString()
+        });
+        
+        expectEvent(tx, 'MetadataCreated', {
+          nftId: newTokenId.toString()
         });
 
         // Verify replicated metadata
         const originalMetadata = await nftMetadata.getMetadata(tokenId);
         const replicatedMetadata = await nftMetadata.getMetadata(newTokenId);
 
-        assert.equal(replicatedMetadata.creator, user2, "New creator should be set");
-        assert.equal(replicatedMetadata.ipType, originalMetadata.ipType, "IP type should match");
-        assert.equal(replicatedMetadata.ipId, originalMetadata.ipId, "IP ID should match");
-        assert.equal(replicatedMetadata.imageUrl, originalMetadata.imageUrl, "Image URL should match");
-        assert.equal(replicatedMetadata.storageType, originalMetadata.storageType, "Storage type should match");
-        assert.equal(replicatedMetadata.storageId, originalMetadata.storageId, "Storage ID should match");
+        assert.equal(replicatedMetadata.intellectual_property_type, originalMetadata.intellectual_property_type, "IP type should match");
+        assert.equal(replicatedMetadata.intellectual_property_id, originalMetadata.intellectual_property_id, "IP ID should match");
+        assert.equal(replicatedMetadata.image, originalMetadata.image, "Image URL should match");
+        assert.equal(replicatedMetadata.intellectual_property_storage, originalMetadata.intellectual_property_storage, "Storage type should match");
         assert.equal(replicatedMetadata.encrypted, originalMetadata.encrypted, "Encrypted flag should match");
-        assert.equal(replicatedMetadata.encryptionId, originalMetadata.encryptionId, "Encryption ID should match");
-        assert.equal(replicatedMetadata.md5Hash, originalMetadata.md5Hash, "MD5 hash should match");
+        assert.equal(replicatedMetadata.encryption_id, originalMetadata.encryption_id, "Encryption ID should match");
+        assert.equal(replicatedMetadata.md5, originalMetadata.md5, "MD5 hash should match");
         assert.equal(replicatedMetadata.version, originalMetadata.version, "Version should match");
       });
 
       it("should prevent replicating non-existent metadata", async () => {
         await expectRevert(
-          nftMetadata.replicateNFT(999, newTokenId, user2, { from: nftContract }),
-          "No metadata exists for original token"
+          nftMetadata.replicateNFT(999, newTokenId, { from: nftContract }),
+          "NFTMetadata: Original metadata does not exist"
         );
       });
 
       it("should prevent replicating to existing token", async () => {
-        await nftMetadata.replicateNFT(tokenId, newTokenId, user2, { from: nftContract });
+        await nftMetadata.replicateNFT(tokenId, newTokenId, { from: nftContract });
 
         await expectRevert(
-          nftMetadata.replicateNFT(tokenId, newTokenId, user2, { from: nftContract }),
-          "Metadata already exists for new token"
+          nftMetadata.replicateNFT(tokenId, newTokenId, { from: nftContract }),
+          "NFTMetadata: Replica metadata already exists"
         );
       });
     });
@@ -298,136 +288,135 @@ contract("NFTMetadata", (accounts) => {
     };
 
     beforeEach(async () => {
-      await nftMetadata.createMetadata(
-        tokenId,
-        user1,
-        validMetadata.ipType,
-        validMetadata.ipId,
-        validMetadata.imageUrl,
-        validMetadata.storageType,
-        validMetadata.storageId,
-        validMetadata.encrypted,
-        validMetadata.encryptionId,
-        validMetadata.md5Hash,
-        validMetadata.version,
-        { from: nftContract }
-      );
+      // Grant NFT absolute ownership
+      await nftAccess.grantAccess(tokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+      
+      const metadataStruct = {
+        image: validMetadata.imageUrl,
+        intellectual_property_type: validMetadata.ipType,
+        encrypted: validMetadata.encrypted,
+        encryption_id: validMetadata.encryptionId,
+        intellectual_property_id: validMetadata.ipId,
+        intellectual_property_storage: validMetadata.storageType,
+        md5: validMetadata.md5Hash,
+        version: validMetadata.version
+      };
+      
+      await nftMetadata.createMetadata(tokenId, metadataStruct, { from: nftContract });
     });
 
     describe("updateMetadata", () => {
       it("should update metadata with EditData access", async () => {
         // Grant EditData access to user2
-        await nftAccess.grantAccess(tokenId, user2, AccessLevel.EditData, { from: nftContract });
+        await nftAccess.grantAccess(tokenId, user2, AccessLevel.EditData, { from: deployer });
 
         const newImageUrl = "https://example.com/new-image.png";
         const newVersion = "2.0.0";
+        
+        const updatedMetadata = {
+          image: newImageUrl,
+          intellectual_property_type: validMetadata.ipType,
+          encrypted: validMetadata.encrypted,
+          encryption_id: validMetadata.encryptionId,
+          intellectual_property_id: validMetadata.ipId,
+          intellectual_property_storage: validMetadata.storageType,
+          md5: validMetadata.md5Hash,
+          version: newVersion
+        };
 
         const tx = await nftMetadata.updateMetadata(
           tokenId,
-          validMetadata.ipType,
-          validMetadata.ipId,
-          newImageUrl,
-          validMetadata.storageType,
-          validMetadata.storageId,
-          validMetadata.encrypted,
-          validMetadata.encryptionId,
-          validMetadata.md5Hash,
-          newVersion,
+          updatedMetadata,
           { from: user2 }
         );
 
         expectEvent(tx, 'MetadataUpdated', {
-          tokenId: tokenId.toString(),
-          updater: user2
+          nftId: tokenId.toString()
         });
 
         const metadata = await nftMetadata.getMetadata(tokenId);
-        assert.equal(metadata.imageUrl, newImageUrl, "Image URL should be updated");
+        assert.equal(metadata.image, newImageUrl, "Image URL should be updated");
         assert.equal(metadata.version, newVersion, "Version should be updated");
       });
 
       it("should prevent update without EditData access", async () => {
         // Grant only UseModel access to user2
-        await nftAccess.grantAccess(tokenId, user2, AccessLevel.UseModel, { from: nftContract });
+        await nftAccess.grantAccess(tokenId, user2, AccessLevel.UseModel, { from: deployer });
+        
+        const updatedMetadata = {
+          image: "https://example.com/new-image.png",
+          intellectual_property_type: validMetadata.ipType,
+          encrypted: validMetadata.encrypted,
+          encryption_id: validMetadata.encryptionId,
+          intellectual_property_id: validMetadata.ipId,
+          intellectual_property_storage: validMetadata.storageType,
+          md5: validMetadata.md5Hash,
+          version: "2.0.0"
+        };
 
         await expectRevert(
-          nftMetadata.updateMetadata(
-            tokenId,
-            validMetadata.ipType,
-            validMetadata.ipId,
-            "https://example.com/new-image.png",
-            validMetadata.storageType,
-            validMetadata.storageId,
-            validMetadata.encrypted,
-            validMetadata.encryptionId,
-            validMetadata.md5Hash,
-            "2.0.0",
-            { from: user2 }
-          ),
-          "Insufficient access level"
+          nftMetadata.updateMetadata(tokenId, updatedMetadata, { from: user2 }),
+          "NFTMetadata: Insufficient access level"
         );
       });
 
-      it("should prevent changing IP type during update", async () => {
-        await nftAccess.grantAccess(tokenId, user2, AccessLevel.EditData, { from: nftContract });
+      it("should allow changing IP type during update", async () => {
+        await nftAccess.grantAccess(tokenId, user2, AccessLevel.EditData, { from: deployer });
+        
+        const updatedMetadata = {
+          image: validMetadata.imageUrl,
+          intellectual_property_type: IPType.DATA, // Different IP type - allowed
+          encrypted: validMetadata.encrypted,
+          encryption_id: validMetadata.encryptionId,
+          intellectual_property_id: validMetadata.ipId,
+          intellectual_property_storage: validMetadata.storageType,
+          md5: validMetadata.md5Hash,
+          version: "2.0.0"
+        };
 
-        await expectRevert(
-          nftMetadata.updateMetadata(
-            tokenId,
-            IPType.DATA, // Different IP type
-            validMetadata.ipId,
-            validMetadata.imageUrl,
-            validMetadata.storageType,
-            validMetadata.storageId,
-            validMetadata.encrypted,
-            validMetadata.encryptionId,
-            validMetadata.md5Hash,
-            "2.0.0",
-            { from: user2 }
-          ),
-          "Cannot change IP type"
-        );
+        await nftMetadata.updateMetadata(tokenId, updatedMetadata, { from: user2 });
+        
+        const metadata = await nftMetadata.getMetadata(tokenId);
+        assert.equal(metadata.intellectual_property_type, IPType.DATA, "IP type should be updated");
       });
 
       it("should validate new storage type", async () => {
-        await nftAccess.grantAccess(tokenId, user2, AccessLevel.EditData, { from: nftContract });
+        await nftAccess.grantAccess(tokenId, user2, AccessLevel.EditData, { from: deployer });
+        
+        const updatedMetadata = {
+          image: validMetadata.imageUrl,
+          intellectual_property_type: validMetadata.ipType,
+          encrypted: validMetadata.encrypted,
+          encryption_id: validMetadata.encryptionId,
+          intellectual_property_id: validMetadata.ipId,
+          intellectual_property_storage: "invalid-storage",
+          md5: validMetadata.md5Hash,
+          version: "2.0.0"
+        };
 
         await expectRevert(
-          nftMetadata.updateMetadata(
-            tokenId,
-            validMetadata.ipType,
-            validMetadata.ipId,
-            validMetadata.imageUrl,
-            "invalid-storage",
-            validMetadata.storageId,
-            validMetadata.encrypted,
-            validMetadata.encryptionId,
-            validMetadata.md5Hash,
-            "2.0.0",
-            { from: user2 }
-          ),
-          "Invalid storage type"
+          nftMetadata.updateMetadata(tokenId, updatedMetadata, { from: user2 }),
+          "NFTMetadata: Invalid storage type. Must be neuralabs, neuralabs-decentralized, or custom"
         );
       });
 
       it("should prevent update for non-existent token", async () => {
-        await nftAccess.grantAccess(999, user2, AccessLevel.EditData, { from: nftContract });
+        await nftAccess.grantAccess(999, user2, AccessLevel.EditData, { from: deployer });
+        
+        const updatedMetadata = {
+          image: validMetadata.imageUrl,
+          intellectual_property_type: validMetadata.ipType,
+          encrypted: validMetadata.encrypted,
+          encryption_id: validMetadata.encryptionId,
+          intellectual_property_id: validMetadata.ipId,
+          intellectual_property_storage: validMetadata.storageType,
+          md5: validMetadata.md5Hash,
+          version: "2.0.0"
+        };
 
         await expectRevert(
-          nftMetadata.updateMetadata(
-            999,
-            validMetadata.ipType,
-            validMetadata.ipId,
-            validMetadata.imageUrl,
-            validMetadata.storageType,
-            validMetadata.storageId,
-            validMetadata.encrypted,
-            validMetadata.encryptionId,
-            validMetadata.md5Hash,
-            "2.0.0",
-            { from: user2 }
-          ),
-          "No metadata exists for this token"
+          nftMetadata.updateMetadata(999, updatedMetadata, { from: user2 }),
+          "NFTMetadata: Metadata does not exist"
         );
       });
     });
@@ -437,29 +426,29 @@ contract("NFTMetadata", (accounts) => {
         const tx = await nftMetadata.deleteMetadata(tokenId, { from: nftContract });
 
         expectEvent(tx, 'MetadataDeleted', {
-          tokenId: tokenId.toString()
+          nftId: tokenId.toString()
         });
 
         // Verify metadata is deleted
-        const metadata = await nftMetadata.getMetadata(tokenId);
-        assert.equal(metadata.creator, "0x0000000000000000000000000000000000000000", "Creator should be zero");
-        assert.equal(metadata.ipType, "", "IP type should be empty");
-        assert.equal(metadata.ipId, "", "IP ID should be empty");
+        await expectRevert(
+          nftMetadata.getMetadata(tokenId),
+          "NFTMetadata: Metadata does not exist"
+        );
       });
 
       it("should prevent unauthorized deletion", async () => {
         await expectRevert(
           nftMetadata.deleteMetadata(tokenId, { from: unauthorized }),
-          "Unauthorized: Caller is not authorized"
+          "NFTMetadata: Caller not authorized"
         );
       });
 
       it("should handle deletion of non-existent metadata", async () => {
-        // Should not revert, just emit event
-        const tx = await nftMetadata.deleteMetadata(999, { from: nftContract });
-        expectEvent(tx, 'MetadataDeleted', {
-          tokenId: "999"
-        });
+        // Should revert
+        await expectRevert(
+          nftMetadata.deleteMetadata(999, { from: nftContract }),
+          "NFTMetadata: Metadata does not exist"
+        );
       });
     });
   });
@@ -504,20 +493,21 @@ contract("NFTMetadata", (accounts) => {
 
     beforeEach(async () => {
       for (let i = 0; i < tokenIds.length; i++) {
-        await nftMetadata.createMetadata(
-          tokenIds[i],
-          user1,
-          metadata[i].ipType,
-          metadata[i].ipId,
-          metadata[i].imageUrl,
-          metadata[i].storageType,
-          metadata[i].storageId,
-          metadata[i].encrypted,
-          metadata[i].encryptionId,
-          metadata[i].md5Hash,
-          metadata[i].version,
-          { from: nftContract }
-        );
+        // Grant NFT absolute ownership
+        await nftAccess.grantAccess(tokenIds[i], nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+        
+        const metadataStruct = {
+          image: metadata[i].imageUrl,
+          intellectual_property_type: metadata[i].ipType,
+          encrypted: metadata[i].encrypted,
+          encryption_id: metadata[i].encryptionId,
+          intellectual_property_id: metadata[i].ipId,
+          intellectual_property_storage: metadata[i].storageType,
+          md5: metadata[i].md5Hash,
+          version: metadata[i].version
+        };
+        
+        await nftMetadata.createMetadata(tokenIds[i], metadataStruct, { from: nftContract });
       }
     });
 
@@ -525,17 +515,17 @@ contract("NFTMetadata", (accounts) => {
       it("should return correct metadata for each token", async () => {
         for (let i = 0; i < tokenIds.length; i++) {
           const result = await nftMetadata.getMetadata(tokenIds[i]);
-          assert.equal(result.ipType, metadata[i].ipType, `IP type should match for token ${tokenIds[i]}`);
-          assert.equal(result.ipId, metadata[i].ipId, `IP ID should match for token ${tokenIds[i]}`);
+          assert.equal(result.intellectual_property_type, metadata[i].ipType, `IP type should match for token ${tokenIds[i]}`);
+          assert.equal(result.intellectual_property_id, metadata[i].ipId, `IP ID should match for token ${tokenIds[i]}`);
           assert.equal(result.encrypted, metadata[i].encrypted, `Encrypted flag should match for token ${tokenIds[i]}`);
         }
       });
 
-      it("should return empty metadata for non-existent token", async () => {
-        const result = await nftMetadata.getMetadata(999);
-        assert.equal(result.creator, "0x0000000000000000000000000000000000000000", "Creator should be zero");
-        assert.equal(result.ipType, "", "IP type should be empty");
-        assert.equal(result.ipId, "", "IP ID should be empty");
+      it("should revert for non-existent token", async () => {
+        await expectRevert(
+          nftMetadata.getMetadata(999),
+          "NFTMetadata: Metadata does not exist"
+        );
       });
     });
 
@@ -553,73 +543,32 @@ contract("NFTMetadata", (accounts) => {
       });
     });
 
-    describe("getIPType", () => {
-      it("should return correct IP type for each token", async () => {
-        for (let i = 0; i < tokenIds.length; i++) {
-          const ipType = await nftMetadata.getIPType(tokenIds[i]);
-          assert.equal(ipType, metadata[i].ipType, `IP type should match for token ${tokenIds[i]}`);
-        }
-      });
-
-      it("should return empty string for non-existent token", async () => {
-        const ipType = await nftMetadata.getIPType(999);
-        assert.equal(ipType, "", "IP type should be empty");
-      });
-    });
   });
 
-  describe("Validation Functions", () => {
-    describe("isValidIPType", () => {
-      it("should return true for valid IP types", async () => {
-        assert.equal(await nftMetadata.isValidIPType(IPType.FLOW), true);
-        assert.equal(await nftMetadata.isValidIPType(IPType.MODEL), true);
-        assert.equal(await nftMetadata.isValidIPType(IPType.DATA), true);
-      });
-
-      it("should return false for invalid IP types", async () => {
-        assert.equal(await nftMetadata.isValidIPType("invalid"), false);
-        assert.equal(await nftMetadata.isValidIPType(""), false);
-        assert.equal(await nftMetadata.isValidIPType("FLOW"), false); // Case sensitive
-      });
-    });
-
-    describe("isValidStorageType", () => {
-      it("should return true for valid storage types", async () => {
-        assert.equal(await nftMetadata.isValidStorageType(StorageType.NEURALABS), true);
-        assert.equal(await nftMetadata.isValidStorageType(StorageType.NEURALABS_DECENTRALIZED), true);
-        assert.equal(await nftMetadata.isValidStorageType(StorageType.CUSTOM), true);
-      });
-
-      it("should return false for invalid storage types", async () => {
-        assert.equal(await nftMetadata.isValidStorageType("invalid"), false);
-        assert.equal(await nftMetadata.isValidStorageType(""), false);
-        assert.equal(await nftMetadata.isValidStorageType("NEURALABS"), false); // Case sensitive
-      });
-    });
-  });
 
   describe("Edge Cases", () => {
     it("should handle empty strings in non-required fields", async () => {
       const tokenId = 1;
       
-      await nftMetadata.createMetadata(
-        tokenId,
-        user1,
-        IPType.MODEL,
-        "model-123",
-        "", // empty image URL
-        StorageType.NEURALABS,
-        "storage-123",
-        false, // not encrypted
-        "", // empty encryption ID (valid when not encrypted)
-        "", // empty MD5 hash
-        "", // empty version
-        { from: nftContract }
-      );
+      // Grant NFT absolute ownership
+      await nftAccess.grantAccess(tokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+      
+      const metadataStruct = {
+        image: "", // empty image URL
+        intellectual_property_type: IPType.MODEL,
+        encrypted: false,
+        encryption_id: "", // empty encryption ID (valid when not encrypted)
+        intellectual_property_id: "model-123",
+        intellectual_property_storage: StorageType.NEURALABS,
+        md5: "", // empty MD5 hash
+        version: "" // empty version
+      };
+      
+      await nftMetadata.createMetadata(tokenId, metadataStruct, { from: nftContract });
 
       const metadata = await nftMetadata.getMetadata(tokenId);
-      assert.equal(metadata.imageUrl, "", "Empty image URL should be allowed");
-      assert.equal(metadata.md5Hash, "", "Empty MD5 hash should be allowed");
+      assert.equal(metadata.image, "", "Empty image URL should be allowed");
+      assert.equal(metadata.md5, "", "Empty MD5 hash should be allowed");
       assert.equal(metadata.version, "", "Empty version should be allowed");
     });
 
@@ -627,43 +576,45 @@ contract("NFTMetadata", (accounts) => {
       const tokenId = 1;
       const longString = "a".repeat(1000); // 1000 character string
       
-      await nftMetadata.createMetadata(
-        tokenId,
-        user1,
-        IPType.MODEL,
-        longString,
-        longString,
-        StorageType.NEURALABS,
-        longString,
-        false,
-        "",
-        longString,
-        longString,
-        { from: nftContract }
-      );
+      // Grant NFT absolute ownership
+      await nftAccess.grantAccess(tokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+      
+      const metadataStruct = {
+        image: longString,
+        intellectual_property_type: IPType.MODEL,
+        encrypted: false,
+        encryption_id: "",
+        intellectual_property_id: longString,
+        intellectual_property_storage: StorageType.NEURALABS,
+        md5: longString,
+        version: longString
+      };
+      
+      await nftMetadata.createMetadata(tokenId, metadataStruct, { from: nftContract });
 
       const metadata = await nftMetadata.getMetadata(tokenId);
-      assert.equal(metadata.ipId, longString, "Long IP ID should be stored");
-      assert.equal(metadata.imageUrl, longString, "Long image URL should be stored");
+      assert.equal(metadata.intellectual_property_id, longString, "Long IP ID should be stored");
+      assert.equal(metadata.image, longString, "Long image URL should be stored");
     });
 
     it("should handle maximum uint256 token ID", async () => {
       const maxTokenId = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
       
-      await nftMetadata.createMetadata(
-        maxTokenId,
-        user1,
-        IPType.MODEL,
-        "model-max",
-        "https://example.com/max.png",
-        StorageType.NEURALABS,
-        "storage-max",
-        false,
-        "",
-        "hash-max",
-        "1.0.0",
-        { from: nftContract }
-      );
+      // Grant NFT absolute ownership
+      await nftAccess.grantAccess(maxTokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+      
+      const metadataStruct = {
+        image: "https://example.com/max.png",
+        intellectual_property_type: IPType.MODEL,
+        encrypted: false,
+        encryption_id: "",
+        intellectual_property_id: "model-max",
+        intellectual_property_storage: StorageType.NEURALABS,
+        md5: "hash-max",
+        version: "1.0.0"
+      };
+      
+      await nftMetadata.createMetadata(maxTokenId, metadataStruct, { from: nftContract });
 
       const exists = await nftMetadata.metadataExists(maxTokenId);
       assert.equal(exists, true, "Should handle max uint256 token ID");
