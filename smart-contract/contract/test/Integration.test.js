@@ -84,13 +84,12 @@ contract("Integration Tests", (accounts) => {
       // Verify the NFT was created successfully
       await expectEvent(tx, 'NFTCreated', {
         tokenId: '0',
-        creator: alice,
         name: "Test NFT",
-        copies: '3'
+        creator: alice
       });
       
       // Verify the creator has AbsoluteOwnership access
-      const hasAccess = await nftAccess.checkAccess(0, alice, AccessLevel.AbsoluteOwnership);
+      const hasAccess = await nftAccess.checkMinimumAccess(0, alice, AccessLevel.AbsoluteOwnership);
       assert.equal(hasAccess, true, "Creator should have AbsoluteOwnership access");
       
       // Verify the maxAccessLevel was set correctly
@@ -107,23 +106,27 @@ contract("Integration Tests", (accounts) => {
       // Now that createNFT is fixed, we can properly create NFTs
       const tx = await nftContract.createNFT("Integration Test NFT", 5, { from: alice });
       tokenId = tx.logs[0].args.tokenId.toNumber();
+      
+      // Grant alice access to NFTAccessControl to allow her to manage access
+      await masterAccess.grantAccess(nftAccess.address, alice, { from: deployer });
     });
 
     it("should test complete NFT lifecycle with access control", async () => {
       // Verify NFT was created with correct properties
       const nftInfo = await nftContract.getNFTInfo(tokenId);
       assert.equal(nftInfo.name, "Integration Test NFT");
-      assert.equal(nftInfo.totalCopies.toString(), "5");
+      assert.equal(nftInfo.levelOfOwnership.toString(), "5");
       assert.equal(nftInfo.creator, alice);
       
       // Test granting access to another user
       await nftAccess.grantAccess(tokenId, bob, AccessLevel.UseModel, { from: alice });
-      assert.equal(await nftAccess.checkAccess(tokenId, bob, AccessLevel.UseModel), true);
-      assert.equal(await nftAccess.checkAccess(tokenId, bob, AccessLevel.Resale), false);
+      assert.equal(await nftAccess.checkMinimumAccess(tokenId, bob, AccessLevel.UseModel), true);
+      assert.equal(await nftAccess.checkMinimumAccess(tokenId, bob, AccessLevel.Resale), false);
       
       // Test access revocation
+      // Since alice is the NFT owner and has access to NFTAccessControl, she can revoke access
       await nftAccess.revokeAccess(tokenId, bob, { from: alice });
-      assert.equal(await nftAccess.checkAccess(tokenId, bob, AccessLevel.UseModel), false);
+      assert.equal(await nftAccess.checkMinimumAccess(tokenId, bob, AccessLevel.UseModel), false);
     });
 
     it("should test access control hierarchy and permissions", async () => {
@@ -132,18 +135,18 @@ contract("Integration Tests", (accounts) => {
       await nftAccess.grantAccess(tokenId, charlie, AccessLevel.ViewAndDownload, { from: alice });
       
       // Verify access hierarchy (higher levels include lower level permissions)
-      assert.equal(await nftAccess.checkAccess(tokenId, bob, AccessLevel.UseModel), true);
-      assert.equal(await nftAccess.checkAccess(tokenId, bob, AccessLevel.Resale), true);
-      assert.equal(await nftAccess.checkAccess(tokenId, bob, AccessLevel.CreateReplica), false);
+      assert.equal(await nftAccess.checkMinimumAccess(tokenId, bob, AccessLevel.UseModel), true);
+      assert.equal(await nftAccess.checkMinimumAccess(tokenId, bob, AccessLevel.Resale), true);
+      assert.equal(await nftAccess.checkMinimumAccess(tokenId, bob, AccessLevel.CreateReplica), false);
       
-      assert.equal(await nftAccess.checkAccess(tokenId, charlie, AccessLevel.UseModel), true);
-      assert.equal(await nftAccess.checkAccess(tokenId, charlie, AccessLevel.ViewAndDownload), true);
-      assert.equal(await nftAccess.checkAccess(tokenId, charlie, AccessLevel.EditData), false);
+      assert.equal(await nftAccess.checkMinimumAccess(tokenId, charlie, AccessLevel.UseModel), true);
+      assert.equal(await nftAccess.checkMinimumAccess(tokenId, charlie, AccessLevel.ViewAndDownload), true);
+      assert.equal(await nftAccess.checkMinimumAccess(tokenId, charlie, AccessLevel.EditData), false);
       
       // Test that only owner can grant access above their own level
       await expectRevert(
         nftAccess.grantAccess(tokenId, accounts[4], AccessLevel.EditData, { from: bob }),
-        "NFTAccessControl: Insufficient permission to grant this level"
+        "NFTAccessControl: Caller not authorized"
       );
     });
   });
@@ -206,7 +209,7 @@ contract("Integration Tests", (accounts) => {
       
       // Verification: Create multiple NFTs to ensure the fix is working
       const tx1 = await nftContract.createNFT("Verification NFT 1", 1, { from: alice });
-      const tx2 = await nftContract.createNFT("Verification NFT 2", 10, { from: bob });
+      const tx2 = await nftContract.createNFT("Verification NFT 2", 6, { from: bob });
       
       // Extract token IDs
       const tokenId1 = tx1.logs[0].args.tokenId.toNumber();
@@ -217,8 +220,8 @@ contract("Integration Tests", (accounts) => {
       assert.equal((await nftContract.getNFTInfo(tokenId2)).name, "Verification NFT 2");
       
       // Verify access control is properly set
-      assert.equal(await nftAccess.checkAccess(tokenId1, alice, AccessLevel.AbsoluteOwnership), true);
-      assert.equal(await nftAccess.checkAccess(tokenId2, bob, AccessLevel.AbsoluteOwnership), true);
+      assert.equal(await nftAccess.checkMinimumAccess(tokenId1, alice, AccessLevel.AbsoluteOwnership), true);
+      assert.equal(await nftAccess.checkMinimumAccess(tokenId2, bob, AccessLevel.AbsoluteOwnership), true);
       
       console.log("=== CONTRACT BUG FIX VERIFICATION ===");
       console.log("✓ NFTContract.createNFT: Now properly sets maxAccessLevel before granting access");

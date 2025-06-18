@@ -1,54 +1,54 @@
 {
   "network": "development",
-  "timestamp": "2025-06-18T06:15:33.124Z",
-  "deployer": "0xb95f540129aB0083dCCbcaB3c4708A431970383c",
+  "timestamp": "2025-06-18T07:51:16.670Z",
+  "deployer": "0x553Aff733315dE59FC56460eEE0FcF52665D1f64",
   "contracts": {
     "MasterAccessControl": {
-      "address": "0x08b17E2Ab98C0874cC39281cC1F03Be6025bd139",
+      "address": "0xF4c6e0318af52270cC91d89767F431B634e1990f",
       "constructorArgs": [],
       "gasUsed": 0
     },
     "NFTAccessControl": {
-      "address": "0x64b928332817Aa56276205159566A960c2774d24",
+      "address": "0xEa88Bd7DD9b52c33b1A88AE33b7c25C40Cbb0CFf",
       "constructorArgs": [
-        "0x08b17E2Ab98C0874cC39281cC1F03Be6025bd139"
+        "0xF4c6e0318af52270cC91d89767F431B634e1990f"
       ],
       "gasUsed": 0
     },
     "NFTMetadata": {
-      "address": "0xE631c8Ab040E70C6048156c05a3D893DAC2b91eC",
+      "address": "0xe00ec6468DD139b94c06fedbe5A383E0B35D476D",
       "constructorArgs": [
-        "0x08b17E2Ab98C0874cC39281cC1F03Be6025bd139",
-        "0x64b928332817Aa56276205159566A960c2774d24"
+        "0xF4c6e0318af52270cC91d89767F431B634e1990f",
+        "0xEa88Bd7DD9b52c33b1A88AE33b7c25C40Cbb0CFf"
       ],
       "gasUsed": 0
     },
     "AIServiceAgreementManagement": {
-      "address": "0x2EF3e7fa8aE5197003762D33b8141fF4C6279d81",
+      "address": "0xF732BA657B44ea2D87B8385ea33f35C831954EFd",
       "constructorArgs": [
-        "0x08b17E2Ab98C0874cC39281cC1F03Be6025bd139",
-        "0x64b928332817Aa56276205159566A960c2774d24"
+        "0xF4c6e0318af52270cC91d89767F431B634e1990f",
+        "0xEa88Bd7DD9b52c33b1A88AE33b7c25C40Cbb0CFf"
       ],
       "gasUsed": 0
     },
     "NFTContract": {
-      "address": "0x8db539a0Aa37a6bD89CD6b279b840932A3112f6A",
+      "address": "0x3A48CA209Cae67d588FC1c621B5918bdC2d3270f",
       "constructorArgs": [
-        "0x08b17E2Ab98C0874cC39281cC1F03Be6025bd139",
-        "0x64b928332817Aa56276205159566A960c2774d24",
-        "0xE631c8Ab040E70C6048156c05a3D893DAC2b91eC",
+        "0xF4c6e0318af52270cC91d89767F431B634e1990f",
+        "0xEa88Bd7DD9b52c33b1A88AE33b7c25C40Cbb0CFf",
+        "0xe00ec6468DD139b94c06fedbe5A383E0B35D476D",
         "0x0000000000000000000000000000000000000000"
       ],
       "gasUsed": 0
     },
     "Monetization": {
-      "address": "0x029f5e9769cC9B7247cAe5E40fa34FC3d287655D",
+      "address": "0x68d1de4223aA6623BFF4F39BE3F632634E380625",
       "constructorArgs": [
-        "0x08b17E2Ab98C0874cC39281cC1F03Be6025bd139",
-        "0x8db539a0Aa37a6bD89CD6b279b840932A3112f6A",
-        "0x64b928332817Aa56276205159566A960c2774d24",
-        "0xE631c8Ab040E70C6048156c05a3D893DAC2b91eC",
-        "0x2EF3e7fa8aE5197003762D33b8141fF4C6279d81"
+        "0xF4c6e0318af52270cC91d89767F431B634e1990f",
+        "0x3A48CA209Cae67d588FC1c621B5918bdC2d3270f",
+        "0xEa88Bd7DD9b52c33b1A88AE33b7c25C40Cbb0CFf",
+        "0xe00ec6468DD139b94c06fedbe5A383E0B35D476D",
+        "0xF732BA657B44ea2D87B8385ea33f35C831954EFd"
       ],
       "gasUsed": 0
     }

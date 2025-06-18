@@ -24,6 +24,9 @@ contract Monetization {
 
     // Address handling off-chain subscription and pay-per-use
     address public subscriptionHandlerPublicKey;
+    
+    // Platform owner address for receiving commissions
+    address private platformOwner;
 
     // Monetization structs
     struct PayPerUseStruct {
@@ -121,6 +124,9 @@ contract Monetization {
         nftAccessControl = NFTAccessControl(_nftAccessControlAddress);
         nftMetadata = NFTMetadata(_nftMetadataAddress);
         aiServiceAgreementManagement = AIServiceAgreementManagement(_aiServiceAgreementManagementAddress);
+
+        // Set platform owner to deployer initially
+        platformOwner = msg.sender;
 
         masterAccessControl.grantSelfAccess(msg.sender);
     }
@@ -477,7 +483,7 @@ contract Monetization {
         address currentOwner = nftInfo.owner;
         
         // Calculate and transfer commission
-        uint256 commission = (msg.value * commission_percentage) / 100;
+        uint256 commission = msg.value / 100 * commission_percentage;
         uint256 ownerAmount = msg.value - commission;
         
         if (commission > 0) {
@@ -507,7 +513,7 @@ contract Monetization {
         NFTContract.NFTInfo memory nftInfo = nftContract.getNFTInfo(_nftId);
         
         // Calculate and transfer commission
-        uint256 commission = (msg.value * commission_percentage) / 100;
+        uint256 commission = msg.value / 100 * commission_percentage;
         uint256 ownerAmount = msg.value - commission;
         
         if (commission > 0) {
@@ -550,7 +556,7 @@ contract Monetization {
         NFTContract.NFTInfo memory nftInfo = nftContract.getNFTInfo(_nftId);
         
         // Calculate and transfer commission
-        uint256 commission = (msg.value * commission_percentage) / 100;
+        uint256 commission = msg.value / 100 * commission_percentage;
         uint256 ownerAmount = msg.value - commission;
         
         if (commission > 0) {
@@ -775,9 +781,8 @@ contract Monetization {
      * @dev Returns contract owner for commission payments
      */
     function owner() public view returns (address) {
-        // In production, this should return the actual platform owner address
-        // For now, returning the deployer stored in master access control
-        return address(0); // Replace with actual owner mechanism
+        // Returns the platform owner for commission payments
+        return platformOwner;
     }
 
     // Struct definitions for setAllMonetizationOptions
