@@ -25,7 +25,7 @@ contract("MasterAccessControl", (accounts) => {
         
         expectEvent(tx, 'AccessGranted', {
           contractAddress: contractA,
-          callerAddress: user1
+          caller: user1
         });
 
         const hasAccess = await masterAccess.hasAccess(contractA, user1);
@@ -46,7 +46,7 @@ contract("MasterAccessControl", (accounts) => {
         const tx = await masterAccess.grantAccess(contractA, user1, { from: deployer });
         expectEvent(tx, 'AccessGranted', {
           contractAddress: contractA,
-          callerAddress: user1
+          caller: user1
         });
       });
     });
@@ -80,7 +80,7 @@ contract("MasterAccessControl", (accounts) => {
         const tx = await masterAccess.revokeAccess(contractA, user2, { from: deployer });
         expectEvent(tx, 'AccessRevoked', {
           contractAddress: contractA,
-          callerAddress: user2
+          caller: user2
         });
       });
     });

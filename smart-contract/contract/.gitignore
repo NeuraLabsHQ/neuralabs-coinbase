@@ -5,3 +5,7 @@ node_modules/
 deployments/*.json
 !deployments/.gitkeep
 !deployments/**-latest.json
+
+
+testing-logs/**
+!testing-logs/__placeholder__
