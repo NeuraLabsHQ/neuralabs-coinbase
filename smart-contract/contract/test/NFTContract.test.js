@@ -5,6 +5,7 @@ const NFTMetadata = artifacts.require("NFTMetadata");
 const Monetization = artifacts.require("Monetization");
 const AIServiceAgreementManagement = artifacts.require("AIServiceAgreementManagement");
 const { expectRevert, expectEvent, time } = require('@openzeppelin/test-helpers');
+const { delay } = require('./helpers/test-utils');
 
 contract("NFTContract", (accounts) => {
   const [deployer, user1, user2, user3, unauthorized] = accounts;
@@ -95,6 +96,9 @@ contract("NFTContract", (accounts) => {
     // NFTAccessControl uses selfCheckAccess which checks if msg.sender has access to NFTAccessControl
     // We already grant this above, but let's ensure it's there
     // Line 86 already does: await masterAccess.grantAccess(nftAccess.address, nftContract.address, { from: deployer });
+    
+    // Add delay to prevent nonce synchronization issues
+    await delay(100);
   });
 
   describe("Deployment", () => {
@@ -109,9 +113,10 @@ contract("NFTContract", (accounts) => {
   describe("NFT Creation", () => {
     describe("createNFT", () => {
       it("should create NFT with valid parameters", async () => {
-        // WORKAROUND: Set max access level for token ID 0 before creation
-        // This is needed because NFTContract has a bug
+        // Set max access level for token ID 0 before creation
+        // This is needed because NFTContract grants AbsoluteOwnership on creation
         await nftAccess.setMaxAccessLevel(0, AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(50);
         
         const tx = await nftContract.createNFT(
           "Test NFT",
@@ -138,6 +143,10 @@ contract("NFTContract", (accounts) => {
       });
 
       it("should prevent creating NFT with invalid ownership level", async () => {
+        // Set max access level for potential NFTs
+        await nftAccess.setMaxAccessLevel(0, AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(50);
+        
         await expectRevert(
           nftContract.createNFT(
             "Test NFT",
@@ -158,6 +167,10 @@ contract("NFTContract", (accounts) => {
       });
 
       it("should prevent creating NFT with empty name", async () => {
+        // Set max access level for potential NFT
+        await nftAccess.setMaxAccessLevel(0, AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(50);
+        
         await expectRevert(
           nftContract.createNFT(
             "", // Empty name
@@ -171,7 +184,9 @@ contract("NFTContract", (accounts) => {
       it("should increment token ID counter correctly", async () => {
         // Set max access levels for the NFTs we'll create
         await nftAccess.setMaxAccessLevel(0, AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(50);
         await nftAccess.setMaxAccessLevel(1, AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(50);
         
         // Create first NFT
         const tx1 = await nftContract.createNFT(
@@ -202,6 +217,7 @@ contract("NFTContract", (accounts) => {
       // Set max access level for the NFT we'll create
       const nextTokenId = await nftContract.totalSupply();
       await nftAccess.setMaxAccessLevel(nextTokenId, AccessLevel.AbsoluteOwnership, { from: deployer });
+      await delay(50);
       
       const tx = await nftContract.createNFT(
         "Burn Test NFT",
@@ -213,6 +229,10 @@ contract("NFTContract", (accounts) => {
 
     describe("burnNFT", () => {
       it("should allow owner to burn their NFT", async () => {
+        // Verify NFTContract has permission to call revokeAccess
+        const hasAccess = await masterAccess.hasAccess(nftAccess.address, nftContract.address);
+        assert.equal(hasAccess, true, "NFTContract should have access to NFTAccessControl");
+        
         const tx = await nftContract.burnNFT(tokenId, { from: user1 });
 
         expectEvent(tx, 'Transfer', {
@@ -254,7 +274,9 @@ contract("NFTContract", (accounts) => {
       it("should clean up all associated data on burn", async () => {
         // Grant additional access to other users
         await nftAccess.grantAccess(tokenId, user2, AccessLevel.UseModel, { from: deployer });
+        await delay(50);
         await nftAccess.grantAccess(tokenId, user3, AccessLevel.ViewAndDownload, { from: deployer });
+        await delay(50);
 
         // Burn the NFT
         await nftContract.burnNFT(tokenId, { from: user1 });
@@ -281,6 +303,7 @@ contract("NFTContract", (accounts) => {
       // Set max access level for the NFT we'll create
       const nextTokenId = await nftContract.totalSupply();
       await nftAccess.setMaxAccessLevel(nextTokenId, AccessLevel.AbsoluteOwnership, { from: deployer });
+      await delay(50);
       
       const tx = await nftContract.createNFT(
         "Lock Test NFT",
@@ -418,6 +441,7 @@ contract("NFTContract", (accounts) => {
       // Set max access level for the NFT we'll create
       const nextTokenId = await nftContract.totalSupply();
       await nftAccess.setMaxAccessLevel(nextTokenId, AccessLevel.AbsoluteOwnership, { from: deployer });
+      await delay(50);
       
       const tx = await nftContract.createNFT(
         "Transfer Test NFT",
@@ -505,6 +529,7 @@ contract("NFTContract", (accounts) => {
       // Set max access level for the NFT we'll create
       const nextTokenId = await nftContract.totalSupply();
       await nftAccess.setMaxAccessLevel(nextTokenId, AccessLevel.AbsoluteOwnership, { from: deployer });
+      await delay(50);
       
       const tx = await nftContract.createNFT(
         "Existence Test NFT",
@@ -566,6 +591,7 @@ contract("NFTContract", (accounts) => {
       const startTokenId = await nftContract.totalSupply();
       for (let i = 0; i < 6; i++) {
         await nftAccess.setMaxAccessLevel(startTokenId.toNumber() + i, AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(50);
       }
       
       // Create NFTs with different ownership levels
@@ -627,6 +653,7 @@ contract("NFTContract", (accounts) => {
       // Set max access level for the NFT we'll create
       const nextTokenId = await nftContract.totalSupply();
       await nftAccess.setMaxAccessLevel(nextTokenId, AccessLevel.AbsoluteOwnership, { from: deployer });
+      await delay(50);
       
       const tx = await nftContract.createNFT(
         "Complex Access NFT",
@@ -634,13 +661,19 @@ contract("NFTContract", (accounts) => {
         { from: user1 }
       );
       const tokenId = tx.logs.find(log => log.event === 'Transfer').args.tokenId;
+      await delay(50);
 
       // Set up complex access
       await masterAccess.grantAccess(nftAccess.address, user1, { from: deployer });
+      await delay(50);
       await nftAccess.grantAccess(tokenId, user2, AccessLevel.EditData, { from: user1 });
+      await delay(50);
       await nftAccess.grantAccess(tokenId, user3, AccessLevel.UseModel, { from: user1 });
+      await delay(50);
       await nftAccess.setDefaultAccessLevel(tokenId, AccessLevel.ViewAndDownload, { from: user1 });
+      await delay(50);
       await nftAccess.setMaxAccessLevel(tokenId, AccessLevel.EditData, { from: user1 });
+      await delay(50);
 
       // Burn NFT
       await nftContract.burnNFT(tokenId, { from: user1 });

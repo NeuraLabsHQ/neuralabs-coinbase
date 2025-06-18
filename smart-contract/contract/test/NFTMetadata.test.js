@@ -2,6 +2,7 @@ const NFTMetadata = artifacts.require("NFTMetadata");
 const MasterAccessControl = artifacts.require("MasterAccessControl");
 const NFTAccessControl = artifacts.require("NFTAccessControl");
 const { expectRevert, expectEvent } = require('@openzeppelin/test-helpers');
+const { delay } = require('./helpers/test-utils');
 
 contract("NFTMetadata", (accounts) => {
   const [deployer, nftContract, user1, user2, unauthorized] = accounts;
@@ -34,12 +35,17 @@ contract("NFTMetadata", (accounts) => {
   beforeEach(async () => {
     // Deploy contracts
     masterAccess = await MasterAccessControl.new({ from: deployer });
+    await delay(100);
     nftAccess = await NFTAccessControl.new(masterAccess.address, { from: deployer });
+    await delay(100);
     nftMetadata = await NFTMetadata.new(masterAccess.address, nftAccess.address, { from: deployer });
+    await delay(100);
     
     // Grant permissions
     await masterAccess.grantAccess(nftMetadata.address, nftContract, { from: deployer });
+    await delay(100);
     await masterAccess.grantAccess(nftAccess.address, nftContract, { from: deployer });
+    await delay(100);
   });
 
   describe("Deployment", () => {
@@ -70,8 +76,10 @@ contract("NFTMetadata", (accounts) => {
       it("should create metadata with valid parameters", async () => {
         // First set max access level for the NFT
         await nftAccess.setMaxAccessLevel(tokenId, AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(100);
         // Grant NFT absolute ownership to simulate NFT contract creating metadata
         await nftAccess.grantAccess(tokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(100);
         
         const metadataStruct = {
           image: validMetadata.imageUrl,
@@ -109,8 +117,10 @@ contract("NFTMetadata", (accounts) => {
       it("should prevent creating metadata for existing token", async () => {
         // First set max access level for the NFT
         await nftAccess.setMaxAccessLevel(tokenId, AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(100);
         // Grant NFT absolute ownership
         await nftAccess.grantAccess(tokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(100);
         
         const metadataStruct = {
           image: validMetadata.imageUrl,
@@ -124,6 +134,7 @@ contract("NFTMetadata", (accounts) => {
         };
         
         await nftMetadata.createMetadata(tokenId, metadataStruct, { from: nftContract });
+        await delay(100);
 
         await expectRevert(
           nftMetadata.createMetadata(tokenId, metadataStruct, { from: nftContract }),
@@ -134,8 +145,10 @@ contract("NFTMetadata", (accounts) => {
       it("should validate IP type", async () => {
         // First set max access level for the NFT
         await nftAccess.setMaxAccessLevel(tokenId, AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(100);
         // Grant NFT absolute ownership
         await nftAccess.grantAccess(tokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(100);
         
         const invalidMetadata = {
           image: validMetadata.imageUrl,
@@ -157,8 +170,10 @@ contract("NFTMetadata", (accounts) => {
       it("should validate storage type", async () => {
         // First set max access level for the NFT
         await nftAccess.setMaxAccessLevel(tokenId, AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(100);
         // Grant NFT absolute ownership
         await nftAccess.grantAccess(tokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(100);
         
         const invalidMetadata = {
           image: validMetadata.imageUrl,
@@ -225,8 +240,10 @@ contract("NFTMetadata", (accounts) => {
       beforeEach(async () => {
         // First set max access level for the NFT
         await nftAccess.setMaxAccessLevel(tokenId, AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(100);
         // Grant NFT absolute ownership
         await nftAccess.grantAccess(tokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(100);
         
         const metadataStruct = {
           image: validMetadata.imageUrl,
@@ -240,6 +257,7 @@ contract("NFTMetadata", (accounts) => {
         };
         
         await nftMetadata.createMetadata(tokenId, metadataStruct, { from: nftContract });
+        await delay(100);
       });
 
       it("should replicate metadata to new token", async () => {
@@ -276,6 +294,7 @@ contract("NFTMetadata", (accounts) => {
 
       it("should prevent replicating to existing token", async () => {
         await nftMetadata.replicateNFT(tokenId, newTokenId, { from: nftContract });
+        await delay(100);
 
         await expectRevert(
           nftMetadata.replicateNFT(tokenId, newTokenId, { from: nftContract }),
@@ -302,8 +321,10 @@ contract("NFTMetadata", (accounts) => {
     beforeEach(async () => {
       // First set max access level for the NFT
       await nftAccess.setMaxAccessLevel(tokenId, AccessLevel.AbsoluteOwnership, { from: deployer });
+      await delay(100);
       // Grant NFT absolute ownership
       await nftAccess.grantAccess(tokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+      await delay(100);
       
       const metadataStruct = {
         image: validMetadata.imageUrl,
@@ -317,12 +338,14 @@ contract("NFTMetadata", (accounts) => {
       };
       
       await nftMetadata.createMetadata(tokenId, metadataStruct, { from: nftContract });
+      await delay(100);
     });
 
     describe("updateMetadata", () => {
       it("should update metadata with EditData access", async () => {
         // Grant EditData access to user2
         await nftAccess.grantAccess(tokenId, user2, AccessLevel.EditData, { from: deployer });
+        await delay(100);
 
         const newImageUrl = "https://example.com/new-image.png";
         const newVersion = "2.0.0";
@@ -356,6 +379,7 @@ contract("NFTMetadata", (accounts) => {
       it("should prevent update without EditData access", async () => {
         // Grant only UseModel access to user2
         await nftAccess.grantAccess(tokenId, user2, AccessLevel.UseModel, { from: deployer });
+        await delay(100);
         
         const updatedMetadata = {
           image: "https://example.com/new-image.png",
@@ -376,6 +400,7 @@ contract("NFTMetadata", (accounts) => {
 
       it("should allow changing IP type during update", async () => {
         await nftAccess.grantAccess(tokenId, user2, AccessLevel.EditData, { from: deployer });
+        await delay(100);
         
         const updatedMetadata = {
           image: validMetadata.imageUrl,
@@ -396,6 +421,7 @@ contract("NFTMetadata", (accounts) => {
 
       it("should validate new storage type", async () => {
         await nftAccess.grantAccess(tokenId, user2, AccessLevel.EditData, { from: deployer });
+        await delay(100);
         
         const updatedMetadata = {
           image: validMetadata.imageUrl,
@@ -416,7 +442,9 @@ contract("NFTMetadata", (accounts) => {
 
       it("should prevent update for non-existent token", async () => {
         await nftAccess.setMaxAccessLevel(999, AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(100);
         await nftAccess.grantAccess(999, user2, AccessLevel.EditData, { from: deployer });
+        await delay(100);
         
         const updatedMetadata = {
           image: validMetadata.imageUrl,
@@ -510,8 +538,10 @@ contract("NFTMetadata", (accounts) => {
       for (let i = 0; i < tokenIds.length; i++) {
         // First set max access level for the NFT
         await nftAccess.setMaxAccessLevel(tokenIds[i], AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(100);
         // Grant NFT absolute ownership
         await nftAccess.grantAccess(tokenIds[i], nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+        await delay(100);
         
         const metadataStruct = {
           image: metadata[i].imageUrl,
@@ -525,6 +555,7 @@ contract("NFTMetadata", (accounts) => {
         };
         
         await nftMetadata.createMetadata(tokenIds[i], metadataStruct, { from: nftContract });
+        await delay(100);
       }
     });
 
@@ -569,8 +600,10 @@ contract("NFTMetadata", (accounts) => {
       
       // First set max access level for the NFT
       await nftAccess.setMaxAccessLevel(tokenId, AccessLevel.AbsoluteOwnership, { from: deployer });
+      await delay(100);
       // Grant NFT absolute ownership
       await nftAccess.grantAccess(tokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+      await delay(100);
       
       const metadataStruct = {
         image: "", // empty image URL - this will cause metadata to be considered non-existent
@@ -584,6 +617,7 @@ contract("NFTMetadata", (accounts) => {
       };
       
       await nftMetadata.createMetadata(tokenId, metadataStruct, { from: nftContract });
+      await delay(100);
 
       // Note: Since image is empty, the contract considers metadata as non-existent
       const exists = await nftMetadata.metadataExists(tokenId);
@@ -592,7 +626,9 @@ contract("NFTMetadata", (accounts) => {
       // Test with non-empty image but other empty fields
       const tokenId2 = 2;
       await nftAccess.setMaxAccessLevel(tokenId2, AccessLevel.AbsoluteOwnership, { from: deployer });
+      await delay(100);
       await nftAccess.grantAccess(tokenId2, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+      await delay(100);
       
       const metadataStruct2 = {
         image: "https://example.com/image.png",
@@ -606,6 +642,7 @@ contract("NFTMetadata", (accounts) => {
       };
       
       await nftMetadata.createMetadata(tokenId2, metadataStruct2, { from: nftContract });
+      await delay(100);
       
       const metadata = await nftMetadata.getMetadata(tokenId2);
       assert.equal(metadata.md5, "", "Empty MD5 hash should be allowed");
@@ -619,8 +656,10 @@ contract("NFTMetadata", (accounts) => {
       
       // First set max access level for the NFT
       await nftAccess.setMaxAccessLevel(tokenId, AccessLevel.AbsoluteOwnership, { from: deployer });
+      await delay(100);
       // Grant NFT absolute ownership
       await nftAccess.grantAccess(tokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+      await delay(100);
       
       const metadataStruct = {
         image: longString,
@@ -634,6 +673,7 @@ contract("NFTMetadata", (accounts) => {
       };
       
       await nftMetadata.createMetadata(tokenId, metadataStruct, { from: nftContract });
+      await delay(100);
 
       const metadata = await nftMetadata.getMetadata(tokenId);
       assert.equal(metadata.intellectual_property_id, longString, "Long IP ID should be stored");
@@ -645,8 +685,10 @@ contract("NFTMetadata", (accounts) => {
       
       // First set max access level for the NFT
       await nftAccess.setMaxAccessLevel(maxTokenId, AccessLevel.AbsoluteOwnership, { from: deployer });
+      await delay(100);
       // Grant NFT absolute ownership
       await nftAccess.grantAccess(maxTokenId, nftContract, AccessLevel.AbsoluteOwnership, { from: deployer });
+      await delay(100);
       
       const metadataStruct = {
         image: "https://example.com/max.png",
@@ -660,6 +702,7 @@ contract("NFTMetadata", (accounts) => {
       };
       
       await nftMetadata.createMetadata(maxTokenId, metadataStruct, { from: nftContract });
+      await delay(100);
 
       const exists = await nftMetadata.metadataExists(maxTokenId);
       assert.equal(exists, true, "Should handle max uint256 token ID");
