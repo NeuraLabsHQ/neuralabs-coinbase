@@ -1,0 +1,483 @@
+digraph G {
+  graph [ ratio = "auto", page = "100", compound =true, bgcolor = "#2e3e56" ];
+  node [ style = "filled", fillcolor = "#edad56", color = "#edad56", penwidth =3 ];
+  edge [ color = "#fcfcfc", penwidth =2, fontname = "helvetica Neue Ultra Light" ];
+subgraph "clusterNFTAgentWallet" {
+  graph [ label = "NFTAgentWallet", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "NFTAgentWallet.onlyAuthorized" [ label = "onlyAuthorized", color = "#1bc6a6", shape =doubleoctagon ];
+  "NFTAgentWallet.<Constructor>" [ label = "<Constructor>", color = "#FF9797", fillcolor = "#FF9797" ];
+  "NFTAgentWallet.registerAgentWallet" [ label = "registerAgentWallet", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTAgentWallet.updateAgentWallet" [ label = "updateAgentWallet", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTAgentWallet.getNFTId" [ label = "getNFTId", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTAgentWallet.getAgentWallet" [ label = "getAgentWallet", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTAgentWallet.hasAgentWallet" [ label = "hasAgentWallet", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTAgentWallet.isAgentWalletAssigned" [ label = "isAgentWalletAssigned", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTAgentWallet.getEthSignedMessageHash" [ label = "getEthSignedMessageHash" ];
+  "NFTAgentWallet.recoverSigner" [ label = "recoverSigner" ];
+  "NFTAgentWallet.addressToString" [ label = "addressToString" ];
+  "NFTAgentWallet.uint256ToString" [ label = "uint256ToString" ];
+}
+
+subgraph "clusterMasterAccessControl" {
+  graph [ label = "MasterAccessControl", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "MasterAccessControl.selfCheckAccess" [ label = "selfCheckAccess", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "MasterAccessControl.grantSelfAccess" [ label = "grantSelfAccess", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "MasterAccessControl.onlyAuthorized" [ label = "onlyAuthorized", color = "#1bc6a6", shape =doubleoctagon ];
+  "MasterAccessControl.<Constructor>" [ label = "<Constructor>", color = "#FF9797", fillcolor = "#FF9797" ];
+  "MasterAccessControl.grantAccess" [ label = "grantAccess", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "MasterAccessControl.revokeAccess" [ label = "revokeAccess", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "MasterAccessControl.revokeSelfAccess" [ label = "revokeSelfAccess", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "MasterAccessControl.hasAccess" [ label = "hasAccess", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterMonetization" {
+  graph [ label = "Monetization", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "Monetization.onlyAuthorized" [ label = "onlyAuthorized", color = "#1bc6a6", shape =doubleoctagon ];
+  "Monetization.onlyNFTOwner" [ label = "onlyNFTOwner", color = "#1bc6a6", shape =doubleoctagon ];
+  "Monetization.<Constructor>" [ label = "<Constructor>", color = "#FF9797", fillcolor = "#FF9797" ];
+  "Monetization.setContractReferences" [ label = "setContractReferences", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Monetization.setCommissionPercentage" [ label = "setCommissionPercentage", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Monetization.setCommitmentTime" [ label = "setCommitmentTime", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Monetization.setNoticeBeforeUnlockCommitment" [ label = "setNoticeBeforeUnlockCommitment", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Monetization.enablePayPerUse" [ label = "enablePayPerUse", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Monetization.enableSubscription" [ label = "enableSubscription", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Monetization.enableBuyAccess" [ label = "enableBuyAccess", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Monetization.enableBuyOwnership" [ label = "enableBuyOwnership", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Monetization.enableBuyReplica" [ label = "enableBuyReplica", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Monetization.disablePayPerUse" [ label = "disablePayPerUse", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Monetization.disableSubscription" [ label = "disableSubscription", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Monetization.disableBuyAccess" [ label = "disableBuyAccess", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Monetization.disableBuyOwnership" [ label = "disableBuyOwnership" ];
+  "Monetization.disableBuyReplica" [ label = "disableBuyReplica" ];
+  "Monetization.buyOwnership" [ label = "buyOwnership", color = "brown", fillcolor = "#ffbdb9" ];
+  "Monetization.buyReplica" [ label = "buyReplica", color = "brown", fillcolor = "#ffbdb9" ];
+  "Monetization.buyAccess" [ label = "buyAccess", color = "brown", fillcolor = "#ffbdb9" ];
+  "Monetization.startUnlockProcess" [ label = "startUnlockProcess", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Monetization.completeUnlock" [ label = "completeUnlock", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Monetization.setAllMonetizationOptions" [ label = "setAllMonetizationOptions", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Monetization._processMonetizationOptions" [ label = "_processMonetizationOptions" ];
+  "Monetization.cleanupMonetization" [ label = "cleanupMonetization", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Monetization._startUnlockProcess" [ label = "_startUnlockProcess" ];
+  "Monetization._disableAllMonetizationOptions" [ label = "_disableAllMonetizationOptions" ];
+  "Monetization._updateMonetizationOption" [ label = "_updateMonetizationOption" ];
+  "Monetization.owner" [ label = "owner" ];
+  "Monetization.registerNFTAgentWallet" [ label = "registerNFTAgentWallet", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Monetization.updateNFTAgentWallet" [ label = "updateNFTAgentWallet", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Monetization.payable" [ label = "payable" ];
+}
+
+subgraph "clusterIMonetization" {
+  graph [ label = "IMonetization  (iface)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IMonetization.cleanupMonetization" [ label = "cleanupMonetization" ];
+}
+
+subgraph "clusterNFTContract" {
+  graph [ label = "NFTContract", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "NFTContract.getNFTInfo" [ label = "getNFTInfo", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTContract.getLockStatus" [ label = "getLockStatus", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTContract.lockNFT" [ label = "lockNFT", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTContract.safeTransferFrom" [ label = "safeTransferFrom", color = "#FF9797", fillcolor = "#FF9797" ];
+  "NFTContract.createNFT" [ label = "createNFT", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTContract.startUnlocking" [ label = "startUnlocking", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTContract.markCanBeUnlocked" [ label = "markCanBeUnlocked", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTContract.unlockNFT" [ label = "unlockNFT", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTContract.onlyAuthorized" [ label = "onlyAuthorized", color = "#1bc6a6", shape =doubleoctagon ];
+  "NFTContract.<Constructor>" [ label = "<Constructor>", color = "#FF9797", fillcolor = "#FF9797" ];
+  "NFTContract.setMonetizationContract" [ label = "setMonetizationContract", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTContract.burnNFT" [ label = "burnNFT", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTContract.transferNFT" [ label = "transferNFT", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTContract.balanceOf" [ label = "balanceOf", color = "#FF9797", fillcolor = "#FF9797" ];
+  "NFTContract.ownerOf" [ label = "ownerOf" ];
+  "NFTContract.transferFrom" [ label = "transferFrom", color = "#FF9797", fillcolor = "#FF9797" ];
+  "NFTContract.approve" [ label = "approve", color = "#FF9797", fillcolor = "#FF9797" ];
+  "NFTContract.setApprovalForAll" [ label = "setApprovalForAll", color = "#FF9797", fillcolor = "#FF9797" ];
+  "NFTContract.getApproved" [ label = "getApproved", color = "#FF9797", fillcolor = "#FF9797" ];
+  "NFTContract.isApprovedForAll" [ label = "isApprovedForAll" ];
+  "NFTContract.supportsInterface" [ label = "supportsInterface", color = "#FF9797", fillcolor = "#FF9797" ];
+  "NFTContract._transfer" [ label = "_transfer" ];
+  "NFTContract._safeTransfer" [ label = "_safeTransfer" ];
+  "NFTContract._exists" [ label = "_exists" ];
+  "NFTContract._isApprovedOrOwner" [ label = "_isApprovedOrOwner" ];
+  "NFTContract._checkOnERC721Received" [ label = "_checkOnERC721Received" ];
+  "NFTContract.isContract" [ label = "isContract" ];
+  "NFTContract.type" [ label = "type" ];
+}
+
+subgraph "clusterIERC721" {
+  graph [ label = "IERC721  (iface)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IERC721.balanceOf" [ label = "balanceOf", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC721.ownerOf" [ label = "ownerOf", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC721.safeTransferFrom" [ label = "safeTransferFrom", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC721.transferFrom" [ label = "transferFrom", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC721.approve" [ label = "approve", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC721.setApprovalForAll" [ label = "setApprovalForAll", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC721.getApproved" [ label = "getApproved", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC721.isApprovedForAll" [ label = "isApprovedForAll", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterIERC165" {
+  graph [ label = "IERC165  (iface)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IERC165.supportsInterface" [ label = "supportsInterface", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterIERC721Receiver" {
+  graph [ label = "IERC721Receiver  (iface)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IERC721Receiver.onERC721Received" [ label = "onERC721Received", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterERC165" {
+  graph [ label = "ERC165", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "ERC165.supportsInterface" [ label = "supportsInterface", color = "#FF9797", fillcolor = "#FF9797" ];
+  "ERC165.type" [ label = "type" ];
+}
+
+subgraph "clusterIAIServiceAgreementManagement" {
+  graph [ label = "IAIServiceAgreementManagement  (iface)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IAIServiceAgreementManagement.hasActiveAccess" [ label = "hasActiveAccess" ];
+}
+
+subgraph "clusterNFTAccessControl" {
+  graph [ label = "NFTAccessControl", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "NFTAccessControl.grantAccess" [ label = "grantAccess", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTAccessControl.canRevokeAccess" [ label = "canRevokeAccess", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTAccessControl.revokeAccess" [ label = "revokeAccess", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTAccessControl.AccessLevel" [ label = "AccessLevel" ];
+  "NFTAccessControl.checkMinimumAccess" [ label = "checkMinimumAccess", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTAccessControl.setMaxAccessLevel" [ label = "setMaxAccessLevel", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTAccessControl.getAccessLevel" [ label = "getAccessLevel", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTAccessControl.onlyAuthorizedOrOwner" [ label = "onlyAuthorizedOrOwner", color = "#1bc6a6", shape =doubleoctagon ];
+  "NFTAccessControl.<Constructor>" [ label = "<Constructor>", color = "#FF9797", fillcolor = "#FF9797" ];
+  "NFTAccessControl.setAIServiceAgreementManagement" [ label = "setAIServiceAgreementManagement", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTAccessControl.setDefaultAccessLevel" [ label = "setDefaultAccessLevel", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTAccessControl.getAllAccessForUser" [ label = "getAllAccessForUser", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTAccessControl.getAllUsersAccessForNFT" [ label = "getAllUsersAccessForNFT", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTAccessControl._updateUserAccessList" [ label = "_updateUserAccessList" ];
+  "NFTAccessControl._updateNFTAccessList" [ label = "_updateNFTAccessList" ];
+  "NFTAccessControl._updateUserAccessListOnRevoke" [ label = "_updateUserAccessListOnRevoke" ];
+  "NFTAccessControl._updateNFTAccessListOnRevoke" [ label = "_updateNFTAccessListOnRevoke" ];
+}
+
+subgraph "clusterNFTMetadata" {
+  graph [ label = "NFTMetadata", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "NFTMetadata.getMetadata" [ label = "getMetadata", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTMetadata.replicateNFT" [ label = "replicateNFT", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTMetadata.metadataExists" [ label = "metadataExists", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTMetadata.deleteMetadata" [ label = "deleteMetadata", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTMetadata.onlyAuthorized" [ label = "onlyAuthorized", color = "#1bc6a6", shape =doubleoctagon ];
+  "NFTMetadata.<Constructor>" [ label = "<Constructor>", color = "#FF9797", fillcolor = "#FF9797" ];
+  "NFTMetadata.createMetadata" [ label = "createMetadata", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTMetadata.updateMetadata" [ label = "updateMetadata", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "NFTMetadata._metadataExists" [ label = "_metadataExists" ];
+}
+
+subgraph "clusterAIServiceAgreementManagement" {
+  graph [ label = "AIServiceAgreementManagement", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "AIServiceAgreementManagement.hasActiveSubscriptions" [ label = "hasActiveSubscriptions", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "AIServiceAgreementManagement.hasActiveAccessSales" [ label = "hasActiveAccessSales", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "AIServiceAgreementManagement.recordAccessSale" [ label = "recordAccessSale", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "AIServiceAgreementManagement.onlyAuthorized" [ label = "onlyAuthorized", color = "#1bc6a6", shape =doubleoctagon ];
+  "AIServiceAgreementManagement.onlyNFTOwner" [ label = "onlyNFTOwner", color = "#1bc6a6", shape =doubleoctagon ];
+  "AIServiceAgreementManagement.<Constructor>" [ label = "<Constructor>", color = "#FF9797", fillcolor = "#FF9797" ];
+  "AIServiceAgreementManagement.recordSubscriptionSale" [ label = "recordSubscriptionSale", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "AIServiceAgreementManagement.hasActiveAccess" [ label = "hasActiveAccess", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "AIServiceAgreementManagement.getTotalActiveAccess" [ label = "getTotalActiveAccess", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "AIServiceAgreementManagement.batchReevaluate" [ label = "batchReevaluate", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "AIServiceAgreementManagement.getAccessSaleDetails" [ label = "getAccessSaleDetails", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "AIServiceAgreementManagement.getSubscriptionDetails" [ label = "getSubscriptionDetails", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+  "NFTAgentWallet.onlyAuthorized";
+  "MasterAccessControl.selfCheckAccess";
+  "NFTAgentWallet.<Constructor>";
+  "MasterAccessControl.grantSelfAccess";
+  "NFTAgentWallet.registerAgentWallet";
+  "NFTAgentWallet.uint256ToString";
+  "NFTAgentWallet.addressToString";
+  "NFTAgentWallet.getEthSignedMessageHash";
+  "NFTAgentWallet.recoverSigner";
+  "NFTAgentWallet.updateAgentWallet";
+  "Monetization.onlyAuthorized";
+  "Monetization.onlyNFTOwner";
+  "NFTContract.getNFTInfo";
+  "Monetization.<Constructor>";
+  "Monetization.setCommitmentTime";
+  "NFTContract.getLockStatus";
+  "Monetization.setNoticeBeforeUnlockCommitment";
+  "Monetization.enablePayPerUse";
+  "NFTMetadata.getMetadata";
+  "NFTContract.lockNFT";
+  "NFTAccessControl.grantAccess";
+  "Monetization.enableSubscription";
+  "Monetization.enableBuyAccess";
+  "Monetization.enableBuyOwnership";
+  "Monetization.enableBuyReplica";
+  "Monetization.disablePayPerUse";
+  "AIServiceAgreementManagement.hasActiveSubscriptions";
+  "NFTAccessControl.canRevokeAccess";
+  "NFTAccessControl.revokeAccess";
+  "Monetization._startUnlockProcess";
+  "Monetization.disableSubscription";
+  "Monetization.disableBuyAccess";
+  "AIServiceAgreementManagement.hasActiveAccessSales";
+  "Monetization.buyOwnership";
+  "Monetization.payable";
+  "Monetization.owner";
+  "NFTContract.safeTransferFrom";
+  "NFTAccessControl.AccessLevel";
+  "Monetization._disableAllMonetizationOptions";
+  "Monetization.buyReplica";
+  "NFTContract.createNFT";
+  "NFTMetadata.replicateNFT";
+  "Monetization.buyAccess";
+  "AIServiceAgreementManagement.recordAccessSale";
+  "Monetization.startUnlockProcess";
+  "NFTContract.startUnlocking";
+  "Monetization.completeUnlock";
+  "NFTContract.markCanBeUnlocked";
+  "NFTContract.unlockNFT";
+  "Monetization.setAllMonetizationOptions";
+  "Monetization._processMonetizationOptions";
+  "Monetization._updateMonetizationOption";
+  "Monetization.cleanupMonetization";
+  "Monetization.disableBuyOwnership";
+  "Monetization.disableBuyReplica";
+  "Monetization.registerNFTAgentWallet";
+  "NFTAccessControl.checkMinimumAccess";
+  "Monetization.updateNFTAgentWallet";
+  "NFTContract.onlyAuthorized";
+  "NFTContract.<Constructor>";
+  "NFTAccessControl.setMaxAccessLevel";
+  "NFTContract.burnNFT";
+  "NFTContract._exists";
+  "NFTMetadata.metadataExists";
+  "NFTMetadata.deleteMetadata";
+  "IMonetization.cleanupMonetization";
+  "NFTContract.transferNFT";
+  "NFTContract._isApprovedOrOwner";
+  "NFTContract._safeTransfer";
+  "NFTContract.transferFrom";
+  "NFTContract._transfer";
+  "NFTContract.approve";
+  "NFTContract.ownerOf";
+  "NFTContract.isApprovedForAll";
+  "NFTContract.getApproved";
+  "NFTContract.supportsInterface";
+  "NFTContract.type";
+  "ERC165.supportsInterface";
+  "NFTAccessControl.getAccessLevel";
+  "NFTContract._checkOnERC721Received";
+  "NFTContract.isContract";
+  "ERC165.type";
+  "NFTAccessControl.onlyAuthorizedOrOwner";
+  "NFTAccessControl.<Constructor>";
+  "NFTAccessControl.setAIServiceAgreementManagement";
+  "NFTAccessControl._updateUserAccessList";
+  "NFTAccessControl._updateNFTAccessList";
+  "IAIServiceAgreementManagement.hasActiveAccess";
+  "NFTAccessControl._updateUserAccessListOnRevoke";
+  "NFTAccessControl._updateNFTAccessListOnRevoke";
+  "NFTMetadata.onlyAuthorized";
+  "NFTMetadata.<Constructor>";
+  "NFTMetadata.createMetadata";
+  "NFTMetadata._metadataExists";
+  "NFTMetadata.updateMetadata";
+  "AIServiceAgreementManagement.onlyAuthorized";
+  "AIServiceAgreementManagement.onlyNFTOwner";
+  "AIServiceAgreementManagement.<Constructor>";
+  "NFTAgentWallet.onlyAuthorized" -> "MasterAccessControl.selfCheckAccess" [ color = "white" ];
+  "NFTAgentWallet.<Constructor>" -> "MasterAccessControl.grantSelfAccess" [ color = "white" ];
+  "NFTAgentWallet.registerAgentWallet" -> "NFTAgentWallet.uint256ToString" [ color = "#1bc6a6" ];
+  "NFTAgentWallet.registerAgentWallet" -> "NFTAgentWallet.addressToString" [ color = "#1bc6a6" ];
+  "NFTAgentWallet.registerAgentWallet" -> "NFTAgentWallet.getEthSignedMessageHash" [ color = "#1bc6a6" ];
+  "NFTAgentWallet.registerAgentWallet" -> "NFTAgentWallet.recoverSigner" [ color = "#1bc6a6" ];
+  "NFTAgentWallet.updateAgentWallet" -> "NFTAgentWallet.uint256ToString" [ color = "#1bc6a6" ];
+  "NFTAgentWallet.updateAgentWallet" -> "NFTAgentWallet.addressToString" [ color = "#1bc6a6" ];
+  "NFTAgentWallet.updateAgentWallet" -> "NFTAgentWallet.getEthSignedMessageHash" [ color = "#1bc6a6" ];
+  "NFTAgentWallet.updateAgentWallet" -> "NFTAgentWallet.recoverSigner" [ color = "#1bc6a6" ];
+  "Monetization.onlyAuthorized" -> "MasterAccessControl.selfCheckAccess" [ color = "white" ];
+  "Monetization.onlyNFTOwner" -> "NFTContract.getNFTInfo" [ color = "white" ];
+  "Monetization.<Constructor>" -> "MasterAccessControl.grantSelfAccess" [ color = "white" ];
+  "Monetization.setCommitmentTime" -> "NFTContract.getLockStatus" [ color = "white" ];
+  "Monetization.setNoticeBeforeUnlockCommitment" -> "NFTContract.getLockStatus" [ color = "white" ];
+  "Monetization.enablePayPerUse" -> "NFTContract.getNFTInfo" [ color = "white" ];
+  "Monetization.enablePayPerUse" -> "NFTMetadata.getMetadata" [ color = "white" ];
+  "Monetization.enablePayPerUse" -> "NFTContract.getLockStatus" [ color = "white" ];
+  "Monetization.enablePayPerUse" -> "NFTContract.lockNFT" [ color = "white" ];
+  "Monetization.enablePayPerUse" -> "NFTAccessControl.grantAccess" [ color = "white" ];
+  "Monetization.enableSubscription" -> "NFTContract.getNFTInfo" [ color = "white" ];
+  "Monetization.enableSubscription" -> "NFTMetadata.getMetadata" [ color = "white" ];
+  "Monetization.enableSubscription" -> "NFTContract.getLockStatus" [ color = "white" ];
+  "Monetization.enableSubscription" -> "NFTContract.lockNFT" [ color = "white" ];
+  "Monetization.enableSubscription" -> "NFTAccessControl.grantAccess" [ color = "white" ];
+  "Monetization.enableBuyAccess" -> "NFTContract.getNFTInfo" [ color = "white" ];
+  "Monetization.enableBuyAccess" -> "NFTMetadata.getMetadata" [ color = "white" ];
+  "Monetization.enableBuyAccess" -> "NFTContract.getLockStatus" [ color = "white" ];
+  "Monetization.enableBuyAccess" -> "NFTContract.lockNFT" [ color = "white" ];
+  "Monetization.enableBuyOwnership" -> "NFTContract.getNFTInfo" [ color = "white" ];
+  "Monetization.enableBuyReplica" -> "NFTContract.getNFTInfo" [ color = "white" ];
+  "Monetization.enableBuyReplica" -> "NFTMetadata.getMetadata" [ color = "white" ];
+  "Monetization.disablePayPerUse" -> "AIServiceAgreementManagement.hasActiveSubscriptions" [ color = "white" ];
+  "Monetization.disablePayPerUse" -> "NFTAccessControl.canRevokeAccess" [ color = "white" ];
+  "Monetization.disablePayPerUse" -> "NFTAccessControl.revokeAccess" [ color = "white" ];
+  "Monetization.disablePayPerUse" -> "NFTContract.getLockStatus" [ color = "white" ];
+  "Monetization.disablePayPerUse" -> "Monetization._startUnlockProcess" [ color = "#1bc6a6" ];
+  "Monetization.disableSubscription" -> "AIServiceAgreementManagement.hasActiveSubscriptions" [ color = "white" ];
+  "Monetization.disableSubscription" -> "NFTAccessControl.canRevokeAccess" [ color = "white" ];
+  "Monetization.disableSubscription" -> "NFTAccessControl.revokeAccess" [ color = "white" ];
+  "Monetization.disableSubscription" -> "NFTContract.getLockStatus" [ color = "white" ];
+  "Monetization.disableSubscription" -> "Monetization._startUnlockProcess" [ color = "#1bc6a6" ];
+  "Monetization.disableBuyAccess" -> "AIServiceAgreementManagement.hasActiveAccessSales" [ color = "white" ];
+  "Monetization.disableBuyAccess" -> "NFTContract.getLockStatus" [ color = "white" ];
+  "Monetization.disableBuyAccess" -> "Monetization._startUnlockProcess" [ color = "#1bc6a6" ];
+  "Monetization.buyOwnership" -> "NFTContract.getLockStatus" [ color = "white" ];
+  "Monetization.buyOwnership" -> "NFTContract.getNFTInfo" [ color = "white" ];
+  "Monetization.buyOwnership" -> "Monetization.payable" [ color = "#1bc6a6" ];
+  "Monetization.buyOwnership" -> "Monetization.owner" [ color = "#1bc6a6" ];
+  "Monetization.buyOwnership" -> "Monetization.payable" [ color = "#1bc6a6" ];
+  "Monetization.buyOwnership" -> "NFTContract.safeTransferFrom" [ color = "white" ];
+  "Monetization.buyOwnership" -> "NFTAccessControl.grantAccess" [ color = "white" ];
+  "Monetization.buyOwnership" -> "NFTAccessControl.AccessLevel" [ color = "white" ];
+  "Monetization.buyOwnership" -> "Monetization._disableAllMonetizationOptions" [ color = "#1bc6a6" ];
+  "Monetization.buyReplica" -> "NFTContract.getNFTInfo" [ color = "white" ];
+  "Monetization.buyReplica" -> "Monetization.payable" [ color = "#1bc6a6" ];
+  "Monetization.buyReplica" -> "Monetization.owner" [ color = "#1bc6a6" ];
+  "Monetization.buyReplica" -> "Monetization.payable" [ color = "#1bc6a6" ];
+  "Monetization.buyReplica" -> "NFTContract.createNFT" [ color = "white" ];
+  "Monetization.buyReplica" -> "NFTMetadata.replicateNFT" [ color = "white" ];
+  "Monetization.buyReplica" -> "NFTContract.safeTransferFrom" [ color = "white" ];
+  "Monetization.buyAccess" -> "NFTContract.getNFTInfo" [ color = "white" ];
+  "Monetization.buyAccess" -> "Monetization.payable" [ color = "#1bc6a6" ];
+  "Monetization.buyAccess" -> "Monetization.owner" [ color = "#1bc6a6" ];
+  "Monetization.buyAccess" -> "Monetization.payable" [ color = "#1bc6a6" ];
+  "Monetization.buyAccess" -> "NFTAccessControl.grantAccess" [ color = "white" ];
+  "Monetization.buyAccess" -> "AIServiceAgreementManagement.recordAccessSale" [ color = "white" ];
+  "Monetization.startUnlockProcess" -> "NFTContract.getLockStatus" [ color = "white" ];
+  "Monetization.startUnlockProcess" -> "AIServiceAgreementManagement.hasActiveSubscriptions" [ color = "white" ];
+  "Monetization.startUnlockProcess" -> "AIServiceAgreementManagement.hasActiveAccessSales" [ color = "white" ];
+  "Monetization.startUnlockProcess" -> "NFTContract.startUnlocking" [ color = "white" ];
+  "Monetization.completeUnlock" -> "NFTContract.getLockStatus" [ color = "white" ];
+  "Monetization.completeUnlock" -> "NFTContract.markCanBeUnlocked" [ color = "white" ];
+  "Monetization.completeUnlock" -> "AIServiceAgreementManagement.hasActiveSubscriptions" [ color = "white" ];
+  "Monetization.completeUnlock" -> "AIServiceAgreementManagement.hasActiveAccessSales" [ color = "white" ];
+  "Monetization.completeUnlock" -> "NFTContract.unlockNFT" [ color = "white" ];
+  "Monetization.setAllMonetizationOptions" -> "Monetization.setCommitmentTime" [ color = "#80e097" ];
+  "Monetization.setAllMonetizationOptions" -> "Monetization.setNoticeBeforeUnlockCommitment" [ color = "#80e097" ];
+  "Monetization.setAllMonetizationOptions" -> "Monetization._processMonetizationOptions" [ color = "#1bc6a6" ];
+  "Monetization._processMonetizationOptions" -> "NFTMetadata.getMetadata" [ color = "white" ];
+  "Monetization._processMonetizationOptions" -> "Monetization._updateMonetizationOption" [ color = "#1bc6a6" ];
+  "Monetization._processMonetizationOptions" -> "Monetization._updateMonetizationOption" [ color = "#1bc6a6" ];
+  "Monetization._processMonetizationOptions" -> "Monetization._updateMonetizationOption" [ color = "#1bc6a6" ];
+  "Monetization._processMonetizationOptions" -> "Monetization._updateMonetizationOption" [ color = "#1bc6a6" ];
+  "Monetization._processMonetizationOptions" -> "Monetization._updateMonetizationOption" [ color = "#1bc6a6" ];
+  "Monetization._processMonetizationOptions" -> "Monetization.enablePayPerUse" [ color = "#80e097" ];
+  "Monetization._processMonetizationOptions" -> "Monetization.enableSubscription" [ color = "#80e097" ];
+  "Monetization._processMonetizationOptions" -> "Monetization.enableBuyAccess" [ color = "#80e097" ];
+  "Monetization._processMonetizationOptions" -> "Monetization.enableBuyOwnership" [ color = "#80e097" ];
+  "Monetization._processMonetizationOptions" -> "Monetization.enableBuyReplica" [ color = "#80e097" ];
+  "Monetization.cleanupMonetization" -> "Monetization._disableAllMonetizationOptions" [ color = "#1bc6a6" ];
+  "Monetization._startUnlockProcess" -> "AIServiceAgreementManagement.hasActiveSubscriptions" [ color = "white" ];
+  "Monetization._startUnlockProcess" -> "AIServiceAgreementManagement.hasActiveAccessSales" [ color = "white" ];
+  "Monetization._startUnlockProcess" -> "NFTContract.startUnlocking" [ color = "white" ];
+  "Monetization._disableAllMonetizationOptions" -> "NFTAccessControl.canRevokeAccess" [ color = "white" ];
+  "Monetization._disableAllMonetizationOptions" -> "NFTAccessControl.revokeAccess" [ color = "white" ];
+  "Monetization._updateMonetizationOption" -> "Monetization.disablePayPerUse" [ color = "#80e097" ];
+  "Monetization._updateMonetizationOption" -> "Monetization.disableSubscription" [ color = "#80e097" ];
+  "Monetization._updateMonetizationOption" -> "Monetization.disableBuyAccess" [ color = "#80e097" ];
+  "Monetization._updateMonetizationOption" -> "Monetization.disableBuyOwnership" [ color = "#80e097" ];
+  "Monetization._updateMonetizationOption" -> "Monetization.disableBuyReplica" [ color = "#80e097" ];
+  "Monetization.registerNFTAgentWallet" -> "NFTContract.getNFTInfo" [ color = "white" ];
+  "Monetization.registerNFTAgentWallet" -> "NFTAccessControl.checkMinimumAccess" [ color = "white" ];
+  "Monetization.registerNFTAgentWallet" -> "NFTAgentWallet.registerAgentWallet" [ color = "white" ];
+  "Monetization.updateNFTAgentWallet" -> "NFTContract.getNFTInfo" [ color = "white" ];
+  "Monetization.updateNFTAgentWallet" -> "NFTAccessControl.checkMinimumAccess" [ color = "white" ];
+  "Monetization.updateNFTAgentWallet" -> "NFTAgentWallet.updateAgentWallet" [ color = "white" ];
+  "NFTContract.onlyAuthorized" -> "MasterAccessControl.selfCheckAccess" [ color = "white" ];
+  "NFTContract.<Constructor>" -> "MasterAccessControl.grantSelfAccess" [ color = "white" ];
+  "NFTContract.createNFT" -> "NFTAccessControl.setMaxAccessLevel" [ color = "white" ];
+  "NFTContract.createNFT" -> "NFTAccessControl.grantAccess" [ color = "white" ];
+  "NFTContract.burnNFT" -> "NFTContract._exists" [ color = "#1bc6a6" ];
+  "NFTContract.burnNFT" -> "NFTMetadata.metadataExists" [ color = "white" ];
+  "NFTContract.burnNFT" -> "NFTMetadata.deleteMetadata" [ color = "white" ];
+  "NFTContract.burnNFT" -> "NFTAccessControl.revokeAccess" [ color = "white" ];
+  "NFTContract.burnNFT" -> "IMonetization.cleanupMonetization" [ color = "white" ];
+  "NFTContract.lockNFT" -> "NFTContract._exists" [ color = "#1bc6a6" ];
+  "NFTContract.startUnlocking" -> "NFTContract._exists" [ color = "#1bc6a6" ];
+  "NFTContract.markCanBeUnlocked" -> "NFTContract._exists" [ color = "#1bc6a6" ];
+  "NFTContract.unlockNFT" -> "NFTContract._exists" [ color = "#1bc6a6" ];
+  "NFTContract.transferNFT" -> "NFTContract.safeTransferFrom" [ color = "#1bc6a6" ];
+  "NFTContract.getLockStatus" -> "NFTContract._exists" [ color = "#1bc6a6" ];
+  "NFTContract.getNFTInfo" -> "NFTContract._exists" [ color = "#1bc6a6" ];
+  "NFTContract.safeTransferFrom" -> "NFTContract._isApprovedOrOwner" [ color = "#1bc6a6" ];
+  "NFTContract.safeTransferFrom" -> "NFTContract._safeTransfer" [ color = "#1bc6a6" ];
+  "NFTContract.safeTransferFrom" -> "NFTContract.safeTransferFrom" [ color = "#1bc6a6" ];
+  "NFTContract.transferFrom" -> "NFTContract._isApprovedOrOwner" [ color = "#1bc6a6" ];
+  "NFTContract.transferFrom" -> "NFTContract._transfer" [ color = "#1bc6a6" ];
+  "NFTContract.approve" -> "NFTContract.ownerOf" [ color = "#1bc6a6" ];
+  "NFTContract.approve" -> "NFTContract.isApprovedForAll" [ color = "#1bc6a6" ];
+  "NFTContract.getApproved" -> "NFTContract._exists" [ color = "#1bc6a6" ];
+  "NFTContract.supportsInterface" -> "NFTContract.type" [ color = "#1bc6a6" ];
+  "NFTContract.supportsInterface" -> "ERC165.supportsInterface" [ color = "white" ];
+  "NFTContract._transfer" -> "NFTContract.ownerOf" [ color = "#1bc6a6" ];
+  "NFTContract._transfer" -> "NFTAccessControl.getAccessLevel" [ color = "white" ];
+  "NFTContract._transfer" -> "NFTAccessControl.revokeAccess" [ color = "white" ];
+  "NFTContract._transfer" -> "NFTAccessControl.grantAccess" [ color = "white" ];
+  "NFTContract._safeTransfer" -> "NFTContract._transfer" [ color = "#1bc6a6" ];
+  "NFTContract._safeTransfer" -> "NFTContract._checkOnERC721Received" [ color = "#1bc6a6" ];
+  "NFTContract._isApprovedOrOwner" -> "NFTContract._exists" [ color = "#1bc6a6" ];
+  "NFTContract._isApprovedOrOwner" -> "NFTContract.ownerOf" [ color = "#1bc6a6" ];
+  "NFTContract._isApprovedOrOwner" -> "NFTContract.getApproved" [ color = "#1bc6a6" ];
+  "NFTContract._isApprovedOrOwner" -> "NFTContract.isApprovedForAll" [ color = "#1bc6a6" ];
+  "NFTContract._checkOnERC721Received" -> "NFTContract.isContract" [ color = "#1bc6a6" ];
+  "ERC165.supportsInterface" -> "ERC165.type" [ color = "#1bc6a6" ];
+  "NFTAccessControl.onlyAuthorizedOrOwner" -> "MasterAccessControl.selfCheckAccess" [ color = "white" ];
+  "NFTAccessControl.<Constructor>" -> "MasterAccessControl.grantSelfAccess" [ color = "white" ];
+  "NFTAccessControl.setAIServiceAgreementManagement" -> "MasterAccessControl.selfCheckAccess" [ color = "white" ];
+  "NFTAccessControl.grantAccess" -> "NFTAccessControl._updateUserAccessList" [ color = "#1bc6a6" ];
+  "NFTAccessControl.grantAccess" -> "NFTAccessControl._updateNFTAccessList" [ color = "#1bc6a6" ];
+  "NFTAccessControl.revokeAccess" -> "MasterAccessControl.selfCheckAccess" [ color = "white" ];
+  "NFTAccessControl.revokeAccess" -> "IAIServiceAgreementManagement.hasActiveAccess" [ color = "white" ];
+  "NFTAccessControl.revokeAccess" -> "NFTAccessControl._updateUserAccessListOnRevoke" [ color = "#1bc6a6" ];
+  "NFTAccessControl.revokeAccess" -> "NFTAccessControl._updateNFTAccessListOnRevoke" [ color = "#1bc6a6" ];
+  "NFTAccessControl.canRevokeAccess" -> "IAIServiceAgreementManagement.hasActiveAccess" [ color = "white" ];
+  "NFTMetadata.onlyAuthorized" -> "MasterAccessControl.selfCheckAccess" [ color = "white" ];
+  "NFTMetadata.<Constructor>" -> "MasterAccessControl.grantSelfAccess" [ color = "white" ];
+  "NFTMetadata.createMetadata" -> "MasterAccessControl.selfCheckAccess" [ color = "white" ];
+  "NFTMetadata.createMetadata" -> "NFTAccessControl.checkMinimumAccess" [ color = "white" ];
+  "NFTMetadata.createMetadata" -> "NFTMetadata._metadataExists" [ color = "#1bc6a6" ];
+  "NFTMetadata.replicateNFT" -> "NFTMetadata._metadataExists" [ color = "#1bc6a6" ];
+  "NFTMetadata.replicateNFT" -> "NFTMetadata._metadataExists" [ color = "#1bc6a6" ];
+  "NFTMetadata.updateMetadata" -> "NFTAccessControl.checkMinimumAccess" [ color = "white" ];
+  "NFTMetadata.updateMetadata" -> "NFTMetadata._metadataExists" [ color = "#1bc6a6" ];
+  "NFTMetadata.deleteMetadata" -> "NFTMetadata._metadataExists" [ color = "#1bc6a6" ];
+  "NFTMetadata.getMetadata" -> "NFTMetadata._metadataExists" [ color = "#1bc6a6" ];
+  "AIServiceAgreementManagement.onlyAuthorized" -> "MasterAccessControl.selfCheckAccess" [ color = "white" ];
+  "AIServiceAgreementManagement.onlyNFTOwner" -> "NFTAccessControl.checkMinimumAccess" [ color = "white" ];
+  "AIServiceAgreementManagement.<Constructor>" -> "MasterAccessControl.grantSelfAccess" [ color = "white" ];
+
+
+rankdir=LR
+node [shape=plaintext]
+subgraph cluster_01 { 
+label = "Legend";
+key [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
+  <tr><td align="right" port="i1">Internal Call</td></tr>
+  <tr><td align="right" port="i2">External Call</td></tr>
+  <tr><td align="right" port="i3">Defined Contract</td></tr>
+  <tr><td align="right" port="i4">Undefined Contract</td></tr>
+  </table>>]
+key2 [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
+  <tr><td port="i1">&nbsp;&nbsp;&nbsp;</td></tr>
+  <tr><td port="i2">&nbsp;&nbsp;&nbsp;</td></tr>
+  <tr><td port="i3" bgcolor="#445773">&nbsp;&nbsp;&nbsp;</td></tr>
+  <tr><td port="i4">
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="7" color="#e8726d">
+      <tr>
+       <td></td>
+      </tr>
+     </table>
+  </td></tr>
+  </table>>]
+key:i1:e -> key2:i1:w [color="#1bc6a6"]
+key:i2:e -> key2:i2:w [color="white"]
+}
+}

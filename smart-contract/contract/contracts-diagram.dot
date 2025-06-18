@@ -13,7 +13,6 @@ digraph SmartContractArchitecture {
     // Write connections: #87CEEB (light blue)
     
     compound=true
-    rankdir=LR
     
     // MasterAccessControl Contract
     subgraph cluster_MasterAccessControl {
@@ -197,6 +196,10 @@ digraph SmartContractArchitecture {
         M_completeUnlock [label="completeUnlock(uint256)\n→ void\nCompletes unlock process", fillcolor="#4a9eff", shape="box"]
         M_cleanupMonetization [label="cleanupMonetization(uint256)\n→ void\nCleans up when NFT burned", fillcolor="#4a9eff", shape="box"]
         M_setAllMonetizationOptions [label="setAllMonetizationOptions(...)\n→ void\nComposite function", fillcolor="#4a9eff", shape="box"]
+
+        M_nftAgentWallet [label="nftAgentWallet\n(NFTAgentWallet)", fillcolor="#ff9f4a", shape="box"]
+        M_registerNFTAgentWallet [label="registerNFTAgentWallet(nftId,signature,agentWallet)\n→ void\nRegisters agent wallet for NFT", fillcolor="#4a9eff", shape="box"]
+        M_updateNFTAgentWallet [label="updateNFTAgentWallet(nftId,signature,newAgentWallet)\n→ void\nUpdates agent wallet for NFT", fillcolor="#4a9eff", shape="box"]
     }
     
     // Inter-contract connections (dotted lines)
@@ -431,8 +434,90 @@ digraph SmartContractArchitecture {
     M_cleanupMonetization -> M_noticeBeforeUnlock [color="#87CEEB"]
     M_cleanupMonetization -> M_monetization_combo [color="#87CEEB"]
     
+    // UserAgentWallet Contract
+    subgraph cluster_UserAgentWallet {
+        label="UserAgentWallet"
+        bgcolor="#2d2d2d"
+        color="white"
+        
+        // Variables
+        UAW_userToAgent [label="userToAgent\n(mapping)", fillcolor="#ff9f4a", shape="box"]
+        UAW_agentToUser [label="agentToUser\n(mapping)", fillcolor="#ff9f4a", shape="box"]
+        
+        // Functions
+        UAW_registerAgentWallet [label="registerAgentWallet(signature,agentWallet)\n→ void\nRegisters agent wallet with signature", fillcolor="#4a9eff", shape="box"]
+        UAW_updateAgentWallet [label="updateAgentWallet(signature,newAgentWallet)\n→ void\nUpdates agent wallet", fillcolor="#4a9eff", shape="box"]
+        UAW_getUserWallet [label="getUserWallet(agentWallet)\n→ address\nReturns user wallet", fillcolor="#4a9eff", shape="box"]
+        UAW_getAgentWallet [label="getAgentWallet(userWallet)\n→ address\nReturns agent wallet", fillcolor="#4a9eff", shape="box"]
+        UAW_hasAgentWallet [label="hasAgentWallet(userWallet)\n→ bool\nChecks if user has agent", fillcolor="#4a9eff", shape="box"]
+        UAW_isAgentWalletAssigned [label="isAgentWalletAssigned(agentWallet)\n→ bool\nChecks if agent assigned", fillcolor="#4a9eff", shape="box"]
+    }
+    
+    // NFTAgentWallet Contract
+    subgraph cluster_NFTAgentWallet {
+        label="NFTAgentWallet"
+        bgcolor="#2d2d2d"
+        color="white"
+        
+        // Variables
+        NAW_masterAccessControl [label="masterAccessControl\n(MasterAccessControl)", fillcolor="#ff9f4a", shape="box"]
+        NAW_nftToAgent [label="nftToAgent\n(mapping)", fillcolor="#ff9f4a", shape="box"]
+        NAW_agentToNft [label="agentToNft\n(mapping)", fillcolor="#ff9f4a", shape="box"]
+        
+        // Functions
+        NAW_constructor [label="constructor(address)\n→ void\nInitializes with MasterAccessControl", fillcolor="#4a9eff", shape="box"]
+        NAW_registerAgentWallet [label="registerAgentWallet(nftId,signature,agentWallet)\n→ void\nRegisters agent for NFT", fillcolor="#4a9eff", shape="box"]
+        NAW_updateAgentWallet [label="updateAgentWallet(nftId,signature,newAgentWallet)\n→ void\nUpdates agent for NFT", fillcolor="#4a9eff", shape="box"]
+        NAW_getNFTId [label="getNFTId(agentWallet)\n→ uint256\nReturns NFT ID", fillcolor="#4a9eff", shape="box"]
+        NAW_getAgentWallet [label="getAgentWallet(nftId)\n→ address\nReturns agent wallet", fillcolor="#4a9eff", shape="box"]
+        NAW_hasAgentWallet [label="hasAgentWallet(nftId)\n→ bool\nChecks if NFT has agent", fillcolor="#4a9eff", shape="box"]
+        NAW_isAgentWalletAssigned [label="isAgentWalletAssigned(agentWallet)\n→ bool\nChecks if agent assigned", fillcolor="#4a9eff", shape="box"]
+    }
+    
+
+    
+    // UserAgentWallet internal connections
+    UAW_registerAgentWallet -> UAW_userToAgent [color="#87CEEB"]
+    UAW_registerAgentWallet -> UAW_agentToUser [color="#87CEEB"]
+    UAW_updateAgentWallet -> UAW_userToAgent [color="#87CEEB"]
+    UAW_updateAgentWallet -> UAW_agentToUser [color="#87CEEB"]
+    UAW_getUserWallet -> UAW_agentToUser [color="white"]
+    UAW_getAgentWallet -> UAW_userToAgent [color="white"]
+    UAW_hasAgentWallet -> UAW_userToAgent [color="white"]
+    UAW_isAgentWalletAssigned -> UAW_agentToUser [color="white"]
+    
+    // NFTAgentWallet internal connections
+    NAW_constructor -> NAW_masterAccessControl [color="#87CEEB"]
+    NAW_registerAgentWallet -> NAW_nftToAgent [color="#87CEEB"]
+    NAW_registerAgentWallet -> NAW_agentToNft [color="#87CEEB"]
+    NAW_registerAgentWallet -> NAW_masterAccessControl [color="white"]
+    NAW_updateAgentWallet -> NAW_nftToAgent [color="#87CEEB"]
+    NAW_updateAgentWallet -> NAW_agentToNft [color="#87CEEB"]
+    NAW_updateAgentWallet -> NAW_masterAccessControl [color="white"]
+    NAW_getNFTId -> NAW_agentToNft [color="white"]
+    NAW_getAgentWallet -> NAW_nftToAgent [color="white"]
+    NAW_hasAgentWallet -> NAW_nftToAgent [color="white"]
+    NAW_isAgentWalletAssigned -> NAW_agentToNft [color="white"]
+    
+    // NFTAgentWallet connections from other contracts
+    NAW_constructor -> MAC_grantSelfAccess [style="dotted", color="#87CEEB"]
+    NAW_registerAgentWallet -> MAC_selfCheckAccess [style="dotted", color="white"]
+    NAW_updateAgentWallet -> MAC_selfCheckAccess [style="dotted", color="white"]
+    
+    // Monetization to NFTAgentWallet connections
+    M_registerNFTAgentWallet -> NAW_registerAgentWallet [style="dotted", color="#87CEEB"]
+    M_updateNFTAgentWallet -> NAW_updateAgentWallet [style="dotted", color="#87CEEB"]
+    M_registerNFTAgentWallet -> NC_getNFTInfo [style="dotted", color="white"]
+    M_updateNFTAgentWallet -> NC_getNFTInfo [style="dotted", color="white"]
+    M_registerNFTAgentWallet -> NAC_checkMinimumAccess [style="dotted", color="white"]
+    M_updateNFTAgentWallet -> NAC_checkMinimumAccess [style="dotted", color="white"]
+    M_setContractReferences -> M_nftAgentWallet [color="#87CEEB"]
+    
+rankdir=LR
+
     // Layout hints
     {rank=same; cluster_MasterAccessControl}
     {rank=same; cluster_NFTAccessControl; cluster_NFTContract; cluster_NFTMetadata}
     {rank=same; cluster_AIServiceAgreement; cluster_Monetization}
+    {rank=same; cluster_UserAgentWallet; cluster_NFTAgentWallet}
 }

@@ -7,6 +7,8 @@ const NFTMetadata = artifacts.require("NFTMetadata");
 const AIServiceAgreementManagement = artifacts.require("AIServiceAgreementManagement");
 const NFTContract = artifacts.require("NFTContract");
 const Monetization = artifacts.require("Monetization");
+const UserAgentWallet = artifacts.require("UserAgentWallet");
+const NFTAgentWallet = artifacts.require("NFTAgentWallet");
 
 module.exports = async function(deployer, network, accounts) {
   const deployerAccount = accounts[0];
@@ -216,6 +218,56 @@ module.exports = async function(deployer, network, accounts) {
     };
     console.log("✓ Monetization deployed at:", monetization.address, `(gas: ${monetizationGasUsed})`);
 
+    // 7. Deploy UserAgentWallet
+    console.log("\n7. Deploying UserAgentWallet...");
+    await deployer.deploy(UserAgentWallet, { from: deployerAccount });
+    const userAgentWallet = await UserAgentWallet.deployed();
+    
+    // Get gas usage from the deployment
+    let userAgentWalletGasUsed = 0;
+    try {
+      const deploymentTxHash = userAgentWallet.transactionHash;
+      if (deploymentTxHash) {
+        const receipt = await web3.eth.getTransactionReceipt(deploymentTxHash);
+        userAgentWalletGasUsed = receipt ? parseInt(receipt.gasUsed) : 0;
+      }
+    } catch (e) {
+      console.log("Could not fetch gas usage for UserAgentWallet");
+    }
+    totalGasUsed += userAgentWalletGasUsed;
+    
+    deploymentData.contracts.UserAgentWallet = {
+      address: userAgentWallet.address,
+      constructorArgs: [],
+      gasUsed: userAgentWalletGasUsed
+    };
+    console.log("✓ UserAgentWallet deployed at:", userAgentWallet.address, `(gas: ${userAgentWalletGasUsed})`);
+
+    // 8. Deploy NFTAgentWallet
+    console.log("\n8. Deploying NFTAgentWallet...");
+    await deployer.deploy(NFTAgentWallet, masterAccessControl.address, { from: deployerAccount });
+    const nftAgentWallet = await NFTAgentWallet.deployed();
+    
+    // Get gas usage from the deployment
+    let nftAgentWalletGasUsed = 0;
+    try {
+      const deploymentTxHash = nftAgentWallet.transactionHash;
+      if (deploymentTxHash) {
+        const receipt = await web3.eth.getTransactionReceipt(deploymentTxHash);
+        nftAgentWalletGasUsed = receipt ? parseInt(receipt.gasUsed) : 0;
+      }
+    } catch (e) {
+      console.log("Could not fetch gas usage for NFTAgentWallet");
+    }
+    totalGasUsed += nftAgentWalletGasUsed;
+    
+    deploymentData.contracts.NFTAgentWallet = {
+      address: nftAgentWallet.address,
+      constructorArgs: [masterAccessControl.address],
+      gasUsed: nftAgentWalletGasUsed
+    };
+    console.log("✓ NFTAgentWallet deployed at:", nftAgentWallet.address, `(gas: ${nftAgentWalletGasUsed})`);
+
   // Post-deployment initialization
   console.log("\n=== Post-Deployment Initialization ===");
 
@@ -242,6 +294,10 @@ module.exports = async function(deployer, network, accounts) {
   await masterAccessControl.grantAccess(aiServiceAgreementManagement.address, nftAccessControl.address);
   console.log("✓ AIServiceAgreementManagement permissions granted");
 
+  // NFTAgentWallet permissions
+  await masterAccessControl.grantAccess(nftAgentWallet.address, monetization.address);
+  console.log("✓ NFTAgentWallet permissions granted");
+
   // Set AIServiceAgreementManagement reference in NFTAccessControl
   console.log("\nSetting AIServiceAgreementManagement reference...");
   await nftAccessControl.setAIServiceAgreementManagement(aiServiceAgreementManagement.address);
@@ -254,7 +310,7 @@ module.exports = async function(deployer, network, accounts) {
 
   // Set contract references in Monetization
   console.log("\nSetting contract references in Monetization...");
-  await monetization.setContractReferences(subscriptionHandler);
+  await monetization.setContractReferences(subscriptionHandler, nftAgentWallet.address);
   console.log("✓ Contract references set");
 
   // Set initial commission percentage (e.g., 10%)
@@ -270,6 +326,8 @@ module.exports = async function(deployer, network, accounts) {
   console.log("- AIServiceAgreementManagement:", aiServiceAgreementManagement.address);
   console.log("- NFTContract:", nftContract.address);
   console.log("- Monetization:", monetization.address);
+  console.log("- UserAgentWallet:", userAgentWallet.address);
+  console.log("- NFTAgentWallet:", nftAgentWallet.address);
   console.log("\nSubscription Handler:", subscriptionHandler);
   console.log("\n✓ All contracts deployed and initialized successfully!");
 

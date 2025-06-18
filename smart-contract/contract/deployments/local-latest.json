@@ -1,60 +1,72 @@
 {
   "network": "local",
-  "timestamp": "2025-06-18T06:20:03.002Z",
-  "deployer": "0xb95f540129aB0083dCCbcaB3c4708A431970383c",
+  "timestamp": "2025-06-18T13:27:00.135Z",
+  "deployer": "0xE4028679bc8Bf0dD25Eb170B8638Ba53a130C57F",
   "contracts": {
     "MasterAccessControl": {
-      "address": "0x586683ee02EF6956304b3174eC26a15802A6B4c8",
+      "address": "0x8a4516b355B05098E6E399e3136B1A61F9055Eb3",
       "constructorArgs": [],
       "gasUsed": 0
     },
     "NFTAccessControl": {
-      "address": "0x6a2495746315174D207c8Bbc7F69a612F0fB5f63",
+      "address": "0x851e624C9e8E941a6e50E92bdB3999B160b1B136",
       "constructorArgs": [
-        "0x586683ee02EF6956304b3174eC26a15802A6B4c8"
+        "0x8a4516b355B05098E6E399e3136B1A61F9055Eb3"
       ],
       "gasUsed": 0
     },
     "NFTMetadata": {
-      "address": "0xcDf2E6067E6833CfeFF36595FeF2B030Ce56D160",
+      "address": "0xfEa6aA68811FA29eDaF17C56D4F12DEe6De0b8Ec",
       "constructorArgs": [
-        "0x586683ee02EF6956304b3174eC26a15802A6B4c8",
-        "0x6a2495746315174D207c8Bbc7F69a612F0fB5f63"
+        "0x8a4516b355B05098E6E399e3136B1A61F9055Eb3",
+        "0x851e624C9e8E941a6e50E92bdB3999B160b1B136"
       ],
       "gasUsed": 0
     },
     "AIServiceAgreementManagement": {
-      "address": "0xE035EC471E03b83FC647A91Aeb8259AF844D1aa2",
+      "address": "0x62E1771fF9F7F342844ECC5A321e7d9ed054Cb19",
       "constructorArgs": [
-        "0x586683ee02EF6956304b3174eC26a15802A6B4c8",
-        "0x6a2495746315174D207c8Bbc7F69a612F0fB5f63"
+        "0x8a4516b355B05098E6E399e3136B1A61F9055Eb3",
+        "0x851e624C9e8E941a6e50E92bdB3999B160b1B136"
       ],
       "gasUsed": 0
     },
     "NFTContract": {
-      "address": "0x68d95ce51A7EA30f0e440a217Bc274B1c6F3E614",
+      "address": "0x007991952aC5880144d4A0b77BCA1d52Ca5f750C",
       "constructorArgs": [
-        "0x586683ee02EF6956304b3174eC26a15802A6B4c8",
-        "0x6a2495746315174D207c8Bbc7F69a612F0fB5f63",
-        "0xcDf2E6067E6833CfeFF36595FeF2B030Ce56D160",
+        "0x8a4516b355B05098E6E399e3136B1A61F9055Eb3",
+        "0x851e624C9e8E941a6e50E92bdB3999B160b1B136",
+        "0xfEa6aA68811FA29eDaF17C56D4F12DEe6De0b8Ec",
         "0x0000000000000000000000000000000000000000"
       ],
       "gasUsed": 0
     },
     "Monetization": {
-      "address": "0x3f7a259dc478298dF7db9078ddEE434676E62DeE",
+      "address": "0xFd79d15A8E0625d25e3bd91778f77214c7e4D583",
       "constructorArgs": [
-        "0x586683ee02EF6956304b3174eC26a15802A6B4c8",
-        "0x68d95ce51A7EA30f0e440a217Bc274B1c6F3E614",
-        "0x6a2495746315174D207c8Bbc7F69a612F0fB5f63",
-        "0xcDf2E6067E6833CfeFF36595FeF2B030Ce56D160",
-        "0xE035EC471E03b83FC647A91Aeb8259AF844D1aa2"
+        "0x8a4516b355B05098E6E399e3136B1A61F9055Eb3",
+        "0x007991952aC5880144d4A0b77BCA1d52Ca5f750C",
+        "0x851e624C9e8E941a6e50E92bdB3999B160b1B136",
+        "0xfEa6aA68811FA29eDaF17C56D4F12DEe6De0b8Ec",
+        "0x62E1771fF9F7F342844ECC5A321e7d9ed054Cb19"
+      ],
+      "gasUsed": 0
+    },
+    "UserAgentWallet": {
+      "address": "0x0EeBf5f021e9f69f3213a246977636F30d9240Ae",
+      "constructorArgs": [],
+      "gasUsed": 0
+    },
+    "NFTAgentWallet": {
+      "address": "0x4AE78a9314BfCcF02f2FcA8A389aC90c95D36b7C",
+      "constructorArgs": [
+        "0x8a4516b355B05098E6E399e3136B1A61F9055Eb3"
       ],
       "gasUsed": 0
     }
   },
   "summary": {
-    "totalContracts": 6,
+    "totalContracts": 8,
     "success": true,
     "totalGasUsed": 0,
     "estimatedCostETH": "0.0000"
