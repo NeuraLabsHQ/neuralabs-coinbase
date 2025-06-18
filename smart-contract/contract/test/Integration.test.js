@@ -67,74 +67,84 @@ contract("Integration Tests", (accounts) => {
     await nftAccess.setAIServiceAgreementManagement(aiServiceAgreement.address, { from: deployer });
   });
 
-  describe("Contract Design Issues", () => {
-    it("CRITICAL: NFTContract.createNFT has a design flaw - cannot grant access without maxAccessLevel", async () => {
-      // This test demonstrates a critical issue in the NFTContract.createNFT function
-      // The function tries to grant AbsoluteOwnership access at line 138:
-      // nftAccessControl.grantAccess(tokenId, msg.sender, NFTAccessControl.AccessLevel.AbsoluteOwnership);
+  describe("Contract Bug Fixes Verification", () => {
+    it("should successfully create NFT after maxAccessLevel fix", async () => {
+      // This test verifies that the previously identified bug in NFTContract.createNFT has been fixed
+      // Previously, the function tried to grant AbsoluteOwnership access without setting maxAccessLevel first
+      // The fix was to add setMaxAccessLevel before granting access in the createNFT function
       // 
-      // However, the NFTAccessControl.grantAccess function checks:
-      // require(_accessLevel <= maxAccessLevel[_nftId], "NFTAccessControl: Exceeds max access level");
-      // 
-      // Since maxAccessLevel defaults to 0 (None) for new NFTs, this always fails.
-      // The contract needs to be modified to either:
-      // 1. Set maxAccessLevel before granting access in createNFT
-      // 2. Allow authorized contracts to bypass the maxAccessLevel check
-      // 3. Have NFTAccessControl automatically set maxAccessLevel when NFTContract creates NFTs
+      // The contract now properly:
+      // 1. Sets maxAccessLevel to AbsoluteOwnership before granting access
+      // 2. Grants AbsoluteOwnership access to the creator
+      // 3. Completes the NFT creation successfully
       
-      await expectRevert(
-        nftContract.createNFT("Test NFT", 3, { from: alice }),
-        "NFTAccessControl: Exceeds max access level"
-      );
+      // Create NFT should now succeed
+      const tx = await nftContract.createNFT("Test NFT", 3, { from: alice });
+      
+      // Verify the NFT was created successfully
+      await expectEvent(tx, 'NFTCreated', {
+        tokenId: '0',
+        creator: alice,
+        name: "Test NFT",
+        copies: '3'
+      });
+      
+      // Verify the creator has AbsoluteOwnership access
+      const hasAccess = await nftAccess.checkAccess(0, alice, AccessLevel.AbsoluteOwnership);
+      assert.equal(hasAccess, true, "Creator should have AbsoluteOwnership access");
+      
+      // Verify the maxAccessLevel was set correctly
+      const maxLevel = await nftAccess.maxAccessLevel(0);
+      assert.equal(maxLevel.toString(), AccessLevel.AbsoluteOwnership.toString(), "maxAccessLevel should be set to AbsoluteOwnership");
     });
   });
 
-  describe("Alternative Integration Tests (Using Workarounds)", () => {
+  describe("Full Integration Tests", () => {
     let tokenId;
 
     beforeEach(async () => {
-      // Workaround for the createNFT issue:
-      // We'll mock the NFT creation by directly setting up the state
-      // In production, the NFTContract.createNFT function needs to be fixed
-      
-      // For testing purposes, we'll create a helper function that properly sets up an NFT
-      // This demonstrates what the contract SHOULD do
-      
-      tokenId = 0; // First token ID
+      // Create an NFT for use in subsequent tests
+      // Now that createNFT is fixed, we can properly create NFTs
+      const tx = await nftContract.createNFT("Integration Test NFT", 5, { from: alice });
+      tokenId = tx.logs[0].args.tokenId.toNumber();
     });
 
-    it("should demonstrate proper NFT setup sequence (what createNFT should do)", async () => {
-      // This shows the correct sequence that NFTContract.createNFT should follow:
+    it("should test complete NFT lifecycle with access control", async () => {
+      // Verify NFT was created with correct properties
+      const nftInfo = await nftContract.getNFTInfo(tokenId);
+      assert.equal(nftInfo.name, "Integration Test NFT");
+      assert.equal(nftInfo.totalCopies.toString(), "5");
+      assert.equal(nftInfo.creator, alice);
       
-      // 1. First, the contract should increment totalSupply and get the token ID
-      // 2. Set the NFT info in the nfts mapping
-      // 3. Set lock status to Unlocked
-      // 4. Update balances
-      // 5. IMPORTANT: Set maxAccessLevel BEFORE granting access
-      // 6. Then grant AbsoluteOwnership to the creator
-      // 7. Emit events
+      // Test granting access to another user
+      await nftAccess.grantAccess(tokenId, bob, AccessLevel.UseModel, { from: alice });
+      assert.equal(await nftAccess.checkAccess(tokenId, bob, AccessLevel.UseModel), true);
+      assert.equal(await nftAccess.checkAccess(tokenId, bob, AccessLevel.Resale), false);
       
-      // Since we can't modify the contract, we can't properly test the integration
-      // All tests that depend on createNFT will fail due to this contract bug
-      
-      assert.equal(true, true, "Contract modification required - see test comments");
+      // Test access revocation
+      await nftAccess.revokeAccess(tokenId, bob, { from: alice });
+      assert.equal(await nftAccess.checkAccess(tokenId, bob, AccessLevel.UseModel), false);
     });
 
-    it("should test access control permissions independently", async () => {
-      // Test that access control works when properly set up
-      // This bypasses the createNFT issue by testing components separately
+    it("should test access control hierarchy and permissions", async () => {
+      // Grant different access levels to different users
+      await nftAccess.grantAccess(tokenId, bob, AccessLevel.Resale, { from: alice });
+      await nftAccess.grantAccess(tokenId, charlie, AccessLevel.ViewAndDownload, { from: alice });
       
-      // Manually set max access level as if an NFT existed
-      await masterAccess.grantAccess(nftAccess.address, alice, { from: deployer });
+      // Verify access hierarchy (higher levels include lower level permissions)
+      assert.equal(await nftAccess.checkAccess(tokenId, bob, AccessLevel.UseModel), true);
+      assert.equal(await nftAccess.checkAccess(tokenId, bob, AccessLevel.Resale), true);
+      assert.equal(await nftAccess.checkAccess(tokenId, bob, AccessLevel.CreateReplica), false);
       
-      // Since we can't create NFTs due to the contract bug, we can only test
-      // the access control logic with token ID 0 (which doesn't actually exist)
+      assert.equal(await nftAccess.checkAccess(tokenId, charlie, AccessLevel.UseModel), true);
+      assert.equal(await nftAccess.checkAccess(tokenId, charlie, AccessLevel.ViewAndDownload), true);
+      assert.equal(await nftAccess.checkAccess(tokenId, charlie, AccessLevel.EditData), false);
       
-      // This would work if the NFT was properly created:
-      // await nftAccess.setMaxAccessLevel(0, AccessLevel.AbsoluteOwnership, { from: alice });
-      // await nftAccess.grantAccess(0, bob, AccessLevel.UseModel, { from: alice });
-      
-      assert.equal(true, true, "Cannot fully test without fixing createNFT");
+      // Test that only owner can grant access above their own level
+      await expectRevert(
+        nftAccess.grantAccess(tokenId, accounts[4], AccessLevel.EditData, { from: bob }),
+        "NFTAccessControl: Insufficient permission to grant this level"
+      );
     });
   });
 
@@ -186,31 +196,37 @@ contract("Integration Tests", (accounts) => {
     });
   });
 
-  describe("Contract Issue Summary", () => {
-    it("should document all contract issues found during integration testing", async () => {
-      // Issue 1: NFTContract.createNFT fails due to maxAccessLevel check
-      // Location: NFTContract.sol line 138
-      // Problem: Tries to grant AbsoluteOwnership without setting maxAccessLevel first
-      // Impact: Cannot create any NFTs, making the entire system unusable
-      // Fix: Set maxAccessLevel before granting access, or modify access control logic
+  describe("Contract Bug Fix Verification Summary", () => {
+    it("should verify all previously identified issues have been resolved", async () => {
+      // Previously Identified Issue: NFTContract.createNFT failed due to maxAccessLevel check
+      // Location: NFTContract.sol (previously around line 138)
+      // Previous Problem: Tried to grant AbsoluteOwnership without setting maxAccessLevel first
+      // Resolution: Contract now calls setMaxAccessLevel before granting access
+      // Status: FIXED ✓
       
-      // Issue 2: Circular dependency in access setup
-      // Problem: NFT needs to exist to set maxAccessLevel, but can't create NFT without it
-      // Impact: Chicken-and-egg problem preventing NFT creation
-      // Fix: Either initialize maxAccessLevel in createNFT or allow bypass for NFTContract
+      // Verification: Create multiple NFTs to ensure the fix is working
+      const tx1 = await nftContract.createNFT("Verification NFT 1", 1, { from: alice });
+      const tx2 = await nftContract.createNFT("Verification NFT 2", 10, { from: bob });
       
-      // Issue 3: No way to set default maxAccessLevel for new NFTs
-      // Problem: Each NFT's maxAccessLevel defaults to None (0)
-      // Impact: Requires extra transaction after creation (which we can't do)
-      // Fix: Add initialization logic or default values
+      // Extract token IDs
+      const tokenId1 = tx1.logs[0].args.tokenId.toNumber();
+      const tokenId2 = tx2.logs[0].args.tokenId.toNumber();
       
-      console.log("=== CRITICAL CONTRACT ISSUES ===");
-      console.log("1. NFTContract.createNFT: Cannot grant access due to maxAccessLevel check");
-      console.log("2. NFTAccessControl: No way to initialize maxAccessLevel during NFT creation");
-      console.log("3. System is non-functional without contract modifications");
-      console.log("================================");
+      // Verify both NFTs were created successfully
+      assert.equal((await nftContract.getNFTInfo(tokenId1)).name, "Verification NFT 1");
+      assert.equal((await nftContract.getNFTInfo(tokenId2)).name, "Verification NFT 2");
       
-      assert.equal(true, true, "See console output for contract issues");
+      // Verify access control is properly set
+      assert.equal(await nftAccess.checkAccess(tokenId1, alice, AccessLevel.AbsoluteOwnership), true);
+      assert.equal(await nftAccess.checkAccess(tokenId2, bob, AccessLevel.AbsoluteOwnership), true);
+      
+      console.log("=== CONTRACT BUG FIX VERIFICATION ===");
+      console.log("✓ NFTContract.createNFT: Now properly sets maxAccessLevel before granting access");
+      console.log("✓ NFTAccessControl: Initialization issue resolved");
+      console.log("✓ System is fully functional with proper NFT creation");
+      console.log("=====================================");
+      
+      assert.equal(true, true, "All contract issues have been resolved");
     });
   });
 });

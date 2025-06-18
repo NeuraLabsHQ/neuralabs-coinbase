@@ -134,6 +134,9 @@ contract NFTContract is IERC721, ERC165 {
         locked[tokenId] = LockStatus.Unlocked;
         balances[msg.sender]++;
         
+        // Set max access level to AbsoluteOwnership for the new NFT
+        nftAccessControl.setMaxAccessLevel(tokenId, NFTAccessControl.AccessLevel.AbsoluteOwnership);
+        
         // Grant absolute ownership access to creator
         nftAccessControl.grantAccess(tokenId, msg.sender, NFTAccessControl.AccessLevel.AbsoluteOwnership);
         

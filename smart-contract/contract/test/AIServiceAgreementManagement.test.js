@@ -2,6 +2,7 @@ const AIServiceAgreementManagement = artifacts.require("AIServiceAgreementManage
 const MasterAccessControl = artifacts.require("MasterAccessControl");
 const NFTAccessControl = artifacts.require("NFTAccessControl");
 const { expectRevert, expectEvent, time, BN } = require('@openzeppelin/test-helpers');
+const { sendTransaction, delay } = require('./helpers/test-utils');
 
 contract("AIServiceAgreementManagement", (accounts) => {
   const [deployer, monetizationContract, user1, user2, user3, unauthorized] = accounts;
@@ -10,16 +11,21 @@ contract("AIServiceAgreementManagement", (accounts) => {
   beforeEach(async () => {
     // Deploy contracts
     masterAccess = await MasterAccessControl.new({ from: deployer });
+    await delay(200);
     nftAccess = await NFTAccessControl.new(masterAccess.address, { from: deployer });
+    await delay(200);
     aiServiceAgreement = await AIServiceAgreementManagement.new(
       masterAccess.address,
       nftAccess.address,
       { from: deployer }
     );
+    await delay(200);
     
     // Set up permissions
     await masterAccess.grantAccess(aiServiceAgreement.address, monetizationContract, { from: deployer });
+    await delay(200);
     await nftAccess.setAIServiceAgreementManagement(aiServiceAgreement.address, { from: deployer });
+    await delay(200);
   });
 
   describe("Deployment", () => {
@@ -107,6 +113,7 @@ contract("AIServiceAgreementManagement", (accounts) => {
         // Record initial sale
         const firstExpiry = (await time.latest()).add(new BN(duration));
         await aiServiceAgreement.recordAccessSale(tokenId, user1, web3.utils.toWei('1', 'ether'), duration, 5, { from: monetizationContract });
+        await delay(200);
 
         // Update with new expiry
         const newExpiry = firstExpiry.add(new BN(duration));
@@ -137,6 +144,7 @@ contract("AIServiceAgreementManagement", (accounts) => {
           5, // AccessLevel.EditData
           { from: monetizationContract }
         );
+        await delay(200);
         
         // User2: Expires in 7 days
         await aiServiceAgreement.recordAccessSale(
@@ -147,6 +155,7 @@ contract("AIServiceAgreementManagement", (accounts) => {
           5, // AccessLevel.EditData
           { from: monetizationContract }
         );
+        await delay(200);
         
         // User3: Permanent access
         await aiServiceAgreement.recordAccessSale(
@@ -157,6 +166,7 @@ contract("AIServiceAgreementManagement", (accounts) => {
           5, // AccessLevel.EditData
           { from: monetizationContract }
         );
+        await delay(200);
       });
 
       it("should correctly identify expired access", async () => {
@@ -182,7 +192,9 @@ contract("AIServiceAgreementManagement", (accounts) => {
 
         // Set max access level and grant NFT ownership to deployer for testing
         await nftAccess.setMaxAccessLevel(tokenId, 6, { from: deployer }); // Set max to AbsoluteOwnership
+        await delay(200);
         await nftAccess.grantAccess(tokenId, deployer, 6, { from: deployer }); // AbsoluteOwnership
+        await delay(200);
 
         const tx = await aiServiceAgreement.batchReevaluate(tokenId, [user1, user2, user3], { from: deployer });
 
@@ -203,7 +215,9 @@ contract("AIServiceAgreementManagement", (accounts) => {
       it("should not affect non-expired access during batch reevaluation", async () => {
         // Set max access level and grant NFT ownership to deployer for testing
         await nftAccess.setMaxAccessLevel(tokenId, 6, { from: deployer }); // Set max to AbsoluteOwnership
+        await delay(200);
         await nftAccess.grantAccess(tokenId, deployer, 6, { from: deployer }); // AbsoluteOwnership
+        await delay(200);
         
         const tx = await aiServiceAgreement.batchReevaluate(tokenId, [user2], { from: deployer });
 
@@ -261,6 +275,7 @@ contract("AIServiceAgreementManagement", (accounts) => {
         
         // Record initial subscription
         await aiServiceAgreement.recordSubscriptionSale(tokenId, user1, web3.utils.toWei('0.1', 'ether'), 2592000, { from: monetizationContract });
+        await delay(200);
         
         // Extend subscription
         const newExpiry = firstExpiry.add(new BN(2592000));
@@ -291,7 +306,9 @@ contract("AIServiceAgreementManagement", (accounts) => {
 
         // Set max access level and grant NFT ownership to deployer for testing batch reevaluate
         await nftAccess.setMaxAccessLevel(tokenId, 6, { from: deployer }); // Set max to AbsoluteOwnership
+        await delay(200);
         await nftAccess.grantAccess(tokenId, deployer, 6, { from: deployer }); // AbsoluteOwnership
+        await delay(200);
         
         // Reevaluate
         const tx = await aiServiceAgreement.batchReevaluate(tokenId, [user1], { from: deployer });
@@ -338,6 +355,7 @@ contract("AIServiceAgreementManagement", (accounts) => {
         5, // AccessLevel.EditData
         { from: monetizationContract }
       );
+      await delay(200);
       
       // User2: Has subscription
       await aiServiceAgreement.recordSubscriptionSale(
@@ -347,6 +365,7 @@ contract("AIServiceAgreementManagement", (accounts) => {
         2592000, // 30 days
         { from: monetizationContract }
       );
+      await delay(200);
     });
 
     describe("hasActiveAccess", () => {
@@ -402,6 +421,7 @@ contract("AIServiceAgreementManagement", (accounts) => {
         5, // AccessLevel.EditData
         { from: monetizationContract }
       );
+      await delay(200);
       
       await aiServiceAgreement.recordAccessSale(
         tokenId,
@@ -411,6 +431,7 @@ contract("AIServiceAgreementManagement", (accounts) => {
         5, // AccessLevel.EditData
         { from: monetizationContract }
       );
+      await delay(200);
       
       await aiServiceAgreement.recordSubscriptionSale(
         tokenId,
@@ -419,6 +440,7 @@ contract("AIServiceAgreementManagement", (accounts) => {
         86400, // Expires in 1 day
         { from: monetizationContract }
       );
+      await delay(200);
       
       await aiServiceAgreement.recordSubscriptionSale(
         tokenId,
@@ -427,13 +449,16 @@ contract("AIServiceAgreementManagement", (accounts) => {
         604800, // Expires in 7 days
         { from: monetizationContract }
       );
+      await delay(200);
     });
 
     describe("batchReevaluate with ownership", () => {
       beforeEach(async () => {
         // Set max access level and grant NFT ownership to deployer for testing
         await nftAccess.setMaxAccessLevel(tokenId, 6, { from: deployer }); // Set max to AbsoluteOwnership
+        await delay(200);
         await nftAccess.grantAccess(tokenId, deployer, 6, { from: deployer }); // AbsoluteOwnership
+        await delay(200);
       });
 
       it("should reevaluate multiple users' access and subscriptions", async () => {
@@ -468,7 +493,9 @@ contract("AIServiceAgreementManagement", (accounts) => {
     it("should handle reevaluation of non-existent records", async () => {
       // Set max access level and grant NFT ownership to deployer for testing
       await nftAccess.setMaxAccessLevel(1, 6, { from: deployer }); // Set max to AbsoluteOwnership
+      await delay(200);
       await nftAccess.grantAccess(1, deployer, 6, { from: deployer }); // AbsoluteOwnership
+      await delay(200);
       
       // Should not revert
       const tx = await aiServiceAgreement.batchReevaluate(1, [user1], { from: deployer });
@@ -500,7 +527,9 @@ contract("AIServiceAgreementManagement", (accounts) => {
       
       // Initial state
       await aiServiceAgreement.recordAccessSale(tokenId, user1, web3.utils.toWei('1', 'ether'), 86400, 5, { from: monetizationContract });
+      await delay(200);
       await aiServiceAgreement.recordSubscriptionSale(tokenId, user1, web3.utils.toWei('0.1', 'ether'), 172800, { from: monetizationContract });
+      await delay(200);
       
       // Verify both are active via hasActiveAccess
       assert.equal(await aiServiceAgreement.hasActiveAccess(tokenId, user1), true);
@@ -519,10 +548,15 @@ contract("AIServiceAgreementManagement", (accounts) => {
       const tokenId = 1;
       const expiry = (await time.latest()).add(new BN(86400));
       
+      // Add delay to ensure nonce synchronization
+      await delay(200);
+      
       await expectRevert(
         aiServiceAgreement.recordAccessSale(tokenId, user1, web3.utils.toWei('1', 'ether'), 86400, 5, { from: unauthorized }),
         "AIServiceAgreementManagement: Caller not authorized"
       );
+      
+      await delay(200);
       
       await expectRevert(
         aiServiceAgreement.recordSubscriptionSale(tokenId, user1, web3.utils.toWei('0.1', 'ether'), 86400, { from: unauthorized }),

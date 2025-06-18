@@ -2,6 +2,7 @@ const NFTAccessControl = artifacts.require("NFTAccessControl");
 const MasterAccessControl = artifacts.require("MasterAccessControl");
 const AIServiceAgreementManagement = artifacts.require("AIServiceAgreementManagement");
 const { expectRevert, expectEvent, time } = require('@openzeppelin/test-helpers');
+const { delay } = require('./helpers/test-utils');
 
 contract("NFTAccessControl", (accounts) => {
   const [deployer, nftContract, user1, user2, user3, unauthorized] = accounts;
@@ -24,6 +25,9 @@ contract("NFTAccessControl", (accounts) => {
     
     // Grant NFTContract permission to use NFTAccessControl
     await masterAccess.grantAccess(nftAccess.address, nftContract, { from: deployer });
+    
+    // Add delay to handle nonce synchronization
+    await delay(200);
   });
 
   describe("Deployment", () => {
@@ -79,8 +83,10 @@ contract("NFTAccessControl", (accounts) => {
       it("should update existing access level", async () => {
         // First set max access level
         await nftAccess.setMaxAccessLevel(tokenId, AccessLevel.AbsoluteOwnership, { from: nftContract });
+        await delay(100);
         
         await nftAccess.grantAccess(tokenId, user1, AccessLevel.UseModel, { from: nftContract });
+        await delay(100);
         await nftAccess.grantAccess(tokenId, user1, AccessLevel.EditData, { from: nftContract });
         
         const accessLevel = await nftAccess.getAccessLevel(tokenId, user1);
@@ -89,6 +95,7 @@ contract("NFTAccessControl", (accounts) => {
 
       it("should not exceed maximum access level if set", async () => {
         await nftAccess.setMaxAccessLevel(tokenId, AccessLevel.ViewAndDownload, { from: nftContract });
+        await delay(100);
         
         await expectRevert(
           nftAccess.grantAccess(tokenId, user1, AccessLevel.EditData, { from: nftContract }),
@@ -101,7 +108,9 @@ contract("NFTAccessControl", (accounts) => {
       beforeEach(async () => {
         // Set max access level first
         await nftAccess.setMaxAccessLevel(tokenId, AccessLevel.AbsoluteOwnership, { from: nftContract });
+        await delay(100);
         await nftAccess.grantAccess(tokenId, user1, AccessLevel.EditData, { from: nftContract });
+        await delay(100);
       });
 
       it("should revoke access when no protection exists", async () => {
@@ -156,9 +165,13 @@ contract("NFTAccessControl", (accounts) => {
     beforeEach(async () => {
       // Set max access level first
       await nftAccess.setMaxAccessLevel(tokenId, AccessLevel.AbsoluteOwnership, { from: nftContract });
+      await delay(100);
       await nftAccess.grantAccess(tokenId, user1, AccessLevel.EditData, { from: nftContract });
+      await delay(100);
       await nftAccess.grantAccess(tokenId, user2, AccessLevel.UseModel, { from: nftContract });
+      await delay(100);
       await nftAccess.setDefaultAccessLevel(tokenId, AccessLevel.ViewAndDownload, { from: nftContract });
+      await delay(100);
     });
 
     describe("checkMinimumAccess", () => {
@@ -191,6 +204,7 @@ contract("NFTAccessControl", (accounts) => {
       it("should set default access level", async () => {
         // First set max access level
         await nftAccess.setMaxAccessLevel(tokenId, AccessLevel.AbsoluteOwnership, { from: nftContract });
+        await delay(100);
         
         await nftAccess.setDefaultAccessLevel(tokenId, AccessLevel.UseModel, { from: nftContract });
         
@@ -201,6 +215,7 @@ contract("NFTAccessControl", (accounts) => {
       it("should prevent setting default access level higher than max", async () => {
         // First set a low max access level
         await nftAccess.setMaxAccessLevel(tokenId, AccessLevel.UseModel, { from: nftContract });
+        await delay(100);
         
         await expectRevert(
           nftAccess.setDefaultAccessLevel(tokenId, AccessLevel.EditData, { from: nftContract }),
@@ -210,6 +225,7 @@ contract("NFTAccessControl", (accounts) => {
 
       it("should allow setting default level when within max level", async () => {
         await nftAccess.setMaxAccessLevel(tokenId, AccessLevel.ViewAndDownload, { from: nftContract });
+        await delay(100);
         
         // This should succeed
         await nftAccess.setDefaultAccessLevel(tokenId, AccessLevel.UseModel, { from: nftContract });
@@ -241,13 +257,20 @@ contract("NFTAccessControl", (accounts) => {
       beforeEach(async () => {
         // Set max access levels first
         await nftAccess.setMaxAccessLevel(1, AccessLevel.AbsoluteOwnership, { from: nftContract });
+        await delay(100);
         await nftAccess.setMaxAccessLevel(2, AccessLevel.AbsoluteOwnership, { from: nftContract });
+        await delay(100);
         await nftAccess.setMaxAccessLevel(3, AccessLevel.AbsoluteOwnership, { from: nftContract });
+        await delay(100);
         
         await nftAccess.grantAccess(1, user1, AccessLevel.EditData, { from: nftContract });
+        await delay(100);
         await nftAccess.grantAccess(2, user1, AccessLevel.UseModel, { from: nftContract });
+        await delay(100);
         await nftAccess.grantAccess(3, user1, AccessLevel.ViewAndDownload, { from: nftContract });
+        await delay(100);
         await nftAccess.grantAccess(2, user2, AccessLevel.Resale, { from: nftContract });
+        await delay(100);
       });
 
       it("should return all token access for a user", async () => {
@@ -277,10 +300,14 @@ contract("NFTAccessControl", (accounts) => {
       beforeEach(async () => {
         // Set max access level first
         await nftAccess.setMaxAccessLevel(tokenId, AccessLevel.AbsoluteOwnership, { from: nftContract });
+        await delay(100);
         
         await nftAccess.grantAccess(tokenId, user1, AccessLevel.EditData, { from: nftContract });
+        await delay(100);
         await nftAccess.grantAccess(tokenId, user2, AccessLevel.UseModel, { from: nftContract });
+        await delay(100);
         await nftAccess.grantAccess(tokenId, user3, AccessLevel.ViewAndDownload, { from: nftContract });
+        await delay(100);
       });
 
       it("should return all users with access to a token", async () => {
@@ -348,6 +375,7 @@ contract("NFTAccessControl", (accounts) => {
       
       // Set max access level first
       await nftAccess.setMaxAccessLevel(largeTokenId, AccessLevel.AbsoluteOwnership, { from: nftContract });
+      await delay(100);
       
       // Should not revert
       await nftAccess.grantAccess(largeTokenId, user1, AccessLevel.UseModel, { from: nftContract });
@@ -360,16 +388,20 @@ contract("NFTAccessControl", (accounts) => {
       // Set max access levels first
       for (let token = 1; token <= 3; token++) {
         await nftAccess.setMaxAccessLevel(token, AccessLevel.AbsoluteOwnership, { from: nftContract });
+        await delay(100);
       }
       
       // Grant access to multiple users for multiple tokens
       for (let token = 1; token <= 3; token++) {
         await nftAccess.grantAccess(token, user1, AccessLevel.UseModel, { from: nftContract });
+        await delay(100);
         await nftAccess.grantAccess(token, user2, AccessLevel.EditData, { from: nftContract });
+        await delay(100);
       }
       
       // Revoke some access
       await nftAccess.revokeAccess(2, user1, { from: nftContract });
+      await delay(100);
       
       // Verify final state
       assert.equal(await nftAccess.getAccessLevel(1, user1), AccessLevel.UseModel);

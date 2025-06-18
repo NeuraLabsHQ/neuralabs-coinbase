@@ -5,6 +5,7 @@ const NFTMetadata = artifacts.require("NFTMetadata");
 const NFTContract = artifacts.require("NFTContract");
 const AIServiceAgreementManagement = artifacts.require("AIServiceAgreementManagement");
 const { expectRevert, expectEvent, time, BN } = require('@openzeppelin/test-helpers');
+const { delay } = require('./helpers/test-utils');
 
 contract("Monetization", (accounts) => {
   const [deployer, nftOwner, buyer, subscriptionHandler, unauthorized] = accounts;
@@ -41,10 +42,14 @@ contract("Monetization", (accounts) => {
   let tokenId;
 
   beforeEach(async () => {
+    await delay(200);
     // Deploy all contracts
     masterAccess = await MasterAccessControl.new({ from: deployer });
+    await delay(100);
     nftAccess = await NFTAccessControl.new(masterAccess.address, { from: deployer });
+    await delay(100);
     nftMetadata = await NFTMetadata.new(masterAccess.address, nftAccess.address, { from: deployer });
+    await delay(100);
     nftContract = await NFTContract.new(
       masterAccess.address,
       nftAccess.address,
@@ -52,11 +57,13 @@ contract("Monetization", (accounts) => {
       "0x0000000000000000000000000000000000000000",
       { from: deployer }
     );
+    await delay(100);
     aiServiceAgreement = await AIServiceAgreementManagement.new(
       masterAccess.address,
       nftAccess.address,
       { from: deployer }
     );
+    await delay(100);
     monetization = await Monetization.new(
       masterAccess.address,
       nftContract.address,
@@ -65,23 +72,35 @@ contract("Monetization", (accounts) => {
       aiServiceAgreement.address,
       { from: deployer }
     );
+    await delay(100);
 
     // Set up permissions
     await masterAccess.grantAccess(nftAccess.address, nftContract.address, { from: deployer });
+    await delay(100);
     await masterAccess.grantAccess(nftMetadata.address, nftContract.address, { from: deployer });
+    await delay(100);
     await masterAccess.grantAccess(nftContract.address, monetization.address, { from: deployer });
+    await delay(100);
     await masterAccess.grantAccess(aiServiceAgreement.address, monetization.address, { from: deployer });
+    await delay(100);
     await masterAccess.grantAccess(monetization.address, nftOwner, { from: deployer });
+    await delay(100);
     await masterAccess.grantAccess(nftAccess.address, nftMetadata.address, { from: deployer });
+    await delay(100);
     await masterAccess.grantAccess(nftMetadata.address, nftOwner, { from: deployer });
+    await delay(100);
     
     // Set monetization in NFTContract and configure
     await nftContract.setMonetizationContract(monetization.address, { from: deployer });
+    await delay(100);
     await monetization.setContractReferences(subscriptionHandler, { from: deployer });
+    await delay(100);
     await monetization.setCommissionPercentage(DEFAULT_COMMISSION, { from: deployer });
+    await delay(100);
     
     // Set AIServiceAgreement in NFTAccessControl
     await nftAccess.setAIServiceAgreementManagement(aiServiceAgreement.address, { from: deployer });
+    await delay(100);
     
     // Create an NFT for testing - only 2 parameters
     const tx = await nftContract.createNFT(
@@ -89,21 +108,46 @@ contract("Monetization", (accounts) => {
       3, // Ownership level 3
       { from: nftOwner }
     );
-    tokenId = tx.logs.find(log => log.event === 'NFTCreated').args.tokenId;
+    await delay(100);
     
-    // Set metadata for the NFT
+    // Find the NFTCreated event and extract tokenId
+    if (!tx || !tx.logs) {
+      console.error('Transaction or logs are undefined:', tx);
+      throw new Error('Transaction failed or logs not available');
+    }
+    
+    const nftCreatedEvent = tx.logs.find(log => log.event === 'NFTCreated');
+    if (!nftCreatedEvent) {
+      console.error('Available events:', tx.logs.map(log => log.event));
+      throw new Error('NFTCreated event not found in transaction logs');
+    }
+    tokenId = nftCreatedEvent.args.tokenId;
+    console.log('NFT created with tokenId:', tokenId.toString());
+    
+    // Ensure tokenId is properly set
+    if (tokenId === undefined || tokenId === null) {
+      throw new Error('tokenId was not properly extracted from event');
+    }
+    
+    // Set metadata for the NFT - must match Metadata struct exactly
     const metadata = {
+      image: validMetadata.imageUrl,                              // Changed from image_url
       intellectual_property_type: validMetadata.ipType,
-      intellectual_property_id: validMetadata.ipId,
-      image_url: validMetadata.imageUrl,
-      storage_type: validMetadata.storageType,
-      storage_id: validMetadata.storageId,
       encrypted: validMetadata.encrypted,
       encryption_id: validMetadata.encryptionId,
-      md5_hash: validMetadata.md5Hash,
+      intellectual_property_id: validMetadata.ipId,
+      intellectual_property_storage: validMetadata.storageType,
+      md5: validMetadata.md5Hash,                                // Changed from md5_hash
       version: validMetadata.version
     };
-    await nftMetadata.createMetadata(tokenId, metadata, { from: nftOwner });
+    console.log('About to create metadata for tokenId:', tokenId, 'metadata keys:', Object.keys(metadata));
+    try {
+      await nftMetadata.createMetadata(tokenId, metadata, { from: nftOwner });
+      await delay(100);
+    } catch (error) {
+      console.error('Error creating metadata:', error.message);
+      throw error;
+    }
   });
 
   describe("Deployment and Configuration", () => {

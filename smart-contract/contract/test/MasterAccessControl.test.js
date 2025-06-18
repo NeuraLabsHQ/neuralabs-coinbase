@@ -1,11 +1,13 @@
 const MasterAccessControl = artifacts.require("MasterAccessControl");
 const { expectRevert, expectEvent } = require('@openzeppelin/test-helpers');
+const { delay } = require('./helpers/test-utils');
 
 contract("MasterAccessControl", (accounts) => {
   const [deployer, contractA, contractB, user1, user2, unauthorized] = accounts;
   let masterAccess;
 
   beforeEach(async () => {
+    await delay(200);
     masterAccess = await MasterAccessControl.new({ from: deployer });
   });
 
@@ -54,6 +56,7 @@ contract("MasterAccessControl", (accounts) => {
     describe("revokeAccess", () => {
       beforeEach(async () => {
         await masterAccess.grantAccess(contractA, user1, { from: deployer });
+        await delay(200);
       });
 
       it("should allow authorized caller to revoke access", async () => {
@@ -69,6 +72,7 @@ contract("MasterAccessControl", (accounts) => {
       });
 
       it("should prevent unauthorized caller from revoking access", async () => {
+        await delay(200);
         await expectRevert(
           masterAccess.revokeAccess(contractA, user1, { from: unauthorized }),
           "MasterAccessControl: Caller not authorized"
@@ -90,6 +94,7 @@ contract("MasterAccessControl", (accounts) => {
     beforeEach(async () => {
       // Grant contractA permission to manage its own access
       await masterAccess.grantAccess(masterAccess.address, contractA, { from: deployer });
+      await delay(200);
     });
 
     describe("grantSelfAccess", () => {
@@ -107,6 +112,7 @@ contract("MasterAccessControl", (accounts) => {
 
       it("should allow any caller to grant self access", async () => {
         // grantSelfAccess doesn't check authorization - it allows any contract to grant access to itself
+        await delay(200);
         const tx = await masterAccess.grantSelfAccess(user1, { from: unauthorized });
         expectEvent(tx, 'AccessGranted', {
           contractAddress: unauthorized,
@@ -118,6 +124,7 @@ contract("MasterAccessControl", (accounts) => {
     describe("revokeSelfAccess", () => {
       beforeEach(async () => {
         await masterAccess.grantSelfAccess(user1, { from: contractA });
+        await delay(200);
       });
 
       it("should allow contract to revoke access to itself", async () => {
@@ -134,6 +141,7 @@ contract("MasterAccessControl", (accounts) => {
 
       it("should allow any caller to revoke self access", async () => {
         // revokeSelfAccess doesn't check authorization - it allows any contract to revoke access from itself
+        await delay(200);
         const tx = await masterAccess.revokeSelfAccess(user1, { from: unauthorized });
         expectEvent(tx, 'AccessRevoked', {
           contractAddress: unauthorized,
@@ -146,7 +154,9 @@ contract("MasterAccessControl", (accounts) => {
   describe("Access Checking", () => {
     beforeEach(async () => {
       await masterAccess.grantAccess(contractA, user1, { from: deployer });
+      await delay(200);
       await masterAccess.grantAccess(masterAccess.address, contractB, { from: deployer });
+      await delay(200);
       await masterAccess.grantSelfAccess(user2, { from: contractB });
     });
 
@@ -187,7 +197,9 @@ contract("MasterAccessControl", (accounts) => {
     it("should handle multiple contracts and users", async () => {
       // Grant various permissions
       await masterAccess.grantAccess(contractA, user1, { from: deployer });
+      await delay(200);
       await masterAccess.grantAccess(contractA, user2, { from: deployer });
+      await delay(200);
       await masterAccess.grantAccess(contractB, user1, { from: deployer });
       
       // Check all permissions
@@ -208,9 +220,11 @@ contract("MasterAccessControl", (accounts) => {
     it("should maintain separate permissions for direct and self access", async () => {
       // Grant contractA ability to manage its own access
       await masterAccess.grantAccess(masterAccess.address, contractA, { from: deployer });
+      await delay(200);
       
       // Grant direct access to user1 for contractA
       await masterAccess.grantAccess(contractA, user1, { from: deployer });
+      await delay(200);
       
       // ContractA grants self access to user2
       await masterAccess.grantSelfAccess(user2, { from: contractA });
@@ -237,11 +251,13 @@ contract("MasterAccessControl", (accounts) => {
 
   describe("Edge Cases", () => {
     it("should handle zero address inputs", async () => {
+      await delay(200);
       await expectRevert(
         masterAccess.grantAccess("0x0000000000000000000000000000000000000000", user1, { from: deployer }),
         "MasterAccessControl: Invalid contract address"
       );
 
+      await delay(200);
       await expectRevert(
         masterAccess.grantAccess(contractA, "0x0000000000000000000000000000000000000000", { from: deployer }),
         "MasterAccessControl: Invalid caller address"

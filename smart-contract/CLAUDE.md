@@ -6,6 +6,10 @@ use development.md for detailed instructions
 
 When testing smart contracts, follow this systematic approach for each test file:
 
+## Contract Modification Policy
+
+**IMPORTANT**: You CAN modify smart contracts when necessary to fix issues. Always ask for permission before making changes, but don't implement workarounds when a proper contract fix is needed. This ensures clean, maintainable code rather than test-specific hacks.
+
 ## Testing Process
 
 For testing each script:
