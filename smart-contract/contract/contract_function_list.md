@@ -157,8 +157,89 @@
 - `cleanupMonetization(uint256 _nftId) external` -- Cleans up all monetization data when NFT burned
 - `owner() public view returns (address)` -- Returns contract owner for commission payments
 
+## UserAgentWallet.sol
+
+### State Variables
+- `userToAgent`: mapping(address => address) private
+- `agentToUser`: mapping(address => address) private
+
+### Functions
+- `registerAgentWallet(bytes memory _signature, address _agentWallet) external` -- Events: AgentWalletRegistered -- Registers agent wallet for sender with signature verification
+- `updateAgentWallet(bytes memory _signature, address _newAgentWallet) external` -- Events: AgentWalletUpdated -- Updates agent wallet with signature verification
+- `getUserWallet(address _agentWallet) external view returns (address)` -- Returns user wallet for given agent wallet
+- `getAgentWallet(address _userWallet) external view returns (address)` -- Returns agent wallet for given user wallet
+- `hasAgentWallet(address _userWallet) external view returns (bool)` -- Checks if user has agent wallet
+- `isAgentWalletAssigned(address _agentWallet) external view returns (bool)` -- Checks if agent wallet is assigned
+
+## NFTAgentWallet.sol
+
+### State Variables
+- `masterAccessControl`: MasterAccessControl
+- `nftToAgent`: mapping(uint256 => address) private
+- `agentToNft`: mapping(address => uint256) private
+
+### Functions
+- `constructor(address _masterAccessControlAddress)` -- Initializes with MasterAccessControl reference
+- `registerAgentWallet(uint256 _nftId, bytes memory _signature, address _agentWallet) external onlyAuthorized` -- Events: AgentWalletRegistered -- Registers agent wallet for NFT (only authorized)
+- `updateAgentWallet(uint256 _nftId, bytes memory _signature, address _newAgentWallet) external onlyAuthorized` -- Events: AgentWalletUpdated -- Updates agent wallet for NFT (only authorized)
+- `getNFTId(address _agentWallet) external view returns (uint256)` -- Returns NFT ID for given agent wallet
+- `getAgentWallet(uint256 _nftId) external view returns (address)` -- Returns agent wallet for given NFT ID
+- `hasAgentWallet(uint256 _nftId) external view returns (bool)` -- Checks if NFT has agent wallet
+- `isAgentWalletAssigned(address _agentWallet) external view returns (bool)` -- Checks if agent wallet is assigned to NFT
+
+## Monetization.sol (Updated)
+
+### State Variables (Updated)
+- `masterAccessControl`: MasterAccessControl
+- `nftContract`: NFTContract
+- `nftAccessControl`: NFTAccessControl
+- `nftMetadata`: NFTMetadata
+- `aiServiceAgreementManagement`: AIServiceAgreementManagement
+- `nftAgentWallet`: NFTAgentWallet (NEW)
+- `commission_percentage`: uint256
+- `subscriptionHandlerPublicKey`: address
+- `monetization_combination`: mapping(uint256 => uint8)
+- `payPerUseData`: mapping(uint256 => PayPerUseStruct)
+- `subscriptionData`: mapping(uint256 => SubscriptionStruct)
+- `buyAccessData`: mapping(uint256 => BuyAccessStruct)
+- `buyOwnershipData`: mapping(uint256 => BuyOwnershipStruct)
+- `buyReplicaData`: mapping(uint256 => BuyReplicaStruct)
+- `commitmentTime`: mapping(uint256 => uint256)
+- `noticeBeforeUnlockCommitment`: mapping(uint256 => uint256)
+- `lockOpensDate`: mapping(uint256 => uint256)
+
+### Functions (Updated)
+- `constructor(address _masterAccessControlAddress, address _nftContractAddress, address _nftAccessControlAddress, address _nftMetadataAddress, address _aiServiceAgreementManagementAddress)` -- Initializes contract with system references
+- `setContractReferences(address _subscriptionHandler, address _nftAgentWalletAddress) external onlyAuthorized` -- Set contract references including NFTAgentWallet (UPDATED)
+- `setCommissionPercentage(uint256 _percentage) external onlyAuthorized` -- Sets platform commission percentage
+- `setCommitmentTime(uint256 _nftId, uint256 _timestamp) external onlyNFTOwner` -- Events: CommitmentTimeSet -- Sets commitment time for an NFT
+- `setNoticeBeforeUnlockCommitment(uint256 _nftId, uint256 _seconds) external onlyNFTOwner` -- Events: NoticeBeforeUnlockSet -- Sets notice period before unlock
+- `enablePayPerUse(uint256 _nftId, uint256 _costPerUse, address _platformCostPaidBy) external onlyNFTOwner` -- Events: MonetizationEnabled -- Enables pay-per-use monetization
+- `enableSubscription(uint256 _nftId, uint256 _cost, uint256 _time, uint256 _limit, uint256 _limitTime) external onlyNFTOwner` -- Events: MonetizationEnabled -- Enables subscription monetization
+- `enableBuyAccess(uint256 _nftId, NFTAccessControl.AccessLevel _level, uint256 _accessTime, uint256 _cost) external onlyNFTOwner` -- Events: MonetizationEnabled -- Enables access purchase option
+- `enableBuyOwnership(uint256 _nftId, uint256 _cost, uint8 _ownershipLevel) external onlyNFTOwner` -- Events: MonetizationEnabled -- Enables ownership purchase option
+- `enableBuyReplica(uint256 _nftId, uint256 _cost, uint8 _ownershipLevel) external onlyNFTOwner` -- Events: MonetizationEnabled -- Enables replica purchase option
+- `disablePayPerUse(uint256 _nftId) external onlyNFTOwner` -- Events: MonetizationDisabled -- Disables pay-per-use monetization
+- `disableSubscription(uint256 _nftId) external onlyNFTOwner` -- Events: MonetizationDisabled -- Disables subscription monetization
+- `disableBuyAccess(uint256 _nftId) external onlyNFTOwner` -- Events: MonetizationDisabled -- Disables buy-access monetization
+- `disableBuyOwnership(uint256 _nftId) external onlyNFTOwner` -- Events: MonetizationDisabled -- Disables buy-ownership monetization
+- `disableBuyReplica(uint256 _nftId) external onlyNFTOwner` -- Events: MonetizationDisabled -- Disables buy-replica monetization
+- `buyOwnership(uint256 _nftId) external payable` -- Events: PaymentProcessed, Transfer -- Purchase NFT ownership
+- `buyReplica(uint256 _nftId) external payable returns (uint256)` -- Events: PaymentProcessed, NFTCreated, Transfer -- Purchase NFT replica
+- `buyAccess(uint256 _nftId) external payable` -- Events: PaymentProcessed -- Purchase temporary access
+- `startUnlockProcess(uint256 _nftId) external onlyNFTOwner` -- Initiates unlock process for committed NFT
+- `completeUnlock(uint256 _nftId) external onlyNFTOwner` -- Completes unlock process
+- `setAllMonetizationOptions(uint256 _nftId, uint256 _commitmentTimestamp, uint256 _noticeSeconds, PayPerUseParams memory _payPerUse, SubscriptionParams memory _subscription, BuyAccessParams memory _buyAccess, BuyOwnershipParams memory _buyOwnership, BuyReplicaParams memory _buyReplica) external onlyNFTOwner` -- Events: AllMonetizationOptionsSet -- Composite function to set all monetization options
+- `cleanupMonetization(uint256 _nftId) external` -- Cleans up all monetization data when NFT burned
+- `owner() public view returns (address)` -- Returns contract owner for commission payments
+- `registerNFTAgentWallet(uint256 _nftId, bytes memory _signature, address _agentWallet) external` -- Registers agent wallet for NFT (requires owner or access level 6) (NEW)
+- `updateNFTAgentWallet(uint256 _nftId, bytes memory _signature, address _newAgentWallet) external` -- Updates agent wallet for NFT (requires owner or access level 6) (NEW)
+
 ## Important Notes:
 1. **NFTAccessControl** has `setMaxAccessLevel` NOT `setMaximumAccessLevel` - tests need to be updated
 2. **NFTContract.createNFT** only takes 2 parameters: name and levelOfOwnership - tests passing 12 parameters need fixing
 3. **MasterAccessControl** events emit `caller` not `callerAddress` - test assertions need updating
 4. Several test functions don't exist in contracts (e.g., `masterAccessControl()` getter, `deployer()` function)
+5. **UserAgentWallet** uses direct user-to-agent mappings with signature verification from agent wallet
+6. **NFTAgentWallet** requires authorization through MasterAccessControl and is called via Monetization contract
+7. **Monetization** contract now integrates with NFTAgentWallet to manage NFT-specific agent wallets

@@ -6,6 +6,7 @@ import "./NFTContract.sol";
 import "./NFTAccessControl.sol";
 import "./NFTMetadata.sol";
 import "./AIServiceAgreementManagement.sol";
+import "./NFTAgentWallet.sol";
 
 /**
  * @title Monetization
@@ -18,6 +19,7 @@ contract Monetization {
     NFTAccessControl public nftAccessControl;
     NFTMetadata public nftMetadata;
     AIServiceAgreementManagement public aiServiceAgreementManagement;
+    NFTAgentWallet public nftAgentWallet;
 
     // Platform commission percentage (0-100)
     uint256 public commission_percentage;
@@ -135,10 +137,13 @@ contract Monetization {
      * @dev Set contract references (for post-deployment setup)
      */
     function setContractReferences(
-        address _subscriptionHandler
+        address _subscriptionHandler,
+        address _nftAgentWalletAddress
     ) external onlyAuthorized {
         require(_subscriptionHandler != address(0), "Monetization: Invalid subscription handler");
+        require(_nftAgentWalletAddress != address(0), "Monetization: Invalid NFT agent wallet");
         subscriptionHandlerPublicKey = _subscriptionHandler;
+        nftAgentWallet = NFTAgentWallet(_nftAgentWalletAddress);
     }
 
     /**
@@ -783,6 +788,58 @@ contract Monetization {
     function owner() public view returns (address) {
         // Returns the platform owner for commission payments
         return platformOwner;
+    }
+    
+    /**
+     * @dev Registers an agent wallet for an NFT
+     * @param _nftId The ID of the NFT
+     * @param _signature Digital signature proving ownership of the agent wallet
+     * @param _agentWallet Address of the agent wallet to register
+     */
+    function registerNFTAgentWallet(
+        uint256 _nftId,
+        bytes memory _signature,
+        address _agentWallet
+    ) external {
+        NFTContract.NFTInfo memory nftInfo = nftContract.getNFTInfo(_nftId);
+        
+        // Check if caller is NFT owner or has access level 6 (ViewModelCode)
+        bool isOwner = nftInfo.owner == msg.sender;
+        bool hasHighAccess = nftAccessControl.checkMinimumAccess(_nftId, msg.sender, NFTAccessControl.AccessLevel.AbsoluteOwnership);
+        
+        require(
+            isOwner || hasHighAccess,
+            "Monetization: Caller must be NFT owner or have access level 6"
+        );
+        
+        // Register the agent wallet through NFTAgentWallet contract
+        nftAgentWallet.registerAgentWallet(_nftId, _signature, _agentWallet);
+    }
+    
+    /**
+     * @dev Updates the agent wallet for an NFT
+     * @param _nftId The ID of the NFT
+     * @param _signature Digital signature proving ownership of the new agent wallet
+     * @param _newAgentWallet Address of the new agent wallet
+     */
+    function updateNFTAgentWallet(
+        uint256 _nftId,
+        bytes memory _signature,
+        address _newAgentWallet
+    ) external {
+        NFTContract.NFTInfo memory nftInfo = nftContract.getNFTInfo(_nftId);
+        
+        // Check if caller is NFT owner or has access level 6 (ViewModelCode)
+        bool isOwner = nftInfo.owner == msg.sender;
+        bool hasHighAccess = nftAccessControl.checkMinimumAccess(_nftId, msg.sender, NFTAccessControl.AccessLevel.AbsoluteOwnership);
+        
+        require(
+            isOwner || hasHighAccess,
+            "Monetization: Caller must be NFT owner or have access level 6"
+        );
+        
+        // Update the agent wallet through NFTAgentWallet contract
+        nftAgentWallet.updateAgentWallet(_nftId, _signature, _newAgentWallet);
     }
 
     // Struct definitions for setAllMonetizationOptions
