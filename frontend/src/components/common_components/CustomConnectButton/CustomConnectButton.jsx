@@ -54,7 +54,7 @@ const CustomConnectButton = ({
   
   // Set wallet tooltip text
   const walletTooltip = isConnected 
-    ? `Connected: Coinbase x(${formattedAddress})` 
+    ? `Connected: Coinbase (${formattedAddress})` 
     : "Connect Wallet";
   
   // Determine which icon to show based on connection state and color mode

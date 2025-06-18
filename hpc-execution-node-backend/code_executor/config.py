@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     aptos_node_url: str                     = os.getenv("APTOS_NODE_URL", "https://testnet.aptoslabs.com")
     aptos_private_key: Optional[str]        = os.getenv("APTOS_PRIVATE_KEY")
     
+    # Coinbase CDP settings
+    coinbase_api_key: Optional[str]         = os.getenv("COINBASE_API_KEY")
+    coinbase_api_secret: Optional[str]      = os.getenv("COINBASE_API_SECRET")
+    coinbase_wallet_secret: Optional[str]   = os.getenv("COINBASE_WALLET_SECRET")
+    
     # Application settings
     log_level: str                          = os.getenv("LOG_LEVEL", "INFO")
     max_execution_time: int                 = int(os.getenv("MAX_EXECUTION_TIME", "300"))  # 5 minutes default
@@ -59,7 +64,9 @@ runtime_config = {
         "rest_api", "metadata", "constants",
         "read_blockchain_data", "build_transaction_json",
         "selector", "merger", "random_generator", "time",
-        "llm_text", "llm_structured"
+        "llm_text", "llm_structured",
+        "coinbase_fetch_balance", "coinbase_read_contract",
+        "read_contract"  # Allow both generic and specific names
     ]
 }
 

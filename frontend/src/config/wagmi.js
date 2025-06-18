@@ -1,4 +1,4 @@
-import { createConfig, http } from '@wagmi/core'
+import { createConfig, http, createStorage } from '@wagmi/core'
 import { sepolia } from '@wagmi/core/chains'
 import { coinbaseWallet } from '@wagmi/connectors'
 
@@ -11,6 +11,10 @@ export const config = createConfig({
       preference: 'smartWalletOnly', // This ensures only Smart Wallet is used
     })
   ],
+  storage: createStorage({
+    storage: window.sessionStorage,
+    key: 'neuralabs-wallet',
+  }),
   transports: {
     [sepolia.id]: http(),
   },

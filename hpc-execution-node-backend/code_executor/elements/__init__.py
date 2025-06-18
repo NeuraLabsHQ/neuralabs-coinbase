@@ -32,6 +32,7 @@ from .custom.custom import Custom
 # Coinbase
 
 from .coinbase.fetch_balance import FetchBalance as CoinbaseFetchBalance
+from .coinbase.read_contract import ReadContract as CoinbaseReadContract
 
 
 # Registry of element types to their classes
@@ -57,6 +58,8 @@ element_registry = {
     "custom": Custom,
     
     
-    "coinbase_fetch_balance": CoinbaseFetchBalance,
-    "FetchBalance": CoinbaseFetchBalance  # Map YAML type to Coinbase implementation
+    "fetchbalance": CoinbaseFetchBalance,
+    "FetchBalance": CoinbaseFetchBalance,  # Map YAML type to Coinbase implementation
+    "coinbase_read_contract": CoinbaseReadContract,
+    "read_contract": CoinbaseReadContract  # Map common name to Coinbase implementation
 }

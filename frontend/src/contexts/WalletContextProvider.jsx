@@ -8,7 +8,8 @@ import {
   disconnect as wagmiDisconnect,
   getBalance,
   switchChain,
-  getChainId
+  getChainId,
+  reconnect
 } from '@wagmi/core';
 import { config } from '../config/wagmi';
 import { formatEther } from 'viem';
@@ -67,6 +68,13 @@ export const WalletContextProvider = ({ children }) => {
   useEffect(() => {
     // Check initial connection and auth
     const checkConnection = async () => {
+      // First, try to reconnect if there's a stored connection
+      try {
+        await reconnect(config);
+      } catch (err) {
+        console.log('No previous connection to restore:', err);
+      }
+      
       const accountData = getAccount(config);
       
       if (accountData && accountData.address && accountData.isConnected) {
@@ -149,7 +157,7 @@ export const WalletContextProvider = ({ children }) => {
       setAccount({ 
         address: walletAddress, 
         isConnected: true,
-        chain: result.chain || { id: currentChainId } 
+        chainId: currentChainId 
       });
       setIsConnected(true);
       setChainId(currentChainId);
