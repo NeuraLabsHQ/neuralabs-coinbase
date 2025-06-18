@@ -64,6 +64,8 @@ digraph SmartContractArchitecture {
         NAC_canRevokeAccess [label="canRevokeAccess(uint256,address)\n→ bool\nChecks if access can be revoked", fillcolor="#4a9eff", shape="box"]
         NAC_updateUserAccessList [label="_updateUserAccessList\n(private)\nInternal function", fillcolor="#4a9eff", shape="box"]
         NAC_updateNFTAccessList [label="_updateNFTAccessList\n(private)\nInternal function", fillcolor="#4a9eff", shape="box"]
+        NAC_updateUserAccessListOnRevoke [label="_updateUserAccessListOnRevoke\n(private)\nRemoves from user list", fillcolor="#4a9eff", shape="box"]
+        NAC_updateNFTAccessListOnRevoke [label="_updateNFTAccessListOnRevoke\n(private)\nRemoves from NFT list", fillcolor="#4a9eff", shape="box"]
     }
     
     // NFTContract
@@ -101,6 +103,15 @@ digraph SmartContractArchitecture {
         NC_transfer [label="_transfer(from,to,tokenId)\n→ void\nInternal transfer logic", fillcolor="#4a9eff", shape="box"]
         NC_ownerOf [label="ownerOf(tokenId)\n→ address\nReturns NFT owner", fillcolor="#4a9eff", shape="box"]
         NC_balanceOf [label="balanceOf(address)\n→ uint256\nReturns balance", fillcolor="#4a9eff", shape="box"]
+        NC_approve [label="approve(to,tokenId)\n→ void\nApproves token transfer", fillcolor="#4a9eff", shape="box"]
+        NC_setApprovalForAll [label="setApprovalForAll(operator,approved)\n→ void\nSets operator approval", fillcolor="#4a9eff", shape="box"]
+        NC_getApproved [label="getApproved(tokenId)\n→ address\nReturns approved address", fillcolor="#4a9eff", shape="box"]
+        NC_isApprovedForAll [label="isApprovedForAll(owner,operator)\n→ bool\nChecks operator approval", fillcolor="#4a9eff", shape="box"]
+        NC_exists [label="_exists(tokenId)\n→ bool\n(internal) Checks existence", fillcolor="#4a9eff", shape="box"]
+        NC_isApprovedOrOwner [label="_isApprovedOrOwner(spender,tokenId)\n→ bool\n(internal) Auth check", fillcolor="#4a9eff", shape="box"]
+        NC_safeTransfer [label="_safeTransfer(...)\n→ void\n(internal) Safe transfer", fillcolor="#4a9eff", shape="box"]
+        NC_checkOnERC721Received [label="_checkOnERC721Received(...)\n→ bool\n(private) Receiver check", fillcolor="#4a9eff", shape="box"]
+        NC_isContract [label="isContract(address)\n→ bool\n(internal) Contract check", fillcolor="#4a9eff", shape="box"]
     }
     
     // NFTMetadata
@@ -175,6 +186,8 @@ digraph SmartContractArchitecture {
         M_buyAccessData [label="buyAccessData\n(mapping)", fillcolor="#ff9f4a", shape="box"]
         M_buyOwnershipData [label="buyOwnershipData\n(mapping)", fillcolor="#ff9f4a", shape="box"]
         M_buyReplicaData [label="buyReplicaData\n(mapping)", fillcolor="#ff9f4a", shape="box"]
+        M_lockOpensDate [label="lockOpensDate\n(mapping)", fillcolor="#ff9f4a", shape="box"]
+        M_platformOwner [label="platformOwner\n(address)", fillcolor="#ff9f4a", shape="box"]
         
         // Key Functions
         M_constructor [label="constructor(5 addresses)\n→ void\nInitializes all references", fillcolor="#4a9eff", shape="box"]
@@ -196,6 +209,10 @@ digraph SmartContractArchitecture {
         M_completeUnlock [label="completeUnlock(uint256)\n→ void\nCompletes unlock process", fillcolor="#4a9eff", shape="box"]
         M_cleanupMonetization [label="cleanupMonetization(uint256)\n→ void\nCleans up when NFT burned", fillcolor="#4a9eff", shape="box"]
         M_setAllMonetizationOptions [label="setAllMonetizationOptions(...)\n→ void\nComposite function", fillcolor="#4a9eff", shape="box"]
+        M_processMonetizationOptions [label="_processMonetizationOptions(...)\n→ void\n(private) Process options", fillcolor="#4a9eff", shape="box"]
+        M_updateMonetizationOption [label="_updateMonetizationOption(...)\n→ void\n(private) Update option", fillcolor="#4a9eff", shape="box"]
+        M_startUnlockProcessInternal [label="_startUnlockProcess(nftId)\n→ void\n(private) Internal unlock", fillcolor="#4a9eff", shape="box"]
+        M_disableAllMonetizationOptions [label="_disableAllMonetizationOptions(nftId)\n→ void\n(private) Disable all", fillcolor="#4a9eff", shape="box"]
 
         M_nftAgentWallet [label="nftAgentWallet\n(NFTAgentWallet)", fillcolor="#ff9f4a", shape="box"]
         M_registerNFTAgentWallet [label="registerNFTAgentWallet(nftId,signature,agentWallet)\n→ void\nRegisters agent wallet for NFT", fillcolor="#4a9eff", shape="box"]
@@ -328,8 +345,12 @@ digraph SmartContractArchitecture {
     NAC_grantAccess -> NAC_updateNFTAccessList [color="#87CEEB"]
     NAC_grantAccess -> NAC_maxAccessLevel [color="white"]
     NAC_revokeAccess -> NAC_nftAccess [color="#87CEEB"]
-    NAC_revokeAccess -> NAC_userAccessList [color="#87CEEB"]
-    NAC_revokeAccess -> NAC_nftAccessList [color="#87CEEB"]
+    NAC_revokeAccess -> NAC_updateUserAccessListOnRevoke [color="#87CEEB"]
+    NAC_revokeAccess -> NAC_updateNFTAccessListOnRevoke [color="#87CEEB"]
+    NAC_updateUserAccessListOnRevoke -> NAC_userAccessList [color="#87CEEB"]
+    NAC_updateUserAccessListOnRevoke -> NAC_userAccessIndex [color="#87CEEB"]
+    NAC_updateNFTAccessListOnRevoke -> NAC_nftAccessList [color="#87CEEB"]
+    NAC_updateNFTAccessListOnRevoke -> NAC_nftAccessIndex [color="#87CEEB"]
     NAC_getAllAccessForUser -> NAC_userAccessList [color="white"]
     NAC_getAccessLevel -> NAC_nftAccess [color="white"]
     NAC_getAccessLevel -> NAC_defaultAccessLevel [color="white"]
@@ -365,6 +386,31 @@ digraph SmartContractArchitecture {
     NC_transfer -> NC_tokenApprovals [color="#87CEEB"]
     NC_transfer -> NC_balances [color="#87CEEB"]
     NC_transfer -> NC_locked [color="white"]
+    NC_burnNFT -> NC_exists [color="white"]
+    NC_lockNFT -> NC_exists [color="white"]
+    NC_startUnlocking -> NC_exists [color="white"]
+    NC_markCanBeUnlocked -> NC_exists [color="white"]
+    NC_unlockNFT -> NC_exists [color="white"]
+    NC_getLockStatus -> NC_exists [color="white"]
+    NC_getNFTInfo -> NC_exists [color="white"]
+    NC_getApproved -> NC_exists [color="white"]
+    NC_exists -> NC_nfts [color="white"]
+    NC_safeTransferFrom -> NC_isApprovedOrOwner [color="white"]
+    NC_safeTransferFrom -> NC_safeTransfer [color="#87CEEB"]
+    NC_transferFrom -> NC_isApprovedOrOwner [color="white"]
+    NC_safeTransfer -> NC_transfer [color="#87CEEB"]
+    NC_safeTransfer -> NC_checkOnERC721Received [color="white"]
+    NC_isApprovedOrOwner -> NC_exists [color="white"]
+    NC_isApprovedOrOwner -> NC_ownerOf [color="white"]
+    NC_isApprovedOrOwner -> NC_getApproved [color="white"]
+    NC_isApprovedOrOwner -> NC_isApprovedForAll [color="white"]
+    NC_checkOnERC721Received -> NC_isContract [color="white"]
+    NC_approve -> NC_ownerOf [color="white"]
+    NC_approve -> NC_isApprovedForAll [color="white"]
+    NC_approve -> NC_tokenApprovals [color="#87CEEB"]
+    NC_setApprovalForAll -> NC_operatorApprovals [color="#87CEEB"]
+    NC_getApproved -> NC_tokenApprovals [color="white"]
+    NC_isApprovedForAll -> NC_operatorApprovals [color="white"]
     
     // NFTMetadata internal
     NM_createMetadata -> NM_metadataMap [color="#87CEEB"]
@@ -433,6 +479,36 @@ digraph SmartContractArchitecture {
     M_cleanupMonetization -> M_commitmentTime [color="#87CEEB"]
     M_cleanupMonetization -> M_noticeBeforeUnlock [color="#87CEEB"]
     M_cleanupMonetization -> M_monetization_combo [color="#87CEEB"]
+    M_cleanupMonetization -> M_disableAllMonetizationOptions [color="#87CEEB"]
+    M_cleanupMonetization -> M_lockOpensDate [color="#87CEEB"]
+    M_setAllMonetizationOptions -> M_processMonetizationOptions [color="#87CEEB"]
+    M_processMonetizationOptions -> M_updateMonetizationOption [color="#87CEEB"]
+    M_processMonetizationOptions -> NM_getMetadata [style="dotted", color="white"]
+    M_updateMonetizationOption -> M_disablePayPerUse [color="#87CEEB"]
+    M_updateMonetizationOption -> M_disableSubscription [color="#87CEEB"]
+    M_updateMonetizationOption -> M_disableBuyAccess [color="#87CEEB"]
+    M_updateMonetizationOption -> M_disableBuyOwnership [color="#87CEEB"]
+    M_updateMonetizationOption -> M_disableBuyReplica [color="#87CEEB"]
+    M_disablePayPerUse -> M_startUnlockProcessInternal [color="#87CEEB"]
+    M_disableSubscription -> M_startUnlockProcessInternal [color="#87CEEB"]
+    M_disableBuyAccess -> M_startUnlockProcessInternal [color="#87CEEB"]
+    M_startUnlockProcess -> M_lockOpensDate [color="#87CEEB"]
+    M_startUnlockProcessInternal -> M_lockOpensDate [color="#87CEEB"]
+    M_startUnlockProcessInternal -> ASA_hasActiveSubscriptions [style="dotted", color="white"]
+    M_startUnlockProcessInternal -> ASA_hasActiveAccessSales [style="dotted", color="white"]
+    M_startUnlockProcessInternal -> NC_startUnlocking [style="dotted", color="#87CEEB"]
+    M_buyOwnership -> M_disableAllMonetizationOptions [color="#87CEEB"]
+    M_buyOwnership -> M_platformOwner [color="white"]
+    M_buyReplica -> M_platformOwner [color="white"]
+    M_buyAccess -> M_platformOwner [color="white"]
+    M_disableAllMonetizationOptions -> NAC_canRevokeAccess [style="dotted", color="white"]
+    M_disableAllMonetizationOptions -> NAC_revokeAccess [style="dotted", color="#87CEEB"]
+    M_disableAllMonetizationOptions -> M_payPerUseData [color="#87CEEB"]
+    M_disableAllMonetizationOptions -> M_subscriptionData [color="#87CEEB"]
+    M_disableAllMonetizationOptions -> M_buyAccessData [color="#87CEEB"]
+    M_disableAllMonetizationOptions -> M_buyOwnershipData [color="#87CEEB"]
+    M_disableAllMonetizationOptions -> M_buyReplicaData [color="#87CEEB"]
+    M_disableAllMonetizationOptions -> M_monetization_combo [color="#87CEEB"]
     
     // UserAgentWallet Contract
     subgraph cluster_UserAgentWallet {
@@ -451,6 +527,9 @@ digraph SmartContractArchitecture {
         UAW_getAgentWallet [label="getAgentWallet(userWallet)\n→ address\nReturns agent wallet", fillcolor="#4a9eff", shape="box"]
         UAW_hasAgentWallet [label="hasAgentWallet(userWallet)\n→ bool\nChecks if user has agent", fillcolor="#4a9eff", shape="box"]
         UAW_isAgentWalletAssigned [label="isAgentWalletAssigned(agentWallet)\n→ bool\nChecks if agent assigned", fillcolor="#4a9eff", shape="box"]
+        UAW_addressToString [label="addressToString(address)\n→ string\n(private) Helper function", fillcolor="#4a9eff", shape="box"]
+        UAW_getEthSignedMessageHash [label="getEthSignedMessageHash(hash)\n→ bytes32\n(private) Hash helper", fillcolor="#4a9eff", shape="box"]
+        UAW_recoverSigner [label="recoverSigner(hash,signature)\n→ address\n(private) Sig recovery", fillcolor="#4a9eff", shape="box"]
     }
     
     // NFTAgentWallet Contract
@@ -472,6 +551,10 @@ digraph SmartContractArchitecture {
         NAW_getAgentWallet [label="getAgentWallet(nftId)\n→ address\nReturns agent wallet", fillcolor="#4a9eff", shape="box"]
         NAW_hasAgentWallet [label="hasAgentWallet(nftId)\n→ bool\nChecks if NFT has agent", fillcolor="#4a9eff", shape="box"]
         NAW_isAgentWalletAssigned [label="isAgentWalletAssigned(agentWallet)\n→ bool\nChecks if agent assigned", fillcolor="#4a9eff", shape="box"]
+        NAW_addressToString [label="addressToString(address)\n→ string\n(private) Helper function", fillcolor="#4a9eff", shape="box"]
+        NAW_uint256ToString [label="uint256ToString(uint256)\n→ string\n(private) Helper function", fillcolor="#4a9eff", shape="box"]
+        NAW_getEthSignedMessageHash [label="getEthSignedMessageHash(hash)\n→ bytes32\n(private) Hash helper", fillcolor="#4a9eff", shape="box"]
+        NAW_recoverSigner [label="recoverSigner(hash,signature)\n→ address\n(private) Sig recovery", fillcolor="#4a9eff", shape="box"]
     }
     
 
@@ -485,6 +568,12 @@ digraph SmartContractArchitecture {
     UAW_getAgentWallet -> UAW_userToAgent [color="white"]
     UAW_hasAgentWallet -> UAW_userToAgent [color="white"]
     UAW_isAgentWalletAssigned -> UAW_agentToUser [color="white"]
+    UAW_registerAgentWallet -> UAW_addressToString [color="white"]
+    UAW_registerAgentWallet -> UAW_getEthSignedMessageHash [color="white"]
+    UAW_registerAgentWallet -> UAW_recoverSigner [color="white"]
+    UAW_updateAgentWallet -> UAW_addressToString [color="white"]
+    UAW_updateAgentWallet -> UAW_getEthSignedMessageHash [color="white"]
+    UAW_updateAgentWallet -> UAW_recoverSigner [color="white"]
     
     // NFTAgentWallet internal connections
     NAW_constructor -> NAW_masterAccessControl [color="#87CEEB"]
@@ -498,6 +587,14 @@ digraph SmartContractArchitecture {
     NAW_getAgentWallet -> NAW_nftToAgent [color="white"]
     NAW_hasAgentWallet -> NAW_nftToAgent [color="white"]
     NAW_isAgentWalletAssigned -> NAW_agentToNft [color="white"]
+    NAW_registerAgentWallet -> NAW_uint256ToString [color="white"]
+    NAW_registerAgentWallet -> NAW_addressToString [color="white"]
+    NAW_registerAgentWallet -> NAW_getEthSignedMessageHash [color="white"]
+    NAW_registerAgentWallet -> NAW_recoverSigner [color="white"]
+    NAW_updateAgentWallet -> NAW_uint256ToString [color="white"]
+    NAW_updateAgentWallet -> NAW_addressToString [color="white"]
+    NAW_updateAgentWallet -> NAW_getEthSignedMessageHash [color="white"]
+    NAW_updateAgentWallet -> NAW_recoverSigner [color="white"]
     
     // NFTAgentWallet connections from other contracts
     NAW_constructor -> MAC_grantSelfAccess [style="dotted", color="#87CEEB"]
