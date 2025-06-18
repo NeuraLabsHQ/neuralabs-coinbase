@@ -20,7 +20,8 @@
     "console": "truffle console",
     "console:testnet": "truffle console --network testnet",
     "console:mainnet": "truffle console --network mainnet",
-    "flatten": "truffle-flattener contracts/**/*.sol > flattened.sol"
+    "flatten": "truffle-flattener contracts/**/*.sol > flattened.sol",
+    "generate-config": "node ../scripts/generate-blockchain-config.js"
   },
   "keywords": [],
   "author": "",

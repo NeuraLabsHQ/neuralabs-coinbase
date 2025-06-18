@@ -1,66 +1,66 @@
 {
   "network": "local",
-  "timestamp": "2025-06-18T13:27:00.135Z",
-  "deployer": "0xE4028679bc8Bf0dD25Eb170B8638Ba53a130C57F",
+  "timestamp": "2025-06-18T16:00:49.338Z",
+  "deployer": "0x25D31AA47F31aD39360B5cD50dEd0a304d85F252",
   "contracts": {
     "MasterAccessControl": {
-      "address": "0x8a4516b355B05098E6E399e3136B1A61F9055Eb3",
+      "address": "0x738Ea5B0267360B887f160B8155f05F6E0dbCc8E",
       "constructorArgs": [],
       "gasUsed": 0
     },
     "NFTAccessControl": {
-      "address": "0x851e624C9e8E941a6e50E92bdB3999B160b1B136",
+      "address": "0x8124eC16C2048f3216586945B6edd0406dfC6603",
       "constructorArgs": [
-        "0x8a4516b355B05098E6E399e3136B1A61F9055Eb3"
+        "0x738Ea5B0267360B887f160B8155f05F6E0dbCc8E"
       ],
       "gasUsed": 0
     },
     "NFTMetadata": {
-      "address": "0xfEa6aA68811FA29eDaF17C56D4F12DEe6De0b8Ec",
+      "address": "0x1bcd7d6244932C57249F888C4dcC4138eAce40A0",
       "constructorArgs": [
-        "0x8a4516b355B05098E6E399e3136B1A61F9055Eb3",
-        "0x851e624C9e8E941a6e50E92bdB3999B160b1B136"
+        "0x738Ea5B0267360B887f160B8155f05F6E0dbCc8E",
+        "0x8124eC16C2048f3216586945B6edd0406dfC6603"
       ],
       "gasUsed": 0
     },
     "AIServiceAgreementManagement": {
-      "address": "0x62E1771fF9F7F342844ECC5A321e7d9ed054Cb19",
+      "address": "0x57bf8D7A397B5359f6E7E3070c8f28C913e3F452",
       "constructorArgs": [
-        "0x8a4516b355B05098E6E399e3136B1A61F9055Eb3",
-        "0x851e624C9e8E941a6e50E92bdB3999B160b1B136"
+        "0x738Ea5B0267360B887f160B8155f05F6E0dbCc8E",
+        "0x8124eC16C2048f3216586945B6edd0406dfC6603"
       ],
       "gasUsed": 0
     },
     "NFTContract": {
-      "address": "0x007991952aC5880144d4A0b77BCA1d52Ca5f750C",
+      "address": "0x9b976a710D53238EE8bA994D22DC00ba8A0E6c31",
       "constructorArgs": [
-        "0x8a4516b355B05098E6E399e3136B1A61F9055Eb3",
-        "0x851e624C9e8E941a6e50E92bdB3999B160b1B136",
-        "0xfEa6aA68811FA29eDaF17C56D4F12DEe6De0b8Ec",
+        "0x738Ea5B0267360B887f160B8155f05F6E0dbCc8E",
+        "0x8124eC16C2048f3216586945B6edd0406dfC6603",
+        "0x1bcd7d6244932C57249F888C4dcC4138eAce40A0",
         "0x0000000000000000000000000000000000000000"
       ],
       "gasUsed": 0
     },
     "Monetization": {
-      "address": "0xFd79d15A8E0625d25e3bd91778f77214c7e4D583",
+      "address": "0x8c1Cb26f4cB0A0a68a5E5F81dd009eA9F365D574",
       "constructorArgs": [
-        "0x8a4516b355B05098E6E399e3136B1A61F9055Eb3",
-        "0x007991952aC5880144d4A0b77BCA1d52Ca5f750C",
-        "0x851e624C9e8E941a6e50E92bdB3999B160b1B136",
-        "0xfEa6aA68811FA29eDaF17C56D4F12DEe6De0b8Ec",
-        "0x62E1771fF9F7F342844ECC5A321e7d9ed054Cb19"
+        "0x738Ea5B0267360B887f160B8155f05F6E0dbCc8E",
+        "0x9b976a710D53238EE8bA994D22DC00ba8A0E6c31",
+        "0x8124eC16C2048f3216586945B6edd0406dfC6603",
+        "0x1bcd7d6244932C57249F888C4dcC4138eAce40A0",
+        "0x57bf8D7A397B5359f6E7E3070c8f28C913e3F452"
       ],
       "gasUsed": 0
     },
     "UserAgentWallet": {
-      "address": "0x0EeBf5f021e9f69f3213a246977636F30d9240Ae",
+      "address": "0x36CEfF3c60eaa74C0d4d22237020c784bA8D98E7",
       "constructorArgs": [],
       "gasUsed": 0
     },
     "NFTAgentWallet": {
-      "address": "0x4AE78a9314BfCcF02f2FcA8A389aC90c95D36b7C",
+      "address": "0xC348A6179E1B4Ee6FcA24565E8bC47dde3eBb07E",
       "constructorArgs": [
-        "0x8a4516b355B05098E6E399e3136B1A61F9055Eb3"
+        "0x738Ea5B0267360B887f160B8155f05F6E0dbCc8E"
       ],
       "gasUsed": 0
     }
