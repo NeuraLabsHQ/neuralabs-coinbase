@@ -16,7 +16,11 @@ import {
   AlertDescription
 } from '@chakra-ui/react';
 import { FiExternalLink, FiCopy, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+
+// Import wallet context to get wallet state and actions
 import { useWallet } from '../../../contexts/WalletContextProvider';
+
+
 import coinbaseConnected from '../../../assets/icons/coinbase-connected.svg';
 import coinbaseLight from '../../../assets/icons/coinbase-light.svg';
 import coinbaseDark from '../../../assets/icons/coinbase-dark.svg';

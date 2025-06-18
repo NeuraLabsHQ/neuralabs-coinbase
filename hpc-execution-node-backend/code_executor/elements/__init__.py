@@ -29,6 +29,10 @@ from .ai.llm_structured import LLMStructured
 # Custom
 from .custom.custom import Custom
 
+# Coinbase
+
+from .coinbase.fetch_balance import FetchBalance as CoinbaseFetchBalance
+
 
 # Registry of element types to their classes
 element_registry = {
@@ -50,5 +54,9 @@ element_registry = {
     "time": TimeBlock,
     "llm_text": LLMText,
     "llm_structured": LLMStructured,
-    "custom": Custom
+    "custom": Custom,
+    
+    
+    "coinbase_fetch_balance": CoinbaseFetchBalance,
+    "FetchBalance": CoinbaseFetchBalance  # Map YAML type to Coinbase implementation
 }

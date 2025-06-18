@@ -3,9 +3,24 @@ element_id: null
 name: null
 node_description: Extracts specific values from data structures using path-based selection
 description: null
-input_schema: null
-output_schema: null
-parameter_schema_structure: null
+input_schema: {}
+output_schema: {}
+parameter_schema_structure: 
+  key:
+    type: string
+    description: The path to the value to extract from the input data
+  default_value:
+    type: any
+    description: The value to return if the specified path does not exist
+  multiple_paths:
+    type: list
+    items:
+      type: string
+    description: List of paths to check for values, returning the first found
+  error_on_missing:
+    type: bool
+    description: Whether to raise an error if the specified path is not found in the input data
+
 parameters:
   key: ''
   default_value: null

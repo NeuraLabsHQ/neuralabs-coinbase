@@ -4,7 +4,7 @@ name: null
 node_description: Stores and provides static data for use in flows
 description: null
 input_schema: {}
-output_schema: null
+output_schema: {}
 parameter_schema_structure:
   data:
     type: any

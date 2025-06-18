@@ -57,7 +57,7 @@ async def create_or_update_agent(
             json.dumps(agent_data.get("tags", {})),
             agent_data.get("license"),
             json.dumps(agent_data.get("socials", {})),
-            agent_data.get("chain_id", 101),  # Default to chain_id 1 if not specified
+            agent_data.get("chain_id", 84532),  # Default to chain_id 1 if not specified
             agent_id,
             user_pub_key
         )
@@ -83,7 +83,7 @@ async def create_or_update_agent(
             json.dumps(agent_data.get("socials", {})),
             agent_data.get("description"),
             agent_data.get("name"),
-            agent_data.get("chain_id", 101)  # Default to chain_id 1 if not specified
+            agent_data.get("chain_id", 84532)  # Default to chain_id 1 if not specified
         )
         
         await pg_conn.execute_query(insert_query, params)

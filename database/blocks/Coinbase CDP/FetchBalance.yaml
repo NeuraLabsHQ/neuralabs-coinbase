@@ -1,0 +1,85 @@
+type: FetchBalance
+element_id: null
+name: null
+node_description: Reads wallet balance for Base Sepolia ETH and USDC
+description: null
+input_schema:
+  wallet_address:
+    type: string
+    description: The wallet address to query on Base Sepolia
+    required: true
+output_schema:
+  wallet_address:
+    type: string
+    description: The queried wallet address
+    required: true
+  eth_balance:
+    type: string
+    description: ETH balance in wei
+    required: true
+  eth_balance_formatted:
+    type: string
+    description: ETH balance formatted with decimals
+    required: true
+  usdc_balance:
+    type: string
+    description: USDC balance in smallest unit
+    required: true
+  usdc_balance_formatted:
+    type: string
+    description: USDC balance formatted with decimals
+    required: true
+  block_number:
+    type: integer
+    description: Current block number at time of query
+    required: true
+parameter_schema_structure:
+  node_url:
+    type: string
+    description: Base Sepolia RPC endpoint URL
+    default: "https://sepolia.base.org"
+    required: true
+  usdc_contract_address:
+    type: string
+    description: USDC contract address on Base Sepolia
+    default: "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+    required: true
+parameters:
+  node_url: "https://sepolia.base.org"
+  usdc_contract_address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+processing_message: Reading Base Sepolia wallet data...
+tags:
+- blockchain
+- base-sepolia
+- wallet
+- balance
+layer: null
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: fixed
+  parameters.node_url:
+    access: edit
+  parameters.usdc_contract_address:
+    access: edit
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit
+input_data: null
+output_data: null
+code: null
+flow_control: null
+icon: FiDatabase
+category: Coinbase CDP

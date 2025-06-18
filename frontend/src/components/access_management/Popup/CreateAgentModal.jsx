@@ -355,7 +355,7 @@ const CreateAgentModal = ({ isOpen, onClose, onCreateAgent }) => {
                 <FormControl>
                   <FormLabel fontSize="sm" color={textColor}>Chain ID</FormLabel>
                   <Input
-                    value="101"
+                    value="84532"
                     size="sm"
                     bg={readOnlyBgColor}
                     // borderColor={readOnlyBorderColor}

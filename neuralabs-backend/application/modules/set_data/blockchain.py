@@ -115,7 +115,7 @@ async def get_or_create_chain_details(chain_id: int) -> Tuple[bool, Optional[str
 
 async def create_or_get_contract_details(
     contract_id: str,
-    chain_id: int = 101,
+    chain_id: int = 84532,
     contract_name: str = "NeuraSynthesis",
     contract_version: str = "1.0.0"
 ) -> Tuple[bool, Optional[str]]:

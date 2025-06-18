@@ -1,0 +1,80 @@
+type: ReadContract
+element_id: null
+name: null
+node_description: Reads data from smart contract view/pure functions
+description: null
+input_schema: {}
+output_schema: {}
+parameter_schema_structure:
+  contract_address:
+    type: string
+    description: The smart contract address to read from
+    required: true
+  contract_abi:
+    type: array
+    description: The contract ABI (Application Binary Interface) as JSON array
+    required: true
+  function_name:
+    type: string
+    description: The name of the function to call
+    required: true
+  network:
+    type: string
+    description: The blockchain network to use
+    default: "base-sepolia"
+    required: true
+  node_url:
+    type: string
+    description: RPC endpoint URL (optional, uses CDP default if not specified)
+    default: ""
+    required: false
+parameters:
+  contract_address: ""
+  contract_abi: []
+  function_name: ""
+  network: "base-sepolia"
+  node_url: ""
+processing_message: Reading smart contract data...
+tags:
+- blockchain
+- smart-contract
+- coinbase-cdp
+- read-only
+layer: null
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: edit
+  output_schema:
+    access: edit
+  parameters.contract_address:
+    access: edit
+  parameters.contract_abi:
+    access: edit
+  parameters.function_name:
+    access: edit
+  parameters.network:
+    access: edit
+  parameters.node_url:
+    access: edit
+  processing_message:
+    access: edit
+  parameter_schema_structure:
+    access: fixed
+  tags:
+    access: append
+  layer:
+    access: edit
+input_data: null
+output_data: null
+code: null
+flow_control: null
+icon: FiFileText
+category: Coinbase CDP

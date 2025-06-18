@@ -25,7 +25,7 @@ class AgentBase(BaseModel):
     license: Optional[str] = Field(None, description="License information")
     fork: Optional[str] = Field(None, description="Reference to forked agent if applicable")
     socials: Optional[Dict[str, Any]] = Field(None, description="Social media links")
-    chain_id: Optional[int] = Field(101, description="Blockchain ID")
+    chain_id: Optional[int] = Field(84532, description="Blockchain ID")
 
 
 class CreateAgentRequest(AgentBase):

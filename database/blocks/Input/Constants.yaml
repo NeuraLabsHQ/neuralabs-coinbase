@@ -5,7 +5,7 @@ node_description: Provides static key-value pairs for configuration and settings
 description: null
 input_schema: {}
 output_schema: {}
-parameter_schema_structure: null
+parameter_schema_structure: {}
 parameters: {}
 processing_message: Loading constants...
 tags:
