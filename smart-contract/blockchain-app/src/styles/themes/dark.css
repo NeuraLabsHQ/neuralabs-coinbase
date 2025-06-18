@@ -1,0 +1,154 @@
+/* Dark Theme Variables */
+:root[data-theme="dark"] {
+  /* Primary Colors */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #141414;
+  --bg-tertiary: #1a1a1a;
+  --bg-card: #1f1f1f;
+  --bg-hover: #252525;
+  --bg-active: #2a2a2a;
+  
+  /* Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: #b3b3b3;
+  --text-tertiary: #808080;
+  --text-muted: #666666;
+  
+  /* Border Colors */
+  --border-primary: #333333;
+  --border-secondary: #262626;
+  --border-active: #404040;
+  
+  /* Accent Colors */
+  --accent-primary: #ffffff;
+  --accent-secondary: #e6e6e6;
+  --accent-success: #4ade80;
+  --accent-warning: #fbbf24;
+  --accent-danger: #f87171;
+  --accent-info: #60a5fa;
+  
+  /* Shadows and Effects */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+  --gradient-secondary: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+  --gradient-accent: linear-gradient(135deg, #333333 0%, #1a1a1a 100%);
+  
+  /* Component Specific */
+  --modal-backdrop: rgba(0, 0, 0, 0.8);
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+  --input-bg: #1a1a1a;
+  --input-border: #333333;
+  --input-focus-border: #666666;
+  
+  /* Bootstrap Overrides */
+  --bs-body-bg: var(--bg-primary);
+  --bs-body-color: var(--text-primary);
+  --bs-border-color: var(--border-primary);
+  --bs-primary: var(--accent-primary);
+  --bs-dark: var(--bg-secondary);
+}
+
+/* Dark Theme Specific Styles */
+[data-theme="dark"] {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .card {
+  background-color: var(--bg-card);
+  border-color: var(--border-primary);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .card:hover {
+  background-color: var(--bg-hover);
+  box-shadow: var(--shadow-lg);
+  transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .btn-primary {
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--bg-primary);
+}
+
+[data-theme="dark"] .btn-primary:hover {
+  background-color: var(--accent-secondary);
+  border-color: var(--accent-secondary);
+  color: var(--bg-primary);
+}
+
+[data-theme="dark"] .btn-outline-primary {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  background-color: transparent;
+}
+
+[data-theme="dark"] .btn-outline-primary:hover {
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--bg-primary);
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+  background-color: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+  background-color: var(--input-bg);
+  border-color: var(--input-focus-border);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .table {
+  color: var(--text-primary);
+  border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] .modal-content {
+  background-color: var(--bg-card);
+  border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer {
+  border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .dropdown-menu {
+  background-color: var(--bg-card);
+  border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .dropdown-item {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .navbar {
+  background-color: var(--bg-secondary) !important;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+[data-theme="dark"] .sidebar {
+  background-color: var(--bg-secondary);
+  border-right: 1px solid var(--border-primary);
+}

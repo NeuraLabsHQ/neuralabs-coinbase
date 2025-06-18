@@ -61,6 +61,79 @@ cp .env.example .env
    - Gas settings
    - Etherscan API key for verification
 
+## Blockchain Interaction Application
+
+This project includes a full-featured web application for interacting with the smart contracts.
+
+### Features
+- Dark/Light theme support with Bootstrap
+- Wallet connection management (MetaMask, etc.)
+- Contract interaction modules with read/execute functions
+- Management interfaces for:
+  - NFT creation and management
+  - Access control configuration
+  - Monetization setup
+  - Agent wallet associations
+  - Service agreement monitoring
+
+### Quick Start
+
+1. Generate blockchain configuration:
+```bash
+cd contract
+npm run generate-config
+```
+
+2. Install and run the application:
+```bash
+cd ../blockchain-app
+npm install
+npm run dev
+```
+
+3. Open http://localhost:5173 in your browser
+
+### Application Structure
+```
+blockchain-app/
+├── src/
+│   ├── blockchain/         # Blockchain interaction modules
+│   │   ├── config/        # Generated config and network settings
+│   │   └── modules/       # Core functions and contract interfaces
+│   ├── components/        # Reusable UI components
+│   ├── pages/            # Application pages
+│   ├── contexts/         # React contexts (wallet, etc.)
+│   └── styles/           # CSS with dark/light themes
+```
+
+### Blockchain Module Usage
+
+```javascript
+import { nftContract, masterAccessControl, read, execute } from './blockchain/modules';
+
+// Read contract data
+const nftInfo = await nftContract.getNFTInfo({ 
+  tokenId: 1, 
+  provider 
+});
+
+// Execute transactions
+const result = await nftContract.createNFT({ 
+  name: "My NFT", 
+  levelOfOwnership: 6, 
+  signer 
+});
+
+// Generic read/execute functions
+const balance = await read({
+  contractAddress: nftContract.address,
+  abi: nftContract.abi,
+  methodName: 'balanceOf',
+  args: [userAddress],
+  provider
+});
+```
+
 ## Deployment
 
 ### Quick Start
