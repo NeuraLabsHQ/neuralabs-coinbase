@@ -3,7 +3,7 @@ export const NETWORKS = {
   local: {
     chainId: 1337,
     name: 'Local Development',
-    rpcUrl: 'http://localhost:8545',
+    rpcUrl: import.meta.env.VITE_LOCAL_RPC_URL || 'http://localhost:8545',
     currency: {
       name: 'Ether',
       symbol: 'ETH',
@@ -15,7 +15,7 @@ export const NETWORKS = {
   sepolia: {
     chainId: 11155111,
     name: 'Sepolia Testnet',
-    rpcUrl: process.env.VITE_SEPOLIA_RPC_URL || 'https://sepolia.infura.io/v3/YOUR-PROJECT-ID',
+    rpcUrl: import.meta.env.VITE_SEPOLIA_RPC_URL || 'https://sepolia.infura.io/v3/YOUR-PROJECT-ID',
     currency: {
       name: 'Sepolia Ether',
       symbol: 'ETH',
@@ -27,7 +27,7 @@ export const NETWORKS = {
   mainnet: {
     chainId: 1,
     name: 'Ethereum Mainnet',
-    rpcUrl: process.env.VITE_MAINNET_RPC_URL || 'https://mainnet.infura.io/v3/YOUR-PROJECT-ID',
+    rpcUrl: import.meta.env.VITE_MAINNET_RPC_URL || 'https://mainnet.infura.io/v3/YOUR-PROJECT-ID',
     currency: {
       name: 'Ether',
       symbol: 'ETH',
@@ -39,7 +39,7 @@ export const NETWORKS = {
 };
 
 // Default network (can be overridden by environment variable)
-export const DEFAULT_NETWORK = process.env.VITE_DEFAULT_NETWORK || 'local';
+export const DEFAULT_NETWORK = import.meta.env.VITE_DEFAULT_NETWORK || 'local';
 
 // Get current network configuration
 export function getCurrentNetwork() {
