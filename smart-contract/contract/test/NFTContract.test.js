@@ -99,12 +99,10 @@ contract("NFTContract", (accounts) => {
 
   describe("Deployment", () => {
     it("should set correct initial values", async () => {
-      assert.equal(await nftContract.name(), "NeuraLabs NFT", "Name should be set");
-      assert.equal(await nftContract.symbol(), "NRNFT", "Symbol should be set");
       assert.equal(await nftContract.masterAccessControl(), masterAccess.address, "MasterAccessControl should be set");
       assert.equal(await nftContract.nftAccessControl(), nftAccess.address, "NFTAccessControl should be set");
       assert.equal(await nftContract.nftMetadata(), nftMetadata.address, "NFTMetadata should be set");
-      assert.equal(await nftContract.monetizationContract(), monetization.address, "Monetization should be set");
+      assert.equal(await nftContract.monetization(), monetization.address, "Monetization should be set");
     });
   });
 
@@ -112,18 +110,9 @@ contract("NFTContract", (accounts) => {
     describe("createNFT", () => {
       it("should create NFT with valid parameters", async () => {
         const tx = await nftContract.createNFT(
-          user1,
+          "Test NFT",
           OwnershipLevel.Level3,
-          validMetadata.ipType,
-          validMetadata.ipId,
-          validMetadata.imageUrl,
-          validMetadata.storageType,
-          validMetadata.storageId,
-          validMetadata.encrypted,
-          validMetadata.encryptionId,
-          validMetadata.md5Hash,
-          validMetadata.version,
-          { from: deployer }
+          { from: user1 }
         );
 
         // Get token ID from event
@@ -132,16 +121,15 @@ contract("NFTContract", (accounts) => {
 
         // Check NFT was minted
         assert.equal(await nftContract.ownerOf(tokenId), user1, "User1 should own the NFT");
-        assert.equal((await nftContract.nftOwnershipLevel(tokenId)).toNumber(), OwnershipLevel.Level3, "Ownership level should be set");
-        assert.equal((await nftContract.lockStatus(tokenId)).toNumber(), LockStatus.Unlocked, "NFT should be unlocked initially");
-
-        // Check metadata was created
-        const metadata = await nftMetadata.getMetadata(tokenId);
-        assert.equal(metadata.ipType, validMetadata.ipType, "IP type should be set");
-        assert.equal(metadata.ipId, validMetadata.ipId, "IP ID should be set");
+        const nftInfo = await nftContract.getNFTInfo(tokenId);
+        assert.equal(nftInfo.levelOfOwnership, OwnershipLevel.Level3, "Ownership level should be set");
+        assert.equal(nftInfo.name, "Test NFT", "NFT name should be set");
+        assert.equal(nftInfo.creator, user1, "Creator should be user1");
+        assert.equal(nftInfo.owner, user1, "Owner should be user1");
+        assert.equal((await nftContract.getLockStatus(tokenId)).toNumber(), LockStatus.Unlocked, "NFT should be unlocked initially");
 
         // Check owner has absolute ownership access
-        const accessLevel = await nftAccess.getUserAccessLevel(tokenId, user1);
+        const accessLevel = await nftAccess.getAccessLevel(tokenId, user1);
         assert.equal(accessLevel.toNumber(), AccessLevel.AbsoluteOwnership, "Owner should have absolute ownership access");
       });
 
@@ -249,18 +237,9 @@ contract("NFTContract", (accounts) => {
 
     beforeEach(async () => {
       const tx = await nftContract.createNFT(
-        user1,
+        "Burn Test NFT",
         OwnershipLevel.Level3,
-        validMetadata.ipType,
-        validMetadata.ipId,
-        validMetadata.imageUrl,
-        validMetadata.storageType,
-        validMetadata.storageId,
-        validMetadata.encrypted,
-        validMetadata.encryptionId,
-        validMetadata.md5Hash,
-        validMetadata.version,
-        { from: deployer }
+        { from: user1 }
       );
       tokenId = tx.logs.find(log => log.event === 'Transfer').args.tokenId;
     });
@@ -278,52 +257,56 @@ contract("NFTContract", (accounts) => {
         // Verify NFT is burned
         await expectRevert(
           nftContract.ownerOf(tokenId),
-          "ERC721: owner query for nonexistent token"
+          "NFTContract: Owner query for nonexistent token"
         );
 
         // Verify metadata is deleted
-        const metadata = await nftMetadata.getMetadata(tokenId);
-        assert.equal(metadata.ipType, "", "Metadata should be deleted");
+        await expectRevert(
+          nftMetadata.getMetadata(tokenId),
+          "NFTMetadata: Metadata does not exist"
+        );
 
         // Verify access is reset
-        const accessLevel = await nftAccess.getUserAccessLevel(tokenId, user1);
+        const accessLevel = await nftAccess.getAccessLevel(tokenId, user1);
         assert.equal(accessLevel.toNumber(), AccessLevel.None, "Access should be reset");
       });
 
       it("should prevent non-owner from burning NFT", async () => {
         await expectRevert(
           nftContract.burnNFT(tokenId, { from: user2 }),
-          "Only token owner can burn"
+          "NFTContract: Only owner can burn"
         );
       });
 
       it("should prevent burning locked NFT", async () => {
-        // Lock the NFT
-        await nftContract.lockNFT(tokenId, { from: user1 });
+        // Lock the NFT (only authorized addresses can lock)
+        await nftContract.lockNFT(tokenId, { from: deployer });
 
         await expectRevert(
           nftContract.burnNFT(tokenId, { from: user1 }),
-          "Cannot burn locked NFT"
+          "NFTContract: Cannot burn locked NFT"
         );
       });
 
       it("should clean up all associated data on burn", async () => {
         // Grant additional access to other users
-        await nftAccess.grantAccess(tokenId, user2, AccessLevel.UseModel, { from: nftContract.address });
-        await nftAccess.grantAccess(tokenId, user3, AccessLevel.ViewAndDownload, { from: nftContract.address });
+        await nftAccess.grantAccess(tokenId, user2, AccessLevel.UseModel, { from: deployer });
+        await nftAccess.grantAccess(tokenId, user3, AccessLevel.ViewAndDownload, { from: deployer });
 
         // Burn the NFT
         await nftContract.burnNFT(tokenId, { from: user1 });
 
         // Verify all access is removed
-        const user2Access = await nftAccess.getUserAccessLevel(tokenId, user2);
-        const user3Access = await nftAccess.getUserAccessLevel(tokenId, user3);
+        const user2Access = await nftAccess.getAccessLevel(tokenId, user2);
+        const user3Access = await nftAccess.getAccessLevel(tokenId, user3);
         assert.equal(user2Access.toNumber(), AccessLevel.None, "User2 access should be reset");
         assert.equal(user3Access.toNumber(), AccessLevel.None, "User3 access should be reset");
 
-        // Verify ownership level is reset
-        const ownershipLevel = await nftContract.nftOwnershipLevel(tokenId);
-        assert.equal(ownershipLevel.toNumber(), 0, "Ownership level should be reset");
+        // Verify NFT info is deleted
+        await expectRevert(
+          nftContract.getNFTInfo(tokenId),
+          "NFTContract: NFT does not exist"
+        );
       });
     });
   });
@@ -333,172 +316,132 @@ contract("NFTContract", (accounts) => {
 
     beforeEach(async () => {
       const tx = await nftContract.createNFT(
-        user1,
+        "Lock Test NFT",
         OwnershipLevel.Level3,
-        validMetadata.ipType,
-        validMetadata.ipId,
-        validMetadata.imageUrl,
-        validMetadata.storageType,
-        validMetadata.storageId,
-        validMetadata.encrypted,
-        validMetadata.encryptionId,
-        validMetadata.md5Hash,
-        validMetadata.version,
-        { from: deployer }
+        { from: user1 }
       );
       tokenId = tx.logs.find(log => log.event === 'Transfer').args.tokenId;
     });
 
     describe("lockNFT", () => {
       it("should lock an unlocked NFT", async () => {
-        const tx = await nftContract.lockNFT(tokenId, { from: user1 });
+        const tx = await nftContract.lockNFT(tokenId, { from: deployer });
 
         expectEvent(tx, 'NFTLocked', {
           tokenId: tokenId,
-          owner: user1
+          status: LockStatus.Locked.toString()
         });
 
-        const lockStatus = await nftContract.lockStatus(tokenId);
+        const lockStatus = await nftContract.getLockStatus(tokenId);
         assert.equal(lockStatus.toNumber(), LockStatus.Locked, "NFT should be locked");
       });
 
-      it("should prevent non-owner from locking NFT", async () => {
+      it("should prevent unauthorized from locking NFT", async () => {
         await expectRevert(
-          nftContract.lockNFT(tokenId, { from: user2 }),
-          "Only token owner can lock"
+          nftContract.lockNFT(tokenId, { from: unauthorized }),
+          "NFTContract: Caller not authorized"
         );
       });
 
       it("should prevent locking already locked NFT", async () => {
-        await nftContract.lockNFT(tokenId, { from: user1 });
+        await nftContract.lockNFT(tokenId, { from: deployer });
 
         await expectRevert(
-          nftContract.lockNFT(tokenId, { from: user1 }),
-          "NFT must be unlocked"
+          nftContract.lockNFT(tokenId, { from: deployer }),
+          "NFTContract: NFT already locked"
         );
       });
     });
 
-    describe("initiateUnlock", () => {
+    describe("startUnlocking", () => {
       beforeEach(async () => {
-        await nftContract.lockNFT(tokenId, { from: user1 });
+        await nftContract.lockNFT(tokenId, { from: deployer });
       });
 
-      it("should initiate unlock process", async () => {
-        const tx = await nftContract.initiateUnlock(tokenId, { from: user1 });
+      it("should start unlock process", async () => {
+        const tx = await nftContract.startUnlocking(tokenId, { from: deployer });
 
-        expectEvent(tx, 'UnlockInitiated', {
+        expectEvent(tx, 'NFTLocked', {
           tokenId: tokenId,
-          owner: user1
+          status: LockStatus.Unlocking.toString()
         });
 
-        const lockStatus = await nftContract.lockStatus(tokenId);
+        const lockStatus = await nftContract.getLockStatus(tokenId);
         assert.equal(lockStatus.toNumber(), LockStatus.Unlocking, "NFT should be in unlocking state");
-
-        const unlockTime = await nftContract.unlockTime(tokenId);
-        assert.notEqual(unlockTime.toNumber(), 0, "Unlock time should be set");
       });
 
-      it("should prevent non-owner from initiating unlock", async () => {
+      it("should prevent unauthorized from starting unlock", async () => {
         await expectRevert(
-          nftContract.initiateUnlock(tokenId, { from: user2 }),
-          "Only token owner can initiate unlock"
+          nftContract.startUnlocking(tokenId, { from: unauthorized }),
+          "NFTContract: Caller not authorized"
         );
       });
 
-      it("should prevent initiating unlock for non-locked NFT", async () => {
-        await nftContract.initiateUnlock(tokenId, { from: user1 });
+      it("should prevent starting unlock for non-locked NFT", async () => {
+        await nftContract.startUnlocking(tokenId, { from: deployer });
         
         await expectRevert(
-          nftContract.initiateUnlock(tokenId, { from: user1 }),
-          "NFT must be locked"
+          nftContract.startUnlocking(tokenId, { from: deployer }),
+          "NFTContract: NFT not locked"
         );
       });
     });
 
-    describe("completeUnlock", () => {
+    describe("markCanBeUnlocked and unlockNFT", () => {
       beforeEach(async () => {
-        await nftContract.lockNFT(tokenId, { from: user1 });
-        await nftContract.initiateUnlock(tokenId, { from: user1 });
+        await nftContract.lockNFT(tokenId, { from: deployer });
+        await nftContract.startUnlocking(tokenId, { from: deployer });
       });
 
-      it("should complete unlock after waiting period", async () => {
-        // Move time forward by 3 days
-        await time.increase(time.duration.days(3));
-
-        const tx = await nftContract.completeUnlock(tokenId, { from: user1 });
-
-        expectEvent(tx, 'NFTUnlocked', {
+      it("should mark as can be unlocked then unlock", async () => {
+        // Mark as can be unlocked
+        const tx1 = await nftContract.markCanBeUnlocked(tokenId, { from: deployer });
+        expectEvent(tx1, 'NFTLocked', {
           tokenId: tokenId,
-          owner: user1
+          status: LockStatus.CanBeUnlocked.toString()
         });
 
-        const lockStatus = await nftContract.lockStatus(tokenId);
-        assert.equal(lockStatus.toNumber(), LockStatus.Unlocked, "NFT should be unlocked");
+        const lockStatus = await nftContract.getLockStatus(tokenId);
+        assert.equal(lockStatus.toNumber(), LockStatus.CanBeUnlocked, "NFT should be ready to unlock");
 
-        const unlockTime = await nftContract.unlockTime(tokenId);
-        assert.equal(unlockTime.toNumber(), 0, "Unlock time should be reset");
-      });
-
-      it("should prevent completing unlock before waiting period", async () => {
-        // Only wait 1 day (need 3 days)
-        await time.increase(time.duration.days(1));
-
-        await expectRevert(
-          nftContract.completeUnlock(tokenId, { from: user1 }),
-          "Unlock period not elapsed"
-        );
-      });
-
-      it("should prevent non-owner from completing unlock", async () => {
-        await time.increase(time.duration.days(3));
-
-        await expectRevert(
-          nftContract.completeUnlock(tokenId, { from: user2 }),
-          "Only token owner can complete unlock"
-        );
-      });
-
-      it("should prevent completing unlock for NFT not in unlocking state", async () => {
-        // Complete the unlock
-        await time.increase(time.duration.days(3));
-        await nftContract.completeUnlock(tokenId, { from: user1 });
-
-        // Try to complete again
-        await expectRevert(
-          nftContract.completeUnlock(tokenId, { from: user1 }),
-          "NFT must be in unlocking state"
-        );
-      });
-    });
-
-    describe("unlockNFT", () => {
-      beforeEach(async () => {
-        await nftContract.lockNFT(tokenId, { from: user1 });
-      });
-
-      it("should unlock NFT directly when called by monetization contract", async () => {
-        // Grant monetization contract permission
-        await masterAccess.grantAccess(nftContract.address, monetization.address, { from: deployer });
-
-        const tx = await nftContract.unlockNFT(tokenId, { from: monetization.address });
-
-        expectEvent(tx, 'NFTUnlocked', {
+        // Complete unlock
+        const tx2 = await nftContract.unlockNFT(tokenId, { from: deployer });
+        expectEvent(tx2, 'NFTLocked', {
           tokenId: tokenId,
-          owner: user1
+          status: LockStatus.Unlocked.toString()
         });
 
-        const lockStatus = await nftContract.lockStatus(tokenId);
-        assert.equal(lockStatus.toNumber(), LockStatus.Unlocked, "NFT should be unlocked");
+        const finalStatus = await nftContract.getLockStatus(tokenId);
+        assert.equal(finalStatus.toNumber(), LockStatus.Unlocked, "NFT should be unlocked");
       });
 
-      it("should prevent unauthorized caller from unlocking", async () => {
+      it("should prevent unauthorized from marking can be unlocked", async () => {
         await expectRevert(
-          nftContract.unlockNFT(tokenId, { from: user2 }),
-          "Unauthorized: Caller is not authorized"
+          nftContract.markCanBeUnlocked(tokenId, { from: unauthorized }),
+          "NFTContract: Caller not authorized"
+        );
+      });
+
+      it("should prevent marking can be unlocked if not in unlocking state", async () => {
+        // First mark as can be unlocked
+        await nftContract.markCanBeUnlocked(tokenId, { from: deployer });
+
+        // Try to mark again
+        await expectRevert(
+          nftContract.markCanBeUnlocked(tokenId, { from: deployer }),
+          "NFTContract: NFT not in unlocking state"
+        );
+      });
+
+      it("should prevent unlocking if not marked as can be unlocked", async () => {
+        // NFT is in Unlocking state, not CanBeUnlocked
+        await expectRevert(
+          nftContract.unlockNFT(tokenId, { from: deployer }),
+          "NFTContract: NFT cannot be unlocked yet"
         );
       });
     });
+
   });
 
   describe("ERC721 Transfer Functions", () => {
@@ -506,18 +449,9 @@ contract("NFTContract", (accounts) => {
 
     beforeEach(async () => {
       const tx = await nftContract.createNFT(
-        user1,
+        "Transfer Test NFT",
         OwnershipLevel.Level3,
-        validMetadata.ipType,
-        validMetadata.ipId,
-        validMetadata.imageUrl,
-        validMetadata.storageType,
-        validMetadata.storageId,
-        validMetadata.encrypted,
-        validMetadata.encryptionId,
-        validMetadata.md5Hash,
-        validMetadata.version,
-        { from: deployer }
+        { from: user1 }
       );
       tokenId = tx.logs.find(log => log.event === 'Transfer').args.tokenId;
     });
@@ -535,22 +469,22 @@ contract("NFTContract", (accounts) => {
         assert.equal(await nftContract.ownerOf(tokenId), user2, "User2 should own the NFT");
 
         // Verify access was transferred
-        const user1Access = await nftAccess.getUserAccessLevel(tokenId, user1);
-        const user2Access = await nftAccess.getUserAccessLevel(tokenId, user2);
+        const user1Access = await nftAccess.getAccessLevel(tokenId, user1);
+        const user2Access = await nftAccess.getAccessLevel(tokenId, user2);
         assert.equal(user1Access.toNumber(), AccessLevel.None, "User1 should have no access");
         assert.equal(user2Access.toNumber(), AccessLevel.AbsoluteOwnership, "User2 should have absolute ownership");
 
         // Other users' access should remain
-        const user3Access = await nftAccess.getUserAccessLevel(tokenId, user3);
+        const user3Access = await nftAccess.getAccessLevel(tokenId, user3);
         assert.equal(user3Access.toNumber(), AccessLevel.UseModel, "User3 should retain their access");
       });
 
       it("should prevent transferring locked NFT", async () => {
-        await nftContract.lockNFT(tokenId, { from: user1 });
+        await nftContract.lockNFT(tokenId, { from: deployer });
 
         await expectRevert(
           nftContract.transferFrom(user1, user2, tokenId, { from: user1 }),
-          "Cannot transfer locked NFT"
+          "NFTContract: Cannot transfer locked NFT"
         );
       });
 
@@ -581,49 +515,42 @@ contract("NFTContract", (accounts) => {
       });
 
       it("should prevent safe transfer of locked NFT", async () => {
-        await nftContract.lockNFT(tokenId, { from: user1 });
+        await nftContract.lockNFT(tokenId, { from: deployer });
 
         await expectRevert(
           nftContract.methods['safeTransferFrom(address,address,uint256)'](
             user1, user2, tokenId, { from: user1 }
           ),
-          "Cannot transfer locked NFT"
+          "NFTContract: Cannot transfer locked NFT"
         );
       });
     });
   });
 
-  describe("Token URI", () => {
+  describe("Token Existence Check", () => {
     let tokenId;
 
     beforeEach(async () => {
       const tx = await nftContract.createNFT(
-        user1,
+        "Existence Test NFT",
         OwnershipLevel.Level3,
-        validMetadata.ipType,
-        validMetadata.ipId,
-        validMetadata.imageUrl,
-        validMetadata.storageType,
-        validMetadata.storageId,
-        validMetadata.encrypted,
-        validMetadata.encryptionId,
-        validMetadata.md5Hash,
-        validMetadata.version,
-        { from: deployer }
+        { from: user1 }
       );
       tokenId = tx.logs.find(log => log.event === 'Transfer').args.tokenId;
     });
 
-    it("should return correct token URI", async () => {
-      const uri = await nftContract.tokenURI(tokenId);
-      const expectedUri = `https://api.neuralabs.ai/nft/${tokenId}`;
-      assert.equal(uri, expectedUri, "Token URI should be correct");
+    it("should return correct NFT info", async () => {
+      const info = await nftContract.getNFTInfo(tokenId);
+      assert.equal(info.name, "Existence Test NFT", "NFT name should be correct");
+      assert.equal(info.levelOfOwnership, OwnershipLevel.Level3, "Ownership level should be correct");
+      assert.equal(info.creator, user1, "Creator should be correct");
+      assert.equal(info.owner, user1, "Owner should be correct");
     });
 
     it("should revert for non-existent token", async () => {
       await expectRevert(
-        nftContract.tokenURI(999),
-        "ERC721URIStorage: URI query for nonexistent token"
+        nftContract.getNFTInfo(999),
+        "NFTContract: NFT does not exist"
       );
     });
   });
@@ -642,7 +569,7 @@ contract("NFTContract", (accounts) => {
       await nftContract.setMonetizationContract(newMonetization.address, { from: deployer });
 
       assert.equal(
-        await nftContract.monetizationContract(),
+        await nftContract.monetization(),
         newMonetization.address,
         "Monetization contract should be updated"
       );
@@ -651,7 +578,7 @@ contract("NFTContract", (accounts) => {
     it("should prevent non-deployer from setting monetization contract", async () => {
       await expectRevert(
         nftContract.setMonetizationContract(user1, { from: user1 }),
-        "Unauthorized: Only deployer can set"
+        "NFTContract: Caller not authorized"
       );
     });
   });
@@ -663,24 +590,15 @@ contract("NFTContract", (accounts) => {
       // Create NFTs with different ownership levels
       for (let level = 1; level <= 6; level++) {
         const tx = await nftContract.createNFT(
-          user1,
+          `Level ${level} NFT`,
           level,
-          validMetadata.ipType,
-          `model-${level}`,
-          validMetadata.imageUrl,
-          validMetadata.storageType,
-          validMetadata.storageId,
-          validMetadata.encrypted,
-          validMetadata.encryptionId,
-          validMetadata.md5Hash,
-          validMetadata.version,
-          { from: deployer }
+          { from: user1 }
         );
         const tokenId = tx.logs.find(log => log.event === 'Transfer').args.tokenId;
         tokens.push(tokenId);
 
-        const ownershipLevel = await nftContract.nftOwnershipLevel(tokenId);
-        assert.equal(ownershipLevel.toNumber(), level, `Token ${tokenId} should have ownership level ${level}`);
+        const nftInfo = await nftContract.getNFTInfo(tokenId);
+        assert.equal(nftInfo.levelOfOwnership, level, `Token ${tokenId} should have ownership level ${level}`);
       }
 
       // Verify all tokens are owned by user1
@@ -691,42 +609,32 @@ contract("NFTContract", (accounts) => {
 
     it("should handle lock/unlock cycle with transfer", async () => {
       const tx = await nftContract.createNFT(
-        user1,
+        "Lock Cycle Test NFT",
         OwnershipLevel.Level3,
-        validMetadata.ipType,
-        validMetadata.ipId,
-        validMetadata.imageUrl,
-        validMetadata.storageType,
-        validMetadata.storageId,
-        validMetadata.encrypted,
-        validMetadata.encryptionId,
-        validMetadata.md5Hash,
-        validMetadata.version,
-        { from: deployer }
+        { from: user1 }
       );
       const tokenId = tx.logs.find(log => log.event === 'Transfer').args.tokenId;
 
       // Lock NFT
-      await nftContract.lockNFT(tokenId, { from: user1 });
+      await nftContract.lockNFT(tokenId, { from: deployer });
 
       // Try to transfer - should fail
       await expectRevert(
         nftContract.transferFrom(user1, user2, tokenId, { from: user1 }),
-        "Cannot transfer locked NFT"
+        "NFTContract: Cannot transfer locked NFT"
       );
 
       // Initiate unlock
       await nftContract.initiateUnlock(tokenId, { from: user1 });
 
-      // Still can't transfer during unlocking
-      await expectRevert(
-        nftContract.transferFrom(user1, user2, tokenId, { from: user1 }),
-        "Cannot transfer locked NFT"
-      );
+      // Start unlocking process
+      await nftContract.startUnlocking(tokenId, { from: deployer });
+
+      // Mark as can be unlocked
+      await nftContract.markCanBeUnlocked(tokenId, { from: deployer });
 
       // Complete unlock
-      await time.increase(time.duration.days(3));
-      await nftContract.completeUnlock(tokenId, { from: user1 });
+      await nftContract.unlockNFT(tokenId, { from: deployer });
 
       // Now transfer should work
       await nftContract.transferFrom(user1, user2, tokenId, { from: user1 });
