@@ -89,6 +89,12 @@ contract("Monetization", (accounts) => {
     await delay(100);
     await masterAccess.grantAccess(nftMetadata.address, nftOwner, { from: deployer });
     await delay(100);
+    // Grant monetization access to NFTAccessControl
+    await masterAccess.grantAccess(nftAccess.address, monetization.address, { from: deployer });
+    await delay(100);
+    // Grant monetization access to NFTMetadata
+    await masterAccess.grantAccess(nftMetadata.address, monetization.address, { from: deployer });
+    await delay(100);
     
     // Set monetization in NFTContract and configure
     await nftContract.setMonetizationContract(monetization.address, { from: deployer });
@@ -190,8 +196,10 @@ contract("Monetization", (accounts) => {
     let noticeTime;
 
     beforeEach(async () => {
-      // Set commitment time 90 days in future
-      futureCommitmentTime = Math.floor(Date.now() / 1000) + (90 * SECONDS_IN_DAY);
+      // Get current blockchain timestamp
+      const block = await web3.eth.getBlock('latest');
+      // Set commitment time 90 days in future from blockchain time
+      futureCommitmentTime = block.timestamp + (90 * SECONDS_IN_DAY);
       noticeTime = 30 * SECONDS_IN_DAY;
       
       // Set commitment and notice first
@@ -238,14 +246,13 @@ contract("Monetization", (accounts) => {
         
         // Set metadata
         const metadata = {
+          image: "https://example.com/image2.png",
           intellectual_property_type: "model",
-          intellectual_property_id: "model-456",
-          image_url: "https://example.com/image2.png",
-          storage_type: "neuralabs",
-          storage_id: "storage-456",
           encrypted: false,
           encryption_id: "",
-          md5_hash: "d41d8cd98f00b204e9800998ecf8427e",
+          intellectual_property_id: "model-456",
+          intellectual_property_storage: "neuralabs",
+          md5: "d41d8cd98f00b204e9800998ecf8427e",
           version: "1.0.0"
         };
         await nftMetadata.createMetadata(newTokenId, metadata, { from: nftOwner });
@@ -303,8 +310,10 @@ contract("Monetization", (accounts) => {
     let noticeTime;
 
     beforeEach(async () => {
-      // Set commitment time 90 days in future
-      futureCommitmentTime = Math.floor(Date.now() / 1000) + (90 * SECONDS_IN_DAY);
+      // Get current blockchain timestamp
+      const block = await web3.eth.getBlock('latest');
+      // Set commitment time 90 days in future from blockchain time
+      futureCommitmentTime = block.timestamp + (90 * SECONDS_IN_DAY);
       noticeTime = 30 * SECONDS_IN_DAY;
       
       // Set commitment and notice first
@@ -363,14 +372,13 @@ contract("Monetization", (accounts) => {
         
         // Set metadata with data type
         const dataMetadata = {
+          image: validMetadata.imageUrl,
           intellectual_property_type: "data",
-          intellectual_property_id: "data-123",
-          image_url: validMetadata.imageUrl,
-          storage_type: validMetadata.storageType,
-          storage_id: validMetadata.storageId,
           encrypted: validMetadata.encrypted,
           encryption_id: validMetadata.encryptionId,
-          md5_hash: validMetadata.md5Hash,
+          intellectual_property_id: "data-123",
+          intellectual_property_storage: validMetadata.storageType,
+          md5: validMetadata.md5Hash,
           version: validMetadata.version
         };
         await nftMetadata.createMetadata(dataTokenId, dataMetadata, { from: nftOwner });
@@ -422,12 +430,13 @@ contract("Monetization", (accounts) => {
         await masterAccess.grantAccess(aiServiceAgreement.address, monetization.address, { from: deployer });
         
         // Record a subscription sale - using correct parameters
+        // Grant monetization contract permission to call AIServiceAgreement
         await aiServiceAgreement.recordSubscriptionSale(
           tokenId,
           buyer,
           cost,
           time * SECONDS_IN_DAY, // Convert days to seconds
-          { from: monetization.address }
+          { from: deployer }
         );
 
         await expectRevert(
@@ -446,8 +455,10 @@ contract("Monetization", (accounts) => {
     let noticeTime;
 
     beforeEach(async () => {
-      // Set commitment time 90 days in future
-      futureCommitmentTime = Math.floor(Date.now() / 1000) + (90 * SECONDS_IN_DAY);
+      // Get current blockchain timestamp
+      const block = await web3.eth.getBlock('latest');
+      // Set commitment time 90 days in future from blockchain time
+      futureCommitmentTime = block.timestamp + (90 * SECONDS_IN_DAY);
       noticeTime = 30 * SECONDS_IN_DAY;
       
       // Set commitment and notice first
@@ -603,6 +614,8 @@ contract("Monetization", (accounts) => {
           ownershipLevel,
           { from: nftOwner }
         );
+        // Approve Monetization contract to transfer NFT
+        await nftContract.approve(monetization.address, tokenId, { from: nftOwner });
       });
 
       it("should transfer ownership with payment", async () => {
@@ -649,7 +662,8 @@ contract("Monetization", (accounts) => {
       
       it("should prevent buying locked NFT", async () => {
         // Enable pay-per-use to lock the NFT
-        const futureCommitmentTime = Math.floor(Date.now() / 1000) + (90 * SECONDS_IN_DAY);
+        const block = await web3.eth.getBlock('latest');
+        const futureCommitmentTime = block.timestamp + (90 * SECONDS_IN_DAY);
         const noticeTime = 30 * SECONDS_IN_DAY;
         await monetization.setCommitmentTime(tokenId, futureCommitmentTime, { from: nftOwner });
         await monetization.setNoticeBeforeUnlockCommitment(tokenId, noticeTime, { from: nftOwner });
@@ -708,14 +722,13 @@ contract("Monetization", (accounts) => {
         
         // Set metadata with data type
         const dataMetadata = {
+          image: validMetadata.imageUrl,
           intellectual_property_type: "data",
-          intellectual_property_id: "data-123",
-          image_url: validMetadata.imageUrl,
-          storage_type: validMetadata.storageType,
-          storage_id: validMetadata.storageId,
           encrypted: validMetadata.encrypted,
           encryption_id: validMetadata.encryptionId,
-          md5_hash: validMetadata.md5Hash,
+          intellectual_property_id: "data-123",
+          intellectual_property_storage: validMetadata.storageType,
+          md5: validMetadata.md5Hash,
           version: validMetadata.version
         };
         await nftMetadata.createMetadata(dataTokenId, dataMetadata, { from: nftOwner });
@@ -770,7 +783,8 @@ contract("Monetization", (accounts) => {
 
   describe("Batch Monetization Configuration", () => {
     it("should set all monetization options at once", async () => {
-      const commitmentTimestamp = Math.floor(Date.now() / 1000) + (90 * SECONDS_IN_DAY);
+      const block = await web3.eth.getBlock('latest');
+      const commitmentTimestamp = block.timestamp + (90 * SECONDS_IN_DAY);
       const noticeSeconds = 30 * SECONDS_IN_DAY;
       
       // Structs for setAllMonetizationOptions
@@ -850,7 +864,8 @@ contract("Monetization", (accounts) => {
     let noticeTime;
     
     beforeEach(async () => {
-      futureCommitmentTime = Math.floor(Date.now() / 1000) + (90 * SECONDS_IN_DAY);
+      const block = await web3.eth.getBlock('latest');
+      futureCommitmentTime = block.timestamp + (90 * SECONDS_IN_DAY);
       noticeTime = 30 * SECONDS_IN_DAY;
       
       await monetization.setCommitmentTime(tokenId, futureCommitmentTime, { from: nftOwner });
@@ -878,7 +893,8 @@ contract("Monetization", (accounts) => {
       await monetization.enablePayPerUse(tokenId, 100, buyer, { from: nftOwner });
       
       // Move time past commitment
-      await time.increase(futureCommitmentTime - Math.floor(Date.now() / 1000) + 1);
+      const currentBlock = await web3.eth.getBlock('latest');
+      await time.increase(futureCommitmentTime - currentBlock.timestamp + 1);
       
       // Start unlock process
       await monetization.startUnlockProcess(tokenId, { from: nftOwner });
@@ -911,7 +927,7 @@ contract("Monetization", (accounts) => {
         buyer,
         web3.utils.toWei('1', 'ether'),
         30 * SECONDS_IN_DAY,
-        { from: monetization.address }
+        { from: deployer }
       );
 
       // Try to disable subscription - should fail
@@ -925,7 +941,8 @@ contract("Monetization", (accounts) => {
   describe("Edge Cases and Security", () => {
     it("should handle zero prices gracefully", async () => {
       // Set commitment times first
-      const futureCommitmentTime = Math.floor(Date.now() / 1000) + (90 * SECONDS_IN_DAY);
+      const block = await web3.eth.getBlock('latest');
+      const futureCommitmentTime = block.timestamp + (90 * SECONDS_IN_DAY);
       const noticeTime = 30 * SECONDS_IN_DAY;
       await monetization.setCommitmentTime(tokenId, futureCommitmentTime, { from: nftOwner });
       await monetization.setNoticeBeforeUnlockCommitment(tokenId, noticeTime, { from: nftOwner });
@@ -955,6 +972,9 @@ contract("Monetization", (accounts) => {
         { from: nftOwner }
       );
       
+      // Approve Monetization contract to transfer NFT
+      await nftContract.approve(monetization.address, tokenId, { from: nftOwner });
+      
       const tx = await monetization.buyOwnership(tokenId, { 
         from: buyer, 
         value: web3.utils.toWei('1', 'ether') 
@@ -965,7 +985,8 @@ contract("Monetization", (accounts) => {
 
     it("should handle payment failures gracefully", async () => {
       // Set commitment times first
-      const futureCommitmentTime = Math.floor(Date.now() / 1000) + (90 * SECONDS_IN_DAY);
+      const block = await web3.eth.getBlock('latest');
+      const futureCommitmentTime = block.timestamp + (90 * SECONDS_IN_DAY);
       const noticeTime = 30 * SECONDS_IN_DAY;
       await monetization.setCommitmentTime(tokenId, futureCommitmentTime, { from: nftOwner });
       await monetization.setNoticeBeforeUnlockCommitment(tokenId, noticeTime, { from: nftOwner });
