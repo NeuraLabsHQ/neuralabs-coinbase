@@ -28,6 +28,9 @@ parameter_schema_structure:
   chain_id:
     type: integer
     description: "Chain ID (e.g., 84532 for Base Sepolia, 1 for Ethereum mainnet)"
+  max_gas:
+    type: integer
+    description: "Maximum gas limit for the transaction (default: 300000)"
 parameters:
   node_url: ''
   contract_address: ''
@@ -35,6 +38,7 @@ parameters:
   function_name: ''
   function_args: []
   chain_id: 84532
+  max_gas: 300000
 processing_message: Building transaction...
 tags:
 - blockchain

@@ -403,13 +403,18 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
                     
                     {/* Show outputs if available and step is completed */}
                     {step.status === 'completed' && step.outputs && Object.keys(step.outputs).length > 0 && (
-                      <Box bg={sourceBgColor} p={isMobile ? 2 : 3} borderRadius="md" mt={2}>
+                      <Box bg={sourceBgColor} p={isMobile ? 2 : 3} borderRadius="md" mt={2} overflowX="auto">
                         {Object.entries(step.outputs).map(([key, value]) => (
                           <Box key={key} mb={2}>
                             <Text fontSize="xs" fontWeight="bold" color={secondaryColor} mb={1}>
                               {key}:
                             </Text>
-                            <Text fontSize="sm" whiteSpace="pre-wrap">
+                            <Text 
+                              fontSize="sm" 
+                              whiteSpace="pre-wrap"
+                              wordBreak="break-word"
+                              overflowWrap="break-word"
+                            >
                               {renderOutput(value)}
                             </Text>
                           </Box>

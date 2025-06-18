@@ -56,6 +56,7 @@ class BuildTransactionJSON(ElementBase):
         self.contract_abi = params.get("contract_abi", [])
         self.function_name = params.get("function_name", "")
         self.function_args = params.get("function_args", [])
+        self.max_gas = params.get("max_gas", 300000)
         
         # Handle contract_abi if it's a JSON string
         if isinstance(self.contract_abi, str):
@@ -176,6 +177,9 @@ class BuildTransactionJSON(ElementBase):
             tx["to"] = to_address
         if gas:
             tx["gas"] = hex(int(gas)) if isinstance(gas, (int, str)) and not str(gas).startswith('0x') else gas
+        else:
+            # Use max_gas parameter if no gas is provided
+            tx["gas"] = hex(self.max_gas)
         if gas_price:
             tx["gasPrice"] = hex(int(gas_price)) if isinstance(gas_price, (int, str)) and not str(gas_price).startswith('0x') else gas_price
         if nonce is not None:
@@ -189,7 +193,9 @@ class BuildTransactionJSON(ElementBase):
         else:
             # Contract interaction
             tx["to"] = self.contract_address
-            tx["value"] = self._to_hex_value(value)  # Usually "0x0" for contract calls
+            # For contract calls, value is usually 0 unless it's a payable function
+            # The actual token amount is passed as a function parameter
+            tx["value"] = "0x0"
             
             # Encode function call data
             if HAS_WEB3 and self.contract_abi:
@@ -197,6 +203,9 @@ class BuildTransactionJSON(ElementBase):
                     tx["data"] = self._encode_function_data(inputs)
                 except Exception as e:
                     logger.error(f"Error encoding function data: {e}")
+                    logger.error(f"Function name: {self.function_name}")
+                    logger.error(f"Contract ABI: {self.contract_abi}")
+                    logger.error(f"Inputs: {inputs}")
                     # Fallback to empty data
                     tx["data"] = "0x"
             else:
@@ -218,7 +227,20 @@ class BuildTransactionJSON(ElementBase):
         if not HAS_WEB3:
             raise ValueError("web3 is required for encoding function data")
         
-        w3 = Web3()
+        # Create Web3 instance with provider if available
+        if self.node_url:
+            if self.node_url.startswith("http"):
+                from web3 import HTTPProvider
+                w3 = Web3(HTTPProvider(self.node_url))
+            elif self.node_url.startswith("ws"):
+                from web3 import WebsocketProvider
+                w3 = Web3(WebsocketProvider(self.node_url))
+            else:
+                # Fallback to default
+                w3 = Web3()
+        else:
+            # Use default provider
+            w3 = Web3()
         
         # Find all functions with the given name (handles overloading)
         matching_functions = []
@@ -261,7 +283,12 @@ class BuildTransactionJSON(ElementBase):
                 if param_type == "address":
                     value = Web3.to_checksum_address(str(value))
                 elif param_type.startswith("uint") or param_type.startswith("int"):
-                    value = int(value)
+                    # Convert to integer - the user should provide the value in the smallest unit
+                    # For tokens, this means the user should provide the amount in wei/smallest unit
+                    if isinstance(value, (int, float)):
+                        value = int(value)
+                    else:
+                        value = int(value)
                 elif param_type == "bool":
                     value = bool(value)
                 elif param_type.startswith("bytes"):
@@ -281,7 +308,8 @@ class BuildTransactionJSON(ElementBase):
         
         # Encode the function call
         function = getattr(contract.functions, self.function_name)
-        return function(*args).build_transaction({"gas": 0})["data"]
+        # Just encode the function data without gas estimation
+        return function(*args)._encode_transaction_data()
     
     def _match_function_by_schema(self, functions: List[Dict]) -> Dict:
         """Match the correct overloaded function based on input schema.

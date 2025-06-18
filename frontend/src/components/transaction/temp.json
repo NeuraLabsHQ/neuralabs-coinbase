@@ -1,7 +1,7 @@
 {
   "contract_example": {
     "description": "Example using a test ERC20 token contract on Base Sepolia",
-    "contract_address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    "contract_address": "dio",
     "contract_name": "USDC (Base Sepolia Test Token)",
     "chain_id": 84532,
     "node_url": "https://sepolia.base.org",
