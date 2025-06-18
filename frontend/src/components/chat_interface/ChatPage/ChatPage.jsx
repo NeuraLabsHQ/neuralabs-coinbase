@@ -32,6 +32,7 @@ const ChatPage = () => {
   // Store thinking states for each message
   const [messageThinkingStates, setMessageThinkingStates] = useState({});
   const [activeMessageId, setActiveMessageId] = useState(null);
+  const [messageTransactions, setMessageTransactions] = useState({});
   
   const websocketRef = useRef(null);
   const timerRef = useRef(null);
@@ -274,6 +275,7 @@ const ChatPage = () => {
       const finalText = data.text_output || messageBuffer;
       console.log('Final output for message:', messageId, 'using buffer:', finalText.substring(0, 100) + '...');
       
+      
       // First check for </think> tag and extract content after it
       let processedContent = finalText;
       const thinkEndMatch = finalText.match(/<\/think>\s*([\s\S]*)/);
@@ -307,6 +309,11 @@ const ChatPage = () => {
           parentMessageId: messageId // Link to the user message
         };
         setMessages(prev => [...prev, assistantMessage]);
+        
+        // If there's a proposed transaction, associate it with the assistant message
+        if (proposedTransaction) {
+          handleTransactionDetected(assistantMessage.id, proposedTransaction);
+        }
       }
     } else if (type === 'flow_completed' || type === 'flow_error') {
       // Stop timer and thinking UI for flow completion or error
@@ -367,6 +374,14 @@ const ChatPage = () => {
     setIsLanding(true);
     setSelectedChatId(null);
     setMessages([]);
+  };
+
+  const handleTransactionDetected = (messageId, transaction) => {
+    console.log('Transaction detected for message:', messageId, transaction);
+    setMessageTransactions(prev => ({
+      ...prev,
+      [messageId]: transaction
+    }));
   };
 
   const handleChatSelect = (chatId) => {
@@ -554,6 +569,8 @@ const ChatPage = () => {
           isLanding={isLanding}
           thinkingState={thinkingState}
           messageThinkingStates={messageThinkingStates}
+          messageTransactions={messageTransactions}
+          onTransactionDetected={handleTransactionDetected}
           onToggleColorMode={toggleColorMode}
           isMobile={isMobile}
         />

@@ -388,13 +388,13 @@ const AccessHomePage = ({ onSelectFlow }) => {
     />,
     <TemplateCard
       key={1}
-      title="Read SUI Balance"
+      title="Read Base Balance"
       imageUrl={templateImage1}
       onClick={() => console.log("Selected template 1")}
     />,
     <TemplateCard
       key={2}
-      title="X-Twitter Post API "
+      title="Read Smart Contract "
       imageUrl={templateImage1}
       onClick={() => console.log("Selected template 2")}
     />,

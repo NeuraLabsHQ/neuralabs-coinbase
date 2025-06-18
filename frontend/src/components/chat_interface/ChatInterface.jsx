@@ -29,6 +29,7 @@ import {
 // Import the separate ThinkingUI component
 import ThinkingUI from "./ThinkingUI/ThinkingUI";
 import MarkdownRenderer from "./MarkdownRenderer";
+import TransactionButton from "../transaction/TransactionButton";
 
 // Import colors
 import { useColorModeValue } from "@chakra-ui/react";
@@ -51,7 +52,7 @@ const AI_MODELS = [
 //   { id: 'code', name: 'Code', icon: FiCode }
 // ];
 
-const Message = ({ message, isMobile }) => {
+const Message = ({ message, isMobile, transaction }) => {
   const isUser = message.role === "user";
 
   const userMessageBg = useColorModeValue(colors.chat.userMessageBg.light, colors.chat.userMessageBg.dark);
@@ -78,40 +79,57 @@ const Message = ({ message, isMobile }) => {
       </Flex>
 
       {!isUser && (
-        <HStack mt={2} spacing={2}>
-          <IconButton
-            icon={<FiThumbsUp />}
-            aria-label="Thumbs up"
-            size="sm"
-            variant="ghost"
-            color={iconColor}
-            _hover={{ color: textColor }}
-          />
-          <IconButton
-            icon={<FiThumbsDown />}
-            aria-label="Thumbs down"
-            size="sm"
-            variant="ghost"
-            color={iconColor}
-            _hover={{ color: textColor }}
-          />
-          <IconButton
-            icon={<FiCode />}
-            aria-label="Copy code"
-            size="sm"
-            variant="ghost"
-            color=  {iconColor}
-            _hover={{ color: textColor }}
-          />
-          <IconButton
-            icon={<FiPaperclip />}
-            aria-label="Save"
-            size="sm"
-            variant="ghost"
-            color=  {iconColor}
-            _hover={{ color: textColor }}
-          />
-        </HStack>
+        <VStack align="start" mt={2} spacing={2}>
+          <HStack spacing={2}>
+            <IconButton
+              icon={<FiThumbsUp />}
+              aria-label="Thumbs up"
+              size="sm"
+              variant="ghost"
+              color={iconColor}
+              _hover={{ color: textColor }}
+            />
+            <IconButton
+              icon={<FiThumbsDown />}
+              aria-label="Thumbs down"
+              size="sm"
+              variant="ghost"
+              color={iconColor}
+              _hover={{ color: textColor }}
+            />
+            <IconButton
+              icon={<FiCode />}
+              aria-label="Copy code"
+              size="sm"
+              variant="ghost"
+              color=  {iconColor}
+              _hover={{ color: textColor }}
+            />
+            <IconButton
+              icon={<FiPaperclip />}
+              aria-label="Save"
+              size="sm"
+              variant="ghost"
+              color=  {iconColor}
+              _hover={{ color: textColor }}
+            />
+          </HStack>
+          
+          {/* Transaction Button */}
+          {transaction && (
+            <Box mt={2}>
+              <TransactionButton 
+                transaction={transaction}
+                onSuccess={(result) => {
+                  console.log('Transaction successful:', result);
+                }}
+                onError={(error) => {
+                  console.error('Transaction failed:', error);
+                }}
+              />
+            </Box>
+          )}
+        </VStack>
       )}
     </Flex>
   );
@@ -123,6 +141,8 @@ const ChatInterface = ({
   isLanding = false,
   thinkingState = { isThinking: false },
   messageThinkingStates = {},
+  messageTransactions = {},
+  onTransactionDetected,
   onToggleColorMode,
   isMobile = false,
 }) => {
@@ -351,7 +371,12 @@ const handleSendMessage = () => {
   {messages.map((message, index) => {
     // First render the current message
     const messageElement = (
-      <Message key={message.id} message={message} isMobile={isMobile} />
+      <Message 
+        key={message.id} 
+        message={message} 
+        isMobile={isMobile}
+        transaction={messageTransactions[message.id]}
+      />
     );
     
     // Check if this is the very last user message in the entire conversation
@@ -371,7 +396,18 @@ const handleSendMessage = () => {
             thinkingState={messageThinkingState} 
             query={message.content} 
             shouldPersist={true}
-            isMobile={isMobile} 
+            isMobile={isMobile}
+            onTransactionDetected={(transaction) => {
+              // Find the next assistant message that follows this user message
+              const nextAssistantMessageIndex = messages.findIndex((msg, idx) => 
+                idx > index && msg.role === 'assistant' && msg.parentMessageId === message.id
+              );
+              
+              if (nextAssistantMessageIndex !== -1) {
+                const assistantMessage = messages[nextAssistantMessageIndex];
+                onTransactionDetected(assistantMessage.id, transaction);
+              }
+            }}
           />
         </Fragment>
       );

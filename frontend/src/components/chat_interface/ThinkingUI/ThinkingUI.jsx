@@ -22,7 +22,7 @@ import thinkingStepTemplates from "../../../utils/thinkingStepTemplates.json";
 import thinkresponse from "../../../utils/thinkresponse.json";
 
 
-const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile: isMobileProp }) => {
+const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile: isMobileProp, onTransactionDetected }) => {
   const { isThinking, steps = [], currentStep, searchResults, timeElapsed, onTypingComplete, executionSteps = [] } = thinkingState;
   
   console.log('ThinkingUI render - isThinking:', isThinking, 'executionSteps:', executionSteps.length, 'thinkingState:', thinkingState);
@@ -69,6 +69,36 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
       scrollableRef.current.scrollTop = scrollableRef.current.scrollHeight;
     }
   }, [executionSteps]);
+
+  // Track detected transactions to avoid duplicate calls
+  const [detectedTransactions, setDetectedTransactions] = useState(new Set());
+  
+  // Check for proposed transactions in end blocks
+  useEffect(() => {
+    if (onTransactionDetected && executionSteps.length > 0) {
+      // Look for completed end blocks with proposed_transaction
+      const endBlockWithTransaction = executionSteps.find(step => 
+        step.elementType === 'end' && 
+        step.status === 'completed' && 
+        step.outputs?.proposed_transaction && 
+        step.outputs.proposed_transaction !== null
+      );
+      
+      if (endBlockWithTransaction) {
+        // Create a unique key for this transaction to avoid duplicates
+        const txKey = JSON.stringify(endBlockWithTransaction.outputs.proposed_transaction);
+        
+        // Only call onTransactionDetected if we haven't seen this transaction before
+        if (!detectedTransactions.has(txKey)) {
+          console.log('Detected new proposed transaction in end block:', endBlockWithTransaction.outputs.proposed_transaction);
+          onTransactionDetected(endBlockWithTransaction.outputs.proposed_transaction);
+          
+          // Add to detected set
+          setDetectedTransactions(prev => new Set(prev).add(txKey));
+        }
+      }
+    }
+  }, [executionSteps, onTransactionDetected, detectedTransactions]);
 
   // useEffect(() => {
   //   if (currentStep && currentStep !== previousStep) {

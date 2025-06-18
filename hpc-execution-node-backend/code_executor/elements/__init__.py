@@ -48,7 +48,7 @@ element_registry = {
     "metadata": Metadata,
     "constants": Constants,
     "read_blockchain_data": ReadBlockchainData,
-    "build_transaction_json": BuildTransactionJSON,
+    "buildtransaction": BuildTransactionJSON,
     "selector": Selector,
     "merger": Merger,
     "random_generator": RandomGenerator,
