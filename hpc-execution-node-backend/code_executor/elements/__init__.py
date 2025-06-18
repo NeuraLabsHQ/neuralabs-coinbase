@@ -61,5 +61,5 @@ element_registry = {
     "fetchbalance": CoinbaseFetchBalance,
     "FetchBalance": CoinbaseFetchBalance,  # Map YAML type to Coinbase implementation
     "coinbase_read_contract": CoinbaseReadContract,
-    "read_contract": CoinbaseReadContract  # Map common name to Coinbase implementation
+    "readcontract": CoinbaseReadContract  # Map common name to Coinbase implementation
 }
