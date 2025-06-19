@@ -12,5 +12,8 @@ pydantic-settings==2.0.3
 requests==2.31.0
 aiohttp
 web3==6.11.0
+eth-account==0.10.0
+eth-typing==4.0.0
+hexbytes==0.3.1
 cryptography>=3.4.8
 websockets==12.0
