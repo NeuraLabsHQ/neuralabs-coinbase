@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useSignPersonalMessage } from '@mysten/dapp-kit'
+// import { useSignPersonalMessage } from '@mysten/dapp-kit'
 import toast from 'react-hot-toast'
 import { INTERACTIVE_PUBLISH_STEPS } from '../functional/journeyConfig'
 

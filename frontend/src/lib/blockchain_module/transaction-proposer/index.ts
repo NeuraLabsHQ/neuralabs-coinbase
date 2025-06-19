@@ -1,7 +1,7 @@
 // Transaction proposer module for building and sending transactions
 
-import { Transaction } from '@mysten/sui/transactions';
-import { SuiClient } from '@mysten/sui/client';
+// import { Transaction } from '@mysten/sui/transactions';
+// import { SuiClient } from '@mysten/sui/client';
 import { TransactionResult } from '../types';
 import { SUI_CONSTANTS } from '../utils/constants';
 import { isTransactionSuccessful, parseError } from '../utils/helpers';

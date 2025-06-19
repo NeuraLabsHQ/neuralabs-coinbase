@@ -1,5 +1,5 @@
 import { Box, Flex, Text, useColorModeValue } from '@chakra-ui/react';
-import SUIToWALConverter from '../../../lib/blockchain_module/pages/SUIToWALConverter';
+// import SUIToWALConverter from '../../../lib/blockchain_module/pages/SUIToWALConverter';
 import colors from '../../../color';
 import { useWallet } from '../../../contexts/WalletContextProvider';
 
@@ -30,7 +30,7 @@ const SwapPage = () => {
           p={8}
           boxShadow="sm"
         >
-          {isConnected ? (
+          {/* {isConnected ? (
             <SUIToWALConverter />
           ) : (
             <Flex 
@@ -47,7 +47,7 @@ const SwapPage = () => {
                 You need to connect a wallet to swap tokens.
               </Text>
             </Flex>
-          )}
+          )} */}
         </Box>
       </Box>
     </Flex>
