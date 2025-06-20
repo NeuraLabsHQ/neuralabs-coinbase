@@ -12,6 +12,7 @@ from .zk_login import router as zk_login_router
 from .flowbuilder import router as flowbuilder_router
 from .chat import router as chat_router
 from .conversations import router as conversations_router
+from .conversations_v2 import router as conversations_v2_router
 
 # Create main router
 router = APIRouter()
@@ -25,3 +26,4 @@ router.include_router(blockchain_router, prefix="/set-blockchain-data", tags=["b
 router.include_router(dashboard_router, prefix="/dashboard", tags=["dashboard"])
 router.include_router(chat_router, prefix="/chat", tags=["chat"])
 router.include_router(conversations_router, prefix="/conversations", tags=["conversations"])
+router.include_router(conversations_v2_router, prefix="/conversations/v2", tags=["conversations-v2"])

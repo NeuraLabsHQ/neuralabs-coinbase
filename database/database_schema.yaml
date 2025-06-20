@@ -253,7 +253,13 @@ postgres:
           references: AGENT.agent_id
           nullable: true
           description: "Optional reference to an agent"
+        conversation_content:
+          type: JSONB
+          default: '{"messages": []}'
+          description: "Stores all messages, thinking states, and transactions as a single JSON document"
     
+    # Note: MESSAGES table is deprecated in favor of conversation_content JSON in CONVERSATIONS table
+    # Kept for backward compatibility during migration
     MESSAGES:
       columns:
         message_id:

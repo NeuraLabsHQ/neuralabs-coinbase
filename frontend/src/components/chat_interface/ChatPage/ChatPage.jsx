@@ -5,7 +5,7 @@ import { useWallet } from '../../../contexts/WalletContextProvider';
 import useUiColors from '../../../utils/uiColors';
 import ChatHistoryPanel from '../ChatHistoryPanel/ChatHistoryPanel';
 import ChatInterface from '../ChatInterface';
-import chatService from '../../../services/chatService';
+import chatService from '../../../services/chatServiceV2';
 
 const ChatPage = () => {
   const colors = useUiColors();
@@ -238,6 +238,7 @@ const ChatPage = () => {
     // Update function that updates both current state and message-specific state
     const updateStates = (updater) => {
       console.log('Updating states for message:', messageId, 'event type:', type);
+      console.log('Current messageThinkingStates keys:', Object.keys(messageThinkingStates));
       setThinkingState(updater);
       if (messageId) {
         setMessageThinkingStates(prev => {
@@ -246,7 +247,7 @@ const ChatPage = () => {
           console.log('Message state update:', messageId, 'new state:', newState);
           return {
             ...prev,
-            [messageId]: newState
+            [messageId]: { ...newState, messageId } // Ensure messageId is stored
           };
         });
       }
@@ -344,7 +345,6 @@ const ChatPage = () => {
               role: 'assistant',
               content: answerContent,
               parentMessageId: messageId,
-              thinkingState: thinkingState,
               transaction: proposedTransaction
             });
             
@@ -375,6 +375,35 @@ const ChatPage = () => {
         ...prev,
         isThinking: false
       }));
+
+      // Save the final thinking state to the user message
+      const conversationId = simulateThinking.conversationId;
+      if (conversationId && messageId) {
+        console.log('Saving final thinking state for message:', messageId);
+        
+        // Small delay to ensure state updates are complete
+        setTimeout(async () => {
+          try {
+            // Get the final thinking state for this message
+            setMessageThinkingStates(prev => {
+              const finalThinkingState = prev[messageId];
+              console.log('All thinking states:', prev);
+              console.log('Final thinking state for', messageId, ':', finalThinkingState);
+              
+              if (finalThinkingState && finalThinkingState.executionSteps && finalThinkingState.executionSteps.length > 0) {
+                // Update the user message with thinking state
+                chatService.updateMessageThinkingState(conversationId, messageId, finalThinkingState)
+                  .then(() => console.log('Saved thinking state for message:', messageId))
+                  .catch(error => console.error('Error saving thinking state:', error));
+              }
+              
+              return prev; // Don't modify state
+            });
+          } catch (error) {
+            console.error('Error in thinking state save:', error);
+          }
+        }, 100);
+      }
 
       // Clear stream buffers
       streamBufferRef.current = '';
@@ -618,6 +647,18 @@ const ChatPage = () => {
           setMessages(prev => prev.map(msg => 
             msg.id === userMessageId ? { ...msg, id: savedMessage.id } : msg
           ));
+          
+          // Also update the thinking states if any exist for the old ID
+          setMessageThinkingStates(prev => {
+            if (prev[userMessageId]) {
+              const { [userMessageId]: oldState, ...rest } = prev;
+              return {
+                ...rest,
+                [savedMessage.id]: oldState
+              };
+            }
+            return prev;
+          });
           
           // Use the server ID for thinking state tracking
           userMessage.id = savedMessage.id;
