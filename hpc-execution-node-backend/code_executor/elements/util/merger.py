@@ -1,6 +1,7 @@
 # elements/util/merger.py
 from typing import Dict, Any, List, Optional, Union
 import copy
+import json
 
 from core.element_base import ElementBase
 from utils.logger import logger
@@ -33,15 +34,17 @@ class Merger(ElementBase):
             logger.error(error_msg)
             raise ValueError(error_msg)
         
-        # Get input data
-        data1 = self.inputs.get("data1", {})
-        data2 = self.inputs.get("data2", {})
+        # Collect all input values dynamically from the schema with their keys
+        merged_data = {}
+        for key in self.input_schema.keys():
+            if key in self.inputs:
+                merged_data[key] = self.inputs[key]
         
-        # Determine merge strategy based on data types
-        merged_data = self._merge_data(data1, data2)
+        # Convert merged data to JSON string
+        merged_data_str = json.dumps(merged_data, indent=2)
         
-        # Set output to the merged data
-        self.outputs = {"merged_data": merged_data}
+        # Set output to the merged data as JSON string
+        self.outputs = {"merged_data": merged_data_str}
         
         # Stream the merge info
         await executor._stream_event("merger", {
@@ -50,6 +53,20 @@ class Merger(ElementBase):
         })
         
         return self.outputs
+    
+    def _merge_multiple(self, data_list: List[Any]) -> Any:
+        """Merge multiple data items iteratively."""
+        if not data_list:
+            return None
+        if len(data_list) == 1:
+            return copy.deepcopy(data_list[0])
+        
+        # Start with the first item and merge each subsequent item into the result
+        result = copy.deepcopy(data_list[0])
+        for data in data_list[1:]:
+            result = self._merge_data(result, data)
+        
+        return result
     
     def _merge_data(self, data1: Any, data2: Any) -> Any:
         """Merge two data items based on their types following documented behavior."""

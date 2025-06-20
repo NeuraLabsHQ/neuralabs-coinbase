@@ -34,7 +34,7 @@ hyperparameters:
   description:
     access: edit
   input_schema:
-    access: fixed
+    access: edit
   output_schema:
     access: fixed
   processing_message:
