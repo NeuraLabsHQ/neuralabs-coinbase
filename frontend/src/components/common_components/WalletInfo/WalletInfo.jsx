@@ -15,6 +15,8 @@ import { useWallet } from '../../../contexts/WalletContextProvider';
 import coinbaseConnected from '../../../assets/icons/coinbase-connected.svg';
 import coinbaseLight from '../../../assets/icons/coinbase-light.svg';
 import coinbaseDark from '../../../assets/icons/coinbase-dark.svg';
+import ethereumIcon from '../../../assets/icons/ethereum.svg';
+import usdcIcon from '../../../assets/icons/usdc.svg';
 
 const WalletInfo = () => {
   const { colorMode } = useColorMode();
@@ -25,6 +27,7 @@ const WalletInfo = () => {
     address,
     formattedAddress,
     formattedBalance,
+    formattedUsdcBalance,
     chainId,
     disconnect
   } = useWallet();
@@ -44,8 +47,8 @@ const WalletInfo = () => {
   // Open explorer link
   const openExplorer = () => {
     if (address) {
-      // Sepolia explorer
-      const explorerUrl = `https://sepolia.etherscan.io/address/${address}`;
+      // Base Sepolia explorer
+      const explorerUrl = `https://sepolia.basescan.org/address/${address}`;
       window.open(explorerUrl, '_blank');
     }
   };
@@ -88,7 +91,7 @@ const WalletInfo = () => {
         </HStack>
         
         <Badge colorScheme="purple">
-          Sepolia
+          Base Sepolia
         </Badge>
       </Flex>
       
@@ -118,13 +121,30 @@ const WalletInfo = () => {
       </Box>
       
       {formattedBalance && (
+        <Box mb={3}>
+          <Text fontSize="sm" color={textMutedColor} mb={1}>
+            ETH Balance
+          </Text>
+          <HStack spacing={2}>
+            <img src={ethereumIcon} alt="ETH" width="20" height="20" />
+            <Text fontWeight="semibold" fontSize="lg" color={textColor}>
+              {formattedBalance}
+            </Text>
+          </HStack>
+        </Box>
+      )}
+      
+      {formattedUsdcBalance && (
         <Box mb={4}>
           <Text fontSize="sm" color={textMutedColor} mb={1}>
-            Balance
+            USDC Balance
           </Text>
-          <Text fontWeight="semibold" fontSize="lg" color={textColor}>
-            {formattedBalance}
-          </Text>
+          <HStack spacing={2}>
+            <img src={usdcIcon} alt="USDC" width="20" height="20" />
+            <Text fontWeight="semibold" fontSize="lg" color={textColor}>
+              {formattedUsdcBalance}
+            </Text>
+          </HStack>
         </Box>
       )}
       

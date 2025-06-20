@@ -24,6 +24,8 @@ import { useWallet } from '../../../contexts/WalletContextProvider';
 import coinbaseConnected from '../../../assets/icons/coinbase-connected.svg';
 import coinbaseLight from '../../../assets/icons/coinbase-light.svg';
 import coinbaseDark from '../../../assets/icons/coinbase-dark.svg';
+import ethereumIcon from '../../../assets/icons/ethereum.svg';
+import usdcIcon from '../../../assets/icons/usdc.svg';
 
 export default function CoinbaseWalletConnect({ 
   viewOnlyMode = false,
@@ -41,6 +43,7 @@ export default function CoinbaseWalletConnect({
     account,
     formattedAddress,
     formattedBalance,
+    formattedUsdcBalance,
     chainId,
     userId,
     connect,
@@ -89,8 +92,8 @@ export default function CoinbaseWalletConnect({
 
   const openExplorer = () => {
     if (account?.address) {
-      // Sepolia explorer
-      const explorerUrl = `https://sepolia.etherscan.io/address/${account.address}`;
+      // Base Sepolia explorer
+      const explorerUrl = `https://sepolia.basescan.org/address/${account.address}`;
       window.open(explorerUrl, '_blank');
     }
   };
@@ -183,12 +186,33 @@ export default function CoinbaseWalletConnect({
           </VStack>
         </Box>
         
-        {/* Balance */}
-        {formattedBalance && (
+        {/* Balances */}
+        {(formattedBalance || formattedUsdcBalance) && (
           <Box p={3} bg={bgColor} borderRadius="md" border="1px solid" borderColor={borderColor}>
-            <VStack align="stretch" spacing={2}>
-              <Text fontSize="sm" color={textMutedColor}>Balance</Text>
-              <Text fontWeight="bold">{formattedBalance}</Text>
+            <VStack align="stretch" spacing={3}>
+              {formattedBalance && (
+                <VStack align="stretch" spacing={1}>
+                  <Text fontSize="sm" color={textMutedColor}>ETH Balance</Text>
+                  <HStack spacing={2}>
+                    <div style={{ display: 'flex', alignItems: 'center',gap: '15px' }}>
+                    <img src={ethereumIcon} alt="ETH" width="15" height="15" />
+                    <Text fontWeight="bold">{formattedBalance}</Text>
+                    </div>
+                  </HStack>
+                </VStack>
+              )}
+              {formattedUsdcBalance && (
+                <VStack align="stretch" spacing={1}>
+                  <Text fontSize="sm" color={textMutedColor}>USDC Balance</Text>
+                  <HStack spacing={2}>
+                    <div style={{ display: 'flex', alignItems: 'center',gap: '10px' }}>
+                    <img src={usdcIcon} alt="USDC" width="20" height="20" />
+          
+                    <Text fontWeight="bold">{formattedUsdcBalance}</Text>
+                    </div>
+                  </HStack>
+                </VStack>
+              )}
             </VStack>
           </Box>
         )}
@@ -198,8 +222,8 @@ export default function CoinbaseWalletConnect({
           <VStack align="stretch" spacing={2}>
             <Text fontSize="sm" color={textMutedColor}>Network</Text>
             <HStack>
-              <Badge colorScheme="purple">Sepolia Testnet</Badge>
-              <Text fontSize="xs" color={textMutedColor}>Chain ID: {chainId || 11155111}</Text>
+              <Badge colorScheme="purple">Base Sepolia</Badge>
+              <Text fontSize="xs" color={textMutedColor}>Chain ID: {chainId || 84532}</Text>
             </HStack>
           </VStack>
         </Box>
