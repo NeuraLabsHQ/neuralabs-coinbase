@@ -1,10 +1,11 @@
 import { Flex, useColorMode, useDisclosure, IconButton, Box, useBreakpointValue, Drawer, DrawerOverlay, DrawerContent, DrawerCloseButton, useToast } from '@chakra-ui/react';
 import { useEffect, useState, useRef } from 'react';
-import { FiList } from 'react-icons/fi';
+import { FiList, FiSearch } from 'react-icons/fi';
 import { useWallet } from '../../../contexts/WalletContextProvider';
 import useUiColors from '../../../utils/uiColors';
 import ChatHistoryPanel from '../ChatHistoryPanel/ChatHistoryPanel';
 import ChatInterface from '../ChatInterface';
+import SearchModal from '../SearchModal/SearchModal';
 import chatService from '../../../services/chatServiceV2';
 
 const ChatPage = () => {
@@ -44,6 +45,7 @@ const ChatPage = () => {
   const messageStreamBuffers = useRef({});
 
   const { isOpen, onToggle, onClose } = useDisclosure({ defaultIsOpen: false });
+  const { isOpen: isSearchOpen, onOpen: onSearchOpen, onClose: onSearchClose } = useDisclosure();
   const { toggleColorMode } = useColorMode();
   
   // Responsive values
@@ -55,6 +57,19 @@ const ChatPage = () => {
   useEffect(() => {
     loadConversations();
   }, [walletAddress]);
+
+  // Keyboard shortcut for search (Cmd/Ctrl + K)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        onSearchOpen();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onSearchOpen]);
 
   const loadConversations = async () => {
     try {
@@ -492,6 +507,27 @@ const ChatPage = () => {
     }));
   };
 
+  const handleSearchSelectMessage = async (conversationId, messageId) => {
+    // First, load the conversation if it's not the current one
+    if (conversationId !== currentConversationId) {
+      await handleChatSelect(conversationId);
+    }
+    
+    // Scroll to the specific message after a small delay to ensure rendering
+    setTimeout(() => {
+      const messageElement = document.getElementById(`message-${messageId}`);
+      if (messageElement) {
+        messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Add a highlight effect
+        messageElement.style.backgroundColor = 'var(--chakra-colors-yellow-200)';
+        setTimeout(() => {
+          messageElement.style.backgroundColor = '';
+          messageElement.style.transition = 'background-color 0.5s ease';
+        }, 1000);
+      }
+    }, 100);
+  };
+
   const handleChatSelect = async (conversationId) => {
     setSelectedChatId(conversationId);
     setCurrentConversationId(conversationId);
@@ -736,6 +772,7 @@ const ChatPage = () => {
           newTitle={newTitle}
           setNewTitle={setNewTitle}
           isMobile={false}
+          onSearchOpen={onSearchOpen}
         />
       )}
       
@@ -773,20 +810,33 @@ const ChatPage = () => {
               newTitle={newTitle}
               setNewTitle={setNewTitle}
               isMobile={true}
+              onSearchOpen={() => {
+                onClose();
+                onSearchOpen();
+              }}
             />
           </DrawerContent>
         </Drawer>
       )}
       
       <Flex flex="1" direction="column" h="100%" position="relative" justifyContent="center">
-        {/* Mobile Chat History Button */}
+        {/* Mobile Chat History and Search Buttons */}
         {isMobile && (
-          <Box 
+          <Flex
             position="fixed" 
             top={4} 
             right={4} 
             zIndex={10}
+            gap={2}
           >
+            <IconButton
+              icon={<FiSearch size={24} />}
+              onClick={onSearchOpen}
+              variant="ghost"
+              aria-label="Search conversations"
+              colorScheme="gray"
+              size="lg"
+            />
             <IconButton
               icon={<FiList size={24} />}
               onClick={onToggle}
@@ -795,8 +845,27 @@ const ChatPage = () => {
               colorScheme="gray"
               size="lg"
             />
-          </Box>
+          </Flex>
         )}
+        
+        {/* Desktop Search Button */}
+        {/* {!isMobile && (
+          <Box 
+            position="absolute" 
+            top={4} 
+            right={4} 
+            zIndex={10}
+          >
+            <IconButton
+              icon={<FiSearch size={20} />}
+              onClick={onSearchOpen}
+              variant="ghost"
+              aria-label="Search conversations (Ctrl+K)"
+              colorScheme="gray"
+              size="md"
+            />
+          </Box>
+        )} */}
         
         <ChatInterface
           messages={messages}
@@ -810,6 +879,15 @@ const ChatPage = () => {
           isMobile={isMobile}
         />
       </Flex>
+      
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={onSearchClose}
+        conversations={chats}
+        onSelectMessage={handleSearchSelectMessage}
+        isLoading={isLoadingChats}
+      />
     </Flex>
   );
 };

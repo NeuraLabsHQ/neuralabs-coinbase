@@ -63,7 +63,14 @@ const Message = ({ message, isMobile, transaction }) => {
   console.log("transaction in Message component:", transaction);
 
   return (
-    <Flex w="100%" maxW={isMobile ? "100%" : "900px"} mx="auto" direction="column" mb={isMobile ? 4 : 8}>
+    <Flex 
+      w="100%" 
+      maxW={isMobile ? "100%" : "900px"} 
+      mx="auto" 
+      direction="column" 
+      mb={isMobile ? 4 : 8}
+      id={`message-${message.id}`}
+    >
       <Flex justify={isUser ? "flex-end" : "flex-start"}>
         <Box
           maxW={isUser ? (isMobile ? "80%" : "300px") : (isMobile ? "90%" : "70%")}

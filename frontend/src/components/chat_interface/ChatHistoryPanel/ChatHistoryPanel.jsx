@@ -9,7 +9,9 @@ import {
   Divider,
   useColorModeValue,
   Input,
-  Tooltip
+  Tooltip,
+  InputGroup,
+  InputLeftElement
 } from '@chakra-ui/react';
 import { 
   FiPlus, 
@@ -20,7 +22,8 @@ import {
   FiMessageCircle,
   FiChevronLeft,
   FiChevronRight,
-  FiMoreVertical
+  FiMoreVertical,
+  FiSearch
 } from 'react-icons/fi';
 import { FaAngleDoubleLeft, FaAngleDoubleRight } from 'react-icons/fa';
 import colors from '../../../color';
@@ -38,7 +41,8 @@ const ChatHistoryPanel = ({
   setEditingChatId,
   newTitle,
   setNewTitle,
-  isMobile = false
+  isMobile = false,
+  onSearchOpen
 }) => {
   // Colors that adapt to light/dark mode
   const bgColor = useColorModeValue(colors.chat.bgTertiary.light, colors.chat.bgTertiary.dark);
@@ -180,8 +184,29 @@ const ChatHistoryPanel = ({
           )}
         </Flex>
         
+        <Box px={3} pt={3} pb={2}>
+          <InputGroup>
+            <InputLeftElement pointerEvents="none">
+              <FiSearch color={iconColor} />
+            </InputLeftElement>
+            <Input
+              placeholder="Search conversations..."
+              onClick={onSearchOpen}
+              readOnly
+              cursor="pointer"
+              bg={buttonBgColor}
+              border="1px solid"
+              borderColor={borderColor}
+              color={textColor}
+              _placeholder={{ color: mutedTextColor }}
+              _hover={{ bg: buttonHoverBgColor }}
+              _focus={{ boxShadow: 'none' }}
+            />
+          </InputGroup>
+        </Box>
+        
         {!isMobile && (
-          <Box p={3}>
+          <Box px={3} pb={3}>
             <Button 
               leftIcon={<FiPlus />} 
               onClick={onNewChat} 
