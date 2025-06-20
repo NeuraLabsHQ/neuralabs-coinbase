@@ -353,10 +353,10 @@ const handleSendMessage = () => {
           mb={isMobile ? 0 : 4}
         >
           <Text fontSize="2xl" fontWeight="medium">
-            Good afternoon, User.
+            Welcome to NeuraLabs
           </Text>
           <Text fontSize="xl" color={textSecondary}>
-            How can I help you today?
+            How can I assist you?
           </Text>
         </Flex>
       ) : (
@@ -473,7 +473,7 @@ const handleSendMessage = () => {
         >
           <Textarea
             placeholder={
-              isLanding ? "What do you want to know?" : "How can Neura help?"
+              isLanding ? "Ask me anything..." : "Type your message..."
             }
             value={input}
             onChange={handleInputChange}

@@ -1,10 +1,11 @@
-import { Flex, useColorMode, useDisclosure, IconButton, Box, useBreakpointValue, Drawer, DrawerOverlay, DrawerContent, DrawerCloseButton } from '@chakra-ui/react';
+import { Flex, useColorMode, useDisclosure, IconButton, Box, useBreakpointValue, Drawer, DrawerOverlay, DrawerContent, DrawerCloseButton, useToast } from '@chakra-ui/react';
 import { useEffect, useState, useRef } from 'react';
 import { FiList } from 'react-icons/fi';
 import { useWallet } from '../../../contexts/WalletContextProvider';
 import useUiColors from '../../../utils/uiColors';
 import ChatHistoryPanel from '../ChatHistoryPanel/ChatHistoryPanel';
 import ChatInterface from '../ChatInterface';
+import chatService from '../../../services/chatService';
 
 const ChatPage = () => {
   const colors = useUiColors();
@@ -14,10 +15,13 @@ const ChatPage = () => {
   
   const [chats, setChats] = useState([]);
   const [selectedChatId, setSelectedChatId] = useState(null);
+  const [currentConversationId, setCurrentConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [editingChatId, setEditingChatId] = useState(null);
   const [newTitle, setNewTitle] = useState('');
   const [isLanding, setIsLanding] = useState(true);
+  const [isLoadingChats, setIsLoadingChats] = useState(true);
+  const toast = useToast();
   
   const [thinkingState, setThinkingState] = useState({
     isThinking: false,
@@ -47,15 +51,32 @@ const ChatPage = () => {
   const drawerPlacement = useBreakpointValue({ base: 'bottom', lg: 'left' });
   const drawerSize = useBreakpointValue({ base: 'sm', lg: 'xs' });
   
+  // Load conversations on mount
   useEffect(() => {
-    const initialChats = [
-      { id: '1', title: 'Welcome to Neural Chat' },
-      { id: '2', title: 'Travel Planning' },
-      { id: '3', title: 'Code Review Help' },
-      { id: '4', title: 'Research on Machine Learning' },
-    ];
-    setChats(initialChats);
-  }, []);
+    loadConversations();
+  }, [walletAddress]);
+
+  const loadConversations = async () => {
+    try {
+      setIsLoadingChats(true);
+      const conversations = await chatService.getConversations();
+      setChats(conversations);
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+      // Don't show error toast if it's just an auth issue (user not logged in)
+      if (!error.message.includes('401') && !error.message.includes('Unauthorized')) {
+        toast({
+          title: 'Error loading conversations',
+          description: error.message,
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+    } finally {
+      setIsLoadingChats(false);
+    }
+  };
 
   // Cleanup function for WebSocket
   useEffect(() => {
@@ -211,7 +232,7 @@ const ChatPage = () => {
     };
   };
 
-  const handleExecutionEvent = (event, messageId) => {
+  const handleExecutionEvent = async (event, messageId) => {
     const { type, data } = event;
 
     // Update function that updates both current state and message-specific state
@@ -287,8 +308,8 @@ const ChatPage = () => {
       // Then check for answer tags in the processed content
       const answerMatch = processedContent.match(/<answer>([\s\S]*?)<\/answer>/);
       
-      if (answerMatch) {
-        const answerContent = answerMatch[1].trim();
+      if (answerMatch || processedContent) {
+        const answerContent = answerMatch ? answerMatch[1].trim() : processedContent;
         
         // Add assistant message
         const assistantMessage = {
@@ -299,20 +320,48 @@ const ChatPage = () => {
           parentMessageId: messageId // Link to the user message
         };
         setMessages(prev => [...prev, assistantMessage]);
-      } else if (processedContent) {
-        // If no answer tags, use the processed text (after </think> if present)
-        const assistantMessage = {
-          id: Date.now().toString(),
-          role: 'assistant',
-          content: processedContent,
-          timestamp: new Date(),
-          parentMessageId: messageId // Link to the user message
-        };
-        setMessages(prev => [...prev, assistantMessage]);
         
-        // If there's a proposed transaction, associate it with the assistant message
-        if (proposedTransaction) {
-          handleTransactionDetected(assistantMessage.id, proposedTransaction);
+        // Save assistant message and thinking state to database
+        const conversationId = simulateThinking.conversationId;
+        if (conversationId) {
+          try {
+            // Get the final thinking state for this message
+            const thinkingState = messageThinkingStates[messageId] || null;
+            
+            // Check for any proposed transaction in the execution steps
+            let proposedTransaction = null;
+            const endBlockWithTransaction = (thinkingState?.executionSteps || []).find(step => 
+              step.elementType === 'end' && 
+              step.status === 'completed' && 
+              step.outputs?.proposed_transaction
+            );
+            
+            if (endBlockWithTransaction) {
+              proposedTransaction = endBlockWithTransaction.outputs.proposed_transaction;
+            }
+            
+            const savedAssistantMessage = await chatService.addMessage(conversationId, {
+              role: 'assistant',
+              content: answerContent,
+              parentMessageId: messageId,
+              thinkingState: thinkingState,
+              transaction: proposedTransaction
+            });
+            
+            // Update the message with the server-generated ID
+            setMessages(prev => prev.map(msg => 
+              msg.id === assistantMessage.id ? { ...msg, id: savedAssistantMessage.id } : msg
+            ));
+            
+            // If there's a proposed transaction, associate it with the saved message
+            if (proposedTransaction) {
+              handleTransactionDetected(savedAssistantMessage.id, proposedTransaction);
+            }
+            
+          } catch (error) {
+            console.error('Error saving assistant message:', error);
+            // Continue even if save fails
+          }
         }
       }
     } else if (type === 'flow_completed' || type === 'flow_error') {
@@ -373,6 +422,7 @@ const ChatPage = () => {
   const handleNewChat = () => {
     setIsLanding(true);
     setSelectedChatId(null);
+    setCurrentConversationId(null);
     setMessages([]);
   };
 
@@ -384,48 +434,114 @@ const ChatPage = () => {
     }));
   };
 
-  const handleChatSelect = (chatId) => {
-    setSelectedChatId(chatId);
+  const handleChatSelect = async (conversationId) => {
+    setSelectedChatId(conversationId);
+    setCurrentConversationId(conversationId);
     setIsLanding(false);
 
-    if (chatId === '1') {
-      setMessages([
-        { id: '1', role: 'assistant', content: 'Hello! Welcome to Neural Chat. How can I assist you today?', timestamp: new Date() },
-      ]);
-    } else if (chatId === '2') {
-      setMessages([
-        { id: '1', role: 'assistant', content: 'Hello! Where would you like to travel to?', timestamp: new Date(Date.now() - 86400000) },
-        { id: '2', role: 'user', content: 'I\'m thinking about going to Japan next spring.', timestamp: new Date(Date.now() - 86300000) },
-        { id: '3', role: 'assistant', content: 'Japan in spring is beautiful, especially during cherry blossom season! Would you like some recommendations for places to visit?', timestamp: new Date(Date.now() - 86200000) },
-      ]);
-    } else if (chatId === '3') {
-      setMessages([
-        { id: '1', role: 'assistant', content: 'Hi there! I\'d be happy to help with code review. What code would you like me to look at?', timestamp: new Date(Date.now() - 172800000) },
-        { id: '2', role: 'user', content: 'I\'m having trouble with a React component that\'s not rendering properly.', model: 'coder', timestamp: new Date(Date.now() - 172700000) },
-        { id: '3', role: 'assistant', content: 'I\'d be happy to help. Could you share the component code?', timestamp: new Date(Date.now() - 172600000) },
-      ]);
-    } else {
-      setMessages([
-        { id: '1', role: 'assistant', content: 'Hello! How can I help you today?', timestamp: new Date() },
-      ]);
-    }
-  };
-
-  const handleDeleteChat = (chatId) => {
-    setChats(chats.filter(chat => chat.id !== chatId));
-    if (selectedChatId === chatId) {
-      setIsLanding(true);
-      setSelectedChatId(null);
+    try {
+      const conversation = await chatService.getConversation(conversationId);
+      
+      // Transform messages to match component format
+      const formattedMessages = conversation.messages.map(msg => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content,
+        timestamp: new Date(msg.timestamp),
+        model: msg.model,
+        parentMessageId: msg.parentMessageId,
+        thinkingState: msg.thinkingState,
+        transaction: msg.transaction
+      }));
+      
+      setMessages(formattedMessages);
+      
+      // Restore thinking states and transactions
+      const thinkingStates = {};
+      const transactions = {};
+      
+      formattedMessages.forEach(msg => {
+        if (msg.thinkingState) {
+          thinkingStates[msg.id] = msg.thinkingState;
+        }
+        if (msg.transaction) {
+          transactions[msg.id] = msg.transaction;
+        }
+      });
+      
+      setMessageThinkingStates(thinkingStates);
+      setMessageTransactions(transactions);
+      
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+      toast({
+        title: 'Error loading conversation',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      
+      // Fallback to empty conversation
       setMessages([]);
     }
   };
 
-  const handleEditChatTitle = (chatId, title) => {
-    setChats(chats.map(chat => chat.id === chatId ? { ...chat, title } : chat));
-    setEditingChatId(null);
+  const handleDeleteChat = async (chatId) => {
+    try {
+      await chatService.deleteConversation(chatId);
+      setChats(chats.filter(chat => chat.id !== chatId));
+      
+      if (selectedChatId === chatId) {
+        setIsLanding(true);
+        setSelectedChatId(null);
+        setCurrentConversationId(null);
+        setMessages([]);
+      }
+      
+      toast({
+        title: 'Conversation deleted',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+      toast({
+        title: 'Error deleting conversation',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   };
 
-  const handleSendMessage = (content, modelId) => {
+  const handleEditChatTitle = async (chatId, title) => {
+    try {
+      await chatService.updateConversation(chatId, { title });
+      setChats(chats.map(chat => chat.id === chatId ? { ...chat, title } : chat));
+      setEditingChatId(null);
+      
+      toast({
+        title: 'Conversation renamed',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error updating conversation:', error);
+      toast({
+        title: 'Error updating conversation',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleSendMessage = async (content, modelId) => {
     // First, close any existing WebSocket connection and stop thinking UI
     if (websocketRef.current) {
       console.log('Closing existing WebSocket connection');
@@ -456,31 +572,80 @@ const ChatPage = () => {
       executionSteps: []
     });
     
-    if (isLanding) {
-      const newChatId = Date.now().toString();
-      const truncatedTitle = content.length > 30 ? content.substring(0, 27) + '...' : content;
-      const newChat = { id: newChatId, title: truncatedTitle };
-      setChats([newChat, ...chats]);
-      setSelectedChatId(newChatId);
-      setIsLanding(false);
+    let conversationId = currentConversationId;
+    
+    try {
+      // Create new conversation if landing
+      if (isLanding) {
+        const truncatedTitle = content.length > 30 ? content.substring(0, 27) + '...' : content;
+        
+        // Get agent ID from URL if available
+        const currentPath = window.location.pathname;
+        const agentIdMatch = currentPath.match(/\/chat\/([^\/]+)/);
+        const agentId = agentIdMatch ? agentIdMatch[1] : null;
+        
+        const newConversation = await chatService.createConversation(truncatedTitle, agentId);
+        conversationId = newConversation.id;
+        
+        setCurrentConversationId(conversationId);
+        setSelectedChatId(conversationId);
+        setChats([newConversation, ...chats]);
+        setIsLanding(false);
+      }
+
+      const userMessageId = Date.now().toString();
+      const userMessage = {
+        id: userMessageId,
+        role: 'user',
+        content,
+        model: modelId,
+        timestamp: new Date()
+      };
+
+      // Add message to UI immediately
+      setMessages(prev => [...prev, userMessage]);
+
+      // Save user message to database
+      if (conversationId) {
+        try {
+          const savedMessage = await chatService.addMessage(conversationId, {
+            role: 'user',
+            content,
+            model: modelId
+          });
+          
+          // Update the message with the server-generated ID
+          setMessages(prev => prev.map(msg => 
+            msg.id === userMessageId ? { ...msg, id: savedMessage.id } : msg
+          ));
+          
+          // Use the server ID for thinking state tracking
+          userMessage.id = savedMessage.id;
+        } catch (error) {
+          console.error('Error saving user message:', error);
+          // Continue even if save fails
+        }
+      }
+
+      // Store conversation ID for the assistant response
+      simulateThinking.conversationId = conversationId;
+
+      // Small delay to ensure WebSocket is fully closed before starting new connection
+      setTimeout(() => {
+        // Always call the backend for every user input with the message ID
+        simulateThinking(content, modelId, userMessage.id);
+      }, 100);
+      
+    } catch (error) {
+      console.error('Error in handleSendMessage:', error);
+      toast({
+        title: 'Error sending message',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
-
-    const userMessageId = Date.now().toString();
-    const userMessage = {
-      id: userMessageId,
-      role: 'user',
-      content,
-      model: modelId,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-
-    // Small delay to ensure WebSocket is fully closed before starting new connection
-    setTimeout(() => {
-      // Always call the backend for every user input with the message ID
-      simulateThinking(content, modelId, userMessageId);
-    }, 100);
   };
 
   return (

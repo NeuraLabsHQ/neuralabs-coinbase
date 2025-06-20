@@ -11,6 +11,7 @@ from .blockchain import router as blockchain_router
 from .zk_login import router as zk_login_router
 from .flowbuilder import router as flowbuilder_router
 from .chat import router as chat_router
+from .conversations import router as conversations_router
 
 # Create main router
 router = APIRouter()
@@ -23,3 +24,4 @@ router.include_router(set_data_router, prefix="/set-data", tags=["data-managemen
 router.include_router(blockchain_router, prefix="/set-blockchain-data", tags=["blockchain"])
 router.include_router(dashboard_router, prefix="/dashboard", tags=["dashboard"])
 router.include_router(chat_router, prefix="/chat", tags=["chat"])
+router.include_router(conversations_router, prefix="/conversations", tags=["conversations"])

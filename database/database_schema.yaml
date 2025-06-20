@@ -244,6 +244,15 @@ postgres:
           type: TIMESTAMP
           default: "CURRENT_TIMESTAMP"
           description: "When conversation started"
+        updated_at:
+          type: TIMESTAMP
+          default: "CURRENT_TIMESTAMP"
+          description: "Last update timestamp"
+        agent_id:
+          type: VARCHAR(255)
+          references: AGENT.agent_id
+          nullable: true
+          description: "Optional reference to an agent"
     
     MESSAGES:
       columns:
@@ -256,22 +265,42 @@ postgres:
           type: UUID
           references: CONVERSATIONS.conversation_id
           description: "References CONVERSATIONS table"
-        sender_type:
+        role:
           type: VARCHAR(10)
           check: "IN ('user', 'assistant')"
           description: "Either 'user' or 'assistant'"
-        agent_id:
-          type: VARCHAR(255)
-          references: AGENT.agent_id
-          nullable: true
-          description: "Optional reference to an agent"
         content:
           type: TEXT
           description: "The message text"
-        created_at:
+        timestamp:
           type: TIMESTAMP
           default: "CURRENT_TIMESTAMP"
           description: "Message timestamp"
+        model:
+          type: VARCHAR(100)
+          nullable: true
+          description: "AI model used for the message"
+        parent_message_id:
+          type: VARCHAR(255)
+          nullable: true
+          description: "Links assistant messages to their parent user messages"
+        metadata:
+          type: JSONB
+          nullable: true
+          description: "Additional message metadata"
+        thinking_state:
+          type: JSONB
+          nullable: true
+          description: "Stores the thinking UI state including execution steps"
+        transaction_data:
+          type: JSONB
+          nullable: true
+          description: "Stores proposed blockchain transactions"
+      indexes:
+        - name: idx_messages_conversation_id
+          columns: ["conversation_id"]
+        - name: idx_messages_parent_message_id
+          columns: ["parent_message_id"]
     
     # Flowbuilder Blocks
     FLOWBUILDER_BLOCKS:
