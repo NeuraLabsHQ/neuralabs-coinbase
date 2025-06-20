@@ -348,10 +348,39 @@ const ChatPage = () => {
               transaction: proposedTransaction
             });
             
+            // If there's a proposed transaction, update the messageTransactions state
+            if (proposedTransaction && savedAssistantMessage) {
+              setMessageTransactions(prev => ({
+                ...prev,
+                [savedAssistantMessage.id]: proposedTransaction
+              }));
+            }
+            
+            // Also check if there's a transaction temporarily stored with the user message
+            const userTransaction = messageTransactions[messageId];
+            if (userTransaction && savedAssistantMessage) {
+              setMessageTransactions(prev => ({
+                ...prev,
+                [savedAssistantMessage.id]: userTransaction,
+                [messageId]: undefined // Clear it from the user message
+              }));
+            }
+            
             // Update the message with the server-generated ID
+            const tempAssistantId = assistantMessage.id;
             setMessages(prev => prev.map(msg => 
-              msg.id === assistantMessage.id ? { ...msg, id: savedAssistantMessage.id } : msg
+              msg.id === tempAssistantId ? { ...msg, id: savedAssistantMessage.id } : msg
             ));
+            
+            // Transfer any transaction from temp ID to permanent ID
+            setMessageTransactions(prev => {
+              const newTransactions = { ...prev };
+              if (newTransactions[tempAssistantId]) {
+                newTransactions[savedAssistantMessage.id] = newTransactions[tempAssistantId];
+                delete newTransactions[tempAssistantId];
+              }
+              return newTransactions;
+            });
             
             // If there's a proposed transaction, associate it with the saved message
             if (proposedTransaction) {

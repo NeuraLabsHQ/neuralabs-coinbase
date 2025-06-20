@@ -27,7 +27,7 @@ import {
 } from "react-icons/fi";
 
 // Import the separate ThinkingUI component
-import ThinkingUI from "./ThinkingUI/ThinkingUI";
+import ThinkingUI from "./ThinkingUI/ThinkingUI.jsx";
 import MarkdownRenderer from "./MarkdownRenderer";
 import TransactionButton from "../transaction/TransactionButton";
 
@@ -54,11 +54,13 @@ const AI_MODELS = [
 
 const Message = ({ message, isMobile, transaction }) => {
   const isUser = message.role === "user";
-
+  
   const userMessageBg = useColorModeValue(colors.chat.userMessageBg.light, colors.chat.userMessageBg.dark);
   const assistantMessageBg = useColorModeValue(colors.chat.assistantMessageBg.light, colors.chat.assistantMessageBg.dark);
   const textColor = useColorModeValue(colors.chat.textPrimary.light, colors.chat.textPrimary.dark);
   const iconColor = useColorModeValue(colors.chat.iconColor.light, colors.chat.iconColor.dark);
+
+  console.log("transaction in Message component:", transaction);
 
   return (
     <Flex w="100%" maxW={isMobile ? "100%" : "900px"} mx="auto" direction="column" mb={isMobile ? 4 : 8}>
@@ -398,14 +400,17 @@ const handleSendMessage = () => {
             shouldPersist={true}
             isMobile={isMobile}
             onTransactionDetected={(transaction) => {
-              // Find the next assistant message that follows this user message
-              const nextAssistantMessageIndex = messages.findIndex((msg, idx) => 
-                idx > index && msg.role === 'assistant' && msg.parentMessageId === message.id
+              // Find the assistant message that follows this user message
+              const assistantMessageIndex = messages.findIndex((msg, idx) => 
+                idx > index && msg.role === 'assistant'
               );
               
-              if (nextAssistantMessageIndex !== -1) {
-                const assistantMessage = messages[nextAssistantMessageIndex];
+              if (assistantMessageIndex !== -1) {
+                const assistantMessage = messages[assistantMessageIndex];
                 onTransactionDetected(assistantMessage.id, transaction);
+              } else {
+                // If no assistant message exists yet, store it temporarily with the user message
+                onTransactionDetected(message.id, transaction);
               }
             }}
           />
