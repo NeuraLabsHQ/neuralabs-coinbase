@@ -113,6 +113,19 @@ const ChatHistoryPanel = ({
             />
           </Tooltip>
           
+          {/* Search button */}
+          <Tooltip label="Search conversations" placement="right">
+            <IconButton
+              icon={<FiSearch />}
+              aria-label="Search conversations"
+              variant="ghost"
+              color={iconColor}
+              _hover={{ color: textColor, bg: hoverBgColor }}
+              onClick={onSearchOpen}
+              mb={2}
+            />
+          </Tooltip>
+          
           {/* New chat button */}
           <Tooltip label="New chat" placement="right">
             <IconButton
@@ -141,8 +154,10 @@ const ChatHistoryPanel = ({
       overflow="hidden"
       position="relative"
       borderTopRadius={isMobile ? "xl" : "0"}
+      display="flex"
+      flexDirection="column"
     >
-      <Flex direction="column" h="100%" >
+      <Flex direction="column" h="100%" overflow="hidden">
         {/* Mobile drawer handle */}
         {isMobile && (
           <Flex justify="center" py={2}>
@@ -236,7 +251,7 @@ const ChatHistoryPanel = ({
           overflowX="hidden"
           sx={{
             '&::-webkit-scrollbar': {
-              width: '6px',
+              width: isMobile ? '4px' : '6px',
             },
             '&::-webkit-scrollbar-track': {
               bg: 'transparent',
@@ -248,6 +263,8 @@ const ChatHistoryPanel = ({
             '&::-webkit-scrollbar-thumb:hover': {
               bg: mutedTextColor,
             },
+            // Add webkit overflow scrolling for smooth scrolling on iOS
+            WebkitOverflowScrolling: 'touch',
           }}
         >
           {chats.map(chat => (
@@ -269,7 +286,7 @@ const ChatHistoryPanel = ({
                     bg={buttonBgColor}
                     border="none"
                     _focus={{ boxShadow: "none" }}
-                    onKeyPress={(e) => {
+                    onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         handleSaveEdit(chat.id);
                       }

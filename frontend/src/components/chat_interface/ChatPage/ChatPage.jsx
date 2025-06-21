@@ -829,14 +829,14 @@ const ChatPage = () => {
             zIndex={10}
             gap={2}
           >
-            <IconButton
+            {/* <IconButton
               icon={<FiSearch size={24} />}
               onClick={onSearchOpen}
               variant="ghost"
               aria-label="Search conversations"
               colorScheme="gray"
               size="lg"
-            />
+            /> */}
             <IconButton
               icon={<FiList size={24} />}
               onClick={onToggle}
