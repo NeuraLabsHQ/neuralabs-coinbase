@@ -96,7 +96,7 @@ const ChatHistoryPanel = ({
       >
         <VStack spacing={0} py={4}>
           {/* Logo / App icon */}
-          <Box w="40px" h="40px" display="flex" justifyContent="center" alignItems="center" mb={4}>
+          {/* <Box w="40px" h="40px" display="flex" justifyContent="center" alignItems="center" mb={4}>
             <Box
               position="relative"
               w="36px"
@@ -134,7 +134,7 @@ const ChatHistoryPanel = ({
                 N
               </Text>
             </Box>
-          </Box>
+          </Box> */}
           
           {/* Expand sidebar button */}
           <Tooltip label="Expand sidebar" placement="right">
