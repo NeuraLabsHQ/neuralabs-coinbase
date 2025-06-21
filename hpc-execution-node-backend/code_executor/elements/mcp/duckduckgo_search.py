@@ -143,7 +143,7 @@ class DuckDuckGoSearch(ElementBase):
             raise ValueError("Search query cannot be empty")
         
         # Get parameters
-        max_results = self.parameters.get("max_results", 10)
+        max_results = int(self.parameters.get("max_results", 10))
         include_snippets = self.parameters.get("include_snippets", True)
         
         # Stream search initiation
@@ -223,12 +223,10 @@ class DuckDuckGoSearch(ElementBase):
                 return []
             
             results = []
-            for result in soup.select(".result"):
-                title_elem = result.select_one(".result__title")
-                if not title_elem:
-                    continue
-                
-                link_elem = title_elem.find("a")
+            # Use the correct selector based on actual DuckDuckGo HTML
+            for result in soup.select(".result.results_links_deep"):
+                # Find the title link
+                link_elem = result.select_one("a.result__a")
                 if not link_elem:
                     continue
                 
@@ -243,8 +241,8 @@ class DuckDuckGoSearch(ElementBase):
                 if link.startswith("//duckduckgo.com/l/?uddg="):
                     link = urllib.parse.unquote(link.split("uddg=")[1].split("&")[0])
                 
-                # Get initial snippet
-                snippet_elem = result.select_one(".result__snippet")
+                # Get snippet from the snippet link
+                snippet_elem = result.select_one("a.result__snippet")
                 snippet = snippet_elem.get_text(strip=True) if snippet_elem else ""
                 
                 results.append(
