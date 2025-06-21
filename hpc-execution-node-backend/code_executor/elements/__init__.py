@@ -29,6 +29,9 @@ from .ai.llm_structured import LLMStructured
 # Custom
 from .custom.custom import Custom
 
+# MCP
+from .mcp.duckduckgo_search import DuckDuckGoSearch
+
 # Coinbase
 
 from .coinbase.fetch_balance import FetchBalance as CoinbaseFetchBalance
@@ -56,6 +59,9 @@ element_registry = {
     "llm_text": LLMText,
     "llm_structured": LLMStructured,
     "custom": Custom,
+    "duckduckgo_search": DuckDuckGoSearch,
+    "DuckDuckGoSearch": DuckDuckGoSearch,
+    "search": DuckDuckGoSearch,  # Backward compatibility
     
     
     "fetchbalance": CoinbaseFetchBalance,

@@ -20,3 +20,4 @@ redis
 python-multipart
 cryptography>=3.4.8
 aiohttp
+beautifulsoup4

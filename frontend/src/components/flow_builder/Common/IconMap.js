@@ -52,7 +52,8 @@ import {
     FiLayout,
     FiCode,
     FiChevronRight,
-    FiChevronDown
+    FiChevronDown,
+    FiSearch
     
 } from 'react-icons/fi';
 
@@ -103,6 +104,7 @@ const ICON_MAP = {
     'FiShuffle': FiShuffle,
     'FiClock': FiClock,
     'FiCpu': FiCpu,
+    'FiSearch': FiSearch,
 };
 
 export default ICON_MAP;

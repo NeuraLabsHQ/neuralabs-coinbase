@@ -1,0 +1,73 @@
+type: Search
+element_id: null
+name: null
+node_description: Searches the web using DuckDuckGo and returns top results
+description: null
+input_schema:
+  query:
+    type: string
+    description: The search query
+    required: true
+output_schema:
+  search_results:
+    type: list
+    description: List of URLs from search results
+    required: true
+  formatted_results:
+    type: string
+    description: Comprehensive content dump from all search results
+    required: true
+  result_count:
+    type: int
+    description: Number of results found
+    required: true
+parameter_schema_structure:
+  max_results:
+    type: int
+    min: 1
+    max: 50
+    default: 10
+    description: Maximum number of search results to return
+  include_snippets:
+    type: bool
+    default: true
+    description: Whether to include result snippets in the output
+parameters:
+  max_results: 10
+  include_snippets: true
+processing_message: Searching the web...
+tags:
+- search
+- web
+- duckduckgo
+- internet
+layer: null
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: fixed
+  parameters.max_results:
+    access: edit
+  parameters.include_snippets:
+    access: edit
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit
+input_data: null
+output_data: null
+code: null
+flow_control: null
+icon: FiSearch
+category: MCPs
