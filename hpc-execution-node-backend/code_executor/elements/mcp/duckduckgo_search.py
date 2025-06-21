@@ -282,9 +282,13 @@ class DuckDuckGoSearch(ElementBase):
         async def fetch_content(result: SearchResult) -> SearchResult:
             try:
                 content = await self._fetch_page_content(result.link)
-                result.full_content = content if content else result.full_content
+                # Only update if we got valid content (not an error message)
+                if content and not content.startswith("Error fetching content:") and content != "Unable to extract content from this page.":
+                    result.full_content = content
+                # Otherwise keep the original snippet
             except Exception as e:
                 logger.warning(f"Failed to fetch content from {result.link}: {str(e)}")
+                # Keep original snippet, don't update with error
             return result
         
         # Fetch content for all results concurrently
@@ -349,11 +353,11 @@ class DuckDuckGoSearch(ElementBase):
             if len(full_content) > max_content_length:
                 full_content = full_content[:max_content_length] + "..."
             
-            return full_content if full_content else "Unable to extract content from this page."
+            return full_content if full_content else None
             
         except Exception as e:
             logger.error(f"Error fetching content from {url}: {str(e)}")
-            return f"Error fetching content: {str(e)}"
+            return None
     
     def _create_comprehensive_summary(self, results: List[SearchResult], query: str) -> str:
         """Create a comprehensive content dump from all search results."""
