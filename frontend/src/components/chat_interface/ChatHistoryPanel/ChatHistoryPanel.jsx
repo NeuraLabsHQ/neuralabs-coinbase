@@ -97,23 +97,50 @@ const ChatHistoryPanel = ({
         <VStack spacing={0} py={4}>
           {/* Logo / App icon */}
           <Box w="40px" h="40px" display="flex" justifyContent="center" alignItems="center" mb={4}>
-            <Flex 
-              w="30px" 
-              h="30px" 
-              borderRadius="full" 
-              bg={colors.gray[700]}
-              alignItems="center" 
+            <Box
+              position="relative"
+              w="36px"
+              h="36px"
+              display="flex"
+              alignItems="center"
               justifyContent="center"
+              borderRadius="lg"
+              bg={useColorModeValue('white', 'black')}
+              border="2px solid"
+              borderColor={useColorModeValue('black', 'white')}
+              boxShadow={useColorModeValue(
+                '2px 2px 0px 0px rgba(0,0,0,1)',
+                '2px 2px 0px 0px rgba(255,255,255,1)'
+              )}
+              transition="all 0.2s ease"
+              _hover={{
+                transform: "translate(-2px, -2px)",
+                boxShadow: useColorModeValue(
+                  '4px 4px 0px 0px rgba(0,0,0,1)',
+                  '4px 4px 0px 0px rgba(255,255,255,1)'
+                )
+              }}
+              cursor="pointer"
             >
-              <Text fontSize="sm" fontWeight="bold" color={textColor}>N</Text>
-            </Flex>
+              <Text
+                fontSize="xl"
+                fontWeight="900"
+                fontFamily="'Inter', system-ui, -apple-system, sans-serif"
+                color={useColorModeValue('black', 'white')}
+                letterSpacing="-0.05em"
+                lineHeight="1"
+                userSelect="none"
+              >
+                N
+              </Text>
+            </Box>
           </Box>
           
           {/* Expand sidebar button */}
           <Tooltip label="Expand sidebar" placement="right">
             <IconButton
               icon={<FaAngleDoubleRight size="16px" />}
-              aria-label="Expand sidebar"
+              tel="Expand sidebar"
               variant="ghost"
               color={iconColor}
               _hover={{ color: textColor, bg: hoverBgColor }}
