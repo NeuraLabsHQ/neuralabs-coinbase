@@ -185,6 +185,7 @@ const SearchModal = ({
   const handleConversationClick = (conversationId) => {
     // Find the first message in the conversation
     const conversation = filteredConversations.find(c => c.id === conversationId);
+    console.log('Selected conversation:', conversation);
     if (conversation && conversation.messages && conversation.messages.length > 0) {
       onSelectMessage(conversationId, conversation.messages[0].id);
       onClose();
@@ -208,7 +209,7 @@ const SearchModal = ({
         <ModalHeader pb={2}>
           <Flex align="center" justify="space-between">
             <HStack spacing={3}>
-              <Icon as={FiSearch} color={iconColor} />
+              {/* <Icon as={FiSearch} color={iconColor} /> */}
               <Text color={textPrimary}>Search Conversations</Text>
             </HStack>
             <HStack spacing={2} mr={8}>
