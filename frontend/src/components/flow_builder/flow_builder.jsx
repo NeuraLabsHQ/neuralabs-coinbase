@@ -1172,6 +1172,25 @@ const handleSaveWorkflow = async () => {
     updateAvailableLayers();
   }, [nodes]);
 
+  // Add keyboard shortcut for Ctrl+S to save workflow
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Check if Ctrl+S (Windows/Linux) or Cmd+S (Mac) is pressed
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault(); // Prevent browser's default save dialog
+        handleSaveWorkflow();
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup on unmount
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [agentId, nodes, edges, agentData]); // Dependencies for handleSaveWorkflow
+
   return (
     <Flex h="100%" w="100%" overflow="hidden">
       {sidebarOpen && !MarketplaceSidebarOpen && (
