@@ -1,15 +1,10 @@
 // src/components/chat_interface/ChatInterface.jsx
 import {
     Box,
-    Button,
     Divider,
     Flex,
     HStack,
     IconButton,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuList,
     Text,
     Textarea,
     Tooltip,
@@ -18,10 +13,8 @@ import {
 import { useEffect, useRef, useState,Fragment } from 'react';
 import {
     FiArrowUp,
-    FiChevronDown,
     FiCode,
     FiPaperclip,
-    FiSearch,
     FiThumbsDown,
     FiThumbsUp
 } from "react-icons/fi";
@@ -342,6 +335,10 @@ const handleSendMessage = () => {
     console.log(`Selected tool: ${tool}`);
   };
 
+  const handleModelSelect = (model) => {
+    setSelectedModel(model);
+  };
+
   return (
     <Flex
       direction="column"
@@ -353,20 +350,91 @@ const handleSendMessage = () => {
     >
       {isLanding ? (
         <Flex
-          flex={isMobile ? "1" : "0"}
+          flex="1"
           direction="column"
           justify="center"
           align="center"
           px={4}
-          pt={isMobile ? 20 : 0}
-          mb={isMobile ? 0 : 4}
+          pb={isMobile ? "200px" : 0}
         >
-          <Text fontSize="2xl" fontWeight="medium">
+          <Text fontSize={isMobile ? "xl" : "2xl"} fontWeight="medium" textAlign="center">
             Welcome to NeuraLabs
           </Text>
-          <Text fontSize="xl" color={textSecondary}>
+          <Text fontSize={isMobile ? "lg" : "xl"} color={textSecondary} textAlign="center" mt={2} mb={isMobile ? 0 : 8}>
             How can I assist you?
           </Text>
+          
+          {/* Desktop input - integrated into the landing content */}
+          {!isMobile && (
+            <Flex
+              direction="column"
+              borderRadius="lg"
+              bg={bgInput}
+              border="1px solid"
+              borderColor={borderColor}
+              p={2}
+              maxW="600px"
+              w="100%"
+              boxShadow="sm"
+            >
+              <Textarea
+                placeholder="Ask me anything..."
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                size="md"
+                bg="transparent"
+                border="none"
+                _focus={{ border: "none", boxShadow: "none" }}
+                resize="none"
+                minH="60px"
+                maxH="200px"
+                overflowY="auto"
+                ref={inputRef}
+                transition="height 0.1s ease"
+                style={{ height: '60px' }}
+                sx={{
+                  '&::-webkit-scrollbar': {
+                    display: 'none',
+                  },
+                  '-ms-overflow-style': 'none',
+                  'scrollbarWidth': 'none',
+                }}
+              />
+
+              <Divider my={2} borderColor={borderColor} />
+
+              <Flex justify="space-between" align="center">
+                <HStack spacing={2}>
+                  <IconButton
+                    icon={<FiPaperclip />}
+                    aria-label="Attach file"
+                    variant="ghost"
+                    size="sm"
+                    color={iconColor}
+                  />
+
+                </HStack>
+
+                <Tooltip label="Send message">
+                  <IconButton
+                    icon={<FiArrowUp />}
+                    aria-label="Send message"
+                    isDisabled={!input.trim()}
+                    onClick={handleSendMessage}
+                    variant="solid"
+                    bg={input.trim() ? textPrimary : "transparent"}
+                    color={input.trim() ? bgPrimary : iconColor}
+                    _hover={{
+                      bg: input.trim() ? textPrimary : "transparent",
+                    }}
+                    size="sm"
+                    borderRadius="md"
+                  />
+                </Tooltip>
+              </Flex>
+            </Flex>
+          )}
         </Flex>
       ) : (
 <Box 
@@ -458,19 +526,20 @@ const handleSendMessage = () => {
         </Center>
       )} */}
 
-      {/* Footer with input */}
-      <Box 
-        p={isMobile ? 3 : 5} 
-        pb={isMobile ? 3 : 10}
-        position={(isMobile && isLanding) ? "fixed" : "relative"}
-        bottom={(isMobile && isLanding) ? 0 : "auto"}
-        left={(isMobile && isLanding) ? 0 : "auto"}
-        right={(isMobile && isLanding) ? 0 : "auto"}
-        bg={bgPrimary}
-        borderTop={(isMobile && isLanding) ? "1px solid" : "none"}
-        borderColor={borderColor}
-        w="100%"
-      >
+      {/* Footer with input - Only show on mobile landing or always when not landing */}
+      {(isMobile || !isLanding) && (
+        <Box 
+          p={isMobile ? 3 : 5} 
+          pb={isMobile ? 3 : 10}
+          position={(isMobile && isLanding) ? "fixed" : "relative"}
+          bottom={(isMobile && isLanding) ? 0 : "auto"}
+          left={(isMobile && isLanding) ? 0 : "auto"}
+          right={(isMobile && isLanding) ? 0 : "auto"}
+          bg={bgPrimary}
+          borderTop={(isMobile && isLanding) ? "1px solid" : "none"}
+          borderColor={borderColor}
+          w="100%"
+        >
         <Flex
           direction="column"
           borderRadius="lg"
@@ -575,76 +644,32 @@ const handleSendMessage = () => {
                 size="sm"
                 color={iconColor}
               />
-
-            <Menu placement={isLanding ? "bottom" : "top"} gutter={4}>
-                {/* <MenuButton
-                  as={Button}
-                  rightIcon={<FiChevronDown />}
-                  size="sm"
-                  variant="ghost"
-                  color={iconColor}
-                >
-                  <Flex align="center">
-                    <Box
-                      mr={1}
-                      as={
-                        toolSelectionMode === "deepSearch" ? FiSearch : FiCode
-                      }
-                    />
-                    {toolSelectionMode === "deepSearch"
-                      ? "DeepSearch"
-                      : "Think"}
-                  </Flex>
-                </MenuButton> */}
-                <MenuList
-                  bg={bgSecondary}
-                  borderColor={borderColor}
-                  p={0}
-                  marginTop={isLanding ? "10px" : "0"}
-                  borderRadius={"md"}
-                //   position={"absolute"}
-                //   left={isLanding ? "20%" : "0"}
-                //   width="10px"
-                >
-                  <MenuItem
-                    icon={<FiSearch />}
-                    onClick={() => setToolSelectionMode("deepSearch")}
-                    _hover={{ bg: bgHover }}
-                    bg={bgSecondary}
-                    
-                  >
-                    DeepSearch
-                  </MenuItem>
-                  <MenuItem
-                    icon={<FiCode />}
-                    onClick={() => setToolSelectionMode("think")}
-                    _hover={{ bg: bgHover }}
-                    bg={bgSecondary}
-                  >
-                    Think
-                  </MenuItem>
-                </MenuList>
-              </Menu>
             </HStack>
 
             <HStack>
 
 
               <Tooltip label="Send message">
-                <IconButton
-                  icon={<FiArrowUp />}
-                  aria-label="Send message"
-                  colorScheme="blue"
-                  size="sm"
-                  isRound
-                  isDisabled={input.trim() === ""}
-                  onClick={handleSendMessage}
-                />
+                  <IconButton
+                    icon={<FiArrowUp />}
+                    aria-label="Send message"
+                    isDisabled={!input.trim()}
+                    onClick={handleSendMessage}
+                    variant="solid"
+                    bg={input.trim() ? textPrimary : "transparent"}
+                    color={input.trim() ? bgPrimary : iconColor}
+                    _hover={{
+                      bg: input.trim() ? textPrimary : "transparent",
+                    }}
+                    size="sm"
+                    borderRadius="md"
+                  />
               </Tooltip>
             </HStack>
           </Flex>
         </Flex>
       </Box>
+      )}
     </Flex>
   );
 };

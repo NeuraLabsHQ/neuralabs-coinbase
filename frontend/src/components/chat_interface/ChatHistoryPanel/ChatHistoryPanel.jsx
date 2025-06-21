@@ -26,6 +26,7 @@ import {
   FiSearch
 } from 'react-icons/fi';
 import { FaAngleDoubleLeft, FaAngleDoubleRight } from 'react-icons/fa';
+import { useState } from 'react';
 import colors from '../../../color';
 
 const ChatHistoryPanel = ({ 
@@ -44,6 +45,9 @@ const ChatHistoryPanel = ({
   isMobile = false,
   onSearchOpen
 }) => {
+  // State for search
+  const [searchQuery, setSearchQuery] = useState('');
+  
   // Colors that adapt to light/dark mode
   const bgColor = useColorModeValue(colors.chat.bgTertiary.light, colors.chat.bgTertiary.dark);
   const borderColor = useColorModeValue(colors.chat.borderColor.light, colors.chat.borderColor.dark);
@@ -54,6 +58,11 @@ const ChatHistoryPanel = ({
   const buttonBgColor = useColorModeValue(colors.chat.bgButton.light, colors.chat.bgButton.dark);
   const buttonHoverBgColor = useColorModeValue(colors.chat.bgButtonHover.light, colors.chat.bgButtonHover.dark);
   const iconColor = useColorModeValue(colors.chat.iconColor.light, colors.chat.iconColor.dark);
+  
+  // Filter chats based on search query
+  const filteredChats = chats.filter(chat => 
+    chat.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
   
   const handleEditClick = (chatId, currentTitle) => {
     setEditingChatId(chatId);
@@ -147,7 +156,7 @@ const ChatHistoryPanel = ({
     <Box
       w={isMobile ? "100%" : "280px"}
       h="100%"
-      borderRight="1px solid"
+      borderRight={isMobile ? "none" : "1px solid"}
       borderColor={borderColor}
       bg={bgColor}
       transition="width 0.3s ease"
@@ -156,8 +165,10 @@ const ChatHistoryPanel = ({
       borderTopRadius={isMobile ? "xl" : "0"}
       display="flex"
       flexDirection="column"
+      mb={0}
+      pb={0}
     >
-      <Flex direction="column" h="100%" overflow="hidden">
+      <Flex direction="column" h="100%" minH="100%" overflow="hidden" bg={bgColor}>
         {/* Mobile drawer handle */}
         {isMobile && (
           <Flex justify="center" py={2}>
@@ -204,19 +215,34 @@ const ChatHistoryPanel = ({
             <InputLeftElement pointerEvents="none">
               <FiSearch color={iconColor} />
             </InputLeftElement>
-            <Input
-              placeholder="Search conversations..."
-              onClick={onSearchOpen}
-              readOnly
-              cursor="pointer"
-              bg={buttonBgColor}
-              border="1px solid"
-              borderColor={borderColor}
-              color={textColor}
-              _placeholder={{ color: mutedTextColor }}
-              _hover={{ bg: buttonHoverBgColor }}
-              _focus={{ boxShadow: 'none' }}
-            />
+            {isMobile ? (
+              <Input
+                placeholder="Search conversations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                bg={buttonBgColor}
+                border="1px solid"
+                borderColor={borderColor}
+                color={textColor}
+                _placeholder={{ color: mutedTextColor }}
+                _hover={{ bg: buttonHoverBgColor }}
+                _focus={{ boxShadow: 'none', borderColor: borderColor }}
+              />
+            ) : (
+              <Input
+                placeholder="Search conversations..."
+                onClick={onSearchOpen}
+                readOnly
+                cursor="pointer"
+                bg={buttonBgColor}
+                border="1px solid"
+                borderColor={borderColor}
+                color={textColor}
+                _placeholder={{ color: mutedTextColor }}
+                _hover={{ bg: buttonHoverBgColor }}
+                _focus={{ boxShadow: 'none' }}
+              />
+            )}
           </InputGroup>
         </Box>
         
@@ -243,12 +269,12 @@ const ChatHistoryPanel = ({
           </Text>
         </Box>
         
-        <VStack 
-          spacing={0} 
-          align="stretch" 
-          flex="1" 
+        <Box
+          flex="1"
           overflowY="auto"
           overflowX="hidden"
+          bg={bgColor}
+          pb={0}
           sx={{
             '&::-webkit-scrollbar': {
               width: isMobile ? '4px' : '6px',
@@ -267,7 +293,12 @@ const ChatHistoryPanel = ({
             WebkitOverflowScrolling: 'touch',
           }}
         >
-          {chats.map(chat => (
+          <VStack 
+            spacing={0} 
+            align="stretch"
+            minH="100%"
+          >
+          {(isMobile ? filteredChats : chats).map(chat => (
             <Box 
               key={chat.id} 
               role="group"
@@ -344,7 +375,21 @@ const ChatHistoryPanel = ({
               )}
             </Box>
           ))}
-        </VStack>
+          
+          {/* Show no results message on mobile when searching */}
+          {isMobile && searchQuery && filteredChats.length === 0 && (
+            <Text 
+              textAlign="center" 
+              color={mutedTextColor} 
+              fontSize="sm" 
+              mt={4}
+              px={4}
+            >
+              No conversations found matching "{searchQuery}"
+            </Text>
+          )}
+          </VStack>
+        </Box>
       </Flex>
     </Box>
   );

@@ -786,6 +786,8 @@ const ChatPage = () => {
         >
           <DrawerOverlay />
           <DrawerContent
+            height={drawerPlacement === 'bottom' ? '60vh' : '100vh'}
+            minH={drawerPlacement === 'bottom' ? '20vh' : '100vh'}
             maxH={drawerPlacement === 'bottom' ? '70vh' : '100vh'}
             borderTopRadius={drawerPlacement === 'bottom' ? 'xl' : '0'}
           >
