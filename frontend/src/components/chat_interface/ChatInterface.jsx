@@ -27,9 +27,10 @@ import MarkdownRenderer from "./MarkdownRenderer";
 import TransactionButton from "../transaction/TransactionButton";
 import SlashCommandDropdown from "./SlashCommandDropdown/SlashCommandDropdown";
 import AgentSelectionModal from "./AgentSelectionModal/AgentSelectionModal";
+import ExportPDFjsPDF from "./ExportPDF/ExportPDFjsPDF";
 
 // Import colors
-import { useColorModeValue } from "@chakra-ui/react";
+import { useColorModeValue, useToast } from "@chakra-ui/react";
 import colors from "../../color";
 import { FiX } from "react-icons/fi";
 
@@ -277,7 +278,9 @@ const handleSendMessage = () => {
     }
   };
 
-  const handleSlashCommandSelect = (command) => {
+  const toast = useToast();
+
+  const handleSlashCommandSelect = async (command) => {
     setShowSlashCommands(false);
     
     switch (command.action) {
@@ -303,6 +306,42 @@ const handleSendMessage = () => {
       case 'export-chat':
         setInput('');
         // Export chat logic
+        if (messages && messages.length > 0) {
+          toast({
+            title: 'Exporting chat...',
+            status: 'info',
+            duration: 2000,
+            isClosable: true,
+          });
+          
+          const result = await ExportPDFjsPDF.exportChatToPDF(messages);
+          
+          if (result.success) {
+            toast({
+              title: 'Chat exported successfully',
+              description: 'Your chat has been saved as a PDF',
+              status: 'success',
+              duration: 3000,
+              isClosable: true,
+            });
+          } else {
+            toast({
+              title: 'Export failed',
+              description: result.error || 'Failed to export chat',
+              status: 'error',
+              duration: 4000,
+              isClosable: true,
+            });
+          }
+        } else {
+          toast({
+            title: 'No messages to export',
+            description: 'Start a conversation first',
+            status: 'warning',
+            duration: 3000,
+            isClosable: true,
+          });
+        }
         break;
       default:
         break;
