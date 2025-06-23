@@ -1,6 +1,7 @@
 // src/components/chat_interface/ChatInterface.jsx
 import {
     Box,
+    Button,
     Divider,
     Flex,
     HStack,
@@ -18,23 +19,19 @@ import {
     FiThumbsDown,
     FiThumbsUp
 } from "react-icons/fi";
+import { RiRobot2Line } from "react-icons/ri";
 
 // Import the separate ThinkingUI component
 import ThinkingUI from "./ThinkingUI/ThinkingUI.jsx";
 import MarkdownRenderer from "./MarkdownRenderer";
 import TransactionButton from "../transaction/TransactionButton";
+import SlashCommandDropdown from "./SlashCommandDropdown/SlashCommandDropdown";
+import AgentSelectionModal from "./AgentSelectionModal/AgentSelectionModal";
 
 // Import colors
 import { useColorModeValue } from "@chakra-ui/react";
 import colors from "../../color";
-// Sample AI models/agents
-const AI_MODELS = [
-  { id: "portfolio", name: "Portfolio Manager" },
-  { id: "grok-2", name: "Grok 2" },
-  { id: "creative", name: "Creative Writer" },
-  { id: "coder", name: "Code Assistant" },
-  { id: "analyst", name: "Data Analyst" },
-];
+import { FiX } from "react-icons/fi";
 
 // const TOOLS = [
 //   { id: 'jfk-files', name: 'JFK Files', icon: FiSearch },
@@ -149,13 +146,15 @@ const ChatInterface = ({
   isMobile = false,
 }) => {
   const [input, setInput] = useState("");
-  const [mentionActive, setMentionActive] = useState(false);
-  const [filteredModels, setFilteredModels] = useState([]);
-  const [selectedModel, setSelectedModel] = useState(AI_MODELS[0]);
+  const [showSlashCommands, setShowSlashCommands] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState(null);
+  const [showAgentModal, setShowAgentModal] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState('below');
   const [toolSelectionMode, setToolSelectionMode] = useState("deepSearch");
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
-  const [aiagentSelected, setaiagentSelected] = useState(false);
+  const inputContainerRef = useRef(null);
+  const [slashSearchTerm, setSlashSearchTerm] = useState("");
   const [lastQueryText, setLastQueryText] = useState(""); // State to store the last query
 
 
@@ -187,6 +186,22 @@ const ChatInterface = ({
     }
   }, []);
 
+  // Calculate dropdown position based on available space
+  useEffect(() => {
+    if (showSlashCommands && inputContainerRef.current) {
+      const rect = inputContainerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      
+      // If less than 200px below, show above
+      if (spaceBelow < 200 && spaceAbove > 200) {
+        setDropdownPosition('above');
+      } else {
+        setDropdownPosition('below');
+      }
+    }
+  }, [showSlashCommands]);
+
   const handleInputChange = (e) => {
     const value = e.target.value;
     setInput(value);
@@ -201,35 +216,15 @@ const ChatInterface = ({
       inputRef.current.style.height = `${Math.max(60, Math.min(scrollHeight, 200))}px`;
     }
     
-    // If the input is empty, reset the mentionSelected flag
-    if (value.trim() === "") {
-        setaiagentSelected(false);
-    }
-  
-    // Only check for @ mentions if we haven't already selected a mention for this message
-    if (value.includes("@") && !aiagentSelected) {
-      console.log("@ detected in input and no mention previously selected");
-      
-      const atPosition = value.lastIndexOf("@");
-      const textAfterAt = value.substring(atPosition + 1);
-      
-      console.log("Text after @:", textAfterAt);
-      
-      // Activate dropdown when @ is typed and no model has been selected yet
-      setMentionActive(true);
-      
-      if (textAfterAt.trim() !== "") {
-        const filtered = AI_MODELS.filter((model) =>
-          model.name.toLowerCase().includes(textAfterAt.toLowerCase())
-        );
-        console.log("Filtered models:", filtered);
-        setFilteredModels(filtered);
-      } else {
-        console.log("Showing all models");
-        setFilteredModels(AI_MODELS);
-      }
+    // Check for slash commands at the beginning of input
+    if (value.startsWith('/')) {
+      setShowSlashCommands(true);
+      // Extract the search term after the slash
+      const searchTerm = value.substring(1).split(' ')[0];
+      setSlashSearchTerm(searchTerm);
     } else {
-      setMentionActive(false);
+      setShowSlashCommands(false);
+      setSlashSearchTerm('');
     }
   };
 
@@ -237,69 +232,38 @@ const ChatInterface = ({
 
 
 const handleSendMessage = () => {
-    if (input.trim() === "") return;
+    const trimmedInput = input.trim();
+    if (trimmedInput === "") return;
 
+    // Don't send if it's just a slash command
+    if (trimmedInput === '/' || (trimmedInput.startsWith('/') && !trimmedInput.includes(' '))) {
+      return;
+    }
     
-  
-    // Check if this message has an @mention
-    const hasAtMention = input.includes("@");
-    let modelId = selectedModel.id;
-    let cleanMessage = input;
-    let useThinkMode = toolSelectionMode === "think";
-
- 
-  
-    // If the message has @mention, extract the model name and remove it from message
-    if (hasAtMention) {
-      // First just extract everything after the @ symbol
-      const atPosition = input.indexOf("@");
-      const textAfterAt = input.substring(atPosition + 1);
-      
-      // Check each model name to see if it appears at the start of the text after @
-      let matchedModel = null;
-      let matchedModelName = "";
-      
-      // Sort models by name length (descending) to match longer names first
-      // This prevents "Grok" matching before "Grok 3"
-      const sortedModels = [...AI_MODELS].sort(
-        (a, b) => b.name.length - a.name.length
-      );
-      
-      for (const model of sortedModels) {
-        if (textAfterAt.toLowerCase().startsWith(model.name.toLowerCase())) {
-          matchedModel = model;
-          matchedModelName = model.name;
-          break;
-        }
-      }
-      
-      if (matchedModel) {
-        modelId = matchedModel.id;
-        
-        // Get everything before the @ and everything after the model name
-        const beforeMention = input.substring(0, atPosition);
-        const afterModelName = textAfterAt.substring(matchedModelName.length);
-        
-        // Create clean message by combining before @ and after model name
-        cleanMessage = beforeMention + afterModelName;
-        
-        // Always enable think mode when an agent is mentioned with @
-        useThinkMode = true;
+    // Remove slash command from message if present
+    let cleanMessage = trimmedInput;
+    if (trimmedInput.startsWith('/')) {
+      const spaceIndex = trimmedInput.indexOf(' ');
+      if (spaceIndex > 0) {
+        cleanMessage = trimmedInput.substring(spaceIndex + 1).trim();
       }
     }
     
-    // Debug logs to verify the extraction
-    console.log("Original input:", input);
+    // Use selected agent if available
+    const agentId = selectedAgent?.id || 'default-agent';
+    const useThinkMode = toolSelectionMode === "think" || selectedAgent !== null;
+    
+    console.log("Original input:", trimmedInput);
     console.log("Clean message:", cleanMessage);
-    console.log("Selected model:", modelId);
+    console.log("Selected agent:", agentId);
     console.log("Using Think mode:", useThinkMode);
 
-    setLastQueryText(cleanMessage.trim());
+    setLastQueryText(cleanMessage);
     
-    // Send the clean message with the appropriate model and think mode flag
-    onSendMessage(cleanMessage.trim(), modelId, useThinkMode);
+    // Send the clean message with the selected agent
+    onSendMessage(cleanMessage, agentId, useThinkMode);
     setInput("");
-    setMentionActive(false);
+    setShowSlashCommands(false);
     
     // Reset textarea height after sending
     if (inputRef.current) {
@@ -313,30 +277,46 @@ const handleSendMessage = () => {
     }
   };
 
-  const handleMentionSelect = (model) => {
-    // Replace the @mention text with the selected model
-    const beforeMention = input.split("@")[0];
-    const afterMention =
-      input.split("@").length > 1
-        ? input.split("@")[1].split(" ").slice(1).join(" ")
-        : "";
-    setInput(`${beforeMention}@${model.name} ${afterMention}`);
-    setMentionActive(false);
+  const handleSlashCommandSelect = (command) => {
+    setShowSlashCommands(false);
     
-    // Set the flag to indicate a mention has been selected for this message
-    setaiagentSelected(true);
-    
-    inputRef.current?.focus();
+    switch (command.action) {
+      case 'select-agent':
+        setShowAgentModal(true);
+        setInput('');
+        break;
+      case 'clear-chat':
+        // Clear chat logic here
+        setInput('');
+        if (window.confirm('Are you sure you want to clear this conversation?')) {
+          // Add clear chat functionality
+        }
+        break;
+      case 'show-help':
+        setInput('');
+        // Show help logic
+        break;
+      case 'open-settings':
+        setInput('');
+        // Open settings logic
+        break;
+      case 'export-chat':
+        setInput('');
+        // Export chat logic
+        break;
+      default:
+        break;
+    }
   };
   
 
-  const handleToolSelect = (tool) => {
-    // In a real app, this would activate the selected tool
-    console.log(`Selected tool: ${tool}`);
+  const handleAgentSelect = (agent) => {
+    setSelectedAgent(agent);
+    setShowAgentModal(false);
   };
 
-  const handleModelSelect = (model) => {
-    setSelectedModel(model);
+  const handleClearAgent = () => {
+    setSelectedAgent(null);
   };
 
   return (
@@ -376,6 +356,8 @@ const handleSendMessage = () => {
               maxW="600px"
               w="100%"
               boxShadow="sm"
+              position="relative"
+              ref={inputContainerRef}
             >
               <Textarea
                 placeholder="Ask me anything..."
@@ -402,6 +384,16 @@ const handleSendMessage = () => {
                 }}
               />
 
+              {/* Slash Command Dropdown for Desktop Landing */}
+              <SlashCommandDropdown
+                isOpen={showSlashCommands}
+                onClose={() => setShowSlashCommands(false)}
+                onSelect={handleSlashCommandSelect}
+                position={dropdownPosition}
+                width={inputContainerRef.current?.offsetWidth}
+                searchTerm={slashSearchTerm}
+              />
+
               <Divider my={2} borderColor={borderColor} />
 
               <Flex justify="space-between" align="center">
@@ -413,7 +405,37 @@ const handleSendMessage = () => {
                     size="sm"
                     color={iconColor}
                   />
-
+                  <HStack spacing={1}>
+                    <Tooltip label={selectedAgent ? "Change Agent" : "Select Agent"}>
+                      <Button
+                        leftIcon={<RiRobot2Line />}
+                        aria-label="Select Agent"
+                        variant={selectedAgent ? "solid" : "ghost"}
+                        size="sm"
+                        color={selectedAgent ? bgPrimary : iconColor}
+                        bg={selectedAgent ? iconColor : "transparent"}
+                        onClick={() => setShowAgentModal(true)}
+                        _hover={{
+                          bg: selectedAgent ? iconColor : bgHover
+                        }}
+                        px={selectedAgent ? 3 : 2}
+                      >
+                        {selectedAgent && selectedAgent.name}
+                      </Button>
+                    </Tooltip>
+                    {selectedAgent && (
+                      <Tooltip label="Clear selected agent">
+                        <IconButton
+                          icon={<FiX />}
+                          size="xs"
+                          variant="ghost"
+                          aria-label="Clear agent"
+                          onClick={handleClearAgent}
+                          color={iconColor}
+                        />
+                      </Tooltip>
+                    )}
+                  </HStack>
                 </HStack>
 
                 <Tooltip label="Send message">
@@ -550,7 +572,8 @@ const handleSendMessage = () => {
           maxW={isLanding ? (isMobile ? "100%" : "600px") : (isMobile ? "100%" : "900px")}
           mx="auto"
           boxShadow="sm"
-        //   position="relative" // Add position relative here without disturbing layout
+          position="relative"
+          ref={inputContainerRef}
         >
           <Textarea
             placeholder={
@@ -579,59 +602,15 @@ const handleSendMessage = () => {
             }}
           />
 
-          {mentionActive && (
-            <Box
-              position="absolute"
-              // Position based on chat state: below input for new chat, above input for existing chat
-              top={isLanding ? (isMobile ? "auto" : "58%") : "auto"}
-              bottom={isLanding ? (isMobile ? "100%" : "auto") : (isMobile ? "100%" : "16%")}
-            //   left="50%"
-            //   transform="translateX(-40%)"
-              width="50%"
-              maxW="300px"
-              bg={bgSecondary}
-              boxShadow="md"
-              borderRadius="md"
-              mt={isLanding ? 2 : 0} // Margin top when below
-              mb={isLanding ? 0 : 2} // Margin bottom when above
-              zIndex={10}
-              border="1px solid"
-              borderColor={borderColor}
-              px={2}
-            >
-              <VStack align="stretch"
-               p={2} 
-               maxH="200px" overflow="auto">
-                {/* <Text
-                  fontWeight="bold"
-                  p={2}
-                  borderBottom="1px solid"
-                  borderColor={colors.borderColor}
-                >
-                  Select Agent
-                </Text> */}
-                {filteredModels.length > 0 ? (
-                  filteredModels.map((model) => (
-                    <Flex
-                      key={model.id}
-                      px={2}
-                      py={0.5}
-                      _hover={{ bg: bgHover }}
-                      cursor="pointer"
-                      onClick={() => handleMentionSelect(model)}
-                      borderRadius="md"
-                    >
-                      <Text>{model.name}</Text>
-                    </Flex>
-                  ))
-                ) : (
-                  <Text 
-                  p={2}
-                  >No models found</Text>
-                )}
-              </VStack>
-            </Box>
-          )}
+          {/* Slash Command Dropdown */}
+          <SlashCommandDropdown
+            isOpen={showSlashCommands}
+            onClose={() => setShowSlashCommands(false)}
+            onSelect={handleSlashCommandSelect}
+            position={dropdownPosition}
+            width={inputContainerRef.current?.offsetWidth}
+            searchTerm={slashSearchTerm}
+          />
 
           <Divider my={2} borderColor={borderColor} />
 
@@ -644,6 +623,37 @@ const handleSendMessage = () => {
                 size="sm"
                 color={iconColor}
               />
+              <HStack spacing={1}>
+                <Tooltip label={selectedAgent ? "Change Agent" : "Select Agent"}>
+                  <Button
+                    leftIcon={<RiRobot2Line />}
+                    aria-label="Select Agent"
+                    variant={selectedAgent ? "solid" : "ghost"}
+                    size="sm"
+                    color={selectedAgent ? bgPrimary : iconColor}
+                    bg={selectedAgent ? iconColor : "transparent"}
+                    onClick={() => setShowAgentModal(true)}
+                    _hover={{
+                      bg: selectedAgent ? iconColor : bgHover
+                    }}
+                    px={selectedAgent ? 3 : 2}
+                  >
+                    {selectedAgent && selectedAgent.name}
+                  </Button>
+                </Tooltip>
+                {selectedAgent && (
+                  <Tooltip label="Clear selected agent">
+                    <IconButton
+                      icon={<FiX />}
+                      size="xs"
+                      variant="ghost"
+                      aria-label="Clear agent"
+                      onClick={handleClearAgent}
+                      color={iconColor}
+                    />
+                  </Tooltip>
+                )}
+              </HStack>
             </HStack>
 
             <HStack>
@@ -670,6 +680,13 @@ const handleSendMessage = () => {
         </Flex>
       </Box>
       )}
+      
+      {/* Agent Selection Modal */}
+      <AgentSelectionModal
+        isOpen={showAgentModal}
+        onClose={() => setShowAgentModal(false)}
+        onSelectAgent={handleAgentSelect}
+      />
     </Flex>
   );
 };

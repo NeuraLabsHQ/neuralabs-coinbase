@@ -475,16 +475,22 @@ const ChatPage = () => {
     }
   };
 
-  const simulateThinking = (query, _modelId, messageId) => {
+  const simulateThinking = (query, modelId, messageId) => {
     console.log('🚀 simulateThinking called with query:', query);
     console.log('📋 Message ID for thinking:', messageId);
+    console.log('📋 Model/Agent ID from input:', modelId);
     
-    // Get agentId from URL params (if available)
-    const currentPath = window.location.pathname;
-    const agentIdMatch = currentPath.match(/\/chat\/([^\/]+)/);
-    const agentId = agentIdMatch ? agentIdMatch[1] : 'default-agent';
+    // Use the agent ID passed from the chat interface (selected via slash command)
+    // If no agent selected, fall back to URL params or default
+    let agentId = modelId;
     
-    console.log('📋 Agent ID:', agentId);
+    if (!agentId || agentId === 'default-agent') {
+      const currentPath = window.location.pathname;
+      const agentIdMatch = currentPath.match(/\/chat\/([^\/]+)/);
+      agentId = agentIdMatch ? agentIdMatch[1] : 'default-agent';
+    }
+    
+    console.log('📋 Final Agent ID:', agentId);
     console.log('📋 Messages for context:', messages.length);
     
     // Connect to NeuraLabs backend with agent ID and user message
