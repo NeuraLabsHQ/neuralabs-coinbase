@@ -30,6 +30,7 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
   const [responseData, setResponseData] = useState(null);
   const [wasThinking, setWasThinking] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [expandedResults, setExpandedResults] = useState({});
   const scrollableRef = useRef(null);
   
   // Responsive values
@@ -167,7 +168,7 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
         // Replace any placeholders in the template
         let templateText = stepTemplate.text;
         templateText = templateText.replace(/\{\{query\}\}/g, query);
-        
+          
         textToType.current = templateText;
       } else {
         // Fallback if step name not found in templates
@@ -251,6 +252,14 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
   if (!isThinking && executionSteps.length === 0) return null;
   if (!isThinking && !shouldPersist && executionSteps.length === 0) return null;
 
+  // Toggle function for result sections
+  const toggleResultExpanded = (stepKey) => {
+    setExpandedResults(prev => ({
+      ...prev,
+      [stepKey]: !prev[stepKey]
+    }));
+  };
+
   // Helper function to render output values
   const renderOutput = (output) => {
     if (typeof output === 'string') {
@@ -282,6 +291,7 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
       border="1px solid"
       borderColor={borderColor}
       bg={bgColor}
+      w={maxBoxWidth}
       maxW={maxBoxWidth}
       mx={isMobile ? 0 : "auto"}
       mb={isMobile ? 4 : 8}
@@ -373,6 +383,7 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
             maxHeight={isMobile ? "250px" : "400px"}
             position="relative"
             css={{
+              scrollbarGutter: 'stable',
               '&::-webkit-scrollbar': {
                 width: '8px',
               },
@@ -396,29 +407,64 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
                   transition={{ duration: 0.3 }}
                   style={{ width: "100%" }}
                 >
-                  <Box w="100%">
+                  <Box w="100%" mr="8px">
                     <Text fontSize={isMobile ? "xs" : "sm"} fontWeight="medium" color={secondaryColor} mb={1}>
                       {step.description}
                     </Text>
                     
                     {/* Show outputs if available and step is completed */}
                     {step.status === 'completed' && step.outputs && Object.keys(step.outputs).length > 0 && (
-                      <Box bg={sourceBgColor} p={isMobile ? 2 : 3} borderRadius="md" mt={2} overflowX="auto">
-                        {Object.entries(step.outputs).map(([key, value]) => (
-                          <Box key={key} mb={2}>
-                            <Text fontSize="xs" fontWeight="bold" color={secondaryColor} mb={1}>
-                              {key}:
-                            </Text>
-                            <Text 
-                              fontSize="sm" 
-                              whiteSpace="pre-wrap"
-                              wordBreak="break-word"
-                              overflowWrap="break-word"
-                            >
-                              {renderOutput(value)}
-                            </Text>
+                      <Box mt={2} mr="8px">
+                        <Flex 
+                          align="center" 
+                          justify="space-between"
+                          cursor="pointer"
+                          onClick={() => toggleResultExpanded(`${step.elementId}-${index}`)}
+                          bg={sourceBgColor}
+                          p={isMobile ? 2 : 3}
+                          borderRadius="md"
+                          _hover={{ opacity: 0.8 }}
+                          transition="opacity 0.2s"
+                        >
+                          <Text fontSize={isMobile ? "xs" : "sm"} fontWeight="medium" color={textColor}>
+                            Results for {step.elementName}
+                          </Text>
+                          <IconButton
+                            icon={expandedResults[`${step.elementId}-${index}`] === false ? <FiChevronDown /> : <FiChevronUp />}
+                            size="xs"
+                            variant="ghost"
+                            aria-label={expandedResults[`${step.elementId}-${index}`] === false ? "Expand results" : "Collapse results"}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleResultExpanded(`${step.elementId}-${index}`);
+                            }}
+                          />
+                        </Flex>
+                        <Collapse in={expandedResults[`${step.elementId}-${index}`] !== false} animateOpacity>
+                          <Box 
+                            bg={sourceBgColor} 
+                            p={isMobile ? 2 : 3} 
+                            borderRadius="md" 
+                            mt={1} 
+                            overflowX="auto"
+                          >
+                            {Object.entries(step.outputs).map(([key, value]) => (
+                              <Box key={key} mb={2}>
+                                <Text fontSize="xs" fontWeight="bold" color={secondaryColor} mb={1}>
+                                  {key}:
+                                </Text>
+                                <Text 
+                                  fontSize="sm" 
+                                  whiteSpace="pre-wrap"
+                                  wordBreak="break-word"
+                                  overflowWrap="break-word"
+                                >
+                                  {renderOutput(value)}
+                                </Text>
+                              </Box>
+                            ))}
                           </Box>
-                        ))}
+                        </Collapse>
                       </Box>
                     )}
                     
@@ -440,8 +486,10 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
                   transition={{ duration: 0.5 }}
                   style={{ width: "100%" }}
                 >
-                  <Box bg={sourceBgColor} p={isMobile ? 2 : 3} borderRadius="md" w="100%">
-                    <Text fontSize={isMobile ? "xs" : "sm"}>Analysis completed for: "{query}"</Text>
+                  <Box mr="8px">
+                    <Box bg={sourceBgColor} p={isMobile ? 2 : 3} borderRadius="md">
+                      <Text fontSize={isMobile ? "xs" : "sm"}>Analysis completed for: "{query}"</Text>
+                    </Box>
                   </Box>
                 </motion.div>
               )}

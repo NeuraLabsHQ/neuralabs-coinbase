@@ -1,6 +1,6 @@
 import { Flex, useColorMode, useDisclosure, IconButton, Box, useBreakpointValue, Drawer, DrawerOverlay, DrawerContent, DrawerCloseButton, useToast } from '@chakra-ui/react';
 import { useEffect, useState, useRef } from 'react';
-import { FiList, FiSearch } from 'react-icons/fi';
+import { FiList, FiSearch, FiMessageCircle } from 'react-icons/fi';
 import { useWallet } from '../../../contexts/WalletContextProvider';
 import useUiColors from '../../../utils/uiColors';
 import ChatHistoryPanel from '../ChatHistoryPanel/ChatHistoryPanel';
@@ -840,7 +840,7 @@ const ChatPage = () => {
               size="lg"
             /> */}
             <IconButton
-              icon={<FiList size={24} />}
+              icon={<FiMessageCircle size={24} />}
               onClick={onToggle}
               variant="ghost"
               aria-label="Open chat history"

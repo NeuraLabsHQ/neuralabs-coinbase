@@ -62,7 +62,7 @@ element_registry = {
     "duckduckgo_search": DuckDuckGoSearch,
     "DuckDuckGoSearch": DuckDuckGoSearch,
     "search": DuckDuckGoSearch,  # Backward compatibility
-    
+    "randomgenerator": RandomGenerator,
     
     "fetchbalance": CoinbaseFetchBalance,
     "FetchBalance": CoinbaseFetchBalance,  # Map YAML type to Coinbase implementation
