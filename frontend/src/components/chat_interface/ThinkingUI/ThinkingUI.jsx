@@ -291,10 +291,12 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
       border="1px solid"
       borderColor={borderColor}
       bg={bgColor}
-      w={maxBoxWidth}
+      w="100%"
       maxW={maxBoxWidth}
+      minW={isMobile ? "100%" : "600px"}
       mx={isMobile ? 0 : "auto"}
       mb={isMobile ? 4 : 8}
+      overflowX="auto"
     >
       <Flex direction={isMobile ? "column" : "row"}>
         <Box 

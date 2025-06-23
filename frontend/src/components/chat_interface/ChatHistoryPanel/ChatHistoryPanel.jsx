@@ -182,6 +182,7 @@ const ChatHistoryPanel = ({
   return (
     <Box
       w={isMobile ? "100%" : "280px"}
+      minW={isMobile ? "100%" : "260px"}
       h="100%"
       borderRight={isMobile ? "none" : "1px solid"}
       borderColor={borderColor}
