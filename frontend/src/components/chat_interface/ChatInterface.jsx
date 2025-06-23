@@ -419,6 +419,12 @@ const handleSendMessage = () => {
                           bg: selectedAgent ? iconColor : bgHover
                         }}
                         px={selectedAgent ? 3 : 2}
+                        iconSpacing={selectedAgent ? 2 : 0}
+                        sx={{
+                          '& .chakra-button__icon': {
+                            margin: selectedAgent ? undefined : 0
+                          }
+                        }}
                       >
                         {selectedAgent && selectedAgent.name}
                       </Button>
@@ -637,6 +643,12 @@ const handleSendMessage = () => {
                       bg: selectedAgent ? iconColor : bgHover
                     }}
                     px={selectedAgent ? 3 : 2}
+                    iconSpacing={selectedAgent ? 2 : 0}
+                    sx={{
+                      '& .chakra-button__icon': {
+                        margin: selectedAgent ? undefined : 0
+                      }
+                    }}
                   >
                     {selectedAgent && selectedAgent.name}
                   </Button>
