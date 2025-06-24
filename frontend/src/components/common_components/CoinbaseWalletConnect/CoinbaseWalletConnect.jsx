@@ -22,9 +22,10 @@ import {
   Input,
   InputGroup,
   InputRightAddon,
-  useToast
+  useToast,
+  ButtonGroup
 } from '@chakra-ui/react';
-import { FiExternalLink, FiCopy, FiCheckCircle, FiAlertCircle, FiSend } from 'react-icons/fi';
+import { FiExternalLink, FiCopy, FiCheckCircle, FiAlertCircle, FiSend, FiRefreshCw } from 'react-icons/fi';
 
 // Import wallet context to get wallet state and actions
 import { useWallet } from '../../../contexts/WalletContextProvider';
@@ -56,7 +57,9 @@ export default function CoinbaseWalletConnect({
     chainId,
     userId,
     connect,
-    disconnect
+    disconnect,
+    updateBalance,
+    updateUsdcBalance
   } = useWallet();
   
   // State for agent wallet
@@ -65,6 +68,9 @@ export default function CoinbaseWalletConnect({
   const [isLoadingAgent, setIsLoadingAgent] = useState(false);
   const [fundAmount, setFundAmount] = useState('');
   const [isFunding, setIsFunding] = useState(false);
+  const [fundingCurrency, setFundingCurrency] = useState('USDC'); // 'USDC' or 'ETH'
+  const [isRefreshingUserBalance, setIsRefreshingUserBalance] = useState(false);
+  const [isRefreshingAgentBalance, setIsRefreshingAgentBalance] = useState(false);
   
   // Hooks for blockchain interaction
   const [publicClient, setPublicClient] = useState(null);
@@ -196,7 +202,7 @@ export default function CoinbaseWalletConnect({
     if (!fundAmount || parseFloat(fundAmount) <= 0) {
       toast({
         title: 'Invalid Amount',
-        description: 'Please enter a valid amount to fund.',
+        description: `Please enter a valid ${fundingCurrency} amount to fund.`,
         status: 'warning',
         duration: 3000,
         isClosable: true,
@@ -206,15 +212,26 @@ export default function CoinbaseWalletConnect({
 
     setIsFunding(true);
     try {
-      const txHash = await transferUsdcToAgent({
-        agentAddress: agentWallet.agent_public_key,
-        amount: fundAmount,
-        walletClient
-      });
+      let txHash;
+      
+      if (fundingCurrency === 'USDC') {
+        txHash = await transferUsdcToAgent({
+          agentAddress: agentWallet.agent_public_key,
+          amount: fundAmount,
+          walletClient
+        });
+      } else {
+        // ETH transfer
+        const amountInWei = BigInt(Math.floor(parseFloat(fundAmount) * 10 ** 18));
+        txHash = await walletClient.sendTransaction({
+          to: agentWallet.agent_public_key,
+          value: amountInWei,
+        });
+      }
 
       toast({
-        title: 'Transaction Sent',
-        description: `Funding transaction sent. Hash: ${txHash.slice(0, 10)}...`,
+        title: `${fundingCurrency} Transaction Sent`,
+        description: `Transaction sent. Hash: ${txHash.slice(0, 10)}...`,
         status: 'success',
         duration: 5000,
         isClosable: true,
@@ -224,10 +241,10 @@ export default function CoinbaseWalletConnect({
       setFundAmount('');
       setTimeout(() => loadAgentBalance(), 5000);
     } catch (error) {
-      console.error('Failed to fund agent:', error);
+      console.error(`Failed to fund agent with ${fundingCurrency}:`, error);
       toast({
-        title: 'Transaction Failed',
-        description: error.message || 'Failed to send funds to agent wallet.',
+        title: `${fundingCurrency} Transaction Failed`,
+        description: error.message || `Failed to send ${fundingCurrency} to agent wallet.`,
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -253,6 +270,63 @@ export default function CoinbaseWalletConnect({
     if (agentWallet?.agent_public_key) {
       const explorerUrl = `https://sepolia.basescan.org/address/${agentWallet.agent_public_key}`;
       window.open(explorerUrl, '_blank');
+    }
+  };
+
+  const refreshUserBalance = async () => {
+    if (!account?.address) return;
+    
+    setIsRefreshingUserBalance(true);
+    try {
+      await Promise.all([
+        updateBalance(account.address),
+        updateUsdcBalance(account.address)
+      ]);
+      toast({
+        title: 'Balance Updated',
+        description: 'Your wallet balance has been refreshed.',
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Failed to refresh user balance:', error);
+      toast({
+        title: 'Refresh Failed',
+        description: 'Failed to update balance. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsRefreshingUserBalance(false);
+    }
+  };
+
+  const refreshAgentBalance = async () => {
+    if (!agentWallet?.agent_public_key || !publicClient) return;
+    
+    setIsRefreshingAgentBalance(true);
+    try {
+      await loadAgentBalance();
+      toast({
+        title: 'Balance Updated',
+        description: 'Agent wallet balance has been refreshed.',
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Failed to refresh agent balance:', error);
+      toast({
+        title: 'Refresh Failed',
+        description: 'Failed to update agent balance. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsRefreshingAgentBalance(false);
     }
   };
 
@@ -350,6 +424,19 @@ export default function CoinbaseWalletConnect({
         {/* Balances */}
         {(formattedBalance || formattedUsdcBalance) && (
           <Box p={3} bg={bgColor} borderRadius="md" border="1px solid" borderColor={borderColor}>
+            <Flex justify="space-between" align="flex-start" mb={2}>
+              <Text fontSize="sm" fontWeight="bold">Balances</Text>
+              <Tooltip label="Refresh balance">
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  onClick={refreshUserBalance}
+                  isLoading={isRefreshingUserBalance}
+                >
+                  <FiRefreshCw />
+                </Button>
+              </Tooltip>
+            </Flex>
             <VStack align="stretch" spacing={3}>
               {formattedBalance && (
                 <VStack align="stretch" spacing={1}>
@@ -453,7 +540,19 @@ export default function CoinbaseWalletConnect({
                   {/* Agent Balances */}
                   <Box p={3} bg={bgColor} borderRadius="md" border="1px solid" borderColor={borderColor}>
                     <VStack align="stretch" spacing={3}>
-                      <Text fontSize="sm" color={textMutedColor} fontWeight="bold">Agent Balances</Text>
+                      <Flex justify="space-between" align="center">
+                        <Text fontSize="sm" color={textMutedColor} fontWeight="bold">Agent Balances</Text>
+                        <Tooltip label="Refresh balance">
+                          <Button
+                            size="xs"
+                            variant="ghost"
+                            onClick={refreshAgentBalance}
+                            isLoading={isRefreshingAgentBalance}
+                          >
+                            <FiRefreshCw />
+                          </Button>
+                        </Tooltip>
+                      </Flex>
                       
                       {/* ETH Balance */}
                       <VStack align="stretch" spacing={1}>
@@ -486,7 +585,31 @@ export default function CoinbaseWalletConnect({
                   {/* Fund Agent */}
                   <Box p={3} bg={bgColor} borderRadius="md" border="1px solid" borderColor={borderColor}>
                     <VStack align="stretch" spacing={3}>
-                      <Text fontSize="sm" fontWeight="bold">Fund Agent with USDC</Text>
+                      <Text fontSize="sm" fontWeight="bold">Fund Agent Wallet</Text>
+                      
+                      {/* Currency Toggle */}
+                      <ButtonGroup size="sm" isAttached variant="outline" width="100%">
+                        <Button
+                          width="50%"
+                          onClick={() => setFundingCurrency('USDC')}
+                          isActive={fundingCurrency === 'USDC'}
+                          colorScheme={fundingCurrency === 'USDC' ? 'blue' : 'gray'}
+                          variant={fundingCurrency === 'USDC' ? 'solid' : 'outline'}
+                        >
+                          USDC
+                        </Button>
+                        <Button
+                          width="50%"
+                          onClick={() => setFundingCurrency('ETH')}
+                          isActive={fundingCurrency === 'ETH'}
+                          colorScheme={fundingCurrency === 'ETH' ? 'purple' : 'gray'}
+                          variant={fundingCurrency === 'ETH' ? 'solid' : 'outline'}
+                        >
+                          ETH
+                        </Button>
+                      </ButtonGroup>
+                      
+                      {/* Amount Input */}
                       <InputGroup size="md">
                         <Input
                           placeholder="Amount"
@@ -494,22 +617,25 @@ export default function CoinbaseWalletConnect({
                           onChange={(e) => setFundAmount(e.target.value)}
                           type="number"
                           min="0"
-                          step="0.01"
+                          step={fundingCurrency === 'USDC' ? '0.01' : '0.001'}
                         />
-                        <InputRightAddon>USDC</InputRightAddon>
+                        <InputRightAddon>{fundingCurrency}</InputRightAddon>
                       </InputGroup>
+                      
+                      {/* Send Button */}
                       <Button
-                        colorScheme="blue"
+                        colorScheme={fundingCurrency === 'USDC' ? 'blue' : 'purple'}
                         onClick={handleFundAgent}
                         isLoading={isFunding}
                         loadingText="Sending..."
                         leftIcon={<FiSend />}
                         isDisabled={!walletClient || !fundAmount || parseFloat(fundAmount) <= 0}
                       >
-                        Fund Agent
+                        Send {fundingCurrency}
                       </Button>
+                      
                       <Text fontSize="xs" color={textMutedColor}>
-                        Transfer USDC from your wallet to the agent wallet
+                        Transfer {fundingCurrency} from your wallet to the agent wallet
                       </Text>
                     </VStack>
                   </Box>
