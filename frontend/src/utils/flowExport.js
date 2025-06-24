@@ -99,12 +99,9 @@ export const exportFlowAsPNG = (nodes, edges, selectedNode, colorMode) => {
           const targetNode = nodes.find(n => n.id === edge.target);
           
           if (sourceNode && targetNode) {
-            const sourcePortIndex = edge.sourcePort || 0;
-            const targetPortIndex = edge.targetPort || 0;
-            
-            // Calculate port positions
-            const sourceY = sourceNode.y + 30 + (sourcePortIndex * 20);
-            const targetY = targetNode.y - 30 - (targetPortIndex * 20);
+            // Port positions are fixed: output at +30, input at -30
+            const sourceY = sourceNode.y + 30;
+            const targetY = targetNode.y - 30;
             
             // Create a smooth bezier curve
             const path = `M ${sourceNode.x} ${sourceY} C ${sourceNode.x} ${sourceY + 50}, ${targetNode.x} ${targetY - 50}, ${targetNode.x} ${targetY}`;
@@ -155,32 +152,56 @@ export const exportFlowAsPNG = (nodes, edges, selectedNode, colorMode) => {
           
           nodeGroup.appendChild(nodeText);
           
-          // Input ports
+          // Single input port (matching FlowCanvas rendering)
           const inputCount = node.inputs?.length || 1;
-          for (let i = 0; i < inputCount; i++) {
+          if (inputCount > 0) {
             const portCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             portCircle.setAttribute('cx', '0');
-            portCircle.setAttribute('cy', `${-30 - (i * 20)}`);
+            portCircle.setAttribute('cy', '-30');
             portCircle.setAttribute('r', '5');
             portCircle.setAttribute('fill', colorMode === 'dark' ? '#FFFFFF' : '#000000');
             portCircle.setAttribute('stroke', nodeColor);
             portCircle.setAttribute('stroke-width', '2');
             
             nodeGroup.appendChild(portCircle);
+            
+            // Add count label if multiple inputs
+            if (inputCount > 1) {
+              const countText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+              countText.setAttribute('x', '12');
+              countText.setAttribute('y', '-25');
+              countText.setAttribute('font-size', '10');
+              countText.setAttribute('font-weight', 'bold');
+              countText.setAttribute('fill', colorMode === 'dark' ? '#A0AEC0' : '#718096');
+              countText.textContent = inputCount.toString();
+              nodeGroup.appendChild(countText);
+            }
           }
           
-          // Output ports
+          // Single output port (matching FlowCanvas rendering)
           const outputCount = node.outputs?.length || 1;
-          for (let i = 0; i < outputCount; i++) {
+          if (outputCount > 0) {
             const portCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             portCircle.setAttribute('cx', '0');
-            portCircle.setAttribute('cy', `${30 + (i * 20)}`);
+            portCircle.setAttribute('cy', '30');
             portCircle.setAttribute('r', '5');
             portCircle.setAttribute('fill', colorMode === 'dark' ? '#FFFFFF' : '#000000');
             portCircle.setAttribute('stroke', nodeColor);
             portCircle.setAttribute('stroke-width', '2');
             
             nodeGroup.appendChild(portCircle);
+            
+            // Add count label if multiple outputs
+            if (outputCount > 1) {
+              const countText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+              countText.setAttribute('x', '12');
+              countText.setAttribute('y', '35');
+              countText.setAttribute('font-size', '10');
+              countText.setAttribute('font-weight', 'bold');
+              countText.setAttribute('fill', colorMode === 'dark' ? '#A0AEC0' : '#718096');
+              countText.textContent = outputCount.toString();
+              nodeGroup.appendChild(countText);
+            }
           }
           
           nodesGroup.appendChild(nodeGroup);
