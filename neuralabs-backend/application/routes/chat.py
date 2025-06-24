@@ -5,13 +5,17 @@ Acts as intermediary between frontend and HPC execution engine
 import json
 import asyncio
 import websockets
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from typing import Dict, Any, Optional
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, status, Depends, Request
+from typing import Dict, Any, Optional, Callable
 import logging
 import yaml
 import os
+import uuid
+from datetime import datetime
 from ..modules.database.postgresconn import PostgresConnection
 from ..modules.authentication.jwt.token import JWTHandler
+from ..modules.authentication import get_current_user
+from x402.fastapi.middleware import require_payment
 
 router = APIRouter()
 
@@ -30,6 +34,14 @@ config = load_config()
 
 # Configuration for HPC execution engine
 HPC_WEBSOCKET_URL = config.get("hpc", {}).get("websocket_url", "ws://localhost:8000/ws/execute/{flow_id}")
+
+# Get payment address from environment
+PAYMENT_ADDRESS = os.environ.get('PAYMENT_ADDRESS', '0x7efD1aae7Ff2203eFa02D44c492f9ab95d1feD4e')
+if PAYMENT_ADDRESS == '0x0000000000000000000000000000000000000000':
+    logger.warning("PAYMENT_ADDRESS not configured - using default address")
+
+# Store payment info for WebSocket connections
+payment_info_store: Dict[str, Dict[str, Any]] = {}
 
 class ConnectionManager:
     """Manages WebSocket connections"""
@@ -345,6 +357,162 @@ async def connect_to_hpc_engine(flow_id: str, flow_definition: Dict[str, Any], i
     finally:
         manager.disconnect(flow_id)
 
+def cors_wrapped_payment_middleware(
+    amount: str,
+    pay_to_address: str,
+    path: str,
+    network_id: str = "base-sepolia",
+    **kwargs
+):
+    """Wrapper that adds CORS headers to 402 responses from x402 middleware"""
+    
+    # Remove path_prefix if it was passed in kwargs
+    kwargs.pop('path_prefix', None)
+    
+    async def wrapped_middleware(request: Request, call_next: Callable):
+        # Log incoming request
+        logger.info(f"Payment middleware processing: {request.method} {request.url.path}")
+        
+        # Check if this request path starts with our base path
+        if request.url.path.startswith(path) and request.method == "POST":
+            logger.info(f"Path {request.url.path} matches payment requirement pattern {path}")
+            
+            # Create a specific middleware for this exact path
+            logger.info(f"Creating payment requirement: amount={amount}, pay_to={pay_to_address}, network={network_id}")
+            specific_middleware = require_payment(
+                amount=amount,
+                pay_to_address=pay_to_address,
+                path=request.url.path,  # Use the actual path with parameters
+                network_id=network_id,
+                **kwargs
+            )
+            
+            # Call the specific middleware
+            logger.info(f"Calling x402 payment middleware for path: {request.url.path}")
+            response = await specific_middleware(request, call_next)
+            logger.info(f"x402 middleware returned status: {response.status_code}")
+        else:
+            # Not a payment-required path, just pass through
+            response = await call_next(request)
+        
+        # Log response status
+        logger.info(f"Payment middleware response: {response.status_code}")
+        
+        # If it's a 402 response, add CORS headers
+        if response.status_code == 402:
+            origin = request.headers.get("Origin", "*")
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Allow-Methods"] = "*"
+            response.headers["Access-Control-Allow-Headers"] = "*"
+            response.headers["Access-Control-Expose-Headers"] = ", ".join([
+                'X-Payment-Response',
+                'X-Payment-Required',
+                'X-Payment-Message',
+                'X-Payment-Facilitator',
+                'X-Payment-Token',
+                'X-Payment-Chain',
+                'X-Payment-Receiver',
+                'X-Payment-Amount',
+                'X-Payment-Nonce',
+                'X-Payment-Signature',
+                'X-Payment-Domain',
+                'X-Payment-Transaction-Hash',
+                'X-Payment-Transaction',
+                'Content-Type'
+            ])
+        
+        return response
+    
+    return wrapped_middleware
+
+@router.post("/initiate/{agent_id}")
+async def initiate_chat(
+    agent_id: str,
+    request: Request,
+    current_user: str = Depends(get_current_user)
+):
+    """
+    HTTP endpoint to initiate chat - payment already verified by x402 middleware
+    
+    This endpoint is called after successful payment verification
+    """
+    try:
+        # Get payment info from headers (added by x402 middleware after payment)
+        payment_headers = {
+            key: value for key, value in request.headers.items()
+            if key.lower().startswith('x-payment-')
+        }
+        
+        logger.info(f"Received payment headers: {payment_headers}")
+        logger.info(f"All headers: {dict(request.headers)}")
+        
+        # Also check for x-payment-response header which might contain encoded payment info
+        payment_response = request.headers.get('x-payment-response', '')
+        if payment_response:
+            logger.info(f"X-Payment-Response header: {payment_response}")
+        
+        # Create session for WebSocket connection
+        session_id = str(uuid.uuid4())
+        
+        # Extract transaction info if available
+        transaction_hash = payment_headers.get('x-payment-transaction-hash', '')
+        if not transaction_hash:
+            # Try other possible header names
+            transaction_hash = payment_headers.get('x-payment-transaction', '') or payment_headers.get('x-payment-tx-hash', '')
+        
+        logger.info(f"Transaction hash extracted: {transaction_hash}")
+        
+        # Store payment info for later use in WebSocket
+        payment_info_store[session_id] = {
+            "user_id": current_user,
+            "agent_id": agent_id,
+            "transaction_hash": transaction_hash,
+            "payment_headers": payment_headers,
+            "created_at": datetime.utcnow()
+        }
+        
+        # Store payment transaction in database
+        if transaction_hash:
+            pg_conn = PostgresConnection()
+            transaction_id = str(uuid.uuid4())
+            
+            insert_query = """
+                INSERT INTO PAYMENT_TRANSACTIONS 
+                (transaction_id, user_id, agent_id, amount, currency, 
+                 transaction_hash, payment_nonce, status, verified_at, metadata)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            
+            await pg_conn.execute_query(insert_query, (
+                transaction_id,
+                current_user,
+                agent_id,
+                0.01,  # Fixed amount for now
+                'USDC',
+                transaction_hash,
+                payment_headers.get('x-payment-nonce', ''),
+                'verified',
+                datetime.utcnow(),
+                json.dumps(payment_headers)
+            ))
+        
+        logger.info(f"Chat session created for user {current_user}, session: {session_id}")
+        
+        return {
+            "status": "payment_verified",
+            "session_id": session_id,
+            "transaction_hash": transaction_hash,
+            "message": "Payment verified. You can now connect to the chat."
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in chat initiation: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
+
 @router.websocket("/execute/{agent_id}")
 async def websocket_execute_flow(websocket: WebSocket, agent_id: str, token: Optional[str] = None):
     """
@@ -396,8 +564,48 @@ async def websocket_execute_flow(websocket: WebSocket, agent_id: str, token: Opt
             initial_data = json.loads(initial_message)
             logger.info(f"📋 Parsed initial data keys: {list(initial_data.keys())}")
             
-            # Extract user_id from message if not from token
-            if not user_id:
+            # Check for session ID (payment verification)
+            session_id = initial_data.get('session_id')
+            transaction_hash = None
+            
+            if session_id:
+                # Validate session
+                session_info = payment_info_store.get(session_id)
+                if not session_info:
+                    logger.error("❌ Invalid payment session")
+                    await websocket.send_text(json.dumps({
+                        'type': 'error',
+                        'data': {'error': 'Invalid payment session'}
+                    }))
+                    return
+                
+                # Check session expiry (5 minutes)
+                session_age = (datetime.utcnow() - session_info['created_at']).total_seconds()
+                if session_age > 300:  # 5 minutes
+                    logger.error("❌ Payment session expired")
+                    del payment_info_store[session_id]
+                    await websocket.send_text(json.dumps({
+                        'type': 'error',
+                        'data': {'error': 'Payment session expired'}
+                    }))
+                    return
+                
+                # Use user_id from session
+                user_id = session_info['user_id']
+                transaction_hash = session_info.get('transaction_hash')
+                logger.info(f"✅ Valid payment session for user {user_id}, tx: {transaction_hash}")
+                
+                # Send payment info to frontend for display
+                await websocket.send_text(json.dumps({
+                    'type': 'payment_info',
+                    'data': {
+                        'transaction_hash': transaction_hash,
+                        'payment_info': session_info.get('payment_headers', {})
+                    }
+                }))
+            
+            # Extract user_id from message if not from session/token
+            elif not user_id:
                 user_id = initial_data.get('user_id')
                 logger.info(f"👤 User ID from message: {user_id}")
                 if not user_id:

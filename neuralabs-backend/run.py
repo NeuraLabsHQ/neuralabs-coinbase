@@ -5,6 +5,10 @@ import uvicorn
 import os
 import yaml
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 def load_config():
     """

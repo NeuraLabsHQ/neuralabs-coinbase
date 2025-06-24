@@ -31,7 +31,7 @@ import { FiExternalLink, FiCopy, FiCheckCircle, FiAlertCircle, FiSend, FiRefresh
 import { useWallet } from '../../../contexts/WalletContextProvider';
 import { getPublicClient, getWalletClient } from '@wagmi/core';
 import { config } from '../../../config/wagmi';
-import { getOrCreateAgentWallet, getAgentBalance, transferUsdcToAgent, formatBalance } from '../../../utils/agent-wallet-api';
+import { getOrCreateAgentWallet, getAgentWalletDetails, getAgentBalance, transferUsdcToAgent, formatBalance } from '../../../utils/agent-wallet-api';
 
 import coinbaseConnected from '../../../assets/icons/coinbase-connected.svg';
 import coinbaseLight from '../../../assets/icons/coinbase-light.svg';
@@ -117,6 +117,10 @@ export default function CoinbaseWalletConnect({
   const handleDisconnect = async () => {
     try {
       await disconnect();
+      // Clear stored agent wallet keys
+      sessionStorage.removeItem('agent_private_key');
+      sessionStorage.removeItem('agent_public_key');
+      console.log('Agent wallet keys cleared from session storage');
     } catch (err) {
       // Error is handled in the context
     }
@@ -164,6 +168,16 @@ export default function CoinbaseWalletConnect({
     try {
       const result = await getOrCreateAgentWallet();
       setAgentWallet(result);
+      
+      // Fetch wallet details including private key
+      const walletDetails = await getAgentWalletDetails(true); // true to include private key
+      
+      if (walletDetails.agent_private_key) {
+        // Store private key in sessionStorage
+        sessionStorage.setItem('agent_private_key', walletDetails.agent_private_key);
+        sessionStorage.setItem('agent_public_key', walletDetails.agent_public_key);
+        console.log('Agent wallet keys stored in session storage');
+      }
       
       // Only show toast if a new wallet was created
       if (result.created) {

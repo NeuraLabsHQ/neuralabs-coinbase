@@ -110,13 +110,17 @@ async def get_or_create_agent_wallet(
                404: {"model": AgentWalletError, "description": "Agent wallet not found"}
            })
 async def get_agent_wallet_details(
-    current_user: str = Depends(get_current_user)
+    current_user: str = Depends(get_current_user),
+    include_private_key: bool = False
 ):
     """
     Get agent wallet details for the authenticated user
     
+    Args:
+        include_private_key: Whether to include the private key in response (default: False)
+    
     Returns:
-        Agent wallet public key and network information
+        Agent wallet public key, network information, and optionally private key
     """
     try:
         user_public_key = current_user
@@ -137,10 +141,17 @@ async def get_agent_wallet_details(
         # Get additional wallet details if needed
         wallet_details = await wallet_manager.get_wallet_details(wallet_info['agent_public_key'])
         
-        return {
+        response = {
             "agent_public_key": wallet_info['agent_public_key'],
             "network": wallet_details.get('network', 'base-sepolia') if wallet_details else 'base-sepolia'
         }
+        
+        # Include private key if requested
+        if include_private_key:
+            response["agent_private_key"] = wallet_info['agent_private_key']
+            logger.info(f"Private key requested for user {user_public_key}")
+        
+        return response
         
     except HTTPException:
         raise

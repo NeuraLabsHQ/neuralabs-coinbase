@@ -15,8 +15,7 @@ import {
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from 'react';
-import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
-import { FiCheck } from "react-icons/fi";
+import { FiChevronDown, FiChevronUp, FiCheck, FiCopy, FiExternalLink } from 'react-icons/fi';
 import colors from "../../../color";
 import thinkingStepTemplates from "../../../utils/thinkingStepTemplates.json";
 import thinkresponse from "../../../utils/thinkresponse.json";
@@ -490,7 +489,103 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
                 >
                   <Box mr="8px">
                     <Box bg={sourceBgColor} p={isMobile ? 2 : 3} borderRadius="md">
-                      <Text fontSize={isMobile ? "xs" : "sm"}>Analysis completed for: "{query}"</Text>
+                      <VStack align="start" spacing={2}>
+                        <Text fontSize={isMobile ? "xs" : "sm"}>Analysis completed for: "{query}"</Text>
+                        
+                        {/* Show transaction details if payment was made */}
+                        {(() => {
+                          const paymentStep = executionSteps.find(step => 
+                            step.elementId === 'payment_required' && 
+                            step.status === 'completed' && 
+                            step.outputs?.transactionHash
+                          );
+                          if (paymentStep) {
+                            return (
+                              <Box 
+                                bg={useColorModeValue('gray.50', 'gray.800')} 
+                                p={3} 
+                                borderRadius="md" 
+                                border="1px solid"
+                                borderColor={useColorModeValue('gray.200', 'gray.600')}
+                                mt={2}
+                                w="100%"
+                              >
+                                <VStack align="start" spacing={2} w="100%">
+                                  <Text fontSize="sm" color={textColor} fontWeight="bold">
+                                    💳 x402 Payment Transaction Details
+                                  </Text>
+                                  
+                                  <Flex justify="space-between" align="center" w="100%">
+                                    <Text fontSize="xs" color={secondaryColor}>
+                                      Transaction Hash:
+                                    </Text>
+                                    <Flex align="center" gap={1}>
+                                      <Text fontSize="xs" fontFamily="mono" color={linkColor}>
+                                        {paymentStep.outputs.transactionHash ? 
+                                          `${paymentStep.outputs.transactionHash.slice(0, 6)}...${paymentStep.outputs.transactionHash.slice(-4)}` : 
+                                          'N/A'}
+                                      </Text>
+                                      <IconButton
+                                        icon={<FiCopy />}
+                                        size="xs"
+                                        variant="ghost"
+                                        aria-label="Copy transaction hash"
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(paymentStep.outputs.transactionHash);
+                                        }}
+                                      />
+                                      <IconButton
+                                        icon={<FiExternalLink />}
+                                        size="xs"
+                                        variant="ghost"
+                                        aria-label="View in explorer"
+                                        onClick={() => {
+                                          const explorerUrl = `https://sepolia.basescan.org/tx/${paymentStep.outputs.transactionHash}`;
+                                          window.open(explorerUrl, '_blank');
+                                        }}
+                                      />
+                                    </Flex>
+                                  </Flex>
+                                  
+                                  {paymentStep.outputs.amount && (
+                                    <Flex justify="space-between" w="100%">
+                                      <Text fontSize="xs" color={secondaryColor}>
+                                        Amount:
+                                      </Text>
+                                      <Text fontSize="xs" fontWeight="medium" color={textColor}>
+                                        {paymentStep.outputs.amount} {paymentStep.outputs.currency || 'USDC'}
+                                      </Text>
+                                    </Flex>
+                                  )}
+                                  
+                                  {paymentStep.outputs.network && (
+                                    <Flex justify="space-between" w="100%">
+                                      <Text fontSize="xs" color={secondaryColor}>
+                                        Network:
+                                      </Text>
+                                      <Text fontSize="xs" color={textColor}>
+                                        {paymentStep.outputs.network}
+                                      </Text>
+                                    </Flex>
+                                  )}
+                                  
+                                  {paymentStep.outputs.timestamp && (
+                                    <Flex justify="space-between" w="100%">
+                                      <Text fontSize="xs" color={secondaryColor}>
+                                        Time:
+                                      </Text>
+                                      <Text fontSize="xs" color={textColor}>
+                                        {new Date(paymentStep.outputs.timestamp).toLocaleString()}
+                                      </Text>
+                                    </Flex>
+                                  )}
+                                </VStack>
+                              </Box>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </VStack>
                     </Box>
                   </Box>
                 </motion.div>

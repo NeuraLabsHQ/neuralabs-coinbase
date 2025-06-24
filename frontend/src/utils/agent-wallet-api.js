@@ -33,12 +33,18 @@ export const getOrCreateAgentWallet = async () => {
 
 /**
  * Get agent wallet details
+ * @param {boolean} includePrivateKey - Whether to include the private key in response
  * @returns {Promise<Object>} Agent wallet details
  */
-export const getAgentWalletDetails = async () => {
+export const getAgentWalletDetails = async (includePrivateKey = false) => {
   try {
+    const url = new URL(`${API_BASE_URL}/api/neuralock-temp/agent-wallet/details`);
+    if (includePrivateKey) {
+      url.searchParams.append('include_private_key', 'true');
+    }
+    
     const response = await makeAuthenticatedRequest(
-      `${API_BASE_URL}/api/neuralock-temp/agent-wallet/details`,
+      url.toString(),
       {
         method: 'GET',
         headers: {

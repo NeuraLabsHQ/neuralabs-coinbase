@@ -7,6 +7,7 @@ import ChatHistoryPanel from '../ChatHistoryPanel/ChatHistoryPanel';
 import ChatInterface from '../ChatInterface';
 import SearchModal from '../SearchModal/SearchModal';
 import chatService from '../../../services/chatServiceV2';
+import { FlowExecutionAPI } from '../../../utils/flow-execution-api';
 
 const ChatPage = () => {
   const colors = useUiColors();
@@ -107,7 +108,12 @@ const ChatPage = () => {
   useEffect(() => {
     return () => {
       if (websocketRef.current) {
-        websocketRef.current.close();
+        // Check if it's a FlowExecutionAPI instance or WebSocket
+        if (websocketRef.current.disconnect) {
+          websocketRef.current.disconnect();
+        } else if (websocketRef.current.close) {
+          websocketRef.current.close();
+        }
       }
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -115,7 +121,7 @@ const ChatPage = () => {
     };
   }, []);
 
-  const connectToBackend = (agentId, userMessage, messageId) => {
+  const connectToBackend = async (agentId, userMessage, messageId) => {
     console.log('Connecting to NeuraLabs backend with agent:', agentId);
     console.log('User message:', userMessage);
     console.log('Message ID:', messageId);
@@ -175,60 +181,23 @@ const ChatPage = () => {
       }));
     }, 1000);
 
-    // Connect to NeuraLabs backend WebSocket (port 8001)
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8001';
-    const wsUrl = backendUrl.replace('http://', 'ws://').replace('https://', 'wss://') + `/api/chat/execute/${agentId}`;
-    console.log('Attempting WebSocket connection to NeuraLabs backend:', wsUrl);
+    // Create FlowExecutionAPI instance
+    const flowApi = new FlowExecutionAPI();
     
-    const ws = new WebSocket(wsUrl);
-    websocketRef.current = ws;
+    // Store the API instance and message ID
+    websocketRef.current = flowApi;
+    flowApi.messageId = messageId;
     
-    // Store the message ID this WebSocket is handling
-    ws.messageId = messageId;
-
-    ws.onopen = () => {
-      console.log('✅ WebSocket connected to NeuraLabs backend');
+    // Set up event listeners
+    flowApi.on('status', (data) => {
+      console.log('→ Handling execution event: status for message:', messageId);
+      handleExecutionEvent({ type: 'status', data }, messageId);
+    });
+    
+    flowApi.on('error', (data) => {
+      console.log('→ Handling execution event: error for message:', messageId);
+      handleExecutionEvent({ type: 'error', data }, messageId);
       
-      // Get conversation history for this chat (excluding the current message)
-      const conversationHistory = messages.map(msg => ({
-        role: msg.role,
-        content: msg.content,
-        timestamp: msg.timestamp,
-        metadata: {
-          message_id: msg.id,
-          model: msg.model || null
-        }
-      }));
-      
-      // Send initial data to NeuraLabs backend with conversation history
-      const initialData = {
-        user_id: walletAddress || 'anonymous', // Use actual wallet address
-        message: userMessage,
-        agent_id: agentId,
-        conversation_history: conversationHistory
-      };
-      
-      console.log('📤 Sending initial data to NeuraLabs backend:', initialData);
-      console.log('📋 Conversation history length:', conversationHistory.length);
-      ws.send(JSON.stringify(initialData));
-    };
-
-    ws.onmessage = (event) => {
-      console.log('📨 WebSocket message received:', event.data);
-      const message = JSON.parse(event.data);
-      
-      // NeuraLabs backend forwards HPC execution events directly
-      if (message.type) {
-        console.log('→ Handling execution event:', message.type, 'for message:', messageId);
-        handleExecutionEvent(message, messageId);
-      } else if (message.status || message.error) {
-        console.log('→ NeuraLabs backend status:', message);
-        // Handle backend status messages if needed
-      }
-    };
-
-    ws.onerror = (error) => {
-      console.error('❌ WebSocket error:', error);
       // Stop thinking UI on error
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -242,19 +211,105 @@ const ChatPage = () => {
       const errorMessage = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: 'Sorry, I couldn\'t connect to the NeuraLabs backend. Please make sure the NeuraLabs backend is running on port 8001.',
+        content: data.error || 'Sorry, an error occurred while processing your request.',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
-    };
-
-    ws.onclose = (event) => {
-      console.log('🔌 WebSocket closed:', event.code, event.reason);
-      // If connection was not established properly, it might be because NeuraLabs backend is not running
-      if (event.code === 1006) {
-        console.error('WebSocket connection failed. Is the NeuraLabs backend running on port 8001?');
+    });
+    
+    flowApi.on('paymentRequired', (data) => {
+      console.log('→ Payment required for message:', messageId);
+      handleExecutionEvent({ type: 'paymentRequired', data }, messageId);
+    });
+    
+    flowApi.on('paymentVerified', (data) => {
+      console.log('→ Payment verified for message:', messageId);
+      handleExecutionEvent({ type: 'paymentVerified', data }, messageId);
+    });
+    
+    flowApi.on('flowStarted', (data) => {
+      console.log('→ Handling execution event: flow_started for message:', messageId);
+      handleExecutionEvent({ type: 'flow_started', timestamp: Date.now() / 1000, data }, messageId);
+    });
+    
+    flowApi.on('elementStarted', (data) => {
+      console.log('→ Handling execution event: element_started for message:', messageId);
+      handleExecutionEvent({ type: 'element_started', timestamp: Date.now() / 1000, data }, messageId);
+    });
+    
+    flowApi.on('processing', (data) => {
+      console.log('→ Handling execution event: processing for message:', messageId);
+      handleExecutionEvent({ type: 'processing', timestamp: Date.now() / 1000, data }, messageId);
+    });
+    
+    flowApi.on('elementCompleted', (data) => {
+      console.log('→ Handling execution event: element_completed for message:', messageId);
+      handleExecutionEvent({ type: 'element_completed', timestamp: Date.now() / 1000, data }, messageId);
+    });
+    
+    flowApi.on('llmPrompt', (data) => {
+      console.log('→ Handling execution event: llm_prompt for message:', messageId);
+      handleExecutionEvent({ type: 'llm_prompt', timestamp: Date.now() / 1000, data }, messageId);
+    });
+    
+    flowApi.on('llmChunk', (data) => {
+      console.log('→ Handling execution event: llm_chunk for message:', messageId);
+      // Accumulate chunks in the message-specific buffer
+      if (!messageStreamBuffers.current[messageId]) {
+        messageStreamBuffers.current[messageId] = '';
       }
-    };
+      messageStreamBuffers.current[messageId] += data.content || '';
+      
+      // Also update global buffer if this is the active message
+      if (messageId === activeMessageId) {
+        streamBufferRef.current += data.content || '';
+      }
+    });
+    
+    flowApi.on('finalOutput', (data) => {
+      console.log('→ Handling execution event: final_output for message:', messageId);
+      handleExecutionEvent({ type: 'final_output', timestamp: Date.now() / 1000, data }, messageId);
+    });
+    
+    flowApi.on('flowCompleted', (data) => {
+      console.log('→ Handling execution event: flow_completed for message:', messageId);
+      handleExecutionEvent({ type: 'flow_completed', timestamp: Date.now() / 1000, data }, messageId);
+    });
+    
+    flowApi.on('flowError', (data) => {
+      console.log('→ Handling execution event: flow_error for message:', messageId);
+      handleExecutionEvent({ type: 'flow_error', timestamp: Date.now() / 1000, data }, messageId);
+    });
+    
+    flowApi.on('disconnected', (data) => {
+      console.log('🔌 WebSocket closed:', data.code, data.reason);
+    });
+    
+    // Get conversation history for this chat (excluding the current message)
+    const conversationHistory = messages.map(msg => ({
+      role: msg.role,
+      content: msg.content,
+      timestamp: msg.timestamp,
+      metadata: {
+        message_id: msg.id,
+        model: msg.model || null
+      }
+    }));
+    
+    try {
+      // Connect with payment flow
+      await flowApi.connect(
+        agentId,
+        walletAddress || 'anonymous',
+        userMessage,
+        {
+          conversation_history: conversationHistory
+        }
+      );
+    } catch (error) {
+      console.error('Failed to connect to backend:', error);
+      handleExecutionEvent({ type: 'error', data: { error: error.message } }, messageId);
+    }
   };
 
   const handleExecutionEvent = async (event, messageId) => {
@@ -278,8 +333,52 @@ const ChatPage = () => {
       }
     };
 
+    // Handle payment events
+    if (type === 'paymentRequired') {
+      // Add payment required step
+      updateStates(prev => ({
+        ...prev,
+        executionSteps: [...(prev.executionSteps || []), {
+          elementId: 'payment_required',
+          elementName: 'Payment Required',
+          elementType: 'payment',
+          description: `Payment of ${data.amount || '0.01'} ${data.currency || 'USDC'} required`,
+          status: 'running',
+          outputs: { amount: data.amount, currency: data.currency },
+          backtracking: false,
+          executionTime: null
+        }]
+      }));
+    } else if (type === 'paymentVerified' || type === 'payment_info') {
+      // Extract payment details from the data
+      const paymentInfo = data.paymentDetails || {};
+      
+      // Update payment step to completed with all payment details
+      updateStates(prev => ({
+        ...prev,
+        executionSteps: (prev.executionSteps || []).map(step =>
+          step.elementId === 'payment_required'
+            ? {
+                ...step,
+                elementName: 'Payment Verified',
+                status: 'completed',
+                outputs: { 
+                  ...step.outputs, 
+                  transactionHash: data.transactionHash || data.transaction_hash || paymentInfo.transaction,
+                  sessionId: data.sessionId,
+                  amount: step.outputs.amount || '0.01',
+                  currency: step.outputs.currency || 'USDC',
+                  network: paymentInfo.network || 'base-sepolia',
+                  timestamp: new Date().toISOString()
+                },
+                description: 'Payment verified successfully'
+              }
+            : step
+        )
+      }));
+    }
     // Handle any type of event generically
-    if (type === 'element_started') {
+    else if (type === 'element_started') {
       // Add a new step when an element starts
       updateStates(prev => ({
         ...prev,
@@ -465,9 +564,14 @@ const ChatPage = () => {
         delete messageStreamBuffers.current[messageId];
       }
       
-      // Close WebSocket
+      // Close WebSocket/FlowAPI connection
       if (websocketRef.current) {
-        websocketRef.current.close();
+        // Check if it's a FlowExecutionAPI instance or WebSocket
+        if (websocketRef.current.disconnect) {
+          websocketRef.current.disconnect();
+        } else if (websocketRef.current.close) {
+          websocketRef.current.close();
+        }
         websocketRef.current = null;
       }
       
@@ -652,10 +756,15 @@ const ChatPage = () => {
   };
 
   const handleSendMessage = async (content, modelId) => {
-    // First, close any existing WebSocket connection and stop thinking UI
+    // First, close any existing WebSocket/FlowAPI connection and stop thinking UI
     if (websocketRef.current) {
-      console.log('Closing existing WebSocket connection');
-      websocketRef.current.close();
+      console.log('Closing existing connection');
+      // Check if it's a FlowExecutionAPI instance or WebSocket
+      if (websocketRef.current.disconnect) {
+        websocketRef.current.disconnect();
+      } else if (websocketRef.current.close) {
+        websocketRef.current.close();
+      }
       websocketRef.current = null;
     }
     

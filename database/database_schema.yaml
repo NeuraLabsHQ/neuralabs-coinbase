@@ -427,6 +427,53 @@ postgres:
         agent_private_key:
           type: VARCHAR(255)
           description: "Private key for the agent, encrypted"
+    
+    # Payment transaction tracking
+    PAYMENT_TRANSACTIONS:
+      columns:
+        transaction_id:
+          type: VARCHAR(255)
+          primary_key: true
+          description: "Unique transaction identifier"
+        user_id:
+          type: VARCHAR(255)
+          references: USER_AUTH.user_pub_key
+          description: "User who made the payment"
+        agent_id:
+          type: VARCHAR(255)
+          references: AGENT.agent_id
+          description: "Agent being accessed"
+        amount:
+          type: DECIMAL(10,6)
+          description: "Payment amount in USDC"
+        currency:
+          type: VARCHAR(10)
+          default: "USDC"
+          description: "Payment currency"
+        transaction_hash:
+          type: VARCHAR(255)
+          nullable: true
+          description: "Blockchain transaction hash"
+        payment_nonce:
+          type: VARCHAR(255)
+          description: "Payment nonce to prevent replay"
+        status:
+          type: VARCHAR(20)
+          check: "IN ('pending', 'verified', 'failed')"
+          default: "pending"
+          description: "Payment status"
+        created_at:
+          type: TIMESTAMP
+          default: "CURRENT_TIMESTAMP"
+          description: "When the payment was initiated"
+        verified_at:
+          type: TIMESTAMP
+          nullable: true
+          description: "When the payment was verified"
+        metadata:
+          type: JSONB
+          nullable: true
+          description: "Additional payment metadata"
 
 # Redis Database Schema
 redis:
