@@ -229,6 +229,16 @@ const AccessHomePage = ({ onSelectFlow }) => {
   const navigate = useNavigate();
   const toast = useToast();
   const isMobile = useBreakpointValue({ base: true, lg: false });
+  
+  // Add loading state to prevent layout flash
+  const [isBreakpointReady, setIsBreakpointReady] = useState(false);
+  
+  useEffect(() => {
+    // Set ready state once breakpoint value is determined
+    if (isMobile !== undefined) {
+      setIsBreakpointReady(true);
+    }
+  }, [isMobile]);
 
   const bgColor = useColorModeValue(colors.accessManagement.mainContent.bg.light, colors.accessManagement.mainContent.bg.dark);
   const cardBgColor = useColorModeValue(colors.accessManagement.flowCard.bg.light, colors.accessManagement.flowCard.bg.dark);
@@ -428,6 +438,19 @@ const AccessHomePage = ({ onSelectFlow }) => {
   const searchBarMaxWidth = useBreakpointValue({ base: "90%", sm: "400px", md: "600px" });
   const headingSize = useBreakpointValue({ base: "md", md: "lg" });
   const containerPadding = useBreakpointValue({ base: 4, md: 6 });
+
+  // Prevent render until breakpoint is determined to avoid layout flash
+  if (!isBreakpointReady) {
+    return (
+      <Box 
+        bg={bgColor} 
+        h="100%" 
+        width="100%" 
+        overflowY="auto"
+        overflowX="hidden"
+      />
+    );
+  }
 
   return (
     <Box 

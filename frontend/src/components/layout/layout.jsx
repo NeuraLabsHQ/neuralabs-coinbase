@@ -1,5 +1,6 @@
 import { Flex, IconButton, useDisclosure, Drawer, DrawerOverlay, DrawerContent, DrawerCloseButton, useBreakpointValue, Box, useColorModeValue } from '@chakra-ui/react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { FiMenu } from 'react-icons/fi';
 import NavPanel from '../common_components/NavPanel/NavelPanel';
 
@@ -11,6 +12,16 @@ const Layout = ({ children }) => {
   // Responsive values
   const isMobile = useBreakpointValue({ base: true, lg: false });
   const navWidth = useBreakpointValue({ base: '280px', lg: '80px' });
+  
+  // Add loading state to prevent layout flash
+  const [isBreakpointReady, setIsBreakpointReady] = useState(false);
+  
+  useEffect(() => {
+    // Set ready state once breakpoint value is determined
+    if (isMobile !== undefined) {
+      setIsBreakpointReady(true);
+    }
+  }, [isMobile]);
   
   // Background color for mobile header
   const mobileBg = useColorModeValue('transparent', '#0A0C0F');
@@ -25,6 +36,13 @@ const Layout = ({ children }) => {
       }
     }
   };
+
+  // Prevent render until breakpoint is determined to avoid layout flash
+  if (!isBreakpointReady) {
+    return (
+      <Flex className="app" h="100vh" w="100vw" overflow="hidden" />
+    );
+  }
 
   return (
     <Flex className="app" h="100vh" w="100vw" overflow="hidden">

@@ -53,6 +53,16 @@ const ChatPage = () => {
   const drawerPlacement = useBreakpointValue({ base: 'bottom', lg: 'left' });
   const drawerSize = useBreakpointValue({ base: 'sm', lg: 'xs' });
   
+  // Add loading state to prevent layout flash
+  const [isBreakpointReady, setIsBreakpointReady] = useState(false);
+  
+  useEffect(() => {
+    // Set ready state once breakpoint value is determined
+    if (isMobile !== undefined) {
+      setIsBreakpointReady(true);
+    }
+  }, [isMobile]);
+  
   // Load conversations on mount
   useEffect(() => {
     loadConversations();
@@ -759,6 +769,13 @@ const ChatPage = () => {
       });
     }
   };
+
+  // Prevent render until breakpoint is determined to avoid layout flash
+  if (!isBreakpointReady) {
+    return (
+      <Flex h="100%" w="100%" overflow="hidden" bg={colors.bgPrimary} />
+    );
+  }
 
   return (
     <Flex h="100%" w="100%" overflow="hidden" bg={colors.bgPrimary}>
