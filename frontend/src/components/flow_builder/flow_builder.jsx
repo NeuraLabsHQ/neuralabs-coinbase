@@ -721,29 +721,65 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
   
   // Zoom controls
   const handleZoomIn = () => {
-    setScale(prevScale => {
-      const newScale = Math.min(prevScale + 0.1, 4);
-      return newScale;
-    });
+    if (zoomBehaviorRef.current && svgRef.current) {
+      const svg = d3.select(svgRef.current);
+      const currentTransform = d3.zoomTransform(svgRef.current);
+      const newScale = Math.min(currentTransform.k + 0.1, 4);
+      
+      // Apply the new scale while maintaining the current translation
+      svg.transition().duration(300).call(
+        zoomBehaviorRef.current.transform,
+        d3.zoomIdentity
+          .translate(currentTransform.x, currentTransform.y)
+          .scale(newScale)
+      );
+    }
   };
   
   const handleZoomOut = () => {
-    setScale(prevScale => {
-      const newScale = Math.max(prevScale - 0.1, 0.8);
-      return newScale;
-    });
+    if (zoomBehaviorRef.current && svgRef.current) {
+      const svg = d3.select(svgRef.current);
+      const currentTransform = d3.zoomTransform(svgRef.current);
+      const newScale = Math.max(currentTransform.k - 0.1, 0.8);
+      
+      // Apply the new scale while maintaining the current translation
+      svg.transition().duration(300).call(
+        zoomBehaviorRef.current.transform,
+        d3.zoomIdentity
+          .translate(currentTransform.x, currentTransform.y)
+          .scale(newScale)
+      );
+    }
   };
   
   const handleFitView = () => {
-    // Reset the view using d3 if the ref exists
-    if (zoomBehaviorRef.current && nodes.length > 0) {
-      centerFlow();
+    // Center on the first node if nodes exist
+    if (zoomBehaviorRef.current && nodes.length > 0 && svgRef.current) {
+      // Get the first node
+      const firstNode = nodes[0];
+      
+      // Get SVG dimensions
+      const svgElement = svgRef.current;
+      const svgRect = svgElement.getBoundingClientRect();
+      const svgWidth = svgRect.width;
+      const svgHeight = svgRect.height;
+      
+      // Calculate the new translate values to center on the first node
+      // Reset scale to 1 for consistent view
+      const targetScale = 1;
+      const newTranslateX = svgWidth / 2 - firstNode.x * targetScale;
+      const newTranslateY = svgHeight / 2 - firstNode.y * targetScale;
+      
+      // Apply transform through D3 zoom behavior - single call with transition
+      const svg = d3.select(svgElement);
+      svg.transition().duration(500).call(
+        zoomBehaviorRef.current.transform,
+        d3.zoomIdentity.translate(newTranslateX, newTranslateY).scale(targetScale)
+      );
+      
     } else {
       // Default reset if no nodes
-      setScale(1);
-      setTranslate({ x: 0, y: 0 });
-      
-      if (zoomBehaviorRef.current) {
+      if (zoomBehaviorRef.current && svgRef.current) {
         const svg = d3.select(svgRef.current);
         svg.transition().duration(300).call(
           zoomBehaviorRef.current.transform, 

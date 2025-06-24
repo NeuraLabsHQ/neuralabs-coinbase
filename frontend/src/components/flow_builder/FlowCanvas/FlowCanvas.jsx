@@ -78,7 +78,12 @@ const FlowCanvas = ({
     } else {
       zoom = d3.zoom()
         .scaleExtent([0.8, 4])
-        .interpolate(d3.interpolateZoom); 
+        .interpolate(d3.interpolateZoom);
+      
+      // Store the zoom behavior in the external ref if provided
+      if (externalZoomRef) {
+        externalZoomRef.current = zoom;
+      }
     }
     
     // Configure zoom behavior
@@ -795,7 +800,7 @@ const renderNode = (node) => {
       overflow="hidden"
     >
       <svg
-        ref={svgRef}
+        ref={externalSvgRef || svgRef}
         width="100%"
         height="100%"
         style={{ cursor: dragging ? 'grabbing' : 'grab' }}
