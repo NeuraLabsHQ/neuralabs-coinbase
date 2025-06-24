@@ -193,7 +193,7 @@ const FlowCanvas = ({
     const startNodeDrag = (e) => {
       setDragging(true);
       
-      const svg = svgRef.current;
+      const svg = externalSvgRef?.current || svgRef.current;
       const svgRect = svg.getBoundingClientRect();
       
       // Find the node
@@ -295,7 +295,7 @@ const centerNodeInView = (nodeId) => {
   if (detailsPanelOpen) rightOffset = Math.max(rightOffset, detailsPanelWidth);
   
   // Get the SVG element and its dimensions
-  const svg = svgRef.current;
+  const svg = externalSvgRef?.current || svgRef.current;
   if (!svg) return;
   
   const svgRect = svg.getBoundingClientRect();
@@ -349,7 +349,7 @@ const handlePortMouseDown = (e, nodeId, portType, portIndex) => {
   clickedPort.setAttribute('stroke', colors.green[900]); // Darker green stroke
   clickedPort.setAttribute('stroke-width', '3');
   
-  const svg = svgRef.current;
+  const svg = externalSvgRef?.current || svgRef.current;
   const svgRect = svg.getBoundingClientRect();
   
   // Find the node
