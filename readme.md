@@ -121,7 +121,7 @@ Our mission is to empower anyone to create, own, and monetize AI agents in a tru
   - Backpressure handling for network optimization
 
 #### 📄 Smart Contract Layer
-- **SUI Move Contracts**: Native smart contracts deployed on SUI testnet
+- **SUI Move Contracts**: Native smart contracts deployed on Base Sepolia Testnet
 - **NFT-Based Access Control**: 6-level hierarchical permission system for AI workflows
 - **Modular Architecture**: 4 separate modules for maintainability and upgradability
 - **Seal Integration**: Built-in `seal_approve` functions for threshold encryption
@@ -1395,7 +1395,7 @@ entry fun seal_approve(
 
 ## Deployment Information
 
-- **Network**: SUI Testnet
+- **Network**: Base Sepolia Testnet
 - **Package ID**: `0x926de4be791b165822a8a213540c0606bb0d52450e5f8b6531097d9cd2c4dc64`
 - **Deployment Status**: ✅ Successfully deployed and tested
 - **Gas Optimization**: All operations designed for O(1) complexity
