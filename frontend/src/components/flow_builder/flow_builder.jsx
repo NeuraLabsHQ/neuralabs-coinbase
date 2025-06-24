@@ -823,10 +823,12 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
         applyBeautify(nodes, edges);
       }
       
-      // Center the flow
-      centerFlow();
-      
       setViewOnlyMode(true);
+      
+      // Center on the first node using fit to view
+      setTimeout(() => {
+        handleFitView();
+      }, 100);
       
       // Notification
       toast({
