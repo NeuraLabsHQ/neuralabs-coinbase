@@ -414,6 +414,19 @@ postgres:
           type: TIMESTAMP
           default: "CURRENT_TIMESTAMP"
           description: "Creation timestamp"
+    
+    NEURALOCK_TEMP_STORE:
+      columns:
+        user_public_key:
+          type: VARCHAR(255)
+          primary_key: true
+          description: "Public key of the user, used as primary identifier"
+        agent_public_key:
+          type: VARCHAR(255)
+          description: "Public key for the agent, encrypted"
+        agent_private_key:
+          type: VARCHAR(255)
+          description: "Private key for the agent, encrypted"
 
 # Redis Database Schema
 redis:

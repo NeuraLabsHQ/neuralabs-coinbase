@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -13,13 +13,24 @@ import {
   useColorMode,
   Alert,
   AlertIcon,
-  AlertDescription
+  AlertDescription,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  Input,
+  InputGroup,
+  InputRightAddon,
+  useToast
 } from '@chakra-ui/react';
-import { FiExternalLink, FiCopy, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiExternalLink, FiCopy, FiCheckCircle, FiAlertCircle, FiSend } from 'react-icons/fi';
 
 // Import wallet context to get wallet state and actions
 import { useWallet } from '../../../contexts/WalletContextProvider';
-
+import { getPublicClient, getWalletClient } from '@wagmi/core';
+import { config } from '../../../config/wagmi';
+import { getOrCreateAgentWallet, getAgentBalance, transferUsdcToAgent, formatBalance } from '../../../utils/agent-wallet-api';
 
 import coinbaseConnected from '../../../assets/icons/coinbase-connected.svg';
 import coinbaseLight from '../../../assets/icons/coinbase-light.svg';
@@ -31,9 +42,7 @@ export default function CoinbaseWalletConnect({
   viewOnlyMode = false,
   onClose = null
 }) {
-  const { colorMode } = useColorMode();
-  
-  // Get wallet state and actions from context
+  // Get wallet state and actions from context first
   const {
     isConnected,
     isConnecting,
@@ -50,10 +59,41 @@ export default function CoinbaseWalletConnect({
     disconnect
   } = useWallet();
   
+  // State for agent wallet
+  const [agentWallet, setAgentWallet] = useState(null);
+  const [agentBalance, setAgentBalance] = useState({ eth: null, usdc: null });
+  const [isLoadingAgent, setIsLoadingAgent] = useState(false);
+  const [fundAmount, setFundAmount] = useState('');
+  const [isFunding, setIsFunding] = useState(false);
+  
+  // Hooks for blockchain interaction
+  const [publicClient, setPublicClient] = useState(null);
+  const [walletClient, setWalletClient] = useState(null);
+  const toast = useToast();
+  const { colorMode } = useColorMode();
+  const [tabIndex, setTabIndex] = useState(0);
+  
+  // Initialize clients when connected
+  useEffect(() => {
+    if (isConnected) {
+      const initClients = async () => {
+        try {
+          const pubClient = getPublicClient(config);
+          setPublicClient(pubClient);
+          
+          const walClient = await getWalletClient(config);
+          setWalletClient(walClient);
+        } catch (error) {
+          console.error('Failed to initialize clients:', error);
+        }
+      };
+      initClients();
+    }
+  }, [isConnected]);
+
   // Color mode values
   const bgColor = useColorModeValue('white', '#18191b');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const textColor = useColorModeValue('gray.800', 'gray.100');
   const textMutedColor = useColorModeValue('gray.600', 'gray.400');
 
   const handleConnect = async () => {
@@ -63,10 +103,6 @@ export default function CoinbaseWalletConnect({
     
     try {
       await connect();
-      // Close modal on successful connection and authentication
-      if (onClose) {
-        setTimeout(() => onClose(), 1000);
-      }
     } catch (err) {
       // Error is handled in the context
     }
@@ -75,10 +111,6 @@ export default function CoinbaseWalletConnect({
   const handleDisconnect = async () => {
     try {
       await disconnect();
-      // Close modal after disconnect
-      if (onClose) {
-        setTimeout(() => onClose(), 500);
-      }
     } catch (err) {
       // Error is handled in the context
     }
@@ -106,6 +138,124 @@ export default function CoinbaseWalletConnect({
     }
   };
 
+  // Load agent wallet when authenticated
+  useEffect(() => {
+    if (isAuthenticated && !agentWallet && !isLoadingAgent) {
+      loadAgentWallet();
+    }
+  }, [isAuthenticated]);
+
+  // Load agent balance when agent wallet is available
+  useEffect(() => {
+    if (agentWallet?.agent_public_key && publicClient) {
+      loadAgentBalance();
+    }
+  }, [agentWallet, publicClient]);
+
+  const loadAgentWallet = async () => {
+    setIsLoadingAgent(true);
+    
+    try {
+      const result = await getOrCreateAgentWallet();
+      setAgentWallet(result);
+      
+      // Only show toast if a new wallet was created
+      if (result.created) {
+        toast({
+          title: 'Agent Wallet Created',
+          description: 'Your agent wallet has been created successfully.',
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load agent wallet:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load agent wallet. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoadingAgent(false);
+    }
+  };
+
+  const loadAgentBalance = async () => {
+    try {
+      const balance = await getAgentBalance(agentWallet.agent_public_key, publicClient);
+      setAgentBalance(balance);
+    } catch (error) {
+      console.error('Failed to load agent balance:', error);
+    }
+  };
+
+  const handleFundAgent = async () => {
+    if (!fundAmount || parseFloat(fundAmount) <= 0) {
+      toast({
+        title: 'Invalid Amount',
+        description: 'Please enter a valid amount to fund.',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    setIsFunding(true);
+    try {
+      const txHash = await transferUsdcToAgent({
+        agentAddress: agentWallet.agent_public_key,
+        amount: fundAmount,
+        walletClient
+      });
+
+      toast({
+        title: 'Transaction Sent',
+        description: `Funding transaction sent. Hash: ${txHash.slice(0, 10)}...`,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+
+      // Clear input and reload balance after a delay
+      setFundAmount('');
+      setTimeout(() => loadAgentBalance(), 5000);
+    } catch (error) {
+      console.error('Failed to fund agent:', error);
+      toast({
+        title: 'Transaction Failed',
+        description: error.message || 'Failed to send funds to agent wallet.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsFunding(false);
+    }
+  };
+
+  const copyAgentAddress = () => {
+    if (agentWallet?.agent_public_key) {
+      navigator.clipboard.writeText(agentWallet.agent_public_key);
+      toast({
+        title: 'Copied',
+        description: 'Agent address copied to clipboard',
+        status: 'success',
+        duration: 2000,
+      });
+    }
+  };
+
+  const openAgentExplorer = () => {
+    if (agentWallet?.agent_public_key) {
+      const explorerUrl = `https://sepolia.basescan.org/address/${agentWallet.agent_public_key}`;
+      window.open(explorerUrl, '_blank');
+    }
+  };
+
   // Show connect button if not connected
   if (!isConnected) {
     return (
@@ -126,22 +276,33 @@ export default function CoinbaseWalletConnect({
 
   // Show wallet info if connected
   return (
-    <Box width="100%">
-      <VStack spacing={4} align="stretch">
-        {/* Connection Status */}
-        <Flex justify="space-between" align="center">
-          <HStack>
-            <img src={getCoinbaseIcon()} alt="Coinbase" width="24" height="24" />
-            <Text fontWeight="bold">Coinbase Smart Wallet</Text>
-          </HStack>
-          <Badge colorScheme="green">Connected</Badge>
-        </Flex>
+    <Box width="100%" minWidth="400px" maxWidth="450px">
+      <Tabs index={tabIndex} onChange={setTabIndex}>
+        <TabList>
+          <Tab>User Wallet</Tab>
+          <Tab>Agent Wallet</Tab>
+        </TabList>
+        
+        <TabPanels minHeight="450px">
+          {/* User Wallet Tab */}
+          <TabPanel>
+            <VStack spacing={4} align="stretch">
+              {/* Connection Status */}
+              <Flex justify="space-between" align="center">
+                <HStack>
+                  <img src={getCoinbaseIcon()} alt="Coinbase" width="24" height="24" />
+                  <Text fontWeight="bold">Coinbase Smart Wallet</Text>
+                </HStack>
+                <Badge colorScheme="green">Connected</Badge>
+              </Flex>
         
         {/* Authentication Status */}
-        {isAuthenticating ? (
+        {isAuthenticating || (isAuthenticated && isLoadingAgent && !agentWallet) ? (
           <Alert status="info" borderRadius="md">
             <Spinner size="sm" mr={2} />
-            <AlertDescription>Authenticating with backend...</AlertDescription>
+            <AlertDescription>
+              {isAuthenticating ? 'Authenticating with backend...' : 'Setting up agent wallet...'}
+            </AlertDescription>
           </Alert>
         ) : isAuthenticated ? (
           <Alert status="success" borderRadius="md">
@@ -226,22 +387,145 @@ export default function CoinbaseWalletConnect({
               <Text fontSize="xs" color={textMutedColor}>Chain ID: {chainId || 84532}</Text>
             </HStack>
           </VStack>
-        </Box>
-      </VStack>
-      
-      {/* Disconnect Button */}
-      <Button 
-        onClick={handleDisconnect}
-        colorScheme="red" 
-        variant="outline" 
-        size="sm" 
-        width="100%"
-        mt={4}
-        isLoading={isDisconnecting}
-        loadingText="Disconnecting..."
-      >
-        Disconnect & Logout
-      </Button>
+              </Box>
+            </VStack>
+            
+            {/* Disconnect Button */}
+            <Button 
+              onClick={handleDisconnect}
+              colorScheme="red" 
+              variant="outline" 
+              size="sm" 
+              width="100%"
+              mt={4}
+              isLoading={isDisconnecting}
+              loadingText="Disconnecting..."
+            >
+              Disconnect & Logout
+            </Button>
+          </TabPanel>
+          
+          {/* Agent Wallet Tab */}
+          <TabPanel>
+            <VStack spacing={4} align="stretch">
+              {isLoadingAgent ? (
+                <Flex justify="center" align="center" minH="200px">
+                  <VStack>
+                    <Spinner size="lg" />
+                    <Text color={textMutedColor}>Loading agent wallet...</Text>
+                  </VStack>
+                </Flex>
+              ) : agentWallet ? (
+                <>
+                  {/* Agent Wallet Info */}
+                  <Flex justify="space-between" align="center">
+                    <HStack>
+                      <img src={getCoinbaseIcon()} alt="Agent" width="24" height="24" />
+                      <Text fontWeight="bold">Agent Wallet</Text>
+                    </HStack>
+                    <Badge colorScheme="purple">Active</Badge>
+                  </Flex>
+                  
+                  {/* Agent Address */}
+                  <Box p={3} bg={bgColor} borderRadius="md" border="1px solid" borderColor={borderColor}>
+                    <VStack align="stretch" spacing={2}>
+                      <Flex justify="space-between">
+                        <Text fontSize="sm" color={textMutedColor}>Agent Address</Text>
+                        <HStack spacing={2}>
+                          <Tooltip label="Copy address">
+                            <Button size="xs" variant="ghost" onClick={copyAgentAddress}>
+                              <FiCopy />
+                            </Button>
+                          </Tooltip>
+                          <Tooltip label="View on explorer">
+                            <Button size="xs" variant="ghost" onClick={openAgentExplorer}>
+                              <FiExternalLink />
+                            </Button>
+                          </Tooltip>
+                        </HStack>
+                      </Flex>
+                      <Text fontFamily="mono" fontSize="sm">
+                        {agentWallet.agent_public_key.slice(0, 6)}...{agentWallet.agent_public_key.slice(-4)}
+                      </Text>
+                    </VStack>
+                  </Box>
+                  
+                  {/* Agent Balances */}
+                  <Box p={3} bg={bgColor} borderRadius="md" border="1px solid" borderColor={borderColor}>
+                    <VStack align="stretch" spacing={3}>
+                      <Text fontSize="sm" color={textMutedColor} fontWeight="bold">Agent Balances</Text>
+                      
+                      {/* ETH Balance */}
+                      <VStack align="stretch" spacing={1}>
+                        <Text fontSize="sm" color={textMutedColor}>ETH Balance</Text>
+                        <HStack spacing={2}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <img src={ethereumIcon} alt="ETH" width="15" height="15" />
+                            <Text fontWeight="bold">
+                              {agentBalance.eth ? formatBalance(agentBalance.eth, 18) : '0.0000'} ETH
+                            </Text>
+                          </div>
+                        </HStack>
+                      </VStack>
+                      
+                      {/* USDC Balance */}
+                      <VStack align="stretch" spacing={1}>
+                        <Text fontSize="sm" color={textMutedColor}>USDC Balance</Text>
+                        <HStack spacing={2}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <img src={usdcIcon} alt="USDC" width="20" height="20" />
+                            <Text fontWeight="bold">
+                              {agentBalance.usdc ? formatBalance(agentBalance.usdc, 6) : '0.00'} USDC
+                            </Text>
+                          </div>
+                        </HStack>
+                      </VStack>
+                    </VStack>
+                  </Box>
+                  
+                  {/* Fund Agent */}
+                  <Box p={3} bg={bgColor} borderRadius="md" border="1px solid" borderColor={borderColor}>
+                    <VStack align="stretch" spacing={3}>
+                      <Text fontSize="sm" fontWeight="bold">Fund Agent with USDC</Text>
+                      <InputGroup size="md">
+                        <Input
+                          placeholder="Amount"
+                          value={fundAmount}
+                          onChange={(e) => setFundAmount(e.target.value)}
+                          type="number"
+                          min="0"
+                          step="0.01"
+                        />
+                        <InputRightAddon>USDC</InputRightAddon>
+                      </InputGroup>
+                      <Button
+                        colorScheme="blue"
+                        onClick={handleFundAgent}
+                        isLoading={isFunding}
+                        loadingText="Sending..."
+                        leftIcon={<FiSend />}
+                        isDisabled={!walletClient || !fundAmount || parseFloat(fundAmount) <= 0}
+                      >
+                        Fund Agent
+                      </Button>
+                      <Text fontSize="xs" color={textMutedColor}>
+                        Transfer USDC from your wallet to the agent wallet
+                      </Text>
+                    </VStack>
+                  </Box>
+                </>
+              ) : (
+                <Alert status="info" borderRadius="md">
+                  <AlertIcon />
+                  <AlertDescription>
+                    Please authenticate with your wallet first to view agent wallet details.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </VStack>
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
     </Box>
   );
 }

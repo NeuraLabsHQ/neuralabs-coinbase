@@ -13,6 +13,7 @@ from .flowbuilder import router as flowbuilder_router
 from .chat import router as chat_router
 from .conversations import router as conversations_router
 from .conversations_v2 import router as conversations_v2_router
+from .neuralock_temp import router as neuralock_temp_router
 
 # Create main router
 router = APIRouter()
@@ -27,3 +28,4 @@ router.include_router(dashboard_router, prefix="/dashboard", tags=["dashboard"])
 router.include_router(chat_router, prefix="/chat", tags=["chat"])
 router.include_router(conversations_router, prefix="/conversations", tags=["conversations"])
 router.include_router(conversations_v2_router, prefix="/conversations/v2", tags=["conversations-v2"])
+router.include_router(neuralock_temp_router, prefix="/neuralock-temp", tags=["neuralock-temp"])

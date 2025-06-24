@@ -11,6 +11,7 @@ import {
   InputGroup,
   InputLeftElement,
   VStack,
+  HStack,
   Box,
   Text,
   Avatar,

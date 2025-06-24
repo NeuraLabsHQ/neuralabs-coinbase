@@ -168,9 +168,9 @@ const CustomConnectButton = ({
       </Tooltip>
       
       {/* Wallet connection/management modal */}
-      <Modal isOpen={modalOpen} onClose={handleModalClose} isCentered size="md">
+      <Modal isOpen={modalOpen} onClose={handleModalClose} isCentered size="lg">
         <ModalOverlay backdropFilter="blur(4px)" />
-        <ModalContent bg={bgColor} color={textColor} borderRadius="lg">
+        <ModalContent bg={bgColor} color={textColor} borderRadius="lg" minWidth="450px" maxWidth="500px">
           <ModalHeader borderBottomWidth="1px" borderColor={borderColor}>
             {isConnected ? 'Wallet Management' : 'Connect to NeuraLabs'}
           </ModalHeader>
