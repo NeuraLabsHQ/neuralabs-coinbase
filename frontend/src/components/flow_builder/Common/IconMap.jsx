@@ -1,22 +1,34 @@
 import React from 'react';
+import { useColorMode } from '@chakra-ui/react';
 
-// Import SVG icons
-import AWSIconSVG from '../../../assets/icons/blocks/aws-svgrepo-com (1).svg';
-import CoinbaseIconSVG from '../../../assets/icons/blocks/coinbase-v2-svgrepo-com.svg';
-import AkashIconSVG from '../../../assets/icons/blocks/akash-network-akt-logo.svg';
+// Import SVG icons - Light versions
+import AWSIconLight from '../../../assets/icons/blocks/aws_icon_light.svg';
+import CoinbaseIconLight from '../../../assets/icons/blocks/coinbase_icon_light.svg';
+import AkashIconLight from '../../../assets/icons/blocks/akash_icon_light.svg';
+
+// Import SVG icons - Dark versions
+import AWSIconDark from '../../../assets/icons/blocks/aws_icon_dark.svg';
+import CoinbaseIconDark from '../../../assets/icons/blocks/coinbase_icon_dark.svg';
+import AkashIconDark from '../../../assets/icons/blocks/akash_icon_dark.svg';
 
 // Create React components for SVG icons
-const AWSIcon = ({ size = 24 }) => (
-  <img src={AWSIconSVG} alt="AWS" style={{ width: `${size}px`, height: `${size}px` }} />
-);
+const AWSIcon = ({ size = 24 }) => {
+  const { colorMode } = useColorMode();
+  const iconSrc = colorMode === 'dark' ? AWSIconDark : AWSIconLight;
+  return <img src={iconSrc} alt="AWS" style={{ width: `${size}px`, height: `${size}px` }} />;
+};
 
-const CoinbaseIcon = ({ size = 24 }) => (
-  <img src={CoinbaseIconSVG} alt="Coinbase" style={{ width: `${size}px`, height: `${size}px` }} />
-);
+const CoinbaseIcon = ({ size = 24 }) => {
+  const { colorMode } = useColorMode();
+  const iconSrc = colorMode === 'dark' ? CoinbaseIconDark : CoinbaseIconLight;
+  return <img src={iconSrc} alt="Coinbase" style={{ width: `${size}px`, height: `${size}px` }} />;
+};
 
-const AkashIcon = ({ size = 24 }) => (
-  <img src={AkashIconSVG} alt="Akash" style={{ width: `${size}px`, height: `${size}px` }} />
-);
+const AkashIcon = ({ size = 24 }) => {
+  const { colorMode } = useColorMode();
+  const iconSrc = colorMode === 'dark' ? AkashIconDark : AkashIconLight;
+  return <img src={iconSrc} alt="Akash" style={{ width: `${size}px`, height: `${size}px` }} />;
+};
 
 import { 
     FiX, 
