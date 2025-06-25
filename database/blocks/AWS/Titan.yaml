@@ -1,0 +1,109 @@
+type: Titan
+element_id: null
+name: null
+node_description: AWS Titan foundation models for text generation and embeddings
+description: null
+input_schema:
+  text_input:
+    type: string
+    description: Text input for processing
+    required: true
+  operation_type:
+    type: string
+    description: Operation type (generate, embed, summarize)
+    required: true
+  additional_context:
+    type: string
+    description: Additional context for generation
+    required: false
+output_schema:
+  result:
+    type: string
+    description: Generated text or embedding result
+    required: true
+  operation_type:
+    type: string
+    description: Type of operation performed
+    required: true
+  embeddings:
+    type: list
+    description: Vector embeddings if operation is embed
+    required: false
+  token_count:
+    type: integer
+    description: Number of tokens processed
+    required: true
+parameter_schema_structure:
+  model_size:
+    type: string
+    description: Titan model size variant
+    default: "titan-text-express"
+  region:
+    type: string
+    description: AWS region
+    default: "us-east-1"
+  max_tokens:
+    type: int
+    min: 1
+    max: 8192
+  temperature:
+    type: float
+    min: 0.0
+    max: 1.0
+  embedding_dimension:
+    type: int
+    description: Dimension for embeddings
+    default: 1536
+parameters:
+  model_size: titan-text-express
+  region: us-east-1
+  max_tokens: 4096
+  temperature: 0.7
+  embedding_dimension: 1536
+processing_message: AWS Titan is processing your request...
+tags:
+- aws
+- titan
+- foundation-model
+- text-generation
+- embeddings
+layer: null
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: fixed
+  parameters.model_size:
+    access: edit
+  parameters.region:
+    access: edit
+  parameters.max_tokens:
+    access: edit
+  parameters.temperature:
+    access: edit
+  parameters.embedding_dimension:
+    access: edit
+  parameters.aws_access_key:
+    access: hidden
+  parameters.aws_secret_key:
+    access: hidden
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit
+input_data: null
+output_data: null
+code: null
+flow_control: null
+icon: AWSIcon
+category: AWS

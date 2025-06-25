@@ -1,0 +1,113 @@
+type: Guardrails
+element_id: null
+name: null
+node_description: AWS Guardrails for LLM safety, compliance, and content filtering
+description: null
+input_schema:
+  text_input:
+    type: string
+    description: Text content to be evaluated
+    required: true
+  guardrail_id:
+    type: string
+    description: ID of the guardrail configuration to use
+    required: true
+  user_context:
+    type: json
+    description: Additional context for evaluation
+    required: false
+output_schema:
+  safe_content:
+    type: string
+    description: Content after guardrail processing
+    required: true
+  violations:
+    type: list
+    description: List of policy violations detected
+    required: true
+  risk_score:
+    type: float
+    description: Overall risk score (0-1)
+    required: true
+  blocked:
+    type: boolean
+    description: Whether content was blocked
+    required: true
+  modifications:
+    type: list
+    description: List of modifications made to the content
+    required: false
+parameter_schema_structure:
+  policy_type:
+    type: string
+    description: Type of guardrail policy
+    default: "standard"
+  region:
+    type: string
+    description: AWS region
+    default: "us-east-1"
+  strict_mode:
+    type: boolean
+    description: Enable strict content filtering
+    default: false
+  custom_filters:
+    type: list
+    description: Custom filter patterns
+  toxicity_threshold:
+    type: float
+    min: 0.0
+    max: 1.0
+    description: Threshold for toxicity detection
+parameters:
+  policy_type: standard
+  region: us-east-1
+  strict_mode: false
+  custom_filters: []
+  toxicity_threshold: 0.7
+processing_message: AWS Guardrails is evaluating content safety...
+tags:
+- aws
+- safety
+- guardrails
+- content-filtering
+- compliance
+layer: null
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: fixed
+  parameters.policy_type:
+    access: edit
+  parameters.region:
+    access: edit
+  parameters.strict_mode:
+    access: edit
+  parameters.custom_filters:
+    access: edit
+  parameters.toxicity_threshold:
+    access: edit
+  parameters.aws_access_key:
+    access: hidden
+  parameters.aws_secret_key:
+    access: hidden
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit
+input_data: null
+output_data: null
+code: null
+flow_control: null
+icon: AWSIcon
+category: AWS

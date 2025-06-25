@@ -160,7 +160,7 @@ const BlocksPanel = ({
   // Get the appropriate icon component for a node type
   const getIconComponent = (iconName) => {
     
-    console.log("icon name ", iconName);
+    console.log("icon name ", iconName, "mapped to:", ICON_MAP[iconName]);
     
     if (typeof iconName === 'function') {
       return iconName; // Already a component

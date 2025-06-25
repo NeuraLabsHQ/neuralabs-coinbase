@@ -1,0 +1,108 @@
+type: Nova
+element_id: null
+name: null
+node_description: AWS Nova AI service for advanced content generation and multimodal processing
+description: null
+input_schema:
+  prompt:
+    type: string
+    description: The prompt for Nova AI model
+    required: true
+  content_type:
+    type: string
+    description: Type of content to generate (text, image, video)
+    required: true
+  context:
+    type: list
+    description: Previous context for continuity
+    required: false
+  media_input:
+    type: string
+    description: Base64 encoded media for multimodal processing
+    required: false
+output_schema:
+  generated_content:
+    type: string
+    description: Generated content based on the prompt
+    required: true
+  content_type:
+    type: string
+    description: Type of content generated
+    required: true
+  metadata:
+    type: json
+    description: Additional metadata about the generation
+    required: false
+parameter_schema_structure:
+  model_variant:
+    type: string
+    description: Nova model variant to use
+    default: "nova-pro"
+  region:
+    type: string
+    description: AWS region
+    default: "us-east-1"
+  max_tokens:
+    type: int
+    min: 1
+    max: 4096
+  temperature:
+    type: float
+    min: 0.0
+    max: 1.0
+  quality:
+    type: string
+    description: Output quality setting
+parameters:
+  model_variant: nova-pro
+  region: us-east-1
+  max_tokens: 2048
+  temperature: 0.7
+  quality: high
+processing_message: AWS Nova is generating content...
+tags:
+- aws
+- ai
+- nova
+- content-generation
+- multimodal
+layer: null
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: fixed
+  parameters.model_variant:
+    access: edit
+  parameters.region:
+    access: edit
+  parameters.max_tokens:
+    access: edit
+  parameters.temperature:
+    access: edit
+  parameters.quality:
+    access: edit
+  parameters.aws_access_key:
+    access: hidden
+  parameters.aws_secret_key:
+    access: hidden
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit
+input_data: null
+output_data: null
+code: null
+flow_control: null
+icon: AWSIcon
+category: AWS

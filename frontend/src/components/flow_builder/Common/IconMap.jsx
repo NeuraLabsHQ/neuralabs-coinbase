@@ -1,28 +1,22 @@
-import { 
-    Box, 
-    Flex, 
-    Heading, 
-    Input, 
-    IconButton, 
-    Text, 
-    Tabs, 
-    TabList, 
-    TabPanels, 
-    Tab, 
-    TabPanel, 
-    SimpleGrid,
-    Accordion,
-    AccordionItem,
-    AccordionButton,
-    AccordionPanel,
-    AccordionIcon,
-    List,
-    ListItem,
-    Badge,
-    useColorModeValue,
-    Center,
-    
-} from '@chakra-ui/react';
+import React from 'react';
+
+// Import SVG icons
+import AWSIconSVG from '../../../assets/icons/blocks/aws-svgrepo-com (1).svg';
+import CoinbaseIconSVG from '../../../assets/icons/blocks/coinbase-v2-svgrepo-com.svg';
+import AkashIconSVG from '../../../assets/icons/blocks/akash-network-akt-logo.svg';
+
+// Create React components for SVG icons
+const AWSIcon = ({ size = 24 }) => (
+  <img src={AWSIconSVG} alt="AWS" style={{ width: `${size}px`, height: `${size}px` }} />
+);
+
+const CoinbaseIcon = ({ size = 24 }) => (
+  <img src={CoinbaseIconSVG} alt="Coinbase" style={{ width: `${size}px`, height: `${size}px` }} />
+);
+
+const AkashIcon = ({ size = 24 }) => (
+  <img src={AkashIconSVG} alt="Akash" style={{ width: `${size}px`, height: `${size}px` }} />
+);
 
 import { 
     FiX, 
@@ -53,9 +47,15 @@ import {
     FiCode,
     FiChevronRight,
     FiChevronDown,
-    FiSearch
-    
+    FiSearch,
+    FiCloud,
+    FiShield,
+    FiType
 } from 'react-icons/fi';
+
+import { 
+    BiBrain 
+} from 'react-icons/bi';
 
 
 import {
@@ -105,6 +105,14 @@ const ICON_MAP = {
     'FiClock': FiClock,
     'FiCpu': FiCpu,
     'FiSearch': FiSearch,
+    'FiCloud': FiCloud,
+    'FiShield': FiShield,
+    'FiType': FiType,
+    'FiBrain': BiBrain,
+    // Custom SVG icons
+    'AWSIcon': AWSIcon,
+    'CoinbaseIcon': CoinbaseIcon,
+    'AkashIcon': AkashIcon,
 };
 
 export default ICON_MAP;

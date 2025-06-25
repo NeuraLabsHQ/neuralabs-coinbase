@@ -81,5 +81,5 @@ input_data: null
 output_data: null
 code: null
 flow_control: null
-icon: FiDatabase
+icon: CoinbaseIcon
 category: Coinbase CDP

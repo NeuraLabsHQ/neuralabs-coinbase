@@ -76,6 +76,7 @@ const FlowBuilder = ({ agentId, agentData }) => {
         // Transform the nodeTypes to include the actual icon components
         const transformedNodeTypes = {};
         Object.entries(nodeTypes).forEach(([key, nodeType]) => {
+          console.log(`Processing node ${key} with icon: ${nodeType.icon}`);
           transformedNodeTypes[key] = {
             ...nodeType,
             icon: ICON_MAP[nodeType.icon] || "activity" // Default to FiActivity if icon not found
