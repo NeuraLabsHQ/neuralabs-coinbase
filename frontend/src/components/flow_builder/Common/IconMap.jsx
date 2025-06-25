@@ -62,7 +62,14 @@ import {
     FiSearch,
     FiCloud,
     FiShield,
-    FiType
+    FiType,
+    FiBox,
+    FiLock,
+    FiTerminal,
+    FiRefreshCw,
+    FiPlay,
+    FiSquare,
+    FiInfo
 } from 'react-icons/fi';
 
 import { 
@@ -108,7 +115,7 @@ const ICON_MAP = {
     'FiDatabase': FiDatabase,
     'FiServer': FiServer,
     'FiGlobe': FiGlobe,
-    'FiInfo': MdInfo,
+    'FiInfo': FiInfo,
     'FiLink': FiLink,
     'FiDollarSign': FiExternalLink,
     'FiFilter': FiFilter,
@@ -121,10 +128,68 @@ const ICON_MAP = {
     'FiShield': FiShield,
     'FiType': FiType,
     'FiBrain': BiBrain,
+    // Additional missing icons
+    'FiBox': FiBox,
+    'FiLock': FiLock,
+    'FiTerminal': FiTerminal,
+    'FiRefreshCw': FiRefreshCw,
+    'FiPlay': FiPlay,
+    'FiSquare': FiSquare,
+    'FiInfo': FiInfo,
     // Custom SVG icons
     'AWSIcon': AWSIcon,
     'CoinbaseIcon': CoinbaseIcon,
     'AkashIcon': AkashIcon,
+};
+
+// Type to Icon mapping based on database blocks
+export const TYPE_TO_ICON_MAP = {
+    // AWS blocks
+    'Titan': AWSIcon,
+    'Nova': AWSIcon,
+    'Guardrails': AWSIcon,
+    
+    // Akash Network blocks
+    'ChatAPI': AkashIcon,
+    
+    // Coinbase CDP blocks
+    'ReadContract': CoinbaseIcon,
+    'FetchBalance': CoinbaseIcon,
+    
+    // Flow Control blocks
+    'Start': FiPlay,
+    'End': FiSquare,
+    'Case': FiGitBranch,
+    'FlowSelect': FiShuffle,
+    
+    // Input blocks
+    'ChatInput': FiMessageCircle,
+    'Constants': FiLock,
+    'ContextHistory': FiClock,
+    'Datablock': FiBox,
+    'Metadata': FiInfo,
+    'RestAPI': FiGlobe,
+    
+    // AI blocks
+    'LLMText': FiType,
+    'LLMStructured': FiCode,
+    
+    // Utility blocks
+    'Selector': FiFilter,
+    'Merger': FiGitMerge,
+    'RandomGenerator': FiRefreshCw,
+    
+    // Custom blocks
+    'Custom': FiTerminal,
+    
+    // Blockchain blocks
+    'BuildTransaction': FiLink,
+    
+    // MCP blocks
+    'Search': FiSearch,
+    
+    // Default fallback
+    'default': FiActivity
 };
 
 export default ICON_MAP;

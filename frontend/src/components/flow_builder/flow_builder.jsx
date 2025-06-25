@@ -22,6 +22,7 @@ import VisualizePanel from './VisualizePanel/VisualizePanel';
 
 
 import ICON_MAP from './Common/IconMap';
+import { FiActivity } from 'react-icons/fi';
 
 const FlowBuilder = ({ agentId, agentData }) => {
   const { colorMode } = useColorMode();
@@ -79,7 +80,7 @@ const FlowBuilder = ({ agentId, agentData }) => {
           console.log(`Processing node ${key} with icon: ${nodeType.icon}`);
           transformedNodeTypes[key] = {
             ...nodeType,
-            icon: ICON_MAP[nodeType.icon] || "activity" // Default to FiActivity if icon not found
+            icon: ICON_MAP[nodeType.icon] || FiActivity // Default to FiActivity component if icon not found
           };
         });
         
