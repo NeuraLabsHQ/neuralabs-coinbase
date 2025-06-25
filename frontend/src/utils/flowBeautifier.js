@@ -99,6 +99,102 @@ export const beautifyFlow = (nodes, edges) => {
       }
     });
     
+    // 3.5. Iterative refinement of layers
+    // First calculate BFS height, then apply: min(child_nodes) - 1
+    // Store the original BFS layers for reference
+    const bfsLayers = { ...nodeToLayer };
+    
+    const refineNodeLayers = () => {
+      let changed = true;
+      let iterations = 0;
+      const maxIterations = 35; // Set to 35 as requested
+      
+      while (changed && iterations < maxIterations) {
+        changed = false;
+        iterations++;
+        
+        // Process each node
+        nodes.forEach(node => {
+          const nodeId = node.id;
+          const currentLayer = nodeToLayer[nodeId];
+          const bfsLayer = bfsLayers[nodeId]; // Original BFS layer
+          const children = outgoingMap[nodeId] || [];
+          
+          if (children.length > 0) {
+            // Find minimum layer of all children
+            const minChildLayer = Math.min(...children.map(childId => nodeToLayer[childId]));
+            
+            // Apply the formula: min(child_nodes) - 1
+            // Allow negative layers during iteration
+            const newLayer = minChildLayer - 1;
+            
+            if (newLayer !== currentLayer) {
+              changed = true;
+              
+              // Remove from old layer
+              const oldLayerNodes = layerToNodes[currentLayer];
+              if (oldLayerNodes) {
+                const index = oldLayerNodes.indexOf(nodeId);
+                if (index > -1) {
+                  oldLayerNodes.splice(index, 1);
+                }
+                // Remove empty layers
+                if (oldLayerNodes.length === 0) {
+                  delete layerToNodes[currentLayer];
+                }
+              }
+              
+              // Add to new layer
+              nodeToLayer[nodeId] = newLayer;
+              if (!layerToNodes[newLayer]) {
+                layerToNodes[newLayer] = [];
+              }
+              layerToNodes[newLayer].push(nodeId);
+            }
+          }
+        });
+        
+        console.log(`Refinement iteration ${iterations}: ${changed ? 'changes made' : 'no changes'}`);
+      }
+      
+      if (iterations === maxIterations) {
+        console.warn('Layer refinement reached maximum iterations');
+      }
+      
+      // After all iterations, find the minimum layer value
+      const allLayers = Object.values(nodeToLayer);
+      const minLayer = Math.min(...allLayers);
+      
+      // If minimum layer is negative, apply offset to all nodes
+      if (minLayer < 0) {
+        const offset = -minLayer; // Make it positive
+        console.log(`Applying offset of +${offset} to all layers (min layer was ${minLayer})`);
+        
+        // Create new layer mappings with offset
+        const newNodeToLayer = {};
+        const newLayerToNodes = {};
+        
+        Object.entries(nodeToLayer).forEach(([nodeId, layer]) => {
+          const newLayer = layer + offset;
+          newNodeToLayer[nodeId] = newLayer;
+          
+          if (!newLayerToNodes[newLayer]) {
+            newLayerToNodes[newLayer] = [];
+          }
+          newLayerToNodes[newLayer].push(nodeId);
+        });
+        
+        // Replace the old mappings
+        Object.keys(nodeToLayer).forEach(key => delete nodeToLayer[key]);
+        Object.keys(layerToNodes).forEach(key => delete layerToNodes[key]);
+        Object.assign(nodeToLayer, newNodeToLayer);
+        Object.assign(layerToNodes, newLayerToNodes);
+      }
+    };
+    
+    // Apply the iterative refinement
+    refineNodeLayers();
+    
     // 4. Calculate positions for each node
     const VERTICAL_SPACING = 200;
     const HORIZONTAL_SPACING = 250;
