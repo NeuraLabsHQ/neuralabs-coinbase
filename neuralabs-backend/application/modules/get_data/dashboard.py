@@ -220,7 +220,7 @@ async def get_flow_details(agent_id: str, user_pub_key: str) -> Optional[Dict[st
     """
     result = await pg_conn.execute_query(query, (user_pub_key, agent_id, user_pub_key, user_pub_key))
     
-    print(result)
+    # print(result)
     
     if result:
         return result[0]

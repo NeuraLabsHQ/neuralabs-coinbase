@@ -253,7 +253,7 @@ def map_node_type_to_element_type(node_type: str) -> str:
         'LLMText': 'llm_text', 'llm_text': 'llm_text',
         'LLMStructured': 'llm_structured', 'llm_structured': 'llm_structured', 'llmstructured': 'llm_structured',  # cspell:ignore llmstructured
         'ReadBlockchainData': 'read_blockchain_data', 'read_blockchain_data': 'read_blockchain_data',
-        'BuildTransactionJSON': 'build_transaction_json', 'build_transaction_json': 'build_transaction_json',
+        'BuildTransaction': 'build_transaction_json', 'build_transaction_json': 'build_transaction_json',
         'Custom': 'custom', 'custom': 'custom',
         'Case': 'case', 'case': 'case',
         'FlowSelect': 'flow_select', 'flow_select': 'flow_select'

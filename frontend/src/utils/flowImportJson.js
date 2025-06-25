@@ -101,11 +101,17 @@ export const importFlowFromJSON = (jsonData, setNodes, setEdges) => {
               if (edge.mappings.length === 0) {
                 edge.connectionType = 'control';
               }
+              // If already 'data' or 'both', upgrade to 'both'
+              else if (edge.connectionType === 'data') {
+                edge.connectionType = 'both';
+              }
             } else if (conn.connection_type === 'data') {
               // If we see a data connection, update type accordingly
               if (edge.connectionType === 'control') {
                 edge.connectionType = 'both';
-              } else {
+              }
+              // If already 'both', keep it as 'both'
+              else if (edge.connectionType !== 'both') {
                 edge.connectionType = 'data';
               }
             }

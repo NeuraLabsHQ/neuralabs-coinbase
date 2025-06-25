@@ -276,8 +276,20 @@ class LLMStructured(ElementBase):
                        ) -> str:
         
         """Format the complete prompt for structured generation."""
-        # Format context as string
-        context_str = "\n".join(context) if context else ""
+        # Format context as string, handling both string and dict formats
+        context_str = ""
+        if context:
+            formatted_context = []
+            for item in context:
+                if isinstance(item, dict):
+                    # Handle conversation history format
+                    role = item.get("role", "unknown")
+                    content = item.get("content", "")
+                    formatted_context.append(f"{role}: {content}")
+                else:
+                    # Handle plain string format
+                    formatted_context.append(str(item))
+            context_str = "\n".join(formatted_context)
         
         # Format additional data as JSON string
         additional_data_str = ""

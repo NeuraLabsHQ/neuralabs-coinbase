@@ -192,60 +192,6 @@ const FlowBuilder = ({ agentId, agentData }) => {
           console.log('Workflow data that failed to load:', workflow);
           
           // Fallback: Try to load directly if it's in the old format
-          try {
-            if (workflow.nodes && Array.isArray(workflow.nodes)) {
-              const loadedNodes = workflow.nodes.map(node => ({
-                id: node.id,
-                type: node.type,
-                name: node.name || node.data?.label || node.type,
-                x: node.x || Math.random() * 500,
-                y: node.y || Math.random() * 300,
-                inputs: node.inputs || [],
-                outputs: node.outputs || [],
-                parameters: node.parameters || [], // Array format for UI
-                parametersObject: node.parametersObject || {}, // Object format for storage
-                hyperparameters: node.hyperparameters || [], // Legacy support
-                description: node.description || '',
-                processing_message: node.processing_message || node.processingMessage || '',
-                processingMessage: node.processingMessage || node.processing_message || '',
-                fieldAccess: node.fieldAccess || {},
-                layer: node.layer || 0,
-                tags: Array.isArray(node.tags) ? node.tags : [],
-                code: node.code || '',
-                metadata: node.metadata || {},
-                templateId: node.templateId || null
-              }));
-              setNodes(loadedNodes);
-            }
-            
-            // Load edges
-            if (workflow.edges && Array.isArray(workflow.edges)) {
-              const loadedEdges = workflow.edges.map(edge => ({
-                id: edge.id,
-                source: edge.source,
-                target: edge.target,
-                sourceName: edge.sourceName || '',
-                targetName: edge.targetName || '',
-                mappings: edge.mappings || [],
-                connectionType: edge.connectionType || 'both',
-                sourcePort: edge.sourcePort || 0,
-                targetPort: edge.targetPort || 0
-              }));
-              setEdges(loadedEdges);
-            }
-            
-            // Center the flow after loading
-            setTimeout(centerFlow, 100);
-          } catch (fallbackError) {
-            console.error('Fallback loading also failed:', fallbackError);
-            toast({
-              title: "Error loading workflow",
-              description: "Failed to load the workflow data. Starting with empty canvas.",
-              status: "warning",
-              duration: 5000,
-              isClosable: true,
-            });
-          }
         }
       }
     };
