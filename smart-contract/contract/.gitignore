@@ -1,0 +1,11 @@
+node_modules/
+
+
+# Deployment artifacts
+deployments/*.json
+!deployments/.gitkeep
+!deployments/**-latest.json
+
+
+testing-logs/**
+!testing-logs/__placeholder__

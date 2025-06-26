@@ -1,0 +1,41 @@
+{
+  "name": "smart-contract",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "truffle test",
+    "test:local": "truffle test --network local",
+    "compile": "truffle compile",
+    "migrate": "truffle migrate",
+    "migrate:reset": "truffle migrate --reset",
+    "deploy:local": "TRUFFLE_NETWORK=local node scripts/deploy.js",
+    "deploy:testnet": "TRUFFLE_NETWORK=testnet node scripts/deploy.js",
+    "deploy:mainnet": "TRUFFLE_NETWORK=mainnet node scripts/deploy.js",
+    "deploy:examples": "TRUFFLE_NETWORK=local node scripts/deploy.js --examples",
+    "deploy:dry-run": "TRUFFLE_NETWORK=local node scripts/deploy.js --dry-run",
+    "verify:testnet": "TRUFFLE_NETWORK=testnet node scripts/verify.js",
+    "verify:mainnet": "TRUFFLE_NETWORK=mainnet node scripts/verify.js",
+    "verify:contract": "node scripts/verify.js --contract=",
+    "console": "truffle console",
+    "console:testnet": "truffle console --network testnet",
+    "console:mainnet": "truffle console --network mainnet",
+    "flatten": "truffle-flattener contracts/**/*.sol > flattened.sol",
+    "generate-config": "node ../scripts/generate-blockchain-config.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.3.0",
+    "@openzeppelin/test-helpers": "^0.5.16",
+    "@truffle/hdwallet-provider": "^2.1.15",
+    "dotenv": "^16.3.1",
+    "truffle": "^5.11.5"
+  },
+  "devDependencies": {
+    "truffle-flattener": "^1.6.0",
+    "truffle-plugin-verify": "^0.6.7"
+  }
+}
