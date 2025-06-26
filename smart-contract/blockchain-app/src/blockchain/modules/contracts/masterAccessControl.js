@@ -1,6 +1,7 @@
 import { read, batchRead } from '../core/read.js';
 import { execute, estimateTransaction } from '../core/execute.js';
 import blockchainConfig from '../../config/blockchain-config.json';
+import { ethers } from 'ethers';
 
 const CONTRACT_NAME = 'MasterAccessControl';
 const config = blockchainConfig.contracts[CONTRACT_NAME];

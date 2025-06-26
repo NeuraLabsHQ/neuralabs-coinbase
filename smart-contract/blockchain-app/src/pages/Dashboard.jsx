@@ -8,19 +8,43 @@ function Dashboard() {
     isAuthorized: false,
     nftBalance: '0',
     totalSupply: '0',
-    loading: true,
+    loading: false, // Start with false since wallet isn't connected initially
     error: null
   });
 
   useEffect(() => {
-    if (wallet.isConnected && wallet.provider) {
-      loadDashboardData();
+    // Skip initial render
+    if (!wallet.account) {
+      return;
     }
-  }, [wallet.isConnected, wallet.account]);
+
+    if (wallet.isConnected && wallet.provider && wallet.signer) {
+      // Add a small delay to ensure provider is fully initialized
+      const timer = setTimeout(() => {
+        loadDashboardData();
+      }, 500); // Increased delay
+      return () => clearTimeout(timer);
+    } else {
+      // Reset stats when wallet disconnects
+      setStats({
+        isAuthorized: false,
+        nftBalance: '0',
+        totalSupply: '0',
+        loading: false,
+        error: null
+      });
+    }
+  }, [wallet.isConnected, wallet.account, wallet.provider, wallet.signer]);
 
   const loadDashboardData = async () => {
     try {
       setStats(prev => ({ ...prev, loading: true, error: null }));
+
+      // Double-check provider exists
+      if (!wallet.provider || !wallet.account) {
+        throw new Error('Wallet not properly connected');
+      }
+
 
       // Check if user is authorized in master access control
       const isAuthorized = await masterAccessControl.isAuthorized({
@@ -80,7 +104,7 @@ function Dashboard() {
                   </div>
                   <div className="col-md-6">
                     <p className="mb-2">
-                      <strong>Network:</strong> {wallet.network?.name || 'Unknown'}
+                      <strong>Network:</strong> {wallet.network?.name || `Chain ${wallet.network?.chainId || 'Unknown'}`}
                     </p>
                     <p className="mb-2">
                       <strong>Authorization:</strong>{' '}

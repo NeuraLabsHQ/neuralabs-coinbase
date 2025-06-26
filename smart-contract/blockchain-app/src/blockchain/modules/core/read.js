@@ -13,7 +13,18 @@ import { ethers } from 'ethers';
 export async function read({ contractAddress, abi, methodName, args = [], provider }) {
   try {
     if (!contractAddress || !abi || !methodName || !provider) {
-      throw new Error('Missing required parameters for read operation');
+      throw new Error(`Missing required parameters for read operation: ${JSON.stringify({
+        contractAddress: !!contractAddress,
+        abi: !!abi,
+        methodName: !!methodName,
+        provider: !!provider,
+        providerType: provider ? typeof provider : 'null'
+      })}`);
+    }
+
+    // Ensure provider is an ethers provider instance (v6 check)
+    if (!provider.getNetwork) {
+      throw new Error('Invalid provider instance - missing getNetwork method');
     }
 
     // Create contract instance

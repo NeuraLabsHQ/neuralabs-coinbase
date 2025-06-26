@@ -28,7 +28,7 @@ function Header({ theme, toggleTheme, toggleSidebar }) {
           {wallet.isConnected && (
             <div className="d-flex align-items-center text-muted">
               <span className="badge bg-secondary">
-                {wallet.network?.name || 'Unknown Network'}
+                {wallet.network?.name || `Chain ${wallet.network?.chainId || 'Unknown'}`}
               </span>
             </div>
           )}

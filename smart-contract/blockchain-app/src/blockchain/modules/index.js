@@ -36,7 +36,7 @@ export function getContract(contractName) {
 // Utility to check if all contracts are deployed
 export function areContractsDeployed() {
   try {
-    const config = require('../config/blockchain-config.json');
+    // Import is already done at the top
     const requiredContracts = [
       'MasterAccessControl',
       'NFTAccessControl',
@@ -49,7 +49,7 @@ export function areContractsDeployed() {
     ];
 
     return requiredContracts.every(contractName => {
-      const contract = config.contracts[contractName];
+      const contract = blockchainConfig.contracts[contractName];
       return contract && contract.address && contract.address !== '0x0000000000000000000000000000000000000000';
     });
   } catch (error) {
