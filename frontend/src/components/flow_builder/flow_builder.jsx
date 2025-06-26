@@ -688,7 +688,7 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
     if (zoomBehaviorRef.current && svgRef.current) {
       const svg = d3.select(svgRef.current);
       const currentTransform = d3.zoomTransform(svgRef.current);
-      const newScale = Math.max(currentTransform.k - 0.1, 0.8);
+      const newScale = Math.max(currentTransform.k - 0.1, 0.2);
       
       // Apply the new scale while maintaining the current translation
       svg.transition().duration(300).call(
