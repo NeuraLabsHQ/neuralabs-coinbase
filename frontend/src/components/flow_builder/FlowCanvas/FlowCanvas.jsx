@@ -77,7 +77,7 @@ const FlowCanvas = ({
       zoom = externalZoomRef.current;
     } else {
       zoom = d3.zoom()
-        .scaleExtent([0.8, 4])
+        .scaleExtent([0.2, 4])
         .interpolate(d3.interpolateZoom);
       
       // Store the zoom behavior in the external ref if provided
