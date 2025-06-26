@@ -38,6 +38,14 @@
             "url": "http://localhost:3000",
             "webRoot": "${workspaceFolder}"
         },
+
+                {
+            "type": "msedge",
+            "request": "launch",
+            "name": "Edge - Launch 5173",
+            "url": "http://localhost:5173",
+            "webRoot": "${workspaceFolder}/smart-contract/blockchain-app"
+        },
  
         {
             "name": "move_contract_frontend_sid",

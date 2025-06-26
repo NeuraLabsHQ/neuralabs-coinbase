@@ -1,6 +1,6 @@
 {
   "network": "local",
-  "timestamp": "2025-06-18T16:00:49.338Z",
+  "timestamp": "2025-06-19T01:55:35.952Z",
   "deployer": "0x25D31AA47F31aD39360B5cD50dEd0a304d85F252",
   "contracts": {
     "MasterAccessControl": {

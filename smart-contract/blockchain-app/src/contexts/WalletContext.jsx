@@ -3,6 +3,22 @@ import { ethers } from 'ethers';
 
 const WalletContext = createContext(null);
 
+// Helper function to get network name from chain ID
+const getNetworkName = (chainId) => {
+  const networks = {
+    1: 'Ethereum Mainnet',
+    3: 'Ropsten',
+    4: 'Rinkeby', 
+    5: 'Goerli',
+    11155111: 'Sepolia',
+    1337: 'Local Development',
+    31337: 'Hardhat',
+    137: 'Polygon',
+    80001: 'Mumbai'
+  };
+  return networks[chainId] || `Chain ${chainId}`;
+};
+
 export const WalletProvider = ({ children }) => {
   const [account, setAccount] = useState(null);
   const [provider, setProvider] = useState(null);
@@ -49,21 +65,36 @@ export const WalletProvider = ({ children }) => {
     if (window.ethereum) {
       try {
         const provider = new ethers.BrowserProvider(window.ethereum);
-        const accounts = await provider.listAccounts();
+        
+        // Check if we have permission to access accounts
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
         
         if (accounts.length > 0) {
+          // Only proceed if we actually have accounts
           const signer = await provider.getSigner();
           const address = await signer.getAddress();
           const network = await provider.getNetwork();
           
+          // Add network name for known networks
+          const networkWithName = {
+            ...network,
+            chainId: Number(network.chainId),
+            name: network.name || getNetworkName(Number(network.chainId))
+          };
+          
           setProvider(provider);
           setSigner(signer);
           setAccount(address);
-          setNetwork(network);
+          setNetwork(networkWithName);
           await updateBalance(address);
         }
       } catch (err) {
         console.error('Error checking wallet connection:', err);
+        // Reset state on error
+        setProvider(null);
+        setSigner(null);
+        setAccount(null);
+        setNetwork(null);
       }
     }
   };
@@ -96,10 +127,17 @@ export const WalletProvider = ({ children }) => {
       const address = await signer.getAddress();
       const network = await provider.getNetwork();
       
+      // Add network name for known networks
+      const networkWithName = {
+        ...network,
+        chainId: Number(network.chainId),
+        name: network.name || getNetworkName(Number(network.chainId))
+      };
+      
       setProvider(provider);
       setSigner(signer);
       setAccount(address);
-      setNetwork(network);
+      setNetwork(networkWithName);
       await updateBalance(address);
       
       return true;
@@ -150,7 +188,7 @@ export const WalletProvider = ({ children }) => {
     network,
     isConnecting,
     error,
-    isConnected: !!account,
+    isConnected: !!(account && provider && signer),
     
     // Actions
     connect,
