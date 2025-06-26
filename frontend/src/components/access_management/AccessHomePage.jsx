@@ -41,20 +41,21 @@ import {
     FiChevronDown
 } from "react-icons/fi";
 import { useNavigate } from 'react-router-dom';
-import templateImage1 from "../../assets/template.png";
 import { accessManagementApi } from "../../utils/access-api";
 import { agentAPI } from "../../utils/agent-api";
 import colors from "../../color.js";
 import CreateAgentModal from "./Popup/CreateAgentModal";
 
-const TemplateCard = ({ title, hasButton = false, onClick, imageUrl }) => {
-  const bgColor = useColorModeValue("white", "gray.800");
-  const hoverBgColor = useColorModeValue("gray.50", "gray.700");
-  const textColor = useColorModeValue("gray.800", "white");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const hoverBorderColor = useColorModeValue("blue.400", "blue.400");
-  const overlayBgColor = useColorModeValue("rgba(255,255,255,0.8)", "rgba(7, 3, 3, 0.6)");
-  const overlayTextColor = useColorModeValue("gray.800", "white");
+const TemplateCard = ({ title, hasButton = false, onClick }) => {
+  const bgColor = useColorModeValue("gray.50", "gray.800");
+  const hoverBgColor = useColorModeValue("gray.100", "gray.700");
+  const textColor = useColorModeValue("gray.800", "gray.100");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+  const hoverBorderColor = useColorModeValue("blue.500", "blue.400");
+  const iconBgColor = useColorModeValue("blue.50", "blue.900");
+  const iconColor = useColorModeValue("blue.600", "blue.300");
+  const overlayBg = useColorModeValue("rgba(59, 130, 246, 0.1)", "rgba(0,0,0,0.8)");
+  const overlayTextColor = useColorModeValue("gray.700", "gray.100");
 
   return (
     <Box
@@ -92,53 +93,50 @@ const TemplateCard = ({ title, hasButton = false, onClick, imageUrl }) => {
         </Flex>
       ) : (
         <>
-          <Box
+          <Flex
             position="absolute"
             top="0"
             left="0"
-            w="100%"
-            h="100%"
-            bgImage={`url(${imageUrl})`}
-            bgSize="cover"
-            bgPosition="center"
-            _before={{
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              bottom: 0,
-              left: 0,
-              bgGradient: "linear(to-r, rgba(255,255,255,0.1), rgba(255,255,255,0.05))",
-              backdropFilter: "blur(1.5px)",
-              WebkitBackdropFilter: "blur(1.5px)",
-              mixBlendMode: "overlay",
-            }}
-            _after={{
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              bottom: 0,
-              left: 0,
-              background: "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWx0ZXI9InVybCgjYSkiIG9wYWNpdHk9Ii4wNSIvPjwvc3ZnPg==')",
-              opacity: 0.2,
-              mixBlendMode: "multiply",
-              pointerEvents: "none"
-            }}
-          />
+            right="0"
+            bottom="44px"
+            align="center"
+            justify="center"
+            p={4}
+          >
+            <Box
+              p={4}
+              borderRadius="xl"
+              bg={iconBgColor}
+              color={iconColor}
+            >
+              <Icon 
+                as={title?.includes("Balance") ? FiActivity : 
+                    title?.includes("Contract") ? FiBarChart2 :
+                    title?.includes("API") ? FiGrid :
+                    title?.includes("ETL") ? FiUpload :
+                    title?.includes("Analytics") ? FiPieChart :
+                    FiActivity
+                  } 
+                boxSize={8} 
+              />
+            </Box>
+          </Flex>
           <Box
             position="absolute"
             bottom="0"
             left="0"
             right="0"
-            bg="rgba(0,0,0,0.7)"
-            p={4}
+            bg={overlayBg}
+            p={3}
+            backdropFilter="blur(8px)"
+            WebkitBackdropFilter="blur(8px)"
           >
             <Text
-              color={textColor}
+              color={overlayTextColor}
               fontWeight="medium"
-              fontSize="md"
+              fontSize="sm"
               textAlign="center"
+              noOfLines={1}
             >
               {title || "Template"}
             </Text>
@@ -231,6 +229,16 @@ const AccessHomePage = ({ onSelectFlow }) => {
   const navigate = useNavigate();
   const toast = useToast();
   const isMobile = useBreakpointValue({ base: true, lg: false });
+  
+  // Add loading state to prevent layout flash
+  const [isBreakpointReady, setIsBreakpointReady] = useState(false);
+  
+  useEffect(() => {
+    // Set ready state once breakpoint value is determined
+    if (isMobile !== undefined) {
+      setIsBreakpointReady(true);
+    }
+  }, [isMobile]);
 
   const bgColor = useColorModeValue(colors.accessManagement.mainContent.bg.light, colors.accessManagement.mainContent.bg.dark);
   const cardBgColor = useColorModeValue(colors.accessManagement.flowCard.bg.light, colors.accessManagement.flowCard.bg.dark);
@@ -388,32 +396,27 @@ const AccessHomePage = ({ onSelectFlow }) => {
     />,
     <TemplateCard
       key={1}
-      title="Read SUI Balance"
-      imageUrl={templateImage1}
+      title="Read Base Balance"
       onClick={() => console.log("Selected template 1")}
     />,
     <TemplateCard
       key={2}
-      title="X-Twitter Post API "
-      imageUrl={templateImage1}
+      title="Read Smart Contract"
       onClick={() => console.log("Selected template 2")}
     />,
     <TemplateCard
       key={3}
       title="API Integration"
-      imageUrl={templateImage1}
       onClick={() => console.log("Selected template 3")}
     />,
     <TemplateCard
       key={4}
       title="Database ETL"
-      imageUrl={templateImage1}
       onClick={() => console.log("Selected template 4")}
     />,
     <TemplateCard
       key={5}
       title="Analytics Dashboard"
-      imageUrl={templateImage1}
       onClick={() => console.log("Selected template 5")}
     />,
   ];
@@ -435,6 +438,19 @@ const AccessHomePage = ({ onSelectFlow }) => {
   const searchBarMaxWidth = useBreakpointValue({ base: "90%", sm: "400px", md: "600px" });
   const headingSize = useBreakpointValue({ base: "md", md: "lg" });
   const containerPadding = useBreakpointValue({ base: 4, md: 6 });
+
+  // Prevent render until breakpoint is determined to avoid layout flash
+  if (!isBreakpointReady) {
+    return (
+      <Box 
+        bg={bgColor} 
+        h="100%" 
+        width="100%" 
+        overflowY="auto"
+        overflowX="hidden"
+      />
+    );
+  }
 
   return (
     <Box 

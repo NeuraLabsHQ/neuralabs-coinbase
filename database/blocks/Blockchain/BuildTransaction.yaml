@@ -12,17 +12,33 @@ output_schema:
 parameter_schema_structure:
   node_url:
     type: string
+    description: "RPC endpoint URL (optional, uses default for network)"
   contract_address:
     type: string
+    description: "Smart contract address for contract interactions"
+  contract_abi:
+    type: string
+    description: "Contract ABI as JSON string for encoding function calls"
   function_name:
     type: string
+    description: "Contract function to call (e.g., 'transfer', 'approve', 'mint')"
   function_args:
     type: list
+    description: "Optional: List of parameter names to help map inputs. If not provided, the element will match function parameters based on your input schema field names"
+  chain_id:
+    type: integer
+    description: "Chain ID (e.g., 84532 for Base Sepolia, 1 for Ethereum mainnet)"
+  max_gas:
+    type: integer
+    description: "Maximum gas limit for the transaction (default: 300000)"
 parameters:
   node_url: ''
   contract_address: ''
+  contract_abi: ''
   function_name: ''
   function_args: []
+  chain_id: 84532
+  max_gas: 300000
 processing_message: Building transaction...
 tags:
 - blockchain
@@ -45,9 +61,13 @@ hyperparameters:
     access: edit
   parameters.contract_address:
     access: edit
+  parameters.contract_abi:
+    access: edit
   parameters.function_name:
     access: edit
   parameters.function_args:
+    access: edit
+  parameters.chain_id:
     access: edit
   processing_message:
     access: edit
@@ -59,5 +79,5 @@ input_data: null
 output_data: null
 code: null
 flow_control: null
-icon: FiBox
+icon: FiLink
 category: Blockchain

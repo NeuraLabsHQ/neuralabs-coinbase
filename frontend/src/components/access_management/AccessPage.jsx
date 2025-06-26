@@ -1,6 +1,6 @@
 // src/components/access_management/AccessPage.jsx
 import { Flex, useToast, useBreakpointValue, useDisclosure, IconButton, Box, Drawer, DrawerOverlay, DrawerContent, DrawerCloseButton } from '@chakra-ui/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiKey } from 'react-icons/fi';
 import { accessManagementApi } from '../../utils/access-api';
 import AccessDetailPanel from './AccessDetailPanel';
@@ -19,6 +19,16 @@ const AccessPage = () => {
   // Responsive values
   const isMobile = useBreakpointValue({ base: true, lg: false });
   const { isOpen, onOpen, onClose } = useDisclosure();
+  
+  // Add loading state to prevent layout flash
+  const [isBreakpointReady, setIsBreakpointReady] = useState(false);
+  
+  useEffect(() => {
+    // Set ready state once breakpoint value is determined
+    if (isMobile !== undefined) {
+      setIsBreakpointReady(true);
+    }
+  }, [isMobile]);
 
   // Handle view change from sidebar
   const handleViewChange = (newView) => {
@@ -58,6 +68,13 @@ const AccessPage = () => {
     setDetailPanelOpen(false);
     setSelectedFlow(null);
   };
+
+  // Prevent render until breakpoint is determined to avoid layout flash
+  if (!isBreakpointReady) {
+    return (
+      <Flex h="100%" w="100%" overflow="hidden" />
+    );
+  }
 
   return (
     <Flex h="100%" w="100%" overflow="hidden">

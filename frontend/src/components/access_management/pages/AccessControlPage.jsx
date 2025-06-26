@@ -330,7 +330,7 @@ const AccessControlPage = ({ agentData }) => {
           <VStack align="stretch" spacing={3}>
             <Flex justify="space-between" direction={isMobile ? "column" : "row"} gap={isMobile ? 1 : 0}>
               <Text fontWeight="medium" color={mutedColor} fontSize={isMobile ? "sm" : "md"}>Chain:</Text>
-              <Text color={textColor} fontSize={isMobile ? "sm" : "md"}>SUI Testnet</Text>
+              <Text color={textColor} fontSize={isMobile ? "sm" : "md"}>Base Sepolia Testnet</Text>
             </Flex>
             <Divider />
             <Flex justify="space-between" direction={isMobile ? "column" : "row"} gap={isMobile ? 1 : 0}>

@@ -75,7 +75,7 @@ const CompletionSection = ({ journeyData, config, onNewJourney }) => {
               </div>
               <div className="detail-item">
                 <span className="detail-label">Network</span>
-                <span className="detail-value">SUI Testnet</span>
+                <span className="detail-value">Base Sepolia Testnet</span>
               </div>
             </motion.div>
 

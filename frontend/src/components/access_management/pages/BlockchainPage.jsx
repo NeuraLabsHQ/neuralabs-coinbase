@@ -57,17 +57,17 @@ const BlockchainPage = ({ agentData }) => {
           <VStack align="stretch" spacing={4}>
             <HStack justify="space-between">
               <Text fontWeight="medium" color={labelColor}>Network:</Text>
-              <Text color={textColor}>SUI Testnet</Text>
+              <Text color={textColor}>Base Sepolia Testnet</Text>
             </HStack>
             <Divider />
             <HStack justify="space-between">
               <Text fontWeight="medium" color={labelColor}>Chain ID:</Text>
-              <Text color={textColor} fontFamily="monospace">0x1</Text>
+              <Text color={textColor} fontFamily="monospace">0x14a34</Text>
             </HStack>
             <Divider />
             <HStack justify="space-between">
               <Text fontWeight="medium" color={labelColor}>RPC Endpoint:</Text>
-              <Text color={textColor} fontSize="sm">https://fullnode.testnet.sui.io</Text>
+              <Text color={textColor} fontSize="sm">https://sepolia.basescan.org/</Text>
             </HStack>
           </VStack>
         </Box>
@@ -302,7 +302,7 @@ const BlockchainPage = ({ agentData }) => {
               _hover={{ textDecoration: 'underline' }}
             >
               <HStack>
-                <Text>SuiScan Explorer</Text>
+                <Text>Base Sepolia Explorer</Text>
                 <FiExternalLink />
               </HStack>
             </Link>
@@ -313,7 +313,7 @@ const BlockchainPage = ({ agentData }) => {
               _hover={{ textDecoration: 'underline' }}
             >
               <HStack>
-                <Text>SUI Testnet Faucet</Text>
+                <Text>Base Sepolia Testnet Faucet</Text>
                 <FiExternalLink />
               </HStack>
             </Link>

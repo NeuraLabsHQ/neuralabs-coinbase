@@ -1,0 +1,243 @@
+{
+  "contract_example": {
+    "description": "Example using a test ERC20 token contract on Base Sepolia",
+    "contract_address": "dio",
+    "contract_name": "USDC (Base Sepolia Test Token)",
+    "chain_id": 84532,
+    "node_url": "https://sepolia.base.org",
+    
+    "minimal_erc20_abi": [
+      {
+        "name": "balanceOf",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "account",
+            "type": "address"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view"
+      },
+      {
+        "name": "transfer",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "to",
+            "type": "address"
+          },
+          {
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "approve",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "spender",
+            "type": "address"
+          },
+          {
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "name": "allowance",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "name": "spender",
+            "type": "address"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view"
+      },
+      {
+        "name": "decimals",
+        "type": "function",
+        "inputs": [],
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint8"
+          }
+        ],
+        "stateMutability": "view"
+      },
+      {
+        "name": "symbol",
+        "type": "function",
+        "inputs": [],
+        "outputs": [
+          {
+            "name": "",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view"
+      },
+      {
+        "name": "name",
+        "type": "function",
+        "inputs": [],
+        "outputs": [
+          {
+            "name": "",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view"
+      }
+    ],
+    
+    "test_scenarios": {
+      "1_simple_eth_transfer": {
+        "description": "Test simple ETH transfer (no contract interaction)",
+        "parameters": {
+          "chain_id": 84532,
+          "contract_address": "",
+          "contract_abi": [],
+          "function_name": ""
+        },
+        "input_schema": {
+          "from": {
+            "type": "string",
+            "description": "Sender address"
+          },
+          "to": {
+            "type": "string", 
+            "description": "Recipient address"
+          },
+          "amount": {
+            "type": "string",
+            "description": "ETH amount to send"
+          }
+        },
+        "example_input": {
+          "from": "0x7efD1aae7Ff2203eFa02D44c492f9ab95d1feD4e",
+          "to": "0x43ADAc5516f8E2D3d2BD31276BeC343547ee6612",
+          "amount": "0.005"
+        }
+      },
+      
+      "2_erc20_transfer": {
+        "description": "Test ERC20 token transfer",
+        "parameters": {
+          "chain_id": 84532,
+          "contract_address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+          "contract_abi": "[{\"name\":\"transfer\",\"type\":\"function\",\"inputs\":[{\"name\":\"to\",\"type\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\"}]",
+          "function_name": "transfer"
+        },
+        "input_schema": {
+          "from": {
+            "type": "string",
+            "description": "Sender address"
+          },
+          "to": {
+            "type": "string",
+            "description": "Recipient address"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Token amount (will be converted to smallest unit)"
+          }
+        },
+        "example_input": {
+          "from": "0x7efD1aae7Ff2203eFa02D44c492f9ab95d1feD4e",
+          "to": "0x43ADAc5516f8E2D3d2BD31276BeC343547ee6612",
+          "amount": "1000000"
+        },
+        "note": "This transfers 1 USDC (6 decimals, so 1000000 = 1 USDC)"
+      },
+      
+      "3_erc20_approve": {
+        "description": "Test ERC20 approve function",
+        "parameters": {
+          "chain_id": 84532,
+          "contract_address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+          "contract_abi": "[{\"name\":\"approve\",\"type\":\"function\",\"inputs\":[{\"name\":\"spender\",\"type\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\"}]",
+          "function_name": "approve"
+        },
+        "input_schema": {
+          "from": {
+            "type": "string",
+            "description": "Token owner address"
+          },
+          "spender": {
+            "type": "string",
+            "description": "Address to approve"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Amount to approve"
+          }
+        },
+        "example_input": {
+          "from": "0x7efD1aae7Ff2203eFa02D44c492f9ab95d1feD4e",
+          "spender": "0x43ADAc5516f8E2D3d2BD31276BeC343547ee6612",
+          "amount": "1000000000"
+        }
+      },
+      
+      "4_function_overloading_test": {
+        "description": "Example with overloaded functions (if contract had them)",
+        "note": "If a contract has multiple functions with same name but different parameters, the system will match based on input schema field names",
+        "example": {
+          "function_overloads": [
+            "transfer(address to, uint256 amount)",
+            "transfer(address to, uint256 amount, bytes data)"
+          ],
+          "matching_logic": "If input schema has 'to' and 'amount' fields only, it matches the first function. If it also has 'data' field, it matches the second."
+        }
+      }
+    },
+    
+    "how_to_test": {
+      "step1": "Use the read_contract block to check token balance first",
+      "step2": "Use build_transaction_json block with the above parameters",
+      "step3": "The output will be a transaction JSON that can be executed",
+      "step4": "The transaction button will appear in the chat interface",
+      "step5": "Click to execute with Coinbase Smart Wallet"
+    },
+    
+    "faucets": {
+      "base_sepolia_eth": "https://www.alchemy.com/faucets/base-sepolia",
+      "test_tokens": "You can get test USDC from Base Sepolia faucets or by interacting with test token contracts"
+    }
+  }
+}

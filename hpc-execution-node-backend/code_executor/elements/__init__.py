@@ -29,9 +29,13 @@ from .ai.llm_structured import LLMStructured
 # Custom
 from .custom.custom import Custom
 
+# MCP
+from .mcp.duckduckgo_search import DuckDuckGoSearch
+
 # Coinbase
 
 from .coinbase.fetch_balance import FetchBalance as CoinbaseFetchBalance
+from .coinbase.read_contract import ReadContract as CoinbaseReadContract
 
 
 # Registry of element types to their classes
@@ -47,7 +51,7 @@ element_registry = {
     "metadata": Metadata,
     "constants": Constants,
     "read_blockchain_data": ReadBlockchainData,
-    "build_transaction_json": BuildTransactionJSON,
+    "buildtransaction": BuildTransactionJSON,
     "selector": Selector,
     "merger": Merger,
     "random_generator": RandomGenerator,
@@ -55,8 +59,13 @@ element_registry = {
     "llm_text": LLMText,
     "llm_structured": LLMStructured,
     "custom": Custom,
+    "duckduckgo_search": DuckDuckGoSearch,
+    "DuckDuckGoSearch": DuckDuckGoSearch,
+    "search": DuckDuckGoSearch,  # Backward compatibility
+    "randomgenerator": RandomGenerator,
     
-    
-    "coinbase_fetch_balance": CoinbaseFetchBalance,
-    "FetchBalance": CoinbaseFetchBalance  # Map YAML type to Coinbase implementation
+    "fetchbalance": CoinbaseFetchBalance,
+    "FetchBalance": CoinbaseFetchBalance,  # Map YAML type to Coinbase implementation
+    "coinbase_read_contract": CoinbaseReadContract,
+    "readcontract": CoinbaseReadContract  # Map common name to Coinbase implementation
 }

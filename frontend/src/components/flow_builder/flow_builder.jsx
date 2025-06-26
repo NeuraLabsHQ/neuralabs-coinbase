@@ -22,6 +22,7 @@ import VisualizePanel from './VisualizePanel/VisualizePanel';
 
 
 import ICON_MAP from './Common/IconMap';
+import { FiActivity } from 'react-icons/fi';
 
 const FlowBuilder = ({ agentId, agentData }) => {
   const { colorMode } = useColorMode();
@@ -76,9 +77,10 @@ const FlowBuilder = ({ agentId, agentData }) => {
         // Transform the nodeTypes to include the actual icon components
         const transformedNodeTypes = {};
         Object.entries(nodeTypes).forEach(([key, nodeType]) => {
+          console.log(`Processing node ${key} with icon: ${nodeType.icon}`);
           transformedNodeTypes[key] = {
             ...nodeType,
-            icon: ICON_MAP[nodeType.icon] || "activity" // Default to FiActivity if icon not found
+            icon: ICON_MAP[nodeType.icon] || FiActivity // Default to FiActivity component if icon not found
           };
         });
         
@@ -191,60 +193,6 @@ const FlowBuilder = ({ agentId, agentData }) => {
           console.log('Workflow data that failed to load:', workflow);
           
           // Fallback: Try to load directly if it's in the old format
-          try {
-            if (workflow.nodes && Array.isArray(workflow.nodes)) {
-              const loadedNodes = workflow.nodes.map(node => ({
-                id: node.id,
-                type: node.type,
-                name: node.name || node.data?.label || node.type,
-                x: node.x || Math.random() * 500,
-                y: node.y || Math.random() * 300,
-                inputs: node.inputs || [],
-                outputs: node.outputs || [],
-                parameters: node.parameters || [], // Array format for UI
-                parametersObject: node.parametersObject || {}, // Object format for storage
-                hyperparameters: node.hyperparameters || [], // Legacy support
-                description: node.description || '',
-                processing_message: node.processing_message || node.processingMessage || '',
-                processingMessage: node.processingMessage || node.processing_message || '',
-                fieldAccess: node.fieldAccess || {},
-                layer: node.layer || 0,
-                tags: Array.isArray(node.tags) ? node.tags : [],
-                code: node.code || '',
-                metadata: node.metadata || {},
-                templateId: node.templateId || null
-              }));
-              setNodes(loadedNodes);
-            }
-            
-            // Load edges
-            if (workflow.edges && Array.isArray(workflow.edges)) {
-              const loadedEdges = workflow.edges.map(edge => ({
-                id: edge.id,
-                source: edge.source,
-                target: edge.target,
-                sourceName: edge.sourceName || '',
-                targetName: edge.targetName || '',
-                mappings: edge.mappings || [],
-                connectionType: edge.connectionType || 'both',
-                sourcePort: edge.sourcePort || 0,
-                targetPort: edge.targetPort || 0
-              }));
-              setEdges(loadedEdges);
-            }
-            
-            // Center the flow after loading
-            setTimeout(centerFlow, 100);
-          } catch (fallbackError) {
-            console.error('Fallback loading also failed:', fallbackError);
-            toast({
-              title: "Error loading workflow",
-              description: "Failed to load the workflow data. Starting with empty canvas.",
-              status: "warning",
-              duration: 5000,
-              isClosable: true,
-            });
-          }
         }
       }
     };
@@ -721,29 +669,65 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
   
   // Zoom controls
   const handleZoomIn = () => {
-    setScale(prevScale => {
-      const newScale = Math.min(prevScale + 0.1, 4);
-      return newScale;
-    });
+    if (zoomBehaviorRef.current && svgRef.current) {
+      const svg = d3.select(svgRef.current);
+      const currentTransform = d3.zoomTransform(svgRef.current);
+      const newScale = Math.min(currentTransform.k + 0.1, 4);
+      
+      // Apply the new scale while maintaining the current translation
+      svg.transition().duration(300).call(
+        zoomBehaviorRef.current.transform,
+        d3.zoomIdentity
+          .translate(currentTransform.x, currentTransform.y)
+          .scale(newScale)
+      );
+    }
   };
   
   const handleZoomOut = () => {
-    setScale(prevScale => {
-      const newScale = Math.max(prevScale - 0.1, 0.8);
-      return newScale;
-    });
+    if (zoomBehaviorRef.current && svgRef.current) {
+      const svg = d3.select(svgRef.current);
+      const currentTransform = d3.zoomTransform(svgRef.current);
+      const newScale = Math.max(currentTransform.k - 0.1, 0.2);
+      
+      // Apply the new scale while maintaining the current translation
+      svg.transition().duration(300).call(
+        zoomBehaviorRef.current.transform,
+        d3.zoomIdentity
+          .translate(currentTransform.x, currentTransform.y)
+          .scale(newScale)
+      );
+    }
   };
   
   const handleFitView = () => {
-    // Reset the view using d3 if the ref exists
-    if (zoomBehaviorRef.current && nodes.length > 0) {
-      centerFlow();
+    // Center on the first node if nodes exist
+    if (zoomBehaviorRef.current && nodes.length > 0 && svgRef.current) {
+      // Get the first node
+      const firstNode = nodes[0];
+      
+      // Get SVG dimensions
+      const svgElement = svgRef.current;
+      const svgRect = svgElement.getBoundingClientRect();
+      const svgWidth = svgRect.width;
+      const svgHeight = svgRect.height;
+      
+      // Calculate the new translate values to center on the first node
+      // Reset scale to 1 for consistent view
+      const targetScale = 1;
+      const newTranslateX = svgWidth / 2 - firstNode.x * targetScale;
+      const newTranslateY = svgHeight / 2 - firstNode.y * targetScale;
+      
+      // Apply transform through D3 zoom behavior - single call with transition
+      const svg = d3.select(svgElement);
+      svg.transition().duration(500).call(
+        zoomBehaviorRef.current.transform,
+        d3.zoomIdentity.translate(newTranslateX, newTranslateY).scale(targetScale)
+      );
+      
     } else {
       // Default reset if no nodes
-      setScale(1);
-      setTranslate({ x: 0, y: 0 });
-      
-      if (zoomBehaviorRef.current) {
+      if (zoomBehaviorRef.current && svgRef.current) {
         const svg = d3.select(svgRef.current);
         svg.transition().duration(300).call(
           zoomBehaviorRef.current.transform, 
@@ -787,10 +771,12 @@ if (nodeType === 'custom-script' || nodeType === 'Custom') {
         applyBeautify(nodes, edges);
       }
       
-      // Center the flow
-      centerFlow();
-      
       setViewOnlyMode(true);
+      
+      // Center on the first node using fit to view
+      setTimeout(() => {
+        handleFitView();
+      }, 100);
       
       // Notification
       toast({
@@ -1171,6 +1157,25 @@ const handleSaveWorkflow = async () => {
   useEffect(() => {
     updateAvailableLayers();
   }, [nodes]);
+
+  // Add keyboard shortcut for Ctrl+S to save workflow
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Check if Ctrl+S (Windows/Linux) or Cmd+S (Mac) is pressed
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault(); // Prevent browser's default save dialog
+        handleSaveWorkflow();
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup on unmount
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [agentId, nodes, edges, agentData]); // Dependencies for handleSaveWorkflow
 
   return (
     <Flex h="100%" w="100%" overflow="hidden">

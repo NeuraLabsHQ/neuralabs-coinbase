@@ -70,7 +70,7 @@ async def get_all_blocks():
         # Format datetime objects
         formatted_blocks = format_datetime(blocks)
         
-        print(formatted_blocks)  # Debugging line to check the formatted result
+        # print(formatted_blocks)  # Debugging line to check the formatted result
         return formatted_blocks
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching blocks: {str(e)}")

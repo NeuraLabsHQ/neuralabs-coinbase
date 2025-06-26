@@ -196,7 +196,7 @@ const FlowActionPanel = ({ toggleSidebar, sidebarOpen, currentPage, onPageChange
             <DrawerBody p={3} overflowY="auto">
               <VStack spacing={2} align="stretch">
                 {/* Toggle Sidebar Button */}
-                <Button
+                {/* <Button
                   {...getButtonStyle(null, true)}
                   onClick={() => {
                     toggleSidebar();
@@ -207,7 +207,7 @@ const FlowActionPanel = ({ toggleSidebar, sidebarOpen, currentPage, onPageChange
                   <HStack spacing={3} w="100%">
                     <Text fontSize="md">{sidebarOpen ? "Close Flow Panel" : "Open Flow Panel"}</Text>
                   </HStack>
-                </Button>
+                </Button> */}
 
                 {/* Flow Action Items with Labels */}
                 {flowIcons.sidebarOptions.map((option, index) => {

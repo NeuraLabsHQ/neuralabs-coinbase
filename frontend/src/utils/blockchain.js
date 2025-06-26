@@ -2,10 +2,10 @@
 // This ensures compatibility between JS and TS files
 
 // Import the client instances
-import { useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
+// import { useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
 
 // Re-export contract functions
-export { getContractInfo } from '../lib/blockchain_module/contracts/index.ts'
+// export { getContractInfo } from '../lib/blockchain_module/contracts/index.ts'
 
 // Re-export NFT functions with wrappers
 export { 
@@ -87,15 +87,15 @@ export const createAccessCap = async (nftId, userAddress) => {
 }
 
 // Import seal encryption functions
-import {
-  getSealClient as _getSealClient,
-  createSessionKey as _createSessionKey,
-  importSessionKey as _importSessionKey,
-  encryptData as _encryptData,
-  decryptData as _decryptData,
-  storeEncryptedData as _storeEncryptedData,
-  SessionKey
-} from '../lib/blockchain_module/seal-encryption/index.ts'
+// import {
+//   getSealClient as _getSealClient,
+//   createSessionKey as _createSessionKey,
+//   importSessionKey as _importSessionKey,
+//   encryptData as _encryptData,
+//   decryptData as _decryptData,
+//   storeEncryptedData as _storeEncryptedData,
+//   SessionKey
+// } from '../lib/blockchain_module/seal-encryption/index.ts'
 
 // Wrap Seal functions
 export const initializeSealClient = (suiClient) => {
@@ -117,9 +117,13 @@ export const createSealSessionKey = (params) => {
   })
 }
 
-export const importSessionKey = _importSessionKey
-export const encryptData = _encryptData
-export const decryptData = _decryptData
+// export const importSessionKey = _importSessionKey
+// export const encryptData = _encryptData
+// export const decryptData = _decryptData
+
+export const encryptData = null;
+export const decryptData = null;
+
 export const storeEncryptedData = async (params) => {
   const client = window.suiClient
   const signAndExecute = window.signAndExecute
@@ -132,7 +136,13 @@ export const storeEncryptedData = async (params) => {
   
   return _storeEncryptedData(client, config, currentAccount, signAndExecute, params)
 }
+
+// remove later
+const SessionKey = null;
+
 export { SessionKey }
+
+
 
 // Create wrapper functions for missing/complex operations
 export const exportSessionKey = async (sessionKey) => {
@@ -188,12 +198,12 @@ export const downloadFromWalrus = async (blobId) => {
 }
 
 // Import exchange functions
-import {
-  getSuiBalance as _getSuiBalance,
-  getWalBalance as _getWalBalance,
-  formatBalance
-} from '../lib/blockchain_module/exchange/index.ts'
-import { convertSuiToWal as _convertSuiToWal } from '../lib/blockchain_module/exchange/convert-simple.js'
+// import {
+//   getSuiBalance as _getSuiBalance,
+//   getWalBalance as _getWalBalance,
+//   formatBalance
+// } from '../lib/blockchain_module/exchange/index.ts'
+// import { convertSuiToWal as _convertSuiToWal } from '../lib/blockchain_module/exchange/convert-simple.js'
 
 // Wrap exchange functions to provide client
 export const getSUIBalance = async (address) => {
@@ -237,10 +247,10 @@ export const convertSUIToWAL = async (params) => {
 }
 
 // Re-export transaction proposer functions
-export { createTransaction } from '../lib/blockchain_module/transaction-proposer/index.ts'
+// export { createTransaction } from '../lib/blockchain_module/transaction-proposer/index.ts'
 
 // Re-export constants
-export { ACCESS_LEVELS } from '../lib/blockchain_module/utils/constants.ts'
+// export { ACCESS_LEVELS } from '../lib/blockchain_module/utils/constants.ts'
 
 // Set up global references for easy access
 if (typeof window !== 'undefined') {

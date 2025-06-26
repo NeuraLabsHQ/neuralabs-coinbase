@@ -15,14 +15,13 @@ import {
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from 'react';
-import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
-import { FiCheck } from "react-icons/fi";
+import { FiChevronDown, FiChevronUp, FiCheck, FiCopy, FiExternalLink } from 'react-icons/fi';
 import colors from "../../../color";
 import thinkingStepTemplates from "../../../utils/thinkingStepTemplates.json";
 import thinkresponse from "../../../utils/thinkresponse.json";
 
 
-const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile: isMobileProp }) => {
+const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile: isMobileProp, onTransactionDetected }) => {
   const { isThinking, steps = [], currentStep, searchResults, timeElapsed, onTypingComplete, executionSteps = [] } = thinkingState;
   
   console.log('ThinkingUI render - isThinking:', isThinking, 'executionSteps:', executionSteps.length, 'thinkingState:', thinkingState);
@@ -30,6 +29,7 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
   const [responseData, setResponseData] = useState(null);
   const [wasThinking, setWasThinking] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [expandedResults, setExpandedResults] = useState({});
   const scrollableRef = useRef(null);
   
   // Responsive values
@@ -69,6 +69,36 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
       scrollableRef.current.scrollTop = scrollableRef.current.scrollHeight;
     }
   }, [executionSteps]);
+
+  // Track detected transactions to avoid duplicate calls
+  const [detectedTransactions, setDetectedTransactions] = useState(new Set());
+  
+  // Check for proposed transactions in end blocks
+  useEffect(() => {
+    if (onTransactionDetected && executionSteps.length > 0) {
+      // Look for completed end blocks with proposed_transaction
+      const endBlockWithTransaction = executionSteps.find(step => 
+        step.elementType === 'end' && 
+        step.status === 'completed' && 
+        step.outputs?.proposed_transaction && 
+        step.outputs.proposed_transaction !== null
+      );
+      
+      if (endBlockWithTransaction) {
+        // Create a unique key for this transaction to avoid duplicates
+        const txKey = JSON.stringify(endBlockWithTransaction.outputs.proposed_transaction);
+        
+        // Only call onTransactionDetected if we haven't seen this transaction before
+        if (!detectedTransactions.has(txKey)) {
+          console.log('Detected new proposed transaction in end block:', endBlockWithTransaction.outputs.proposed_transaction);
+          onTransactionDetected(endBlockWithTransaction.outputs.proposed_transaction);
+          
+          // Add to detected set
+          setDetectedTransactions(prev => new Set(prev).add(txKey));
+        }
+      }
+    }
+  }, [executionSteps, onTransactionDetected, detectedTransactions]);
 
   // useEffect(() => {
   //   if (currentStep && currentStep !== previousStep) {
@@ -137,7 +167,7 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
         // Replace any placeholders in the template
         let templateText = stepTemplate.text;
         templateText = templateText.replace(/\{\{query\}\}/g, query);
-        
+          
         textToType.current = templateText;
       } else {
         // Fallback if step name not found in templates
@@ -221,6 +251,14 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
   if (!isThinking && executionSteps.length === 0) return null;
   if (!isThinking && !shouldPersist && executionSteps.length === 0) return null;
 
+  // Toggle function for result sections
+  const toggleResultExpanded = (stepKey) => {
+    setExpandedResults(prev => ({
+      ...prev,
+      [stepKey]: !prev[stepKey]
+    }));
+  };
+
   // Helper function to render output values
   const renderOutput = (output) => {
     if (typeof output === 'string') {
@@ -252,9 +290,12 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
       border="1px solid"
       borderColor={borderColor}
       bg={bgColor}
+      w="100%"
       maxW={maxBoxWidth}
+      minW={isMobile ? "100%" : "600px"}
       mx={isMobile ? 0 : "auto"}
       mb={isMobile ? 4 : 8}
+      overflowX="auto"
     >
       <Flex direction={isMobile ? "column" : "row"}>
         <Box 
@@ -343,6 +384,7 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
             maxHeight={isMobile ? "250px" : "400px"}
             position="relative"
             css={{
+              scrollbarGutter: 'stable',
               '&::-webkit-scrollbar': {
                 width: '8px',
               },
@@ -366,24 +408,64 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
                   transition={{ duration: 0.3 }}
                   style={{ width: "100%" }}
                 >
-                  <Box w="100%">
+                  <Box w="100%" mr="8px">
                     <Text fontSize={isMobile ? "xs" : "sm"} fontWeight="medium" color={secondaryColor} mb={1}>
                       {step.description}
                     </Text>
                     
                     {/* Show outputs if available and step is completed */}
                     {step.status === 'completed' && step.outputs && Object.keys(step.outputs).length > 0 && (
-                      <Box bg={sourceBgColor} p={isMobile ? 2 : 3} borderRadius="md" mt={2}>
-                        {Object.entries(step.outputs).map(([key, value]) => (
-                          <Box key={key} mb={2}>
-                            <Text fontSize="xs" fontWeight="bold" color={secondaryColor} mb={1}>
-                              {key}:
-                            </Text>
-                            <Text fontSize="sm" whiteSpace="pre-wrap">
-                              {renderOutput(value)}
-                            </Text>
+                      <Box mt={2} mr="8px">
+                        <Flex 
+                          align="center" 
+                          justify="space-between"
+                          cursor="pointer"
+                          onClick={() => toggleResultExpanded(`${step.elementId}-${index}`)}
+                          bg={sourceBgColor}
+                          p={isMobile ? 2 : 3}
+                          borderRadius="md"
+                          _hover={{ opacity: 0.8 }}
+                          transition="opacity 0.2s"
+                        >
+                          <Text fontSize={isMobile ? "xs" : "sm"} fontWeight="medium" color={textColor}>
+                            Results for {step.elementName}
+                          </Text>
+                          <IconButton
+                            icon={expandedResults[`${step.elementId}-${index}`] === false ? <FiChevronDown /> : <FiChevronUp />}
+                            size="xs"
+                            variant="ghost"
+                            aria-label={expandedResults[`${step.elementId}-${index}`] === false ? "Expand results" : "Collapse results"}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleResultExpanded(`${step.elementId}-${index}`);
+                            }}
+                          />
+                        </Flex>
+                        <Collapse in={expandedResults[`${step.elementId}-${index}`] !== false} animateOpacity>
+                          <Box 
+                            bg={sourceBgColor} 
+                            p={isMobile ? 2 : 3} 
+                            borderRadius="md" 
+                            mt={1} 
+                            overflowX="auto"
+                          >
+                            {Object.entries(step.outputs).map(([key, value]) => (
+                              <Box key={key} mb={2}>
+                                <Text fontSize="xs" fontWeight="bold" color={secondaryColor} mb={1}>
+                                  {key}:
+                                </Text>
+                                <Text 
+                                  fontSize="sm" 
+                                  whiteSpace="pre-wrap"
+                                  wordBreak="break-word"
+                                  overflowWrap="break-word"
+                                >
+                                  {renderOutput(value)}
+                                </Text>
+                              </Box>
+                            ))}
                           </Box>
-                        ))}
+                        </Collapse>
                       </Box>
                     )}
                     
@@ -405,8 +487,106 @@ const ThinkingUI = ({ thinkingState, query = "", shouldPersist = true, isMobile:
                   transition={{ duration: 0.5 }}
                   style={{ width: "100%" }}
                 >
-                  <Box bg={sourceBgColor} p={isMobile ? 2 : 3} borderRadius="md" w="100%">
-                    <Text fontSize={isMobile ? "xs" : "sm"}>Analysis completed for: "{query}"</Text>
+                  <Box mr="8px">
+                    <Box bg={sourceBgColor} p={isMobile ? 2 : 3} borderRadius="md">
+                      <VStack align="start" spacing={2}>
+                        <Text fontSize={isMobile ? "xs" : "sm"}>Analysis completed for: "{query}"</Text>
+                        
+                        {/* Show transaction details if payment was made */}
+                        {(() => {
+                          const paymentStep = executionSteps.find(step => 
+                            step.elementId === 'payment_required' && 
+                            step.status === 'completed' && 
+                            step.outputs?.transactionHash
+                          );
+                          if (paymentStep) {
+                            return (
+                              <Box 
+                                bg={useColorModeValue('gray.50', 'gray.800')} 
+                                p={3} 
+                                borderRadius="md" 
+                                border="1px solid"
+                                borderColor={useColorModeValue('gray.200', 'gray.600')}
+                                mt={2}
+                                w="100%"
+                              >
+                                <VStack align="start" spacing={2} w="100%">
+                                  <Text fontSize="sm" color={textColor} fontWeight="bold">
+                                    💳 x402 Payment Transaction Details
+                                  </Text>
+                                  
+                                  <Flex justify="space-between" align="center" w="100%">
+                                    <Text fontSize="xs" color={secondaryColor}>
+                                      Transaction Hash:
+                                    </Text>
+                                    <Flex align="center" gap={1}>
+                                      <Text fontSize="xs" fontFamily="mono" color={linkColor}>
+                                        {paymentStep.outputs.transactionHash ? 
+                                          `${paymentStep.outputs.transactionHash.slice(0, 6)}...${paymentStep.outputs.transactionHash.slice(-4)}` : 
+                                          'N/A'}
+                                      </Text>
+                                      <IconButton
+                                        icon={<FiCopy />}
+                                        size="xs"
+                                        variant="ghost"
+                                        aria-label="Copy transaction hash"
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(paymentStep.outputs.transactionHash);
+                                        }}
+                                      />
+                                      <IconButton
+                                        icon={<FiExternalLink />}
+                                        size="xs"
+                                        variant="ghost"
+                                        aria-label="View in explorer"
+                                        onClick={() => {
+                                          const explorerUrl = `https://sepolia.basescan.org/tx/${paymentStep.outputs.transactionHash}`;
+                                          window.open(explorerUrl, '_blank');
+                                        }}
+                                      />
+                                    </Flex>
+                                  </Flex>
+                                  
+                                  {paymentStep.outputs.amount && (
+                                    <Flex justify="space-between" w="100%">
+                                      <Text fontSize="xs" color={secondaryColor}>
+                                        Amount:
+                                      </Text>
+                                      <Text fontSize="xs" fontWeight="medium" color={textColor}>
+                                        {paymentStep.outputs.amount} {paymentStep.outputs.currency || 'USDC'}
+                                      </Text>
+                                    </Flex>
+                                  )}
+                                  
+                                  {paymentStep.outputs.network && (
+                                    <Flex justify="space-between" w="100%">
+                                      <Text fontSize="xs" color={secondaryColor}>
+                                        Network:
+                                      </Text>
+                                      <Text fontSize="xs" color={textColor}>
+                                        {paymentStep.outputs.network}
+                                      </Text>
+                                    </Flex>
+                                  )}
+                                  
+                                  {paymentStep.outputs.timestamp && (
+                                    <Flex justify="space-between" w="100%">
+                                      <Text fontSize="xs" color={secondaryColor}>
+                                        Time:
+                                      </Text>
+                                      <Text fontSize="xs" color={textColor}>
+                                        {new Date(paymentStep.outputs.timestamp).toLocaleString()}
+                                      </Text>
+                                    </Flex>
+                                  )}
+                                </VStack>
+                              </Box>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </VStack>
+                    </Box>
                   </Box>
                 </motion.div>
               )}

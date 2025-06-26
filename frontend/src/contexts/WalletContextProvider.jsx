@@ -8,10 +8,12 @@ import {
   disconnect as wagmiDisconnect,
   getBalance,
   switchChain,
-  getChainId
+  getChainId,
+  reconnect,
+  readContract
 } from '@wagmi/core';
 import { config } from '../config/wagmi';
-import { formatEther } from 'viem';
+import { formatEther, formatUnits } from 'viem';
 import { useToast } from '@chakra-ui/react';
 import { 
   authenticateWallet, 
@@ -21,6 +23,27 @@ import {
   isAuthenticated as checkIsAuthenticated 
 } from '../components/auth/WalletSignatureService.js';
 
+// USDC Contract on Base Sepolia
+const USDC_BASE_SEPOLIA = {
+  address: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+  abi: [
+    {
+      "inputs": [{"name": "account", "type": "address"}],
+      "name": "balanceOf",
+      "outputs": [{"name": "", "type": "uint256"}],
+      "type": "function",
+      "stateMutability": "view"
+    },
+    {
+      "inputs": [],
+      "name": "decimals",
+      "outputs": [{"name": "", "type": "uint8"}],
+      "type": "function",
+      "stateMutability": "view"
+    }
+  ]
+};
+
 // Create the context
 const WalletContext = createContext(null);
 
@@ -28,6 +51,7 @@ const WalletContext = createContext(null);
 export const WalletContextProvider = ({ children }) => {
   const [account, setAccount] = useState(null);
   const [balance, setBalance] = useState(null);
+  const [usdcBalance, setUsdcBalance] = useState(null);
   const [chainId, setChainId] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
@@ -50,6 +74,32 @@ export const WalletContextProvider = ({ children }) => {
     }
   }, []);
 
+  // Update USDC balance
+  const updateUsdcBalance = useCallback(async (address) => {
+    if (!address) return;
+    
+    try {
+      const usdcBalanceRaw = await readContract(config, {
+        address: USDC_BASE_SEPOLIA.address,
+        abi: USDC_BASE_SEPOLIA.abi,
+        functionName: 'balanceOf',
+        args: [address],
+      });
+      
+      // USDC has 6 decimals
+      const formattedBalance = formatUnits(usdcBalanceRaw, 6);
+      setUsdcBalance({
+        value: usdcBalanceRaw,
+        formatted: formattedBalance,
+        decimals: 6,
+        symbol: 'USDC'
+      });
+    } catch (err) {
+      console.error('Error fetching USDC balance:', err);
+      setUsdcBalance(null);
+    }
+  }, []);
+
   // Check authentication status
   const checkAuthStatus = useCallback(() => {
     const token = getStoredAuthToken();
@@ -67,6 +117,13 @@ export const WalletContextProvider = ({ children }) => {
   useEffect(() => {
     // Check initial connection and auth
     const checkConnection = async () => {
+      // First, try to reconnect if there's a stored connection
+      try {
+        await reconnect(config);
+      } catch (err) {
+        console.log('No previous connection to restore:', err);
+      }
+      
       const accountData = getAccount(config);
       
       if (accountData && accountData.address && accountData.isConnected) {
@@ -74,6 +131,7 @@ export const WalletContextProvider = ({ children }) => {
         setIsConnected(true);
         setChainId(getChainId(config));
         await updateBalance(accountData.address);
+        await updateUsdcBalance(accountData.address);
         
         // Check if already authenticated
         checkAuthStatus();
@@ -81,6 +139,7 @@ export const WalletContextProvider = ({ children }) => {
         setAccount(null);
         setIsConnected(false);
         setBalance(null);
+        setUsdcBalance(null);
         setChainId(null);
         setIsAuthenticated(false);
         setAuthToken(null);
@@ -100,6 +159,7 @@ export const WalletContextProvider = ({ children }) => {
           setIsConnected(true);
           setChainId(getChainId(config));
           await updateBalance(newAccount.address);
+          await updateUsdcBalance(newAccount.address);
           
           // Check auth status on account change
           checkAuthStatus();
@@ -108,6 +168,7 @@ export const WalletContextProvider = ({ children }) => {
           setAccount(null);
           setIsConnected(false);
           setBalance(null);
+          setUsdcBalance(null);
           setChainId(null);
           setIsAuthenticated(false);
           setAuthToken(null);
@@ -117,7 +178,7 @@ export const WalletContextProvider = ({ children }) => {
     });
 
     return () => unwatch();
-  }, [updateBalance, checkAuthStatus]);
+  }, [updateBalance, updateUsdcBalance, checkAuthStatus]);
 
   // Connect wallet and authenticate
   const connect = useCallback(async () => {
@@ -149,11 +210,12 @@ export const WalletContextProvider = ({ children }) => {
       setAccount({ 
         address: walletAddress, 
         isConnected: true,
-        chain: result.chain || { id: currentChainId } 
+        chainId: currentChainId 
       });
       setIsConnected(true);
       setChainId(currentChainId);
       await updateBalance(walletAddress);
+      await updateUsdcBalance(walletAddress);
 
       toast({
         title: 'Wallet Connected',
@@ -248,6 +310,7 @@ export const WalletContextProvider = ({ children }) => {
       setAccount(null);
       setIsConnected(false);
       setBalance(null);
+      setUsdcBalance(null);
       setChainId(null);
       setIsAuthenticated(false);
       setAuthToken(null);
@@ -295,6 +358,7 @@ export const WalletContextProvider = ({ children }) => {
     // State
     account,
     balance,
+    usdcBalance,
     chainId,
     isConnecting,
     isDisconnecting,
@@ -308,6 +372,7 @@ export const WalletContextProvider = ({ children }) => {
     connect,
     disconnect,
     updateBalance,
+    updateUsdcBalance,
     switchChain: handleSwitchChain,
     
     // Computed values
@@ -317,6 +382,9 @@ export const WalletContextProvider = ({ children }) => {
       : '',
     formattedBalance: balance 
       ? `${parseFloat(formatEther(balance.value)).toFixed(4)} ${balance.symbol}` 
+      : null,
+    formattedUsdcBalance: usdcBalance 
+      ? `${parseFloat(usdcBalance.formatted).toFixed(2)} ${usdcBalance.symbol}` 
       : null,
   };
 

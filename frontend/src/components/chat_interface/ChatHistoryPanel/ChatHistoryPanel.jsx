@@ -9,7 +9,9 @@ import {
   Divider,
   useColorModeValue,
   Input,
-  Tooltip
+  Tooltip,
+  InputGroup,
+  InputLeftElement
 } from '@chakra-ui/react';
 import { 
   FiPlus, 
@@ -20,9 +22,11 @@ import {
   FiMessageCircle,
   FiChevronLeft,
   FiChevronRight,
-  FiMoreVertical
+  FiMoreVertical,
+  FiSearch
 } from 'react-icons/fi';
 import { FaAngleDoubleLeft, FaAngleDoubleRight } from 'react-icons/fa';
+import { useState } from 'react';
 import colors from '../../../color';
 
 const ChatHistoryPanel = ({ 
@@ -38,8 +42,12 @@ const ChatHistoryPanel = ({
   setEditingChatId,
   newTitle,
   setNewTitle,
-  isMobile = false
+  isMobile = false,
+  onSearchOpen
 }) => {
+  // State for search
+  const [searchQuery, setSearchQuery] = useState('');
+  
   // Colors that adapt to light/dark mode
   const bgColor = useColorModeValue(colors.chat.bgTertiary.light, colors.chat.bgTertiary.dark);
   const borderColor = useColorModeValue(colors.chat.borderColor.light, colors.chat.borderColor.dark);
@@ -50,6 +58,11 @@ const ChatHistoryPanel = ({
   const buttonBgColor = useColorModeValue(colors.chat.bgButton.light, colors.chat.bgButton.dark);
   const buttonHoverBgColor = useColorModeValue(colors.chat.bgButtonHover.light, colors.chat.bgButtonHover.dark);
   const iconColor = useColorModeValue(colors.chat.iconColor.light, colors.chat.iconColor.dark);
+  
+  // Filter chats based on search query
+  const filteredChats = chats.filter(chat => 
+    chat.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
   
   const handleEditClick = (chatId, currentTitle) => {
     setEditingChatId(chatId);
@@ -83,29 +96,69 @@ const ChatHistoryPanel = ({
       >
         <VStack spacing={0} py={4}>
           {/* Logo / App icon */}
-          <Box w="40px" h="40px" display="flex" justifyContent="center" alignItems="center" mb={4}>
-            <Flex 
-              w="30px" 
-              h="30px" 
-              borderRadius="full" 
-              bg={colors.gray[700]}
-              alignItems="center" 
+          {/* <Box w="40px" h="40px" display="flex" justifyContent="center" alignItems="center" mb={4}>
+            <Box
+              position="relative"
+              w="36px"
+              h="36px"
+              display="flex"
+              alignItems="center"
               justifyContent="center"
+              borderRadius="lg"
+              bg={useColorModeValue('white', 'black')}
+              border="2px solid"
+              borderColor={useColorModeValue('black', 'white')}
+              boxShadow={useColorModeValue(
+                '2px 2px 0px 0px rgba(0,0,0,1)',
+                '2px 2px 0px 0px rgba(255,255,255,1)'
+              )}
+              transition="all 0.2s ease"
+              _hover={{
+                transform: "translate(-2px, -2px)",
+                boxShadow: useColorModeValue(
+                  '4px 4px 0px 0px rgba(0,0,0,1)',
+                  '4px 4px 0px 0px rgba(255,255,255,1)'
+                )
+              }}
+              cursor="pointer"
             >
-              <Text fontSize="sm" fontWeight="bold" color={textColor}>N</Text>
-            </Flex>
-          </Box>
+              <Text
+                fontSize="xl"
+                fontWeight="900"
+                fontFamily="'Inter', system-ui, -apple-system, sans-serif"
+                color={useColorModeValue('black', 'white')}
+                letterSpacing="-0.05em"
+                lineHeight="1"
+                userSelect="none"
+              >
+                N
+              </Text>
+            </Box>
+          </Box> */}
           
           {/* Expand sidebar button */}
           <Tooltip label="Expand sidebar" placement="right">
             <IconButton
               icon={<FaAngleDoubleRight size="16px" />}
-              aria-label="Expand sidebar"
+              tel="Expand sidebar"
               variant="ghost"
               color={iconColor}
               _hover={{ color: textColor, bg: hoverBgColor }}
               onClick={onToggleSidebar}
               mb={4}
+            />
+          </Tooltip>
+          
+          {/* Search button */}
+          <Tooltip label="Search conversations" placement="right">
+            <IconButton
+              icon={<FiSearch />}
+              aria-label="Search conversations"
+              variant="ghost"
+              color={iconColor}
+              _hover={{ color: textColor, bg: hoverBgColor }}
+              onClick={onSearchOpen}
+              mb={2}
             />
           </Tooltip>
           
@@ -129,16 +182,21 @@ const ChatHistoryPanel = ({
   return (
     <Box
       w={isMobile ? "100%" : "280px"}
+      minW={isMobile ? "100%" : "260px"}
       h="100%"
-      borderRight="1px solid"
+      borderRight={isMobile ? "none" : "1px solid"}
       borderColor={borderColor}
       bg={bgColor}
       transition="width 0.3s ease"
       overflow="hidden"
       position="relative"
       borderTopRadius={isMobile ? "xl" : "0"}
+      display="flex"
+      flexDirection="column"
+      mb={0}
+      pb={0}
     >
-      <Flex direction="column" h="100%" >
+      <Flex direction="column" h="100%" minH="100%" overflow="hidden" bg={bgColor}>
         {/* Mobile drawer handle */}
         {isMobile && (
           <Flex justify="center" py={2}>
@@ -180,8 +238,44 @@ const ChatHistoryPanel = ({
           )}
         </Flex>
         
+        <Box px={3} pt={3} pb={2}>
+          <InputGroup>
+            <InputLeftElement pointerEvents="none">
+              <FiSearch color={iconColor} />
+            </InputLeftElement>
+            {isMobile ? (
+              <Input
+                placeholder="Search conversations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                bg={buttonBgColor}
+                border="1px solid"
+                borderColor={borderColor}
+                color={textColor}
+                _placeholder={{ color: mutedTextColor }}
+                _hover={{ bg: buttonHoverBgColor }}
+                _focus={{ boxShadow: 'none', borderColor: borderColor }}
+              />
+            ) : (
+              <Input
+                placeholder="Search conversations..."
+                onClick={onSearchOpen}
+                readOnly
+                cursor="pointer"
+                bg={buttonBgColor}
+                border="1px solid"
+                borderColor={borderColor}
+                color={textColor}
+                _placeholder={{ color: mutedTextColor }}
+                _hover={{ bg: buttonHoverBgColor }}
+                _focus={{ boxShadow: 'none' }}
+              />
+            )}
+          </InputGroup>
+        </Box>
+        
         {!isMobile && (
-          <Box p={3}>
+          <Box px={3} pb={3}>
             <Button 
               leftIcon={<FiPlus />} 
               onClick={onNewChat} 
@@ -203,15 +297,15 @@ const ChatHistoryPanel = ({
           </Text>
         </Box>
         
-        <VStack 
-          spacing={0} 
-          align="stretch" 
-          flex="1" 
+        <Box
+          flex="1"
           overflowY="auto"
           overflowX="hidden"
+          bg={bgColor}
+          pb={0}
           sx={{
             '&::-webkit-scrollbar': {
-              width: '6px',
+              width: isMobile ? '4px' : '6px',
             },
             '&::-webkit-scrollbar-track': {
               bg: 'transparent',
@@ -223,9 +317,16 @@ const ChatHistoryPanel = ({
             '&::-webkit-scrollbar-thumb:hover': {
               bg: mutedTextColor,
             },
+            // Add webkit overflow scrolling for smooth scrolling on iOS
+            WebkitOverflowScrolling: 'touch',
           }}
         >
-          {chats.map(chat => (
+          <VStack 
+            spacing={0} 
+            align="stretch"
+            minH="100%"
+          >
+          {(isMobile ? filteredChats : chats).map(chat => (
             <Box 
               key={chat.id} 
               role="group"
@@ -244,7 +345,7 @@ const ChatHistoryPanel = ({
                     bg={buttonBgColor}
                     border="none"
                     _focus={{ boxShadow: "none" }}
-                    onKeyPress={(e) => {
+                    onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         handleSaveEdit(chat.id);
                       }
@@ -302,7 +403,21 @@ const ChatHistoryPanel = ({
               )}
             </Box>
           ))}
-        </VStack>
+          
+          {/* Show no results message on mobile when searching */}
+          {isMobile && searchQuery && filteredChats.length === 0 && (
+            <Text 
+              textAlign="center" 
+              color={mutedTextColor} 
+              fontSize="sm" 
+              mt={4}
+              px={4}
+            >
+              No conversations found matching "{searchQuery}"
+            </Text>
+          )}
+          </VStack>
+        </Box>
       </Flex>
     </Box>
   );

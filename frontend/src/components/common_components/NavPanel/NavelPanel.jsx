@@ -19,7 +19,11 @@ import {
   FiMoon,
   FiShoppingBag,
   FiMessageSquare,
-  FiKey
+  FiKey,
+  FiDatabase,
+  FiDollarSign,
+  FiCpu,
+  FiLock
 } from 'react-icons/fi';
 
 import CustomConnectButton from '../CustomConnectButton/CustomConnectButton';
@@ -61,6 +65,14 @@ const NavPanel = ({
       setActiveButton('chat');
     } else if (currentPath === '/access-management') {
       setActiveButton('access-management');
+    } else if (currentPath === '/data') {
+      setActiveButton('data');
+    } else if (currentPath === '/monetization') {
+      setActiveButton('monetization');
+    } else if (currentPath === '/gpus') {
+      setActiveButton('gpus');
+    } else if (currentPath === '/access-keys') {
+      setActiveButton('access-keys');
     } else {
       setActiveButton(null);
     }
@@ -145,6 +157,10 @@ const NavPanel = ({
     { name: 'access-management', label: 'Access Management', icon: FiKey, route: '/access-management' },
     { name: 'flow-builder', label: 'Flow Builder', icon: FiLayout, route: '/flow-builder' },
     { name: 'marketplace', label: 'Marketplace', icon: FiShoppingBag, route: '/marketplace' },
+    { name: 'data', label: 'Data', icon: FiDatabase, route: '/data' },
+    { name: 'monetization', label: 'Monetization', icon: FiDollarSign, route: '/monetization' },
+    { name: 'gpus', label: 'GPUs', icon: FiCpu, route: '/gpus' },
+    { name: 'access-keys', label: 'Access Keys', icon: FiLock, route: '/access-keys' },
   ];
 
   return (

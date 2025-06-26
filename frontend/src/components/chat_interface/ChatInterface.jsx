@@ -6,10 +6,6 @@ import {
     Flex,
     HStack,
     IconButton,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuList,
     Text,
     Textarea,
     Tooltip,
@@ -18,29 +14,25 @@ import {
 import { useEffect, useRef, useState,Fragment } from 'react';
 import {
     FiArrowUp,
-    FiChevronDown,
     FiCode,
     FiPaperclip,
-    FiSearch,
     FiThumbsDown,
     FiThumbsUp
 } from "react-icons/fi";
+import { RiRobot2Line } from "react-icons/ri";
 
 // Import the separate ThinkingUI component
-import ThinkingUI from "./ThinkingUI/ThinkingUI";
+import ThinkingUI from "./ThinkingUI/ThinkingUI.jsx";
 import MarkdownRenderer from "./MarkdownRenderer";
+import TransactionButton from "../transaction/TransactionButton";
+import SlashCommandDropdown from "./SlashCommandDropdown/SlashCommandDropdown";
+import AgentSelectionModal from "./AgentSelectionModal/AgentSelectionModal";
+import ExportPDFjsPDF from "./ExportPDF/ExportPDFjsPDF";
 
 // Import colors
-import { useColorModeValue } from "@chakra-ui/react";
+import { useColorModeValue, useToast } from "@chakra-ui/react";
 import colors from "../../color";
-// Sample AI models/agents
-const AI_MODELS = [
-  { id: "portfolio", name: "Portfolio Manager" },
-  { id: "grok-2", name: "Grok 2" },
-  { id: "creative", name: "Creative Writer" },
-  { id: "coder", name: "Code Assistant" },
-  { id: "analyst", name: "Data Analyst" },
-];
+import { FiX } from "react-icons/fi";
 
 // const TOOLS = [
 //   { id: 'jfk-files', name: 'JFK Files', icon: FiSearch },
@@ -51,16 +43,25 @@ const AI_MODELS = [
 //   { id: 'code', name: 'Code', icon: FiCode }
 // ];
 
-const Message = ({ message, isMobile }) => {
+const Message = ({ message, isMobile, transaction }) => {
   const isUser = message.role === "user";
-
+  
   const userMessageBg = useColorModeValue(colors.chat.userMessageBg.light, colors.chat.userMessageBg.dark);
   const assistantMessageBg = useColorModeValue(colors.chat.assistantMessageBg.light, colors.chat.assistantMessageBg.dark);
   const textColor = useColorModeValue(colors.chat.textPrimary.light, colors.chat.textPrimary.dark);
   const iconColor = useColorModeValue(colors.chat.iconColor.light, colors.chat.iconColor.dark);
 
+  console.log("transaction in Message component:", transaction);
+
   return (
-    <Flex w="100%" maxW={isMobile ? "100%" : "900px"} mx="auto" direction="column" mb={isMobile ? 4 : 8}>
+    <Flex 
+      w="100%" 
+      maxW={isMobile ? "100%" : "900px"} 
+      mx="auto" 
+      direction="column" 
+      mb={isMobile ? 4 : 8}
+      id={`message-${message.id}`}
+    >
       <Flex justify={isUser ? "flex-end" : "flex-start"}>
         <Box
           maxW={isUser ? (isMobile ? "80%" : "300px") : (isMobile ? "90%" : "70%")}
@@ -78,40 +79,57 @@ const Message = ({ message, isMobile }) => {
       </Flex>
 
       {!isUser && (
-        <HStack mt={2} spacing={2}>
-          <IconButton
-            icon={<FiThumbsUp />}
-            aria-label="Thumbs up"
-            size="sm"
-            variant="ghost"
-            color={iconColor}
-            _hover={{ color: textColor }}
-          />
-          <IconButton
-            icon={<FiThumbsDown />}
-            aria-label="Thumbs down"
-            size="sm"
-            variant="ghost"
-            color={iconColor}
-            _hover={{ color: textColor }}
-          />
-          <IconButton
-            icon={<FiCode />}
-            aria-label="Copy code"
-            size="sm"
-            variant="ghost"
-            color=  {iconColor}
-            _hover={{ color: textColor }}
-          />
-          <IconButton
-            icon={<FiPaperclip />}
-            aria-label="Save"
-            size="sm"
-            variant="ghost"
-            color=  {iconColor}
-            _hover={{ color: textColor }}
-          />
-        </HStack>
+        <VStack align="start" mt={2} spacing={2}>
+          <HStack spacing={2}>
+            <IconButton
+              icon={<FiThumbsUp />}
+              aria-label="Thumbs up"
+              size="sm"
+              variant="ghost"
+              color={iconColor}
+              _hover={{ color: textColor }}
+            />
+            <IconButton
+              icon={<FiThumbsDown />}
+              aria-label="Thumbs down"
+              size="sm"
+              variant="ghost"
+              color={iconColor}
+              _hover={{ color: textColor }}
+            />
+            <IconButton
+              icon={<FiCode />}
+              aria-label="Copy code"
+              size="sm"
+              variant="ghost"
+              color=  {iconColor}
+              _hover={{ color: textColor }}
+            />
+            <IconButton
+              icon={<FiPaperclip />}
+              aria-label="Save"
+              size="sm"
+              variant="ghost"
+              color=  {iconColor}
+              _hover={{ color: textColor }}
+            />
+          </HStack>
+          
+          {/* Transaction Button */}
+          {transaction && (
+            <Box mt={2}>
+              <TransactionButton 
+                transaction={transaction}
+                onSuccess={(result) => {
+                  console.log('Transaction successful:', result);
+                }}
+                onError={(error) => {
+                  console.error('Transaction failed:', error);
+                }}
+              />
+            </Box>
+          )}
+        </VStack>
       )}
     </Flex>
   );
@@ -123,17 +141,21 @@ const ChatInterface = ({
   isLanding = false,
   thinkingState = { isThinking: false },
   messageThinkingStates = {},
+  messageTransactions = {},
+  onTransactionDetected,
   onToggleColorMode,
   isMobile = false,
 }) => {
   const [input, setInput] = useState("");
-  const [mentionActive, setMentionActive] = useState(false);
-  const [filteredModels, setFilteredModels] = useState([]);
-  const [selectedModel, setSelectedModel] = useState(AI_MODELS[0]);
+  const [showSlashCommands, setShowSlashCommands] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState(null);
+  const [showAgentModal, setShowAgentModal] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState('below');
   const [toolSelectionMode, setToolSelectionMode] = useState("deepSearch");
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
-  const [aiagentSelected, setaiagentSelected] = useState(false);
+  const inputContainerRef = useRef(null);
+  const [slashSearchTerm, setSlashSearchTerm] = useState("");
   const [lastQueryText, setLastQueryText] = useState(""); // State to store the last query
 
 
@@ -165,6 +187,22 @@ const ChatInterface = ({
     }
   }, []);
 
+  // Calculate dropdown position based on available space
+  useEffect(() => {
+    if (showSlashCommands && inputContainerRef.current) {
+      const rect = inputContainerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      
+      // If less than 200px below, show above
+      if (spaceBelow < 200 && spaceAbove > 200) {
+        setDropdownPosition('above');
+      } else {
+        setDropdownPosition('below');
+      }
+    }
+  }, [showSlashCommands]);
+
   const handleInputChange = (e) => {
     const value = e.target.value;
     setInput(value);
@@ -179,35 +217,15 @@ const ChatInterface = ({
       inputRef.current.style.height = `${Math.max(60, Math.min(scrollHeight, 200))}px`;
     }
     
-    // If the input is empty, reset the mentionSelected flag
-    if (value.trim() === "") {
-        setaiagentSelected(false);
-    }
-  
-    // Only check for @ mentions if we haven't already selected a mention for this message
-    if (value.includes("@") && !aiagentSelected) {
-      console.log("@ detected in input and no mention previously selected");
-      
-      const atPosition = value.lastIndexOf("@");
-      const textAfterAt = value.substring(atPosition + 1);
-      
-      console.log("Text after @:", textAfterAt);
-      
-      // Activate dropdown when @ is typed and no model has been selected yet
-      setMentionActive(true);
-      
-      if (textAfterAt.trim() !== "") {
-        const filtered = AI_MODELS.filter((model) =>
-          model.name.toLowerCase().includes(textAfterAt.toLowerCase())
-        );
-        console.log("Filtered models:", filtered);
-        setFilteredModels(filtered);
-      } else {
-        console.log("Showing all models");
-        setFilteredModels(AI_MODELS);
-      }
+    // Check for slash commands at the beginning of input
+    if (value.startsWith('/')) {
+      setShowSlashCommands(true);
+      // Extract the search term after the slash
+      const searchTerm = value.substring(1).split(' ')[0];
+      setSlashSearchTerm(searchTerm);
     } else {
-      setMentionActive(false);
+      setShowSlashCommands(false);
+      setSlashSearchTerm('');
     }
   };
 
@@ -215,69 +233,38 @@ const ChatInterface = ({
 
 
 const handleSendMessage = () => {
-    if (input.trim() === "") return;
+    const trimmedInput = input.trim();
+    if (trimmedInput === "") return;
 
+    // Don't send if it's just a slash command
+    if (trimmedInput === '/' || (trimmedInput.startsWith('/') && !trimmedInput.includes(' '))) {
+      return;
+    }
     
-  
-    // Check if this message has an @mention
-    const hasAtMention = input.includes("@");
-    let modelId = selectedModel.id;
-    let cleanMessage = input;
-    let useThinkMode = toolSelectionMode === "think";
-
- 
-  
-    // If the message has @mention, extract the model name and remove it from message
-    if (hasAtMention) {
-      // First just extract everything after the @ symbol
-      const atPosition = input.indexOf("@");
-      const textAfterAt = input.substring(atPosition + 1);
-      
-      // Check each model name to see if it appears at the start of the text after @
-      let matchedModel = null;
-      let matchedModelName = "";
-      
-      // Sort models by name length (descending) to match longer names first
-      // This prevents "Grok" matching before "Grok 3"
-      const sortedModels = [...AI_MODELS].sort(
-        (a, b) => b.name.length - a.name.length
-      );
-      
-      for (const model of sortedModels) {
-        if (textAfterAt.toLowerCase().startsWith(model.name.toLowerCase())) {
-          matchedModel = model;
-          matchedModelName = model.name;
-          break;
-        }
-      }
-      
-      if (matchedModel) {
-        modelId = matchedModel.id;
-        
-        // Get everything before the @ and everything after the model name
-        const beforeMention = input.substring(0, atPosition);
-        const afterModelName = textAfterAt.substring(matchedModelName.length);
-        
-        // Create clean message by combining before @ and after model name
-        cleanMessage = beforeMention + afterModelName;
-        
-        // Always enable think mode when an agent is mentioned with @
-        useThinkMode = true;
+    // Remove slash command from message if present
+    let cleanMessage = trimmedInput;
+    if (trimmedInput.startsWith('/')) {
+      const spaceIndex = trimmedInput.indexOf(' ');
+      if (spaceIndex > 0) {
+        cleanMessage = trimmedInput.substring(spaceIndex + 1).trim();
       }
     }
     
-    // Debug logs to verify the extraction
-    console.log("Original input:", input);
+    // Use selected agent if available
+    const agentId = selectedAgent?.id || 'default-agent';
+    const useThinkMode = toolSelectionMode === "think" || selectedAgent !== null;
+    
+    console.log("Original input:", trimmedInput);
     console.log("Clean message:", cleanMessage);
-    console.log("Selected model:", modelId);
+    console.log("Selected agent:", agentId);
     console.log("Using Think mode:", useThinkMode);
 
-    setLastQueryText(cleanMessage.trim());
+    setLastQueryText(cleanMessage);
     
-    // Send the clean message with the appropriate model and think mode flag
-    onSendMessage(cleanMessage.trim(), modelId, useThinkMode);
+    // Send the clean message with the selected agent
+    onSendMessage(cleanMessage, agentId, useThinkMode);
     setInput("");
-    setMentionActive(false);
+    setShowSlashCommands(false);
     
     // Reset textarea height after sending
     if (inputRef.current) {
@@ -291,26 +278,84 @@ const handleSendMessage = () => {
     }
   };
 
-  const handleMentionSelect = (model) => {
-    // Replace the @mention text with the selected model
-    const beforeMention = input.split("@")[0];
-    const afterMention =
-      input.split("@").length > 1
-        ? input.split("@")[1].split(" ").slice(1).join(" ")
-        : "";
-    setInput(`${beforeMention}@${model.name} ${afterMention}`);
-    setMentionActive(false);
+  const toast = useToast();
+
+  const handleSlashCommandSelect = async (command) => {
+    setShowSlashCommands(false);
     
-    // Set the flag to indicate a mention has been selected for this message
-    setaiagentSelected(true);
-    
-    inputRef.current?.focus();
+    switch (command.action) {
+      case 'select-agent':
+        setShowAgentModal(true);
+        setInput('');
+        break;
+      case 'clear-chat':
+        // Clear chat logic here
+        setInput('');
+        if (window.confirm('Are you sure you want to clear this conversation?')) {
+          // Add clear chat functionality
+        }
+        break;
+      case 'show-help':
+        setInput('');
+        // Show help logic
+        break;
+      case 'open-settings':
+        setInput('');
+        // Open settings logic
+        break;
+      case 'export-chat':
+        setInput('');
+        // Export chat logic
+        if (messages && messages.length > 0) {
+          toast({
+            title: 'Exporting chat...',
+            status: 'info',
+            duration: 2000,
+            isClosable: true,
+          });
+          
+          const result = await ExportPDFjsPDF.exportChatToPDF(messages);
+          
+          if (result.success) {
+            toast({
+              title: 'Chat exported successfully',
+              description: 'Your chat has been saved as a PDF',
+              status: 'success',
+              duration: 3000,
+              isClosable: true,
+            });
+          } else {
+            toast({
+              title: 'Export failed',
+              description: result.error || 'Failed to export chat',
+              status: 'error',
+              duration: 4000,
+              isClosable: true,
+            });
+          }
+        } else {
+          toast({
+            title: 'No messages to export',
+            description: 'Start a conversation first',
+            status: 'warning',
+            duration: 3000,
+            isClosable: true,
+          });
+        }
+        break;
+      default:
+        break;
+    }
   };
   
 
-  const handleToolSelect = (tool) => {
-    // In a real app, this would activate the selected tool
-    console.log(`Selected tool: ${tool}`);
+  const handleAgentSelect = (agent) => {
+    setSelectedAgent(agent);
+    setShowAgentModal(false);
+  };
+
+  const handleClearAgent = () => {
+    setSelectedAgent(null);
   };
 
   return (
@@ -324,20 +369,139 @@ const handleSendMessage = () => {
     >
       {isLanding ? (
         <Flex
-          flex={isMobile ? "1" : "0"}
+          flex="1"
           direction="column"
           justify="center"
           align="center"
           px={4}
-          pt={isMobile ? 20 : 0}
-          mb={isMobile ? 0 : 4}
+          pb={isMobile ? "200px" : 0}
         >
-          <Text fontSize="2xl" fontWeight="medium">
-            Good afternoon, User.
+          <Text fontSize={isMobile ? "xl" : "2xl"} fontWeight="medium" textAlign="center">
+            Welcome to NeuraLabs
           </Text>
-          <Text fontSize="xl" color={textSecondary}>
-            How can I help you today?
+          <Text fontSize={isMobile ? "lg" : "xl"} color={textSecondary} textAlign="center" mt={2} mb={isMobile ? 0 : 8}>
+            How can I assist you?
           </Text>
+          
+          {/* Desktop input - integrated into the landing content */}
+          {!isMobile && (
+            <Flex
+              direction="column"
+              borderRadius="lg"
+              bg={bgInput}
+              border="1px solid"
+              borderColor={borderColor}
+              p={2}
+              maxW="600px"
+              w="100%"
+              boxShadow="sm"
+              position="relative"
+              ref={inputContainerRef}
+            >
+              <Textarea
+                placeholder="Ask me anything..."
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                size="md"
+                bg="transparent"
+                border="none"
+                _focus={{ border: "none", boxShadow: "none" }}
+                resize="none"
+                minH="60px"
+                maxH="200px"
+                overflowY="auto"
+                ref={inputRef}
+                transition="height 0.1s ease"
+                style={{ height: '60px' }}
+                sx={{
+                  '&::-webkit-scrollbar': {
+                    display: 'none',
+                  },
+                  '-ms-overflow-style': 'none',
+                  'scrollbarWidth': 'none',
+                }}
+              />
+
+              {/* Slash Command Dropdown for Desktop Landing */}
+              <SlashCommandDropdown
+                isOpen={showSlashCommands}
+                onClose={() => setShowSlashCommands(false)}
+                onSelect={handleSlashCommandSelect}
+                position={dropdownPosition}
+                width={inputContainerRef.current?.offsetWidth}
+                searchTerm={slashSearchTerm}
+              />
+
+              <Divider my={2} borderColor={borderColor} />
+
+              <Flex justify="space-between" align="center">
+                <HStack spacing={2}>
+                  <IconButton
+                    icon={<FiPaperclip />}
+                    aria-label="Attach file"
+                    variant="ghost"
+                    size="sm"
+                    color={iconColor}
+                  />
+                  <HStack spacing={1}>
+                    <Tooltip label={selectedAgent ? "Change Agent" : "Select Agent"}>
+                      <Button
+                        leftIcon={<RiRobot2Line />}
+                        aria-label="Select Agent"
+                        variant={selectedAgent ? "solid" : "ghost"}
+                        size="sm"
+                        color={selectedAgent ? bgPrimary : iconColor}
+                        bg={selectedAgent ? iconColor : "transparent"}
+                        onClick={() => setShowAgentModal(true)}
+                        _hover={{
+                          bg: selectedAgent ? iconColor : bgHover
+                        }}
+                        px={selectedAgent ? 3 : 2}
+                        iconSpacing={selectedAgent ? 2 : 0}
+                        sx={{
+                          '& .chakra-button__icon': {
+                            margin: selectedAgent ? undefined : 0
+                          }
+                        }}
+                      >
+                        {selectedAgent && selectedAgent.name}
+                      </Button>
+                    </Tooltip>
+                    {selectedAgent && (
+                      <Tooltip label="Clear selected agent">
+                        <IconButton
+                          icon={<FiX />}
+                          size="xs"
+                          variant="ghost"
+                          aria-label="Clear agent"
+                          onClick={handleClearAgent}
+                          color={iconColor}
+                        />
+                      </Tooltip>
+                    )}
+                  </HStack>
+                </HStack>
+
+                <Tooltip label="Send message">
+                  <IconButton
+                    icon={<FiArrowUp />}
+                    aria-label="Send message"
+                    isDisabled={!input.trim()}
+                    onClick={handleSendMessage}
+                    variant="solid"
+                    bg={input.trim() ? textPrimary : "transparent"}
+                    color={input.trim() ? bgPrimary : iconColor}
+                    _hover={{
+                      bg: input.trim() ? textPrimary : "transparent",
+                    }}
+                    size="sm"
+                    borderRadius="md"
+                  />
+                </Tooltip>
+              </Flex>
+            </Flex>
+          )}
         </Flex>
       ) : (
 <Box 
@@ -351,7 +515,12 @@ const handleSendMessage = () => {
   {messages.map((message, index) => {
     // First render the current message
     const messageElement = (
-      <Message key={message.id} message={message} isMobile={isMobile} />
+      <Message 
+        key={message.id} 
+        message={message} 
+        isMobile={isMobile}
+        transaction={messageTransactions[message.id]}
+      />
     );
     
     // Check if this is the very last user message in the entire conversation
@@ -371,7 +540,21 @@ const handleSendMessage = () => {
             thinkingState={messageThinkingState} 
             query={message.content} 
             shouldPersist={true}
-            isMobile={isMobile} 
+            isMobile={isMobile}
+            onTransactionDetected={(transaction) => {
+              // Find the assistant message that follows this user message
+              const assistantMessageIndex = messages.findIndex((msg, idx) => 
+                idx > index && msg.role === 'assistant'
+              );
+              
+              if (assistantMessageIndex !== -1) {
+                const assistantMessage = messages[assistantMessageIndex];
+                onTransactionDetected(assistantMessage.id, transaction);
+              } else {
+                // If no assistant message exists yet, store it temporarily with the user message
+                onTransactionDetected(message.id, transaction);
+              }
+            }}
           />
         </Fragment>
       );
@@ -410,19 +593,20 @@ const handleSendMessage = () => {
         </Center>
       )} */}
 
-      {/* Footer with input */}
-      <Box 
-        p={isMobile ? 3 : 5} 
-        pb={isMobile ? 3 : 10}
-        position={(isMobile && isLanding) ? "fixed" : "relative"}
-        bottom={(isMobile && isLanding) ? 0 : "auto"}
-        left={(isMobile && isLanding) ? 0 : "auto"}
-        right={(isMobile && isLanding) ? 0 : "auto"}
-        bg={bgPrimary}
-        borderTop={(isMobile && isLanding) ? "1px solid" : "none"}
-        borderColor={borderColor}
-        w="100%"
-      >
+      {/* Footer with input - Only show on mobile landing or always when not landing */}
+      {(isMobile || !isLanding) && (
+        <Box 
+          p={isMobile ? 3 : 5} 
+          pb={isMobile ? 3 : 10}
+          position={(isMobile && isLanding) ? "fixed" : "relative"}
+          bottom={(isMobile && isLanding) ? 0 : "auto"}
+          left={(isMobile && isLanding) ? 0 : "auto"}
+          right={(isMobile && isLanding) ? 0 : "auto"}
+          bg={bgPrimary}
+          borderTop={(isMobile && isLanding) ? "1px solid" : "none"}
+          borderColor={borderColor}
+          w="100%"
+        >
         <Flex
           direction="column"
           borderRadius="lg"
@@ -433,11 +617,12 @@ const handleSendMessage = () => {
           maxW={isLanding ? (isMobile ? "100%" : "600px") : (isMobile ? "100%" : "900px")}
           mx="auto"
           boxShadow="sm"
-        //   position="relative" // Add position relative here without disturbing layout
+          position="relative"
+          ref={inputContainerRef}
         >
           <Textarea
             placeholder={
-              isLanding ? "What do you want to know?" : "How can Neura help?"
+              isLanding ? "Ask me anything..." : "Type your message..."
             }
             value={input}
             onChange={handleInputChange}
@@ -462,59 +647,15 @@ const handleSendMessage = () => {
             }}
           />
 
-          {mentionActive && (
-            <Box
-              position="absolute"
-              // Position based on chat state: below input for new chat, above input for existing chat
-              top={isLanding ? (isMobile ? "auto" : "58%") : "auto"}
-              bottom={isLanding ? (isMobile ? "100%" : "auto") : (isMobile ? "100%" : "16%")}
-            //   left="50%"
-            //   transform="translateX(-40%)"
-              width="50%"
-              maxW="300px"
-              bg={bgSecondary}
-              boxShadow="md"
-              borderRadius="md"
-              mt={isLanding ? 2 : 0} // Margin top when below
-              mb={isLanding ? 0 : 2} // Margin bottom when above
-              zIndex={10}
-              border="1px solid"
-              borderColor={borderColor}
-              px={2}
-            >
-              <VStack align="stretch"
-               p={2} 
-               maxH="200px" overflow="auto">
-                {/* <Text
-                  fontWeight="bold"
-                  p={2}
-                  borderBottom="1px solid"
-                  borderColor={colors.borderColor}
-                >
-                  Select Agent
-                </Text> */}
-                {filteredModels.length > 0 ? (
-                  filteredModels.map((model) => (
-                    <Flex
-                      key={model.id}
-                      px={2}
-                      py={0.5}
-                      _hover={{ bg: bgHover }}
-                      cursor="pointer"
-                      onClick={() => handleMentionSelect(model)}
-                      borderRadius="md"
-                    >
-                      <Text>{model.name}</Text>
-                    </Flex>
-                  ))
-                ) : (
-                  <Text 
-                  p={2}
-                  >No models found</Text>
-                )}
-              </VStack>
-            </Box>
-          )}
+          {/* Slash Command Dropdown */}
+          <SlashCommandDropdown
+            isOpen={showSlashCommands}
+            onClose={() => setShowSlashCommands(false)}
+            onSelect={handleSlashCommandSelect}
+            position={dropdownPosition}
+            width={inputContainerRef.current?.offsetWidth}
+            searchTerm={slashSearchTerm}
+          />
 
           <Divider my={2} borderColor={borderColor} />
 
@@ -527,76 +668,76 @@ const handleSendMessage = () => {
                 size="sm"
                 color={iconColor}
               />
-
-            <Menu placement={isLanding ? "bottom" : "top"} gutter={4}>
-                {/* <MenuButton
-                  as={Button}
-                  rightIcon={<FiChevronDown />}
-                  size="sm"
-                  variant="ghost"
-                  color={iconColor}
-                >
-                  <Flex align="center">
-                    <Box
-                      mr={1}
-                      as={
-                        toolSelectionMode === "deepSearch" ? FiSearch : FiCode
+              <HStack spacing={1}>
+                <Tooltip label={selectedAgent ? "Change Agent" : "Select Agent"}>
+                  <Button
+                    leftIcon={<RiRobot2Line />}
+                    aria-label="Select Agent"
+                    variant={selectedAgent ? "solid" : "ghost"}
+                    size="sm"
+                    color={selectedAgent ? bgPrimary : iconColor}
+                    bg={selectedAgent ? iconColor : "transparent"}
+                    onClick={() => setShowAgentModal(true)}
+                    _hover={{
+                      bg: selectedAgent ? iconColor : bgHover
+                    }}
+                    px={selectedAgent ? 3 : 2}
+                    iconSpacing={selectedAgent ? 2 : 0}
+                    sx={{
+                      '& .chakra-button__icon': {
+                        margin: selectedAgent ? undefined : 0
                       }
+                    }}
+                  >
+                    {selectedAgent && selectedAgent.name}
+                  </Button>
+                </Tooltip>
+                {selectedAgent && (
+                  <Tooltip label="Clear selected agent">
+                    <IconButton
+                      icon={<FiX />}
+                      size="xs"
+                      variant="ghost"
+                      aria-label="Clear agent"
+                      onClick={handleClearAgent}
+                      color={iconColor}
                     />
-                    {toolSelectionMode === "deepSearch"
-                      ? "DeepSearch"
-                      : "Think"}
-                  </Flex>
-                </MenuButton> */}
-                <MenuList
-                  bg={bgSecondary}
-                  borderColor={borderColor}
-                  p={0}
-                  marginTop={isLanding ? "10px" : "0"}
-                  borderRadius={"md"}
-                //   position={"absolute"}
-                //   left={isLanding ? "20%" : "0"}
-                //   width="10px"
-                >
-                  <MenuItem
-                    icon={<FiSearch />}
-                    onClick={() => setToolSelectionMode("deepSearch")}
-                    _hover={{ bg: bgHover }}
-                    bg={bgSecondary}
-                    
-                  >
-                    DeepSearch
-                  </MenuItem>
-                  <MenuItem
-                    icon={<FiCode />}
-                    onClick={() => setToolSelectionMode("think")}
-                    _hover={{ bg: bgHover }}
-                    bg={bgSecondary}
-                  >
-                    Think
-                  </MenuItem>
-                </MenuList>
-              </Menu>
+                  </Tooltip>
+                )}
+              </HStack>
             </HStack>
 
             <HStack>
 
 
               <Tooltip label="Send message">
-                <IconButton
-                  icon={<FiArrowUp />}
-                  aria-label="Send message"
-                  colorScheme="blue"
-                  size="sm"
-                  isRound
-                  isDisabled={input.trim() === ""}
-                  onClick={handleSendMessage}
-                />
+                  <IconButton
+                    icon={<FiArrowUp />}
+                    aria-label="Send message"
+                    isDisabled={!input.trim()}
+                    onClick={handleSendMessage}
+                    variant="solid"
+                    bg={input.trim() ? textPrimary : "transparent"}
+                    color={input.trim() ? bgPrimary : iconColor}
+                    _hover={{
+                      bg: input.trim() ? textPrimary : "transparent",
+                    }}
+                    size="sm"
+                    borderRadius="md"
+                  />
               </Tooltip>
             </HStack>
           </Flex>
         </Flex>
       </Box>
+      )}
+      
+      {/* Agent Selection Modal */}
+      <AgentSelectionModal
+        isOpen={showAgentModal}
+        onClose={() => setShowAgentModal(false)}
+        onSelectAgent={handleAgentSelect}
+      />
     </Flex>
   );
 };

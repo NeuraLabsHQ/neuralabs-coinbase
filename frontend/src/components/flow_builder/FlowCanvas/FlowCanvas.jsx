@@ -8,7 +8,7 @@ import {
     FiSliders
 } from 'react-icons/fi';
 // Define the icon mapping object
-import ICON_MAP from '../Common/IconMap';
+import ICON_MAP, { TYPE_TO_ICON_MAP } from '../Common/IconMap';
 import colors from '../../../color.js';
 
 const FlowCanvas = ({ 
@@ -77,8 +77,13 @@ const FlowCanvas = ({
       zoom = externalZoomRef.current;
     } else {
       zoom = d3.zoom()
-        .scaleExtent([0.8, 4])
-        .interpolate(d3.interpolateZoom); 
+        .scaleExtent([0.2, 4])
+        .interpolate(d3.interpolateZoom);
+      
+      // Store the zoom behavior in the external ref if provided
+      if (externalZoomRef) {
+        externalZoomRef.current = zoom;
+      }
     }
     
     // Configure zoom behavior
@@ -188,7 +193,7 @@ const FlowCanvas = ({
     const startNodeDrag = (e) => {
       setDragging(true);
       
-      const svg = svgRef.current;
+      const svg = externalSvgRef?.current || svgRef.current;
       const svgRect = svg.getBoundingClientRect();
       
       // Find the node
@@ -290,7 +295,7 @@ const centerNodeInView = (nodeId) => {
   if (detailsPanelOpen) rightOffset = Math.max(rightOffset, detailsPanelWidth);
   
   // Get the SVG element and its dimensions
-  const svg = svgRef.current;
+  const svg = externalSvgRef?.current || svgRef.current;
   if (!svg) return;
   
   const svgRect = svg.getBoundingClientRect();
@@ -344,7 +349,7 @@ const handlePortMouseDown = (e, nodeId, portType, portIndex) => {
   clickedPort.setAttribute('stroke', colors.green[900]); // Darker green stroke
   clickedPort.setAttribute('stroke-width', '3');
   
-  const svg = svgRef.current;
+  const svg = externalSvgRef?.current || svgRef.current;
   const svgRect = svg.getBoundingClientRect();
   
   // Find the node
@@ -503,24 +508,59 @@ const handlePortMouseDown = (e, nodeId, portType, portIndex) => {
     return ICON_MAP[icon] || FiActivity; // Get from map or default to Activity
   };
   
-const getNodeIcon = (nodeType) => {
-  // Check if nodeType exists in nodeTypes
-  if (nodeTypes[nodeType]) {
-    const IconComponent = getIconComponent(nodeTypes[nodeType].icon);
+const getNodeIcon = (node) => {
+  // First, check the TYPE_TO_ICON_MAP for the node type
+  // Try exact match first
+  let IconComponent = TYPE_TO_ICON_MAP[node.type];
+  
+  // If not found, try with first letter capitalized
+  if (!IconComponent) {
+    const capitalizedType = node.type.charAt(0).toUpperCase() + node.type.slice(1).toLowerCase();
+    IconComponent = TYPE_TO_ICON_MAP[capitalizedType];
+  }
+  
+  // If still not found, try special cases
+  if (!IconComponent) {
+    const typeMapping = {
+      'nova': 'Nova',
+      'titan': 'Titan',
+      'guardrails': 'Guardrails',
+      'chatapi': 'ChatAPI',
+      'restapi': 'RestAPI',
+      'llmtext': 'LLMText',
+      'llmstructured': 'LLMStructured',
+      'flowselect': 'FlowSelect',
+      'fetchbalance': 'FetchBalance',
+      'readcontract': 'ReadContract',
+      'contexthistory': 'ContextHistory',
+      'buildtransaction': 'BuildTransaction',
+      'search': 'Search'
+    };
+    
+    const mappedType = typeMapping[node.type.toLowerCase()];
+    if (mappedType) {
+      IconComponent = TYPE_TO_ICON_MAP[mappedType];
+    }
+  }
+  
+  // Use default if still not found
+  if (!IconComponent) {
+    IconComponent = TYPE_TO_ICON_MAP['default'];
+  }
+  
+  // If it's a React component (not a string), render it directly
+  if (typeof IconComponent === 'function') {
     return <IconComponent size={20} />;
   }
   
-  // Fallback to default icons if nodeType not found in nodeTypes
-  switch (nodeType) {
-    case 'data':
-      return <FiDatabase size={20} />;
-    case 'task':
-      return <FiActivity size={20} />;
-    case 'parameters':
-      return <FiSliders size={20} />;
-    default:
-      return <FiActivity size={20} />; // Default fallback
+  // If it's a string, try to get it from ICON_MAP
+  const MappedIcon = ICON_MAP[IconComponent];
+  if (MappedIcon) {
+    return <MappedIcon size={20} />;
   }
+  
+  // Final fallback
+  return <FiActivity size={20} />;
 };
 
 
@@ -646,7 +686,7 @@ const renderNode = (node) => {
             transition: 'width 0.3s ease-in-out'
           }}>
             <div style={{ color: iconColor, flexShrink: 0 }}>
-              {getNodeIcon(node.type)}
+              {getNodeIcon(node)}
             </div>
             {!hideTextLabels && (
               <span style={{ 
@@ -795,7 +835,7 @@ const renderNode = (node) => {
       overflow="hidden"
     >
       <svg
-        ref={svgRef}
+        ref={externalSvgRef || svgRef}
         width="100%"
         height="100%"
         style={{ cursor: dragging ? 'grabbing' : 'grab' }}

@@ -11,8 +11,8 @@ from utils.validators import validate_inputs, validate_outputs
 try:
     from cdp import CdpClient
 except ImportError:
-    logger.error("CDP SDK not installed. Install with: pip install cdp-sdk")
-    raise
+    logger.warning("CDP SDK not installed. Install with: pip install cdp-sdk")
+    CdpClient = None
 
 
 class FetchBalance(ElementBase):
@@ -42,16 +42,9 @@ class FetchBalance(ElementBase):
         self._check_credentials()
     
     def _check_credentials(self):
-        """Check if CDP credentials are available in environment."""
-        self.api_key_id = os.getenv("CDP_API_KEY_ID")
-        self.api_key_secret = os.getenv("CDP_API_KEY_SECRET")
-        # self.wallet_secret = os.getenv("CDP_WALLET_SECRET")
-        
-        if not self.api_key_id or not self.api_key_secret:
-            raise ValueError(
-                "CDP API keys not found in environment. "
-                "Set CDP_API_KEY_ID and CDP_API_KEY_SECRET"
-            )
+        """Check if CDP credentials are available - will be loaded from config during execution."""
+        # Credentials will be loaded from executor.config during execute()
+        pass
     
     async def execute(self, executor, backtracking=False) -> Dict[str, Any]:
         """Execute the fetch balance element."""
@@ -83,8 +76,23 @@ class FetchBalance(ElementBase):
         })
         
         try:
+            # Check if CDP SDK is available
+            if CdpClient is None:
+                raise ImportError("CDP SDK is not installed. Install it with: pip install cdp-sdk")
+            
+            # Get CDP API credentials from config
+            config = executor.config
+            api_key_id = config.get("coinbase_api_key")
+            api_key_secret = config.get("coinbase_api_secret")
+            
+            if not api_key_id or not api_key_secret:
+                raise ValueError(
+                    "CDP API keys not found in configuration. "
+                    "Set COINBASE_API_KEY and COINBASE_API_SECRET in environment variables."
+                )
+            
             # Read wallet data using CDP
-            wallet_data = await self._read_wallet_data(wallet_address)
+            wallet_data = await self._read_wallet_data(wallet_address, api_key_id, api_key_secret)
             
             # Set outputs
             self.outputs = wallet_data
@@ -116,14 +124,14 @@ class FetchBalance(ElementBase):
             
             raise
     
-    async def _read_wallet_data(self, wallet_address: str) -> Dict[str, Any]:
+    async def _read_wallet_data(self, wallet_address: str, api_key_id: str, api_key_secret: str) -> Dict[str, Any]:
         """Read wallet data from Base Sepolia using CDP."""
         logger.info(f"Reading wallet data for address: {wallet_address}")
         
         try:
             async with CdpClient(
-                api_key_id=self.api_key_id,
-                api_key_secret=self.api_key_secret,
+                api_key_id=api_key_id,
+                api_key_secret=api_key_secret,
                 # wallet_secret=self.wallet_secret
             ) as cdp:
                 try:

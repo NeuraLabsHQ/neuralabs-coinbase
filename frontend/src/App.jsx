@@ -71,6 +71,8 @@ function App() {
                       <AccessManagementPage />
                     </Layout>
                   } />
+                  {/* Settings route - redirect to dashboard for now */}
+                  <Route path="/settings" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
               </BrowserRouter>
               </WalletContextProvider>

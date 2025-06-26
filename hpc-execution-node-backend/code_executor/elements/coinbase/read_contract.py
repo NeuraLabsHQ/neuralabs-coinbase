@@ -29,6 +29,14 @@ class ReadContract(ElementBase):
     
     This element uses web3.py for contract interactions as the CDP SDK
     doesn't provide direct contract reading functionality.
+    
+    Output Schema Flexibility:
+    The output schema should match the return type of the selected function:
+    - For functions returning strings (e.g., name(), symbol()): use {"token_name": {"type": "string"}}
+    - For functions returning numbers (e.g., balanceOf(), totalSupply()): use {"balance": {"type": "uint256"}}
+    - For functions returning booleans: use {"is_paused": {"type": "bool"}}
+    
+    The element will automatically adapt the output to match your schema definition.
     """
     
     def __init__(self, element_id: str, name: str, description: str,
@@ -46,7 +54,17 @@ class ReadContract(ElementBase):
         # Extract parameters
         params = parameters or {}
         self.contract_address = params.get("contract_address", "")
-        self.contract_abi = params.get("contract_abi", [])
+        
+        # Handle contract_abi - it might be a string that needs parsing
+        contract_abi_raw = params.get("contract_abi", [])
+        if isinstance(contract_abi_raw, str):
+            try:
+                self.contract_abi = json.loads(contract_abi_raw)
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid JSON in contract_abi: {e}")
+        else:
+            self.contract_abi = contract_abi_raw
+            
         self.function_name = params.get("function_name", "")
         self.network = params.get("network", "base-sepolia")
         self.node_url = params.get("node_url", "")
@@ -116,7 +134,13 @@ class ReadContract(ElementBase):
         
         # Get function inputs - could be the entire inputs dict or nested under a key
         # This allows flexibility for users to define their own schema
-        function_inputs = self.inputs
+        function_inputs = self.inputs.copy()
+        
+        # Apply default values from input schema if inputs are missing
+        if self.input_schema:
+            for key, schema in self.input_schema.items():
+                if key not in function_inputs and 'default' in schema:
+                    function_inputs[key] = schema['default']
         
         # Stream contract read request info
         await executor._stream_event("contract_read_request", {
@@ -164,19 +188,14 @@ class ReadContract(ElementBase):
             formatted_result = self._format_result(result)
             
             # Set outputs based on user-defined schema
-            # If output_schema is empty, return the raw result
             if not self.output_schema:
-                # Return raw result directly
+                # If no schema defined, return raw result
                 self.outputs = formatted_result if isinstance(formatted_result, dict) else {"result": formatted_result}
             else:
-                # Use standard format if schema is defined
-                self.outputs = {
-                    "result": formatted_result,
-                    "success": True,
-                    "error": None
-                }
+                # Map formatted result to user-defined schema
+                self.outputs = self._map_to_output_schema(formatted_result)
                 
-                # Validate outputs only if schema is defined
+                # Validate outputs against schema
                 validation_result = validate_outputs(self.outputs, self.output_schema)
                 if not validation_result["valid"]:
                     error_msg = f"Invalid outputs from read contract: {validation_result['error']}"
@@ -206,12 +225,18 @@ class ReadContract(ElementBase):
                 # Simple error format for empty schema
                 self.outputs = {"error": error_msg}
             else:
-                # Standard error format
-                self.outputs = {
-                    "result": None,
-                    "success": False,
-                    "error": error_msg
-                }
+                # Create error outputs that match user-defined schema
+                self.outputs = {}
+                for key, schema_def in self.output_schema.items():
+                    # Check if this field is meant for errors
+                    if key.lower() in ["error", "error_message", "message"]:
+                        self.outputs[key] = error_msg
+                    elif key.lower() in ["success", "is_success", "ok"]:
+                        self.outputs[key] = False
+                    else:
+                        # Set default value for other fields
+                        output_type = schema_def.get("type", "string")
+                        self.outputs[key] = self._get_default_value(output_type)
             
             return self.outputs
     
@@ -294,6 +319,109 @@ class ReadContract(ElementBase):
         
         # Return as-is if we can't format
         return result
+    
+    def _map_to_output_schema(self, formatted_result: Any) -> Dict[str, Any]:
+        """Map the formatted result to match the user-defined output schema.
+        
+        This method handles the flexible nature of contract outputs where:
+        - balanceOf returns a uint256 (number)
+        - symbol returns a string
+        - name returns a string
+        - decimals returns a uint8 (number)
+        
+        The user defines the output schema based on what function they're calling.
+        """
+        outputs = {}
+        
+        # Special handling for single-value returns (most common case)
+        if len(self.output_schema) == 1:
+            key = list(self.output_schema.keys())[0]
+            schema_def = self.output_schema[key]
+            
+            # Direct mapping for single output
+            outputs[key] = formatted_result
+            
+            # Type validation/conversion based on schema
+            expected_type = schema_def.get("type", "string")
+            
+            # Convert types if needed
+            if expected_type in ["string", "str"]:
+                outputs[key] = str(formatted_result) if formatted_result is not None else ""
+            elif expected_type in ["int", "integer", "number", "uint", "uint256", "uint8"]:
+                # Handle numeric types - already formatted as string for precision
+                if isinstance(formatted_result, str) and formatted_result.isdigit():
+                    outputs[key] = formatted_result  # Keep as string to preserve precision
+                else:
+                    outputs[key] = formatted_result
+            elif expected_type in ["bool", "boolean"]:
+                outputs[key] = bool(formatted_result) if formatted_result is not None else False
+            elif expected_type == "address":
+                outputs[key] = str(formatted_result).lower() if formatted_result else ""
+            
+            return outputs
+        
+        # Handle multiple outputs or complex results
+        if isinstance(formatted_result, dict):
+            # Check if the result already has the expected schema keys
+            schema_keys = set(self.output_schema.keys())
+            result_keys = set(formatted_result.keys())
+            
+            # If keys match exactly, return as is
+            if schema_keys == result_keys:
+                return formatted_result
+            
+            # Otherwise, try to map values to schema
+            for key, schema_def in self.output_schema.items():
+                if key in formatted_result:
+                    outputs[key] = formatted_result[key]
+                else:
+                    # Try to find a matching key
+                    # Common mappings
+                    if key == "balance" and "result" in formatted_result:
+                        outputs[key] = formatted_result["result"]
+                    elif key == "value" and "result" in formatted_result:
+                        outputs[key] = formatted_result["result"]
+                    else:
+                        # Set default value based on type
+                        output_type = schema_def.get("type", "string")
+                        outputs[key] = self._get_default_value(output_type)
+        else:
+            # Non-dict result with multiple expected outputs
+            # This is unusual but handle gracefully
+            if "result" in self.output_schema:
+                outputs["result"] = formatted_result
+                # Fill other fields with defaults
+                for key, schema_def in self.output_schema.items():
+                    if key != "result":
+                        output_type = schema_def.get("type", "string")
+                        outputs[key] = self._get_default_value(output_type)
+            else:
+                # Put in first field and default the rest
+                first_key = list(self.output_schema.keys())[0]
+                outputs[first_key] = formatted_result
+                for key, schema_def in self.output_schema.items():
+                    if key != first_key:
+                        output_type = schema_def.get("type", "string")
+                        outputs[key] = self._get_default_value(output_type)
+        
+        return outputs
+    
+    def _get_default_value(self, output_type: str) -> Any:
+        """Get default value for a given type."""
+        if output_type == "string":
+            return ""
+        elif output_type in ["int", "integer", "number"]:
+            return 0
+        elif output_type == "float":
+            return 0.0
+        elif output_type in ["bool", "boolean"]:
+            return False
+        elif output_type in ["array", "list"]:
+            return []
+        elif output_type in ["object", "dict", "json"]:
+            return {}
+        else:
+            return None
     
     def _format_single_value(self, value: Any, solidity_type: str) -> Any:
         """Format a single value based on its Solidity type."""

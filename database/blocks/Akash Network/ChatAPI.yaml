@@ -1,0 +1,113 @@
+type: ChatAPI
+element_id: null
+name: null
+node_description: Decentralized Chat API service running on Akash Network
+description: null
+input_schema:
+  messages:
+    type: list
+    description: List of chat messages with role and content
+    required: true
+  model:
+    type: string
+    description: AI model to use for chat completion
+    required: true
+  system_prompt:
+    type: string
+    description: System prompt to guide the AI behavior
+    required: false
+  max_history:
+    type: integer
+    description: Maximum number of historical messages to include
+    required: false
+output_schema:
+  response:
+    type: string
+    description: AI generated response
+    required: true
+  model_used:
+    type: string
+    description: The model that was used for generation
+    required: true
+  provider_info:
+    type: json
+    description: Information about the Akash provider
+    required: true
+  usage:
+    type: json
+    description: Token usage statistics
+    required: false
+parameter_schema_structure:
+  deployment_uri:
+    type: string
+    description: Akash deployment URI endpoint
+    required: true
+  provider_address:
+    type: string
+    description: Akash provider address
+    required: true
+  temperature:
+    type: float
+    min: 0.0
+    max: 2.0
+    default: 0.7
+  max_tokens:
+    type: int
+    min: 1
+    max: 4096
+    default: 1000
+  stream:
+    type: boolean
+    description: Enable streaming responses
+    default: false
+parameters:
+  deployment_uri: ""
+  provider_address: ""
+  temperature: 0.7
+  max_tokens: 1000
+  stream: false
+processing_message: Connecting to decentralized Akash Network...
+tags:
+- akash
+- decentralized
+- chat
+- api
+- web3
+layer: null
+hyperparameters:
+  type:
+    access: fixed
+  element_id:
+    access: fixed
+  name:
+    access: edit
+  description:
+    access: edit
+  input_schema:
+    access: fixed
+  output_schema:
+    access: fixed
+  parameters.deployment_uri:
+    access: edit
+  parameters.provider_address:
+    access: edit
+  parameters.temperature:
+    access: edit
+  parameters.max_tokens:
+    access: edit
+  parameters.stream:
+    access: edit
+  parameters.api_key:
+    access: hidden
+  processing_message:
+    access: edit
+  tags:
+    access: append
+  layer:
+    access: edit
+input_data: null
+output_data: null
+code: null
+flow_control: null
+icon: AkashIcon
+category: Akash Network

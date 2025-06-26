@@ -12,6 +12,9 @@ from ..modules.authentication.jwt.redis_storage import RedisJWTStorage
 from ..modules.authentication import get_current_user, security
 from ..modules.database.postgresconn import PostgresConnection
 from ..modules.zk_login.zk_login import get_or_create_salt
+from ..modules.signature_verification.eth_signature_verification import verify_eth_signature
+import yaml
+import os
 
 # Create router
 router = APIRouter()
@@ -20,12 +23,19 @@ router = APIRouter()
 jwt_handler = JWTHandler()
 redis_jwt_storage = RedisJWTStorage()
 
+# Load config to get provider URL
+config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "config.yaml")
+with open(config_path, "r") as file:
+    config = yaml.safe_load(file)
+provider_url = config.get("quicknode", {}).get("coinbase", {}).get("provider")
+
 
 # Define request and response models
 class LoginRequest(BaseModel):
     public_key: str = Field(..., description="User's public key")
     signature: Optional[str] = Field(None, description="Signature to verify (optional for now)")
     message: Optional[str] = Field(None, description="Message that was signed (optional for now)")
+    
 class ZKLoginRequest(BaseModel):
     email: str = Field(..., description="User's email address")
 
@@ -50,8 +60,8 @@ async def login(login_data: LoginRequest):
     Returns:
         JWT token response if login successful
     """
-    # For now, we'll do a simple check if the user exists in our database
-    # TODO: In a full implementation, you would verify the signature against the public key
+    # Verify the signature
+    verify_eth_signature(login_data.public_key, login_data.signature, login_data.message, provider_url)
     
     pg_conn = PostgresConnection()
     query = "SELECT user_pub_key, username FROM USER_AUTH WHERE user_pub_key = %s"

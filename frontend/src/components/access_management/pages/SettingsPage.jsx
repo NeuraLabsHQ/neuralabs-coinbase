@@ -110,7 +110,7 @@ const SettingsPage = ({ agentData, onUpdate }) => {
       const updateData = {
         ...formData,
         tags: tagsObject,
-        chain_id: agentData.chain_id || 101 // Include chain_id from agentData
+        chain_id: agentData.chain_id ||  84532 // Include chain_id from agentData
       };
       
       // Call the API to update agent settings

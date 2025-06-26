@@ -1,0 +1,37 @@
+[
+  {
+    "test": "Create Wallet (no name)",
+    "success": true,
+    "details": "Created wallet with address: 0xD85f096250C39ae2029c1fad9797b91F50Db3653",
+    "error": null,
+    "timestamp": "2025-06-19T18:21:53.585587"
+  },
+  {
+    "test": "Create Wallet with Name",
+    "success": true,
+    "details": "Created wallet 'test-wallet-20250619-182153' with address: 0x74Ff0c980cfC0cA950d97F51A651Fdf04414c7Ed",
+    "error": null,
+    "timestamp": "2025-06-19T18:21:56.793258"
+  },
+  {
+    "test": "Get Wallet by Name",
+    "success": true,
+    "details": "Retrieved wallet 'test-wallet-20250619-182153'",
+    "error": null,
+    "timestamp": "2025-06-19T18:21:57.056193"
+  },
+  {
+    "test": "Export Wallet Private Key",
+    "success": true,
+    "details": "Exported private key for wallet 0x74Ff0c980cfC0cA950d97F51A651Fdf04414c7Ed",
+    "error": null,
+    "timestamp": "2025-06-19T18:21:58.860014"
+  },
+  {
+    "test": "List All Wallets",
+    "success": false,
+    "details": "",
+    "error": "EvmClient.list_accounts() got an unexpected keyword argument 'page_number'",
+    "timestamp": "2025-06-19T18:21:59.155998"
+  }
+]

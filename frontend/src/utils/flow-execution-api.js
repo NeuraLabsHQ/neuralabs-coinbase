@@ -3,6 +3,9 @@
  * Connects to NeuraLabs backend which acts as intermediary to HPC execution engine
  */
 import { useState, useEffect } from 'react';
+import { createX402WalletClient } from './x402-payment-handler';
+import { withPaymentInterceptor, decodeXPaymentResponse } from 'x402-axios';
+import axios from 'axios';
 
 const API_BASE_URL = process.env.VITE_BACKEND_URL || 'http://localhost:8001';
 const WS_BASE_URL = API_BASE_URL.replace('http', 'ws');
@@ -22,28 +25,219 @@ export class FlowExecutionAPI {
    * @param {Object} options - Additional options
    */
   async connect(agentId, userId, message = '', options = {}) {
-    return new Promise((resolve, reject) => {
+    // First, initiate payment flow via HTTP
+    try {
+      // Get private key from session storage
+      const privateKey = sessionStorage.getItem('agent_private_key');
+      console.log('Agent private key from sessionStorage:', privateKey ? 'Found' : 'Not found');
+      
+      if (!privateKey) {
+        // Log what's in sessionStorage for debugging
+        console.log('SessionStorage contents:');
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          console.log(`  ${key}: ${key.includes('private') ? '***' : sessionStorage.getItem(key)}`);
+        }
+        throw new Error('Agent wallet private key not found. Please reconnect your wallet.');
+      }
+      
+      // Create x402-compatible wallet client
+      const walletClient = createX402WalletClient(privateKey);
+      console.log('Created wallet client for address:', walletClient.account.address);
+      
+      // Get auth token from sessionStorage
+      const authToken = sessionStorage.getItem('wallet_auth_token');
+      
+      // Create axios instance with auth header
+      const axiosInstance = axios.create({
+        baseURL: API_BASE_URL,
+        timeout: 30000,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
+      
+      // Add payment interceptor
+      console.log('Adding payment interceptor...');
+      
+      // Use withPaymentInterceptor exactly like the x402-pay example
+      const x402Client = withPaymentInterceptor(axiosInstance, walletClient);
+      console.log('Payment interceptor added successfully');
+      
+      // Add request/response interceptors for debugging
+      x402Client.interceptors.request.use(
+        (config) => {
+          console.log('x402 Request:', config.method?.toUpperCase(), config.url);
+          console.log('x402 Request headers:', config.headers);
+          return config;
+        },
+        (error) => {
+          console.error('x402 Request error:', error);
+          return Promise.reject(error);
+        }
+      );
+      
+      x402Client.interceptors.response.use(
+        (response) => {
+          console.log('x402 Response:', response.status, response.statusText);
+          console.log('x402 Response headers:', response.headers);
+          console.log('x402 Response data:', response.data);
+          
+          // Log all headers to see what x402 returns
+          if (response.headers) {
+            const allHeaders = {};
+            // Different ways to access headers depending on axios version
+            if (typeof response.headers.entries === 'function') {
+              for (const [key, value] of response.headers.entries()) {
+                allHeaders[key] = value;
+              }
+            } else if (typeof response.headers === 'object') {
+              Object.keys(response.headers).forEach(key => {
+                allHeaders[key] = response.headers[key];
+              });
+            }
+            console.log('All response headers:', allHeaders);
+          }
+          
+          return response;
+        },
+        (error) => {
+          console.log('x402 Response error:', error.response?.status, error.response?.statusText);
+          console.log('x402 Error response headers:', error.response?.headers);
+          console.log('x402 Error response data:', error.response?.data);
+          
+          // Log 402 payment required details
+          if (error.response?.status === 402) {
+            console.log('402 Payment Required - Full error:', error);
+            console.log('402 Payment Required - Headers:', error.response.headers);
+            console.log('402 Payment Required - Data:', error.response.data);
+            
+            // Log the actual payment requirements
+            if (error.response.data) {
+              console.log('402 Payment Requirements:', JSON.stringify(error.response.data, null, 2));
+            }
+            
+            const paymentHeaders = {};
+            if (error.response.headers) {
+              Object.keys(error.response.headers).forEach(key => {
+                if (key.toLowerCase().startsWith('x-payment-')) {
+                  paymentHeaders[key] = error.response.headers[key];
+                }
+              });
+            }
+            console.log('402 Payment headers:', paymentHeaders);
+          }
+          
+          // Don't reject here, let x402-axios handle the 402
+          return Promise.reject(error);
+        }
+      );
+      
+      // Emit payment required status
+      this.emit('status', { message: 'Initiating payment...' });
+      this.emit('paymentRequired', { amount: '0.01', currency: 'USDC' });
+      
+      // Make initial HTTP request to initiate chat
+      // x402-axios will automatically handle 402 responses and payment signing
+      let sessionData;
       try {
-        const wsUrl = `${WS_BASE_URL}/api/chat/execute/${agentId}`;
-        console.log('Connecting to WebSocket:', wsUrl);
+        console.log('Making request to:', `/api/chat/initiate/${agentId}`);
+        console.log('x402Client before post:', x402Client);
+        console.log('x402Client.post type:', typeof x402Client.post);
         
-        this.websocket = new WebSocket(wsUrl);
+        const response = await x402Client.post(
+          `/api/chat/initiate/${agentId}`,
+          {}
+        );
         
-        this.websocket.onopen = () => {
-          console.log('WebSocket connected');
-          this.isConnected = true;
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        // Decode payment details from x-payment-response header
+        let paymentDetails = null;
+        let transactionHash = '';
+        
+        // Try different case variations of the header
+        const paymentResponseHeader = response.headers['x-payment-response'] || 
+                                    response.headers['X-Payment-Response'] ||
+                                    response.headers['x-Payment-Response'];
+        console.log('Payment response header:', paymentResponseHeader);
+        
+        // Also log all headers that start with payment
+        const paymentRelatedHeaders = {};
+        Object.keys(response.headers).forEach(key => {
+          if (key.toLowerCase().includes('payment')) {
+            paymentRelatedHeaders[key] = response.headers[key];
+          }
+        });
+        console.log('All payment-related headers:', paymentRelatedHeaders);
+        
+        if (paymentResponseHeader) {
+          try {
+            paymentDetails = decodeXPaymentResponse(paymentResponseHeader);
+            console.log('Decoded payment details:', paymentDetails);
+            // Extract transaction hash from payment details
+            transactionHash = paymentDetails?.transaction || paymentDetails?.txHash || paymentDetails?.transactionHash || '';
+          } catch (err) {
+            console.warn('Failed to decode payment response:', err);
+          }
+        }
+        
+        sessionData = response.data;
+        console.log('Payment verified:', sessionData);
+        
+        // Get transaction hash from payment details or response data
+        if (!transactionHash) {
+          transactionHash = sessionData.transaction_hash || '';
+        }
+        
+        this.emit('paymentVerified', {
+          sessionId: sessionData.session_id,
+          transactionHash: transactionHash,
+          paymentDetails: paymentDetails
+        });
+        
+        // Store session info
+        this.sessionId = sessionData.session_id;
+        this.transactionHash = transactionHash;
+        
+      } catch (error) {
+        console.error('Error during payment request:', error);
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        
+        if (error.response && error.response.status === 402) {
+          // This shouldn't happen as x402-axios should handle it
+          throw new Error('Payment required but not handled by x402-axios');
+        }
+        throw error;
+      }
+      
+      // Connect to WebSocket
+      return new Promise((resolve, reject) => {
+        try {
+          const wsUrl = `${WS_BASE_URL}/api/chat/execute/${agentId}`;
+          console.log('Connecting to WebSocket:', wsUrl);
           
-          // Send initial data
-          const initialData = {
-            user_id: userId,
-            message: message,
-            initial_inputs: options.initialInputs || {},
-            ...options
+          this.websocket = new WebSocket(wsUrl);
+          
+          this.websocket.onopen = () => {
+            console.log('WebSocket connected');
+            this.isConnected = true;
+            
+            // Send initial data with session ID if available
+            const initialData = {
+              user_id: userId,
+              message: message,
+              initial_inputs: options.initialInputs || {},
+              session_id: this.sessionId,
+              ...options
+            };
+            
+            this.websocket.send(JSON.stringify(initialData));
+            resolve();
           };
-          
-          this.websocket.send(JSON.stringify(initialData));
-          resolve();
-        };
         
         this.websocket.onmessage = (event) => {
           try {
@@ -54,23 +248,28 @@ export class FlowExecutionAPI {
           }
         };
         
-        this.websocket.onerror = (error) => {
-          console.error('WebSocket error:', error);
-          this.isConnected = false;
+          this.websocket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            this.isConnected = false;
+            reject(error);
+          };
+          
+          this.websocket.onclose = (event) => {
+            console.log('WebSocket closed:', event.code, event.reason);
+            this.isConnected = false;
+            this.emit('disconnected', { code: event.code, reason: event.reason });
+          };
+          
+        } catch (error) {
+          console.error('Error creating WebSocket connection:', error);
           reject(error);
-        };
-        
-        this.websocket.onclose = (event) => {
-          console.log('WebSocket closed:', event.code, event.reason);
-          this.isConnected = false;
-          this.emit('disconnected', { code: event.code, reason: event.reason });
-        };
-        
-      } catch (error) {
-        console.error('Error creating WebSocket connection:', error);
-        reject(error);
-      }
-    });
+        }
+      });
+    } catch (error) {
+      console.error('Error in payment flow:', error);
+      this.emit('error', { error: error.message });
+      throw error;
+    }
   }
 
   /**
@@ -214,6 +413,11 @@ export const useFlowExecution = (agentId) => {
   const [messages, setMessages] = useState([]);
   const [currentResponse, setCurrentResponse] = useState('');
   
+  // Payment states
+  const [paymentInfo, setPaymentInfo] = useState(null);
+  const [isPaymentRequired, setIsPaymentRequired] = useState(false);
+  const [isPaymentVerified, setIsPaymentVerified] = useState(false);
+  
   useEffect(() => {
     // Set up event listeners
     api.on('status', (data) => {
@@ -223,6 +427,21 @@ export const useFlowExecution = (agentId) => {
     api.on('error', (data) => {
       setError(data.error || 'Unknown error');
       setIsExecuting(false);
+    });
+    
+    api.on('paymentRequired', (data) => {
+      setIsPaymentRequired(true);
+      setPaymentInfo(data);
+    });
+    
+    api.on('paymentVerified', (data) => {
+      setIsPaymentRequired(false);
+      setIsPaymentVerified(true);
+      setPaymentInfo(prev => ({ ...prev, ...data }));
+    });
+    
+    api.on('payment_info', (data) => {
+      setPaymentInfo(prev => ({ ...prev, ...data.data }));
     });
     
     api.on('flowStarted', () => {
@@ -302,7 +521,11 @@ export const useFlowExecution = (agentId) => {
     messages,
     currentResponse,
     clearMessages: () => setMessages([]),
-    clearError: () => setError(null)
+    clearError: () => setError(null),
+    // Payment states
+    paymentInfo,
+    isPaymentRequired,
+    isPaymentVerified
   };
 };
 

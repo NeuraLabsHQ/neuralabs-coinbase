@@ -1,7 +1,7 @@
 // AccessCap creation functionality
 
-import { SuiClient } from '@mysten/sui/client';
-import { Transaction } from '@mysten/sui/transactions';
+// import { SuiClient } from '@mysten/sui/client';
+// import { Transaction } from '@mysten/sui/transactions';
 import { NeuralabsConfig, TransactionResult } from '../types';
 import { checkWalletConnection } from '../wallet-connection';
 

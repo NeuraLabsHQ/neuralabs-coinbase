@@ -43,7 +43,7 @@ const PublishModal = ({ isOpen, onClose, onPublish }) => {
       <ModalOverlay />
       <ModalContent bg={bgColor} color={textColor} borderRadius="md">
         <ModalHeader fontSize="lg" fontWeight="bold">
-          Publish and Deploy on SUI Testnet
+          Publish and Deploy on Base Sepolia Testnet
         </ModalHeader>
         <ModalBody>
           <VStack spacing={4} align="stretch">
@@ -53,7 +53,7 @@ const PublishModal = ({ isOpen, onClose, onPublish }) => {
                 Prerequisites
               </Text>
               <Text fontSize="xs" color={mutedTextColor}>
-              Deploying workflow on SUI Testnet requires a connected wallet with sufficient test SUI tokens.
+              Deploying workflow on Base Sepolia Testnet requires a connected wallet with sufficient test SUI tokens.
         To use this feature, please ensure you have the Sui Wallet or supported wallet extension installed and connected
         with your account. You can get free test tokens from the SUI Faucet if needed.{" "}
                 <Text as="span" color={linkColor} textDecor="underline">
@@ -69,7 +69,7 @@ const PublishModal = ({ isOpen, onClose, onPublish }) => {
                 Disclaimer
               </Text>
               <Text fontSize="xs" color={mutedTextColor}>
-              This workflow will be published to the SUI Testnet blockchain and will be publicly visible.
+              This workflow will be published to the Base Sepolia Testnet blockchain and will be publicly visible.
         The testnet environment is for development purposes only, and any tokens or data on the testnet
         have no real-world value. Test thoroughly before deploying to mainnet.
               </Text>

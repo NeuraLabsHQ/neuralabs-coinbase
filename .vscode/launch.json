@@ -48,6 +48,16 @@
         },
  
         {
+
+    {
+            "type": "msedge",
+            "request": "launch",
+            "name": "Edge - frontend",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}/frontend"
+        },
+ 
+        {
             "name": "move_contract_frontend_sid",
             "type": "msedge",
             "request": "attach",

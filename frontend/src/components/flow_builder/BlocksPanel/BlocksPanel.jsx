@@ -160,7 +160,7 @@ const BlocksPanel = ({
   // Get the appropriate icon component for a node type
   const getIconComponent = (iconName) => {
     
-    console.log("icon name ", iconName);
+    console.log("icon name ", iconName, "mapped to:", ICON_MAP[iconName]);
     
     if (typeof iconName === 'function') {
       return iconName; // Already a component
@@ -636,41 +636,197 @@ const BlocksPanel = ({
       </Tabs>
 
       {/* Agent Info Modal */}
-      <Modal isOpen={isInfoOpen} onClose={onInfoClose} size="md">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>{agentData?.name || 'Agent'} Information</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
-            <VStack align="stretch" spacing={4}>
-              <Box>
-                <Text fontWeight="bold" mb={1}>Name</Text>
-                <Text>{agentData?.name || 'N/A'}</Text>
-              </Box>
-              <Box>
-                <Text fontWeight="bold" mb={1}>Description</Text>
-                <Text>{agentData?.description || 'No description available'}</Text>
-              </Box>
-              <Box>
-                <Text fontWeight="bold" mb={1}>Owner</Text>
-                <Text>{agentData?.owner || 'Unknown'}</Text>
-              </Box>
-              <Box>
-                <Text fontWeight="bold" mb={1}>Created On</Text>
-                <Text>
-                  {agentData?.creation_date 
-                    ? new Date(agentData.creation_date).toLocaleDateString()
-                    : 'N/A'}
+      <Modal 
+        isOpen={isInfoOpen} 
+        onClose={onInfoClose} 
+        size="xl"
+        isCentered
+        motionPreset="slideInBottom"
+      >
+        <ModalOverlay backdropFilter="blur(8px)" bg="blackAlpha.300" />
+        <ModalContent
+          bg={useColorModeValue('white', 'gray.800')}
+          borderRadius="2xl"
+          boxShadow="2xl"
+          border="1px solid"
+          borderColor={useColorModeValue('gray.200', 'gray.700')}
+          overflow="hidden"
+        >
+          <Box
+            bg={useColorModeValue('gray.50', 'gray.900')}
+            px={8}
+            py={6}
+            borderBottom="1px solid"
+            borderColor={borderColor}
+          >
+            <Flex align="center" justify="space-between">
+              <HStack spacing={4}>
+                <Box
+                  w="50px"
+                  h="50px"
+                  borderRadius="xl"
+                  bg={useColorModeValue('blue.500', 'blue.400')}
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  boxShadow="lg"
+                >
+                  <FiActivity color="white" size={24} />
+                </Box>
+                <Box>
+                  <Heading size="md" color={headingColor}>
+                    {agentData?.name || 'Agent'}
+                  </Heading>
+                  <Text fontSize="sm" color={mutedTextColor}>
+                    Agent Information
+                  </Text>
+                </Box>
+              </HStack>
+              <ModalCloseButton 
+                position="relative"
+                top="0"
+                right="0"
+                size="lg"
+              />
+            </Flex>
+          </Box>
+          
+          <ModalBody px={8} py={6}>
+            <VStack align="stretch" spacing={6}>
+              <Box
+                p={4}
+                bg={useColorModeValue('gray.50', 'gray.900')}
+                borderRadius="lg"
+                border="1px solid"
+                borderColor={borderColor}
+              >
+                <Text 
+                  fontSize="xs" 
+                  fontWeight="semibold" 
+                  color={mutedTextColor}
+                  textTransform="uppercase"
+                  letterSpacing="wider"
+                  mb={2}
+                >
+                  Description
+                </Text>
+                <Text color={textColor} lineHeight="tall">
+                  {agentData?.description || 'No description available'}
                 </Text>
               </Box>
-              <Box>
-                <Text fontWeight="bold" mb={1}>Last Modified</Text>
-                <Text>
-                  {agentData?.last_edited_time
-                    ? new Date(agentData.last_edited_time).toLocaleDateString()
-                    : 'N/A'}
-                </Text>
-              </Box>
+              
+              <SimpleGrid columns={2} spacing={4}>
+                <Box
+                  p={4}
+                  bg={useColorModeValue('gray.50', 'gray.900')}
+                  borderRadius="lg"
+                  border="1px solid"
+                  borderColor={borderColor}
+                >
+                  <Text 
+                    fontSize="xs" 
+                    fontWeight="semibold" 
+                    color={mutedTextColor}
+                    textTransform="uppercase"
+                    letterSpacing="wider"
+                    mb={2}
+                  >
+                    Owner
+                  </Text>
+                  <Text color={textColor} fontWeight="medium">
+                    {agentData?.owner || 'Unknown'}
+                  </Text>
+                </Box>
+                
+                <Box
+                  p={4}
+                  bg={useColorModeValue('gray.50', 'gray.900')}
+                  borderRadius="lg"
+                  border="1px solid"
+                  borderColor={borderColor}
+                >
+                  <Text 
+                    fontSize="xs" 
+                    fontWeight="semibold" 
+                    color={mutedTextColor}
+                    textTransform="uppercase"
+                    letterSpacing="wider"
+                    mb={2}
+                  >
+                    Status
+                  </Text>
+                  <HStack>
+                    <Box
+                      w="8px"
+                      h="8px"
+                      borderRadius="full"
+                      bg="green.400"
+                      boxShadow="0 0 0 3px rgba(72, 187, 120, 0.2)"
+                    />
+                    <Text color={textColor} fontWeight="medium">
+                      Active
+                    </Text>
+                  </HStack>
+                </Box>
+              </SimpleGrid>
+              
+              <SimpleGrid columns={2} spacing={4}>
+                <Box
+                  p={4}
+                  bg={useColorModeValue('gray.50', 'gray.900')}
+                  borderRadius="lg"
+                  border="1px solid"
+                  borderColor={borderColor}
+                >
+                  <Text 
+                    fontSize="xs" 
+                    fontWeight="semibold" 
+                    color={mutedTextColor}
+                    textTransform="uppercase"
+                    letterSpacing="wider"
+                    mb={2}
+                  >
+                    Created On
+                  </Text>
+                  <Text color={textColor} fontWeight="medium">
+                    {agentData?.creation_date 
+                      ? new Date(agentData.creation_date).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })
+                      : 'N/A'}
+                  </Text>
+                </Box>
+                
+                <Box
+                  p={4}
+                  bg={useColorModeValue('gray.50', 'gray.900')}
+                  borderRadius="lg"
+                  border="1px solid"
+                  borderColor={borderColor}
+                >
+                  <Text 
+                    fontSize="xs" 
+                    fontWeight="semibold" 
+                    color={mutedTextColor}
+                    textTransform="uppercase"
+                    letterSpacing="wider"
+                    mb={2}
+                  >
+                    Last Modified
+                  </Text>
+                  <Text color={textColor} fontWeight="medium">
+                    {agentData?.last_edited_time
+                      ? new Date(agentData.last_edited_time).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })
+                      : 'N/A'}
+                  </Text>
+                </Box>
+              </SimpleGrid>
             </VStack>
           </ModalBody>
         </ModalContent>

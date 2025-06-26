@@ -1,8 +1,8 @@
 import { Box, Heading, Text, VStack, Button, Image, useColorModeValue, Flex, useBreakpointValue, useToast } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import homepageBackground from '../assets/homepage.png';
-import productLight from '../assets/product.png';
-import productDark from '../assets/product_dark.png';
+import productLight from '../assets/product.jpg';
+import productDark from '../assets/product_dark.jpg';
 import ParticlesBackground from '../components/common_components/ParticlesBackground';
 
 const HomePage = () => {
