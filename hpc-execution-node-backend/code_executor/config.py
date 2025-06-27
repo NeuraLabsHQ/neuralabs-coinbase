@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     custom_code_max_memory_mb: int          = int(os.getenv("CUSTOM_CODE_MAX_MEMORY_MB", "100"))
     custom_code_max_cpu_seconds: int        = int(os.getenv("CUSTOM_CODE_MAX_CPU_SECONDS", "10"))
     
+    # Akash Chat API settings
+    akash_api_key: Optional[str]            = os.getenv("AKASH_API_KEY")
+    akash_base_url: str                     = os.getenv("AKASH_BASE_URL", "https://chatapi.akash.network/api/v1")
+    
     # Feature flags
     enable_blockchain: bool                 = os.getenv("ENABLE_BLOCKCHAIN", "true").lower() == "true"
     enable_llm_caching: bool                = os.getenv("ENABLE_LLM_CACHING", "false").lower() == "true"
@@ -66,7 +70,8 @@ runtime_config = {
         "selector", "merger", "random_generator", "time",
         "llm_text", "llm_structured",
         "coinbase_fetch_balance", "coinbase_read_contract",
-        "read_contract"  # Allow both generic and specific names
+        "read_contract",  # Allow both generic and specific names
+        "ChatAPI", "chat_api", "akash_chat"  # Akash Chat API
     ]
 }
 

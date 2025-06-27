@@ -21,3 +21,4 @@ python-multipart
 cryptography>=3.4.8
 aiohttp
 beautifulsoup4
+openai>=1.0.0

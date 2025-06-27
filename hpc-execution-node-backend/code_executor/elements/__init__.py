@@ -37,6 +37,9 @@ from .mcp.duckduckgo_search import DuckDuckGoSearch
 from .coinbase.fetch_balance import FetchBalance as CoinbaseFetchBalance
 from .coinbase.read_contract import ReadContract as CoinbaseReadContract
 
+# Akash
+from .akash.chat_api import ChatAPI
+
 
 # Registry of element types to their classes
 element_registry = {
@@ -67,5 +70,11 @@ element_registry = {
     "fetchbalance": CoinbaseFetchBalance,
     "FetchBalance": CoinbaseFetchBalance,  # Map YAML type to Coinbase implementation
     "coinbase_read_contract": CoinbaseReadContract,
-    "readcontract": CoinbaseReadContract  # Map common name to Coinbase implementation
+    "readcontract": CoinbaseReadContract,  # Map common name to Coinbase implementation
+    
+    # Akash
+    "ChatAPI": ChatAPI,
+    "chat_api": ChatAPI,
+    "akash_chat": ChatAPI,
+    "chatapi": ChatAPI,
 }

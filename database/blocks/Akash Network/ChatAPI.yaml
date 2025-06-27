@@ -4,48 +4,28 @@ name: null
 node_description: Decentralized Chat API service running on Akash Network
 description: null
 input_schema:
-  messages:
+  prompt:
+    type: string
+    description: The prompt for the Akash AI
+    required: true
+  context:
     type: list
-    description: List of chat messages with role and content
-    required: true
-  model:
-    type: string
-    description: AI model to use for chat completion
-    required: true
-  system_prompt:
-    type: string
-    description: System prompt to guide the AI behavior
+    description: Previous conversation context
     required: false
-  max_history:
-    type: integer
-    description: Maximum number of historical messages to include
+  additional_data:
+    type: json
+    description: Additional data for the AI
     required: false
 output_schema:
-  response:
+  llm_output:
     type: string
-    description: AI generated response
+    description: Generated text response from Akash
     required: true
-  model_used:
-    type: string
-    description: The model that was used for generation
-    required: true
-  provider_info:
-    type: json
-    description: Information about the Akash provider
-    required: true
-  usage:
-    type: json
-    description: Token usage statistics
-    required: false
 parameter_schema_structure:
-  deployment_uri:
+  model:
     type: string
-    description: Akash deployment URI endpoint
-    required: true
-  provider_address:
-    type: string
-    description: Akash provider address
-    required: true
+    description: Akash AI model to use
+    default: Meta-Llama-3-1-8B-Instruct-FP8
   temperature:
     type: float
     min: 0.0
@@ -56,16 +36,15 @@ parameter_schema_structure:
     min: 1
     max: 4096
     default: 1000
-  stream:
-    type: boolean
-    description: Enable streaming responses
-    default: false
+  wrapper_prompt:
+    type: string
+    description: Template to wrap prompts
+    default: ''
 parameters:
-  deployment_uri: ""
-  provider_address: ""
+  model: Meta-Llama-3-1-8B-Instruct-FP8
   temperature: 0.7
   max_tokens: 1000
-  stream: false
+  wrapper_prompt: ''
 processing_message: Connecting to decentralized Akash Network...
 tags:
 - akash
@@ -87,15 +66,13 @@ hyperparameters:
     access: fixed
   output_schema:
     access: fixed
-  parameters.deployment_uri:
-    access: edit
-  parameters.provider_address:
+  parameters.model:
     access: edit
   parameters.temperature:
     access: edit
   parameters.max_tokens:
     access: edit
-  parameters.stream:
+  parameters.wrapper_prompt:
     access: edit
   parameters.api_key:
     access: hidden
