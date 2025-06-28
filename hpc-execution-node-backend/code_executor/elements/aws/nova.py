@@ -170,11 +170,13 @@ class Nova(ElementBase):
         
         # Prepare context for RAG if embedding is provided
         rag_context = ""
+        used_contexts = []
         
         if embedding and source_text:
             logger.info(f"RAG mode: Using provided embedding and source text")
             # Simply use the provided source text as context
             rag_context = source_text
+            used_contexts = [source_text]
             logger.info(f"Using source text as context: {source_text[:100]}...")
         
         # Format the final prompt

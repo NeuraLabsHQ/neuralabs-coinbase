@@ -4,6 +4,7 @@ from typing import Any, AsyncGenerator, Dict, Optional
 from .llm.anthropic import AnthropicModel
 from .llm.deepseek import DeepSeekModel
 from .llm.general import GeneralModel
+from .llm.nova import NovaModel
 
 
 class BedrockService:
@@ -35,6 +36,8 @@ class BedrockService:
             self.model = AnthropicModel(self.client, self.model_id)
         elif "deepseek" in self.model_id:
             self.model = DeepSeekModel(self.client, self.model_id)
+        elif "nova" in self.model_id.lower():
+            self.model = NovaModel(self.client, self.model_id)
         else:
             self.model = GeneralModel(self.client, self.model_id)
     

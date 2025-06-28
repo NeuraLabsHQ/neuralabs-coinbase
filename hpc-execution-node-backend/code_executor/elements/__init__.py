@@ -40,6 +40,10 @@ from .coinbase.read_contract import ReadContract as CoinbaseReadContract
 # Akash
 from .akash.chat_api import ChatAPI
 
+# AWS
+from .aws.titan import Titan
+from .aws.nova import Nova
+
 
 # Registry of element types to their classes
 element_registry = {
@@ -77,4 +81,10 @@ element_registry = {
     "chat_api": ChatAPI,
     "akash_chat": ChatAPI,
     "chatapi": ChatAPI,
+    
+    # AWS
+    "Titan": Titan,
+    "titan": Titan,
+    "Nova": Nova,
+    "nova": Nova,
 }

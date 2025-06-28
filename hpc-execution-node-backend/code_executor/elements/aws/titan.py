@@ -190,10 +190,10 @@ class Titan(ElementBase):
                 await executor._stream_event("output", {
                     "element_id": self.element_id,
                     "outputs": {
-                        "source_text": merged_text[:100] + "..." if len(merged_text) > 100 else merged_text,
+                        # "source_text": merged_text[:100] + "..." if len(merged_text) > 100 else merged_text,
                         "embedding_dimension": embedding_dimension,
                         "token_count": token_count,
-                        "embedding": f"[{embedding_dimension}-dimensional vector]"  # Don't stream full vector
+                        # "embedding": f"[{embedding_dimension}-dimensional vector]"  # Don't stream full vector
                     }
                 })
             
