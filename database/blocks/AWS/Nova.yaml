@@ -12,13 +12,13 @@ input_schema:
     type: list
     description: Chat history or additional context
     required: false
-  embeddings:
+  embedding:
     type: list
-    description: List of vector embeddings for RAG
+    description: Vector embedding from Titan block (single embedding vector of N dimensions)
     required: false
-  source_texts:
-    type: list
-    description: List of source texts corresponding to embeddings
+  source_text:
+    type: string
+    description: Source text corresponding to the embedding
     required: false
 output_schema:
   response:
@@ -48,24 +48,10 @@ parameter_schema_structure:
     min: 1
     max: 4096
     default: 1000
-  similarity_threshold:
-    type: float
-    description: Minimum similarity score for including context
-    default: 0.7
-    min: 0.0
-    max: 1.0
-  top_k_contexts:
-    type: int
-    description: Maximum number of context pieces to include
-    default: 3
-    min: 1
-    max: 10
 parameters:
   model_id: us.amazon.nova-lite-v1:0
   temperature: 0.7
   max_tokens: 1000
-  similarity_threshold: 0.7
-  top_k_contexts: 3
 processing_message: Generating response with AWS Nova...
 tags:
 - aws

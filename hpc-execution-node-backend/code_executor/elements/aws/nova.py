@@ -1,6 +1,5 @@
 # elements/aws/nova.py
-from typing import Dict, Any, List, Optional, Tuple
-import numpy as np
+from typing import Dict, Any, List, Optional
 
 from core.element_base import ElementBase
 from core.schema import HyperparameterSchema, AccessLevel
@@ -140,44 +139,6 @@ class Nova(ElementBase):
             parameter_schema_structure=parameter_schema_structure
         )
     
-    def cosine_similarity(self, vec1: List[float], vec2: List[float]) -> float:
-        """Calculate cosine similarity between two vectors."""
-        vec1 = np.array(vec1)
-        vec2 = np.array(vec2)
-        
-        dot_product = np.dot(vec1, vec2)
-        norm1 = np.linalg.norm(vec1)
-        norm2 = np.linalg.norm(vec2)
-        
-        if norm1 == 0 or norm2 == 0:
-            return 0.0
-        
-        return float(dot_product / (norm1 * norm2))
-    
-    def find_relevant_contexts(self, 
-                             query_embedding: List[float], 
-                             embeddings: List[List[float]], 
-                             source_texts: List[str],
-                             threshold: float,
-                             top_k: int) -> Tuple[List[str], List[float]]:
-        """Find the most relevant contexts based on embedding similarity."""
-        similarities = []
-        
-        for i, doc_embedding in enumerate(embeddings):
-            similarity = self.cosine_similarity(query_embedding, doc_embedding)
-            if similarity >= threshold:
-                similarities.append((source_texts[i], similarity))
-        
-        # Sort by similarity descending and take top_k
-        similarities.sort(key=lambda x: x[1], reverse=True)
-        top_contexts = similarities[:top_k]
-        
-        # Return texts and scores separately
-        texts = [ctx[0] for ctx in top_contexts]
-        scores = [ctx[1] for ctx in top_contexts]
-        
-        return texts, scores
-    
     async def execute(self, 
                       executor, 
                       backtracking=False) -> Dict[str, Any]:
@@ -199,47 +160,22 @@ class Nova(ElementBase):
         # Get inputs
         prompt = self.inputs.get("prompt", "")
         context = self.inputs.get("context", [])
-        embeddings = self.inputs.get("embeddings", [])
-        source_texts = self.inputs.get("source_texts", [])
+        embedding = self.inputs.get("embedding", None)
+        source_text = self.inputs.get("source_text", "")
         
         # Get parameters
         model_id = self.parameters.get("model_id", "us.amazon.nova-lite-v1:0")
         temperature = self.parameters.get("temperature", 0.7)
         max_tokens = self.parameters.get("max_tokens", 1000)
-        similarity_threshold = self.parameters.get("similarity_threshold", 0.7)
-        top_k_contexts = self.parameters.get("top_k_contexts", 3)
         
-        # Handle single embedding/text from Titan block
-        if embeddings and isinstance(embeddings[0], (int, float)):
-            # Single embedding vector passed directly
-            embeddings = [embeddings]
-        if source_texts and isinstance(source_texts, str):
-            # Single source text passed directly
-            source_texts = [source_texts]
-        
-        # Prepare context for RAG if embeddings are provided
-        used_contexts = []
+        # Prepare context for RAG if embedding is provided
         rag_context = ""
         
-        if embeddings and source_texts and len(embeddings) == len(source_texts):
-            logger.info(f"RAG mode: Processing {len(embeddings)} embeddings")
-            
-            # First, we need to get the embedding for the prompt
-            # For now, we'll use the first embedding as query (in practice, you'd embed the prompt)
-            # Or we can find the most diverse contexts
-            relevant_texts, scores = self.find_relevant_contexts(
-                embeddings[0],  # Using first embedding as reference
-                embeddings,
-                source_texts,
-                similarity_threshold,
-                top_k_contexts
-            )
-            
-            if relevant_texts:
-                used_contexts = relevant_texts
-                rag_context = "\n\n".join([f"Context {i+1}: {text}" 
-                                         for i, text in enumerate(relevant_texts)])
-                logger.info(f"Found {len(relevant_texts)} relevant contexts")
+        if embedding and source_text:
+            logger.info(f"RAG mode: Using provided embedding and source text")
+            # Simply use the provided source text as context
+            rag_context = source_text
+            logger.info(f"Using source text as context: {source_text[:100]}...")
         
         # Format the final prompt
         messages = []
@@ -271,66 +207,76 @@ Please provide an accurate answer based on the given context. If the context doe
         })
         
         try:
-            # Initialize boto3 client
-            session = boto3.Session(
+            # Initialize Bedrock service
+            bedrock_service = BedrockService(
                 region_name=settings.aws_region,
                 aws_access_key_id=settings.aws_access_key_id,
-                aws_secret_access_key=settings.aws_secret_access_key
+                aws_secret_access_key=settings.aws_secret_access_key,
+                model_id=model_id
             )
-            bedrock_client = session.client('bedrock-runtime')
+            
+            # Format messages for BedrockService
+            # The service expects a simple prompt, so we'll convert messages to text
+            formatted_prompt = ""
+            if len(messages) > 1:
+                # Multiple messages - format as conversation
+                for msg in messages[:-1]:
+                    role = msg.get("role", "user")
+                    content = msg.get("content", [])
+                    if content and isinstance(content[0], dict):
+                        text = content[0].get("text", "")
+                        formatted_prompt += f"{role}: {text}\n\n"
+                # Add the final message
+                final_content = messages[-1].get("content", [])
+                if final_content and isinstance(final_content[0], dict):
+                    formatted_prompt += final_content[0].get("text", "")
+            else:
+                # Single message
+                content = messages[0].get("content", [])
+                if content and isinstance(content[0], dict):
+                    formatted_prompt = content[0].get("text", "")
             
             # Stream the response
             response_text = ""
             tokens_used = 0
             
             if executor.stream_manager:
-                # Use streaming API
-                response = bedrock_client.converse_stream(
-                    modelId=model_id,
-                    messages=messages,
-                    inferenceConfig={
-                        "maxTokens": max_tokens,
-                        "temperature": temperature
-                    }
+                # Use BedrockService streaming
+                metadata = {
+                    "element_id": self.element_id,
+                    "element_type": self.element_type,
+                    "element_name": self.name,
+                    "flow_id": executor.flow_id
+                }
+                
+                # Get streaming generator from BedrockService
+                chunk_generator = bedrock_service.generate_text_stream(
+                    prompt=formatted_prompt,
+                    temperature=temperature,
+                    max_tokens=max_tokens
                 )
                 
                 # Stream chunks
-                for event in response["stream"]:
-                    if "contentBlockDelta" in event:
-                        delta = event["contentBlockDelta"]["delta"]
-                        if "text" in delta:
-                            chunk = delta["text"]
-                            response_text += chunk
-                            
-                            # Stream chunk to frontend
-                            await executor._stream_event("llm_chunk", {
-                                "element_id": self.element_id,
-                                "content": chunk,
-                                "metadata": {
-                                    "element_id": self.element_id,
-                                    "element_type": self.element_type,
-                                    "element_name": self.name,
-                                    "flow_id": executor.flow_id
-                                }
-                            })
-                    
-                    elif "metadata" in event:
-                        # Extract token usage
-                        usage = event["metadata"].get("usage", {})
-                        tokens_used = usage.get("totalTokens", 0)
-            else:
-                # Non-streaming fallback
-                response = bedrock_client.converse(
-                    modelId=model_id,
-                    messages=messages,
-                    inferenceConfig={
-                        "maxTokens": max_tokens,
-                        "temperature": temperature
-                    }
-                )
+                async for chunk in chunk_generator:
+                    response_text += chunk
+                    # Stream chunk to frontend
+                    await executor._stream_event("llm_chunk", {
+                        "element_id": self.element_id,
+                        "content": chunk,
+                        "metadata": metadata
+                    })
                 
-                response_text = response["output"]["message"]["content"][0]["text"]
-                tokens_used = response.get("usage", {}).get("totalTokens", 0)
+                # Estimate token usage (BedrockService doesn't return exact usage in streaming)
+                tokens_used = len(response_text.split()) * 1.3  # Rough estimate
+            else:
+                # Non-streaming fallback using BedrockService
+                logger.warning("No stream manager available, using non-streaming generation")
+                response_text = await bedrock_service.generate_text(
+                    prompt=formatted_prompt,
+                    temperature=temperature,
+                    max_tokens=max_tokens
+                )
+                tokens_used = len(response_text.split()) * 1.3  # Rough estimate
             
             # Set outputs
             self.outputs = {
