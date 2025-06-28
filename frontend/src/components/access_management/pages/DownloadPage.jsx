@@ -37,20 +37,54 @@ const DownloadPage = ({ agentData }) => {
   const handleExportPNG = async () => {
     setIsExporting(true);
     try {
-      // Fetch the agent data to get the workflow
-      const agent = await agentAPI.getAgent(agentData.agent_id);
-      
-      if (!agent || !agent.workflow) {
+      // Use the workflow data from the agentData prop
+      if (!agentData || !agentData.workflow) {
         throw new Error('No workflow data found');
       }
 
       // Parse the workflow data to get nodes and edges
-      const workflowData = typeof agent.workflow === 'string' 
-        ? JSON.parse(agent.workflow) 
-        : agent.workflow;
+      const workflowData = typeof agentData.workflow === 'string' 
+        ? JSON.parse(agentData.workflow) 
+        : agentData.workflow;
 
-      const nodes = workflowData.nodes || [];
-      const edges = workflowData.edges || [];
+      // Handle new flow definition format
+      let nodes = [];
+      let edges = [];
+      
+      if (workflowData.flow_definition) {
+        // New format: flow_definition.nodes is an object, flow_definition.edges is an array
+        if (workflowData.flow_definition.nodes) {
+          // Convert nodes object to array while preserving the ID
+          nodes = Object.entries(workflowData.flow_definition.nodes).map(([nodeId, node]) => ({
+            ...node,
+            id: nodeId, // Ensure each node has an ID
+            // Map backend node properties to frontend format if needed
+            type: node.type || 'custom',
+            position: node.position || { x: 0, y: 0 },
+            x: node.position?.x || 0,
+            y: node.position?.y || 0
+          }));
+        }
+        // Handle edges/connections - map to frontend format
+        const connections = workflowData.flow_definition.edges || workflowData.flow_definition.connections || [];
+        edges = connections.map((conn, index) => ({
+          id: conn.id || `edge_${index}`,
+          source: conn.from_id || conn.source,
+          target: conn.to_id || conn.target,
+          sourceHandle: conn.from_output,
+          targetHandle: conn.to_input,
+          type: conn.connection_type || 'default',
+          ...conn
+        }));
+      } else {
+        // Old format: direct nodes and edges arrays
+        nodes = workflowData.nodes || [];
+        edges = workflowData.edges || [];
+      }
+
+      if (nodes.length === 0) {
+        throw new Error('No nodes found in the workflow');
+      }
 
       // Export the flow as PNG using the same mechanism as flow builder
       const dataUrl = await exportFlowAsPNG(nodes, edges, null, colorMode);
@@ -134,20 +168,54 @@ const DownloadPage = ({ agentData }) => {
   const handleExportYAML = async () => {
     setIsExporting(true);
     try {
-      // Fetch the agent data to get the workflow
-      const agent = await agentAPI.getAgent(agentData.agent_id);
-      
-      if (!agent || !agent.workflow) {
+      // Use the workflow data from the agentData prop
+      if (!agentData || !agentData.workflow) {
         throw new Error('No workflow data found');
       }
 
       // Parse the workflow data to get nodes and edges
-      const workflowData = typeof agent.workflow === 'string' 
-        ? JSON.parse(agent.workflow) 
-        : agent.workflow;
+      const workflowData = typeof agentData.workflow === 'string' 
+        ? JSON.parse(agentData.workflow) 
+        : agentData.workflow;
 
-      const nodes = workflowData.nodes || [];
-      const edges = workflowData.edges || [];
+      // Handle new flow definition format
+      let nodes = [];
+      let edges = [];
+      
+      if (workflowData.flow_definition) {
+        // New format: flow_definition.nodes is an object, flow_definition.edges is an array
+        if (workflowData.flow_definition.nodes) {
+          // Convert nodes object to array while preserving the ID
+          nodes = Object.entries(workflowData.flow_definition.nodes).map(([nodeId, node]) => ({
+            ...node,
+            id: nodeId, // Ensure each node has an ID
+            // Map backend node properties to frontend format if needed
+            type: node.type || 'custom',
+            position: node.position || { x: 0, y: 0 },
+            x: node.position?.x || 0,
+            y: node.position?.y || 0
+          }));
+        }
+        // Handle edges/connections - map to frontend format
+        const connections = workflowData.flow_definition.edges || workflowData.flow_definition.connections || [];
+        edges = connections.map((conn, index) => ({
+          id: conn.id || `edge_${index}`,
+          source: conn.from_id || conn.source,
+          target: conn.to_id || conn.target,
+          sourceHandle: conn.from_output,
+          targetHandle: conn.to_input,
+          type: conn.connection_type || 'default',
+          ...conn
+        }));
+      } else {
+        // Old format: direct nodes and edges arrays
+        nodes = workflowData.nodes || [];
+        edges = workflowData.edges || [];
+      }
+
+      if (nodes.length === 0) {
+        throw new Error('No nodes found in the workflow');
+      }
 
       // Create metadata for YAML export
       const metadata = {
@@ -228,7 +296,7 @@ const DownloadPage = ({ agentData }) => {
                   borderRadius="md"
                   alignSelf={isMobile ? "center" : undefined}
                 >
-                  <Icon as={FiImage} boxSize={isMobile ? 5 : 6} color={colors.blue[500]} />
+                  <Icon as={FiImage} boxSize={isMobile ? 5 : 6} color={textColor} />
                 </Box>
                 <VStack align={isMobile ? "center" : "start"} flex={1} spacing={1}>
                   <Text fontWeight="bold" color={textColor} fontSize={isMobile ? "sm" : "md"} textAlign={isMobile ? "center" : "left"}>
@@ -277,7 +345,7 @@ const DownloadPage = ({ agentData }) => {
                   borderRadius="md"
                   alignSelf={isMobile ? "center" : undefined}
                 >
-                  <Icon as={FiFileText} boxSize={isMobile ? 5 : 6} color={colors.green[500]} />
+                  <Icon as={FiFileText} boxSize={isMobile ? 5 : 6} color={textColor} />
                 </Box>
                 <VStack align={isMobile ? "center" : "start"} flex={1} spacing={1}>
                   <Text fontWeight="bold" color={textColor} fontSize={isMobile ? "sm" : "md"} textAlign={isMobile ? "center" : "left"}>
@@ -326,7 +394,7 @@ const DownloadPage = ({ agentData }) => {
                   borderRadius="md"
                   alignSelf={isMobile ? "center" : undefined}
                 >
-                  <Icon as={FiCode} boxSize={isMobile ? 5 : 6} color={colors.yellow[500]} />
+                  <Icon as={FiCode} boxSize={isMobile ? 5 : 6} color={textColor} />
                 </Box>
                 <VStack align={isMobile ? "center" : "start"} flex={1} spacing={1}>
                   <Text fontWeight="bold" color={textColor} fontSize={isMobile ? "sm" : "md"} textAlign={isMobile ? "center" : "left"}>
