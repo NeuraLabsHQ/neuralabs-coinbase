@@ -1,72 +1,53 @@
 type: Titan
 element_id: null
 name: null
-node_description: AWS Titan foundation models for text generation and embeddings
+node_description: AWS Titan embeddings model for generating text embeddings
 description: null
 input_schema:
-  text_input:
+  input_text:
     type: string
-    description: Text input for processing
-    required: true
-  operation_type:
-    type: string
-    description: Operation type (generate, embed, summarize)
-    required: true
-  additional_context:
-    type: string
-    description: Additional context for generation
+    description: Text input from the workflow
     required: false
 output_schema:
-  result:
-    type: string
-    description: Generated text or embedding result
-    required: true
-  operation_type:
-    type: string
-    description: Type of operation performed
-    required: true
-  embeddings:
+  embedding:
     type: list
-    description: Vector embeddings if operation is embed
-    required: false
+    description: Vector embedding of the merged text
+    required: true
+  source_text:
+    type: string
+    description: The text that was embedded
+    required: true
+  embedding_dimension:
+    type: integer
+    description: Dimension of the embedding vector
+    required: true
   token_count:
     type: integer
     description: Number of tokens processed
     required: true
 parameter_schema_structure:
-  model_size:
+  param_text:
     type: string
-    description: Titan model size variant
-    default: "titan-text-express"
-  region:
+    description: Text input from parameters
+    default: ""
+  model_id:
     type: string
-    description: AWS region
-    default: "us-east-1"
-  max_tokens:
-    type: int
-    min: 1
-    max: 8192
-  temperature:
-    type: float
-    min: 0.0
-    max: 1.0
+    description: Titan embedding model ID
+    default: "amazon.titan-embed-text-v2:0"
   embedding_dimension:
     type: int
-    description: Dimension for embeddings
-    default: 1536
+    description: Expected dimension of embedding vector
+    default: 1024
 parameters:
-  model_size: titan-text-express
-  region: us-east-1
-  max_tokens: 4096
-  temperature: 0.7
-  embedding_dimension: 1536
-processing_message: AWS Titan is processing your request...
+  param_text: ""
+  model_id: amazon.titan-embed-text-v2:0
+  embedding_dimension: 1024
+processing_message: Generating embeddings with AWS Titan...
 tags:
 - aws
 - titan
-- foundation-model
-- text-generation
 - embeddings
+- vector-search
 layer: null
 hyperparameters:
   type:

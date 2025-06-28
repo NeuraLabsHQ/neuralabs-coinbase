@@ -71,7 +71,9 @@ runtime_config = {
         "llm_text", "llm_structured",
         "coinbase_fetch_balance", "coinbase_read_contract",
         "read_contract",  # Allow both generic and specific names
-        "ChatAPI", "chat_api", "akash_chat"  # Akash Chat API
+        "ChatAPI", "chat_api", "akash_chat",  # Akash Chat API
+        "Titan", "titan",  # AWS Titan embeddings
+        "Nova", "nova"  # AWS Nova chat and RAG
     ]
 }
 

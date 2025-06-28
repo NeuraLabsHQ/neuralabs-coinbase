@@ -1,71 +1,78 @@
 type: Nova
 element_id: null
 name: null
-node_description: AWS Nova AI service for advanced content generation and multimodal processing
+node_description: AWS Nova model for chat and RAG-based text generation
 description: null
 input_schema:
   prompt:
     type: string
-    description: The prompt for Nova AI model
-    required: true
-  content_type:
-    type: string
-    description: Type of content to generate (text, image, video)
+    description: User's chat prompt or query
     required: true
   context:
     type: list
-    description: Previous context for continuity
+    description: Chat history or additional context
     required: false
-  media_input:
-    type: string
-    description: Base64 encoded media for multimodal processing
+  embeddings:
+    type: list
+    description: List of vector embeddings for RAG
+    required: false
+  source_texts:
+    type: list
+    description: List of source texts corresponding to embeddings
     required: false
 output_schema:
-  generated_content:
+  response:
     type: string
-    description: Generated content based on the prompt
+    description: Generated response from Nova
     required: true
-  content_type:
-    type: string
-    description: Type of content generated
+  tokens_used:
+    type: integer
+    description: Number of tokens used in generation
     required: true
-  metadata:
-    type: json
-    description: Additional metadata about the generation
+  used_context:
+    type: list
+    description: Source texts that were used as context
     required: false
 parameter_schema_structure:
-  model_variant:
+  model_id:
     type: string
-    description: Nova model variant to use
-    default: "nova-pro"
-  region:
-    type: string
-    description: AWS region
-    default: "us-east-1"
-  max_tokens:
-    type: int
-    min: 1
-    max: 4096
+    description: Nova model ID (lite or pro)
+    default: "us.amazon.nova-lite-v1:0"
   temperature:
     type: float
     min: 0.0
     max: 1.0
-  quality:
-    type: string
-    description: Output quality setting
+    default: 0.7
+  max_tokens:
+    type: int
+    min: 1
+    max: 4096
+    default: 1000
+  similarity_threshold:
+    type: float
+    description: Minimum similarity score for including context
+    default: 0.7
+    min: 0.0
+    max: 1.0
+  top_k_contexts:
+    type: int
+    description: Maximum number of context pieces to include
+    default: 3
+    min: 1
+    max: 10
 parameters:
-  model_variant: nova-pro
-  region: us-east-1
-  max_tokens: 2048
+  model_id: us.amazon.nova-lite-v1:0
   temperature: 0.7
-  quality: high
-processing_message: AWS Nova is generating content...
+  max_tokens: 1000
+  similarity_threshold: 0.7
+  top_k_contexts: 3
+processing_message: Generating response with AWS Nova...
 tags:
 - aws
-- ai
 - nova
-- content-generation
-- multimodal
+- chat
+- rag
+- text-generation
 layer: null
 hyperparameters:
   type:
