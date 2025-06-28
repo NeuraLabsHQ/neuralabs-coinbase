@@ -101,11 +101,19 @@ const NavPanel = ({
       }
     }
     
-    // Disable marketplace - show coming soon message
-    if (buttonName === 'marketplace') {
+    // Show coming soon message for features under development
+    const comingSoonFeatures = ['marketplace', 'data', 'monetization', 'gpus', 'access-keys'];
+    if (comingSoonFeatures.includes(buttonName)) {
+      const featureNames = {
+        'marketplace': 'Marketplace',
+        'data': 'Data',
+        'monetization': 'Monetization',
+        'gpus': 'GPUs',
+        'access-keys': 'Access Keys'
+      };
       toast({
         title: "Coming Soon",
-        description: "The Marketplace feature is currently under development and will be available soon.",
+        description: `The ${featureNames[buttonName]} feature is currently under development and will be available soon.`,
         status: "info",
         duration: 3000,
         isClosable: true,
@@ -128,9 +136,10 @@ const NavPanel = ({
   const getButtonStyles = (buttonName) => {
     const isButtonActive = isActive(buttonName);
     const isMobileCheck = typeof window !== 'undefined' ? window.innerWidth < 1024 : false;
+    const comingSoonFeatures = ['marketplace', 'data', 'monetization', 'gpus', 'access-keys'];
     const isDisabled = (viewOnlyMode && buttonName !== 'theme') || 
                       (isMobileCheck && buttonName === 'flow-builder') ||
-                      (buttonName === 'marketplace');
+                      (comingSoonFeatures.includes(buttonName));
     
     return {
       w: "100%",
@@ -219,10 +228,11 @@ const NavPanel = ({
           {/* Navigation Items */}
           {navItems.map((item) => {
             const Icon = item.icon;
+            const comingSoonFeatures = ['marketplace', 'data', 'monetization', 'gpus', 'access-keys'];
             const isDisabled = viewOnlyMode || 
                               (isMobile && item.name === 'flow-builder') ||
-                              (item.name === 'marketplace');
-            const tooltipLabel = item.name === 'marketplace' ? 'Marketplace - Coming Soon' : item.label;
+                              (comingSoonFeatures.includes(item.name));
+            const tooltipLabel = comingSoonFeatures.includes(item.name) ? `${item.label} - Coming Soon` : item.label;
             
             return (
               <Box key={item.name} as="li" position="relative" w="100%">
