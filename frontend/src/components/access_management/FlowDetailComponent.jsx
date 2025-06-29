@@ -328,23 +328,23 @@ const FlowDetailComponent = ({ flowDetails, onHoverItem, onLeaveItem }) => {
             {renderField("noOfAccess", "No of Access:")}
           </VStack>
 
-          <Divider borderColor={colors.gray[600]} />
+          {/* <Divider borderColor={colors.gray[600]} /> */}
 
           {/* Walrus Storage Info */}
-          <VStack align="start" spacing={2} w="100%">
+          {/* <VStack align="start" spacing={2} w="100%">
             {renderField("walrusBlobId", "Walrus Blob ID:")}
             {renderField("walrusUrl", "Walrus URL:")}
             {renderField("accessCapId", "Access Cap ID:")}
-          </VStack>
+          </VStack> */}
 
-          <Divider borderColor={colors.gray[600]} />
+          {/* <Divider borderColor={colors.gray[600]} /> */}
 
           {/* Encryption Details */}
-          <VStack align="start" spacing={2} w="100%">
+          {/* <VStack align="start" spacing={2} w="100%">
             {renderField("encryptedId", "Encrypted ID:")}
             {renderField("fileSize", "File Size:")}
             {renderField("mimeType", "MIME Type:")}
-          </VStack>
+          </VStack> */}
 
           <Divider borderColor={colors.gray[600]} />
 
