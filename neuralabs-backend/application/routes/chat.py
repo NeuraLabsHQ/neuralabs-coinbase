@@ -15,6 +15,7 @@ from datetime import datetime
 from ..modules.database.postgresconn import PostgresConnection
 from ..modules.authentication.jwt.token import JWTHandler
 from ..modules.authentication import get_current_user
+from ..modules.authentication.payment_session_storage import PaymentSessionStorage
 from x402.fastapi.middleware import require_payment
 
 router = APIRouter()
@@ -40,8 +41,8 @@ PAYMENT_ADDRESS = config.get('PAYMENT_ADDRESS', '0x7efD1aae7Ff2203eFa02D44c492f9
 if PAYMENT_ADDRESS == '0x0000000000000000000000000000000000000000':
     logger.warning("PAYMENT_ADDRESS not configured - using default address")
 
-# Store payment info for WebSocket connections
-payment_info_store: Dict[str, Dict[str, Any]] = {}
+# Initialize payment session storage
+payment_storage = PaymentSessionStorage()
 
 class ConnectionManager:
     """Manages WebSocket connections"""
@@ -464,13 +465,14 @@ async def initiate_chat(
         logger.info(f"Transaction hash extracted: {transaction_hash}")
         
         # Store payment info for later use in WebSocket
-        payment_info_store[session_id] = {
+        payment_data = {
             "user_id": current_user,
             "agent_id": agent_id,
             "transaction_hash": transaction_hash,
             "payment_headers": payment_headers,
             "created_at": datetime.utcnow()
         }
+        payment_storage.store_payment_session(session_id, payment_data)
         
         # Store payment transaction in database
         if transaction_hash:
@@ -570,23 +572,12 @@ async def websocket_execute_flow(websocket: WebSocket, agent_id: str, token: Opt
             
             if session_id:
                 # Validate session
-                session_info = payment_info_store.get(session_id)
+                session_info = payment_storage.get_payment_session(session_id)
                 if not session_info:
                     logger.error("❌ Invalid payment session")
                     await websocket.send_text(json.dumps({
                         'type': 'error',
                         'data': {'error': 'Invalid payment session'}
-                    }))
-                    return
-                
-                # Check session expiry (5 minutes)
-                session_age = (datetime.utcnow() - session_info['created_at']).total_seconds()
-                if session_age > 300:  # 5 minutes
-                    logger.error("❌ Payment session expired")
-                    del payment_info_store[session_id]
-                    await websocket.send_text(json.dumps({
-                        'type': 'error',
-                        'data': {'error': 'Payment session expired'}
                     }))
                     return
                 

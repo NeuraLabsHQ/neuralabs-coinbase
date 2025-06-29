@@ -489,6 +489,23 @@ redis:
           description: "Session token"
       ttl: 86400  # 24 hours in seconds
     
+    # Payment Session Management
+    PAYMENT_SESSION:
+      key_pattern: "payment_session:{session_id}"
+      type: hash
+      fields:
+        - name: user_id
+          description: "User identifier"
+        - name: agent_id
+          description: "Agent being accessed"
+        - name: transaction_hash
+          description: "Payment transaction hash"
+        - name: payment_headers
+          description: "Payment headers JSON"
+        - name: created_at
+          description: "Session creation timestamp"
+      ttl: 300  # 5 minutes in seconds
+    
     # Real-time Workflow Editing
     WORKFLOW_LIVE_EDITOR:
       key_pattern: "workflow_live_editor:{agent_id}"

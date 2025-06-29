@@ -267,6 +267,8 @@ class DatabaseInitializer:
                 example_key = key_pattern.format(token='eyJhbGciOiJIUzI1NiI...')
             elif key_name == 'WORKFLOW_LIVE_EDITOR':
                 example_key = key_pattern.format(agent_id='agent456')
+            elif key_name == 'PAYMENT_SESSION':
+                example_key = key_pattern.format(session_id='session789')
             else:
                 try:
                     example_key = key_pattern.format(user_id='user123')
