@@ -7,7 +7,7 @@ import { createX402WalletClient } from './x402-payment-handler';
 import { withPaymentInterceptor, decodeXPaymentResponse } from 'x402-axios';
 import axios from 'axios';
 
-const API_BASE_URL = process.env.VITE_BACKEND_URL || 'http://localhost:8001';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8001';
 const WS_BASE_URL = API_BASE_URL.replace('http', 'ws');
 
 export class FlowExecutionAPI {

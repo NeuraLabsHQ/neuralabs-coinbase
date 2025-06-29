@@ -40,7 +40,7 @@ services:
       - "traefik.http.services.neuralabs-frontend-coinbase.loadbalancer.server.port=80"
       
       # Router config
-      - "traefik.http.routers.neuralabs-frontend-coinbase.rule=Host(`coinbase.neuralabs.org`)"
+      - "traefik.http.routers.neuralabs-frontend-coinbase.rule=Host(`app.neuralabs.org`)"
       - "traefik.http.routers.neuralabs-frontend-coinbase.entrypoints=websecure"
       - "traefik.http.routers.neuralabs-frontend-coinbase.tls=true"
       - "traefik.http.routers.neuralabs-frontend-coinbase.tls.certresolver=letsencrypt"
@@ -81,7 +81,7 @@ services:
       - "traefik.http.middlewares.neuralabs-backend-coinbase-cors.headers.accesscontrolallowcredentials=true"
       
       # Router config
-      - "traefik.http.routers.neuralabs-backend-coinbase.rule=Host(`api.coinbase.neuralabs.org`)"
+      - "traefik.http.routers.neuralabs-backend-coinbase.rule=Host(`api.app.neuralabs.org`)"
       - "traefik.http.routers.neuralabs-backend-coinbase.entrypoints=websecure"
       - "traefik.http.routers.neuralabs-backend-coinbase.tls=true"
       - "traefik.http.routers.neuralabs-backend-coinbase.tls.certresolver=letsencrypt"
@@ -102,7 +102,7 @@ services:
       - neuralabs_network
     restart: unless-stopped
     env_file:
-      - ./hpc-execution-node-backend/.env
+      - ./hpc-execution-node-backend/code_executor/.env
     environment:
       - PYTHONPATH=/app
     volumes:
