@@ -191,7 +191,7 @@ const CreateAgentModal = ({ isOpen, onClose, onCreateAgent }) => {
                 Agent Details
               </Text>
               <Text fontSize="xs" color={mutedTextColor}>
-                Create a new agent that will be deployed on the SUI network. 
+                Create a new agent that will be deployed on th Coinbase network. 
                 Fill in the required information to get started with your workflow.
               </Text>
             </Box>
