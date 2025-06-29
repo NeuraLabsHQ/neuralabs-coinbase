@@ -151,9 +151,43 @@ export default function CoinbaseWalletConnect({
   // Load agent wallet when authenticated
   useEffect(() => {
     console.log('isAuthenticated:', isAuthenticated);
-    if (isAuthenticated && !agentWallet && !isLoadingAgent) {
-      console.log('Loading agent wallet...');
-      loadAgentWallet();
+    if (isAuthenticated && !isLoadingAgent) {
+      // Check if agent_private_key is missing from session storage
+      const storedPrivateKey = sessionStorage.getItem('agent_private_key');
+      const storedPublicKey = sessionStorage.getItem('agent_public_key');
+      
+      if (!storedPrivateKey || !storedPublicKey) {
+        console.log('Agent private key missing from session, fetching wallet details...');
+        // Fetch wallet details to get the private key
+        const fetchWalletDetails = async () => {
+          try {
+            const walletDetails = await getAgentWalletDetails(true); // true to include private key
+            console.log('Agent wallet details fetched for missing key:', walletDetails);
+            
+            if (walletDetails.agent_private_key) {
+              sessionStorage.setItem('agent_private_key', walletDetails.agent_private_key);
+              sessionStorage.setItem('agent_public_key', walletDetails.agent_public_key);
+              console.log('Agent wallet keys restored in session storage');
+            }
+            
+            // Set agent wallet state if not already set
+            if (!agentWallet) {
+              setAgentWallet({
+                agent_public_key: walletDetails.agent_public_key,
+                created: false // Existing wallet, not newly created
+              });
+            }
+          } catch (error) {
+            console.error('Failed to fetch agent wallet details:', error);
+          }
+        };
+        
+        fetchWalletDetails();
+      } else if (!agentWallet) {
+        // If keys exist in session but agentWallet state is not set
+        console.log('Loading agent wallet from existing session...');
+        loadAgentWallet();
+      }
     }
   }, [isAuthenticated]);
 
