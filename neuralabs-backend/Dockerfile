@@ -13,6 +13,11 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+
+# Temporary fix for missing dependencies
+RUN pip install x402==0.1.2
+RUN pip install cdp-sdk
+
 # Copy application code
 COPY . .
 

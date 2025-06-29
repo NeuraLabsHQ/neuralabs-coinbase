@@ -18,4 +18,4 @@ eth-typing
 hexbytes 
 cryptography
 websockets 
-python-dotenv 
+python-dotenv
