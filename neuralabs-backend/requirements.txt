@@ -2,13 +2,14 @@ fastapi
 uvicorn
 gunicorn
 pydantic
+pydantic-settings
+pydantic_core
 psycopg2-binary
 PyYAML
 redis
 python-multipart 
 python-jose[cryptography] 
 passlib[bcrypt] 
-pydantic-settings 
 requests 
 aiohttp
 web3 
@@ -19,4 +20,4 @@ cryptography
 websockets 
 cdp-sdk
 python-dotenv 
-x402
+x402==0.1.1

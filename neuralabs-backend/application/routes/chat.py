@@ -33,10 +33,10 @@ def load_config():
 config = load_config()
 
 # Configuration for HPC execution engine
-HPC_WEBSOCKET_URL = config.get("hpc", {}).get("websocket_url", "ws://localhost:8000/ws/execute/{flow_id}")
+HPC_WEBSOCKET_URL = config.get("hpc", {}).get("websocket_url", "ws://localhost:8000") + "/ws/execute/{flow_id}"
 
 # Get payment address from environment
-PAYMENT_ADDRESS = os.environ.get('PAYMENT_ADDRESS', '0x7efD1aae7Ff2203eFa02D44c492f9ab95d1feD4e')
+PAYMENT_ADDRESS = config.get('PAYMENT_ADDRESS', '0x7efD1aae7Ff2203eFa02D44c492f9ab95d1feD4e')
 if PAYMENT_ADDRESS == '0x0000000000000000000000000000000000000000':
     logger.warning("PAYMENT_ADDRESS not configured - using default address")
 
