@@ -156,36 +156,9 @@ export default function CoinbaseWalletConnect({
       const storedPrivateKey = sessionStorage.getItem('agent_private_key');
       const storedPublicKey = sessionStorage.getItem('agent_public_key');
       
-      if (!storedPrivateKey || !storedPublicKey) {
-        console.log('Agent private key missing from session, fetching wallet details...');
-        // Fetch wallet details to get the private key
-        const fetchWalletDetails = async () => {
-          try {
-            const walletDetails = await getAgentWalletDetails(true); // true to include private key
-            console.log('Agent wallet details fetched for missing key:', walletDetails);
-            
-            if (walletDetails.agent_private_key) {
-              sessionStorage.setItem('agent_private_key', walletDetails.agent_private_key);
-              sessionStorage.setItem('agent_public_key', walletDetails.agent_public_key);
-              console.log('Agent wallet keys restored in session storage');
-            }
-            
-            // Set agent wallet state if not already set
-            if (!agentWallet) {
-              setAgentWallet({
-                agent_public_key: walletDetails.agent_public_key,
-                created: false // Existing wallet, not newly created
-              });
-            }
-          } catch (error) {
-            console.error('Failed to fetch agent wallet details:', error);
-          }
-        };
-        
-        fetchWalletDetails();
-      } else if (!agentWallet) {
-        // If keys exist in session but agentWallet state is not set
-        console.log('Loading agent wallet from existing session...');
+      if (!storedPrivateKey || !storedPublicKey || !agentWallet) {
+        // Load agent wallet - this will create it if needed and fetch details
+        console.log('Loading agent wallet...');
         loadAgentWallet();
       }
     }
