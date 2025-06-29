@@ -18,6 +18,4 @@ eth-typing
 hexbytes 
 cryptography
 websockets 
-cdp-sdk
 python-dotenv 
-x402==0.1.1

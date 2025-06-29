@@ -358,7 +358,7 @@ async def connect_to_hpc_engine(flow_id: str, flow_definition: Dict[str, Any], i
         manager.disconnect(flow_id)
 
 def cors_wrapped_payment_middleware(
-    amount: str,
+    price: str,
     pay_to_address: str,
     path: str,
     network_id: str = "base-sepolia",
@@ -378,9 +378,9 @@ def cors_wrapped_payment_middleware(
             logger.info(f"Path {request.url.path} matches payment requirement pattern {path}")
             
             # Create a specific middleware for this exact path
-            logger.info(f"Creating payment requirement: amount={amount}, pay_to={pay_to_address}, network={network_id}")
+            logger.info(f"Creating payment requirement: amount={price}, pay_to={pay_to_address}, network={network_id}")
             specific_middleware = require_payment(
-                amount=amount,
+                price=price,
                 pay_to_address=pay_to_address,
                 path=request.url.path,  # Use the actual path with parameters
                 network_id=network_id,

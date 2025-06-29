@@ -29,6 +29,8 @@ async def create_wallet(api_key: str, api_secret: str, wallet_secret: str, user_
         # Export private key
         private_key = await client.evm.export_account(address=wallet.address)
         
+        
+        
         # Clean up
         await client.close()
         

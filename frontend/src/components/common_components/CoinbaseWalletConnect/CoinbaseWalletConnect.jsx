@@ -150,7 +150,9 @@ export default function CoinbaseWalletConnect({
 
   // Load agent wallet when authenticated
   useEffect(() => {
+    console.log('isAuthenticated:', isAuthenticated);
     if (isAuthenticated && !agentWallet && !isLoadingAgent) {
+      console.log('Loading agent wallet...');
       loadAgentWallet();
     }
   }, [isAuthenticated]);
@@ -171,7 +173,7 @@ export default function CoinbaseWalletConnect({
       
       // Fetch wallet details including private key
       const walletDetails = await getAgentWalletDetails(true); // true to include private key
-      
+      console.log('Agent wallet details loaded:', walletDetails);
       if (walletDetails.agent_private_key) {
         // Store private key in sessionStorage
         sessionStorage.setItem('agent_private_key', walletDetails.agent_private_key);

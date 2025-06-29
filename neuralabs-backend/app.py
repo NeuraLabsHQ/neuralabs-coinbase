@@ -57,7 +57,7 @@ print(f"Payment address configured: {PAYMENT_ADDRESS}")
 # The middleware will match any path that starts with /api/chat/initiate
 app.middleware("http")(
     cors_wrapped_payment_middleware(
-        amount="0.01",
+        price="0.01",
         pay_to_address=PAYMENT_ADDRESS,
         path="/api/chat/initiate",
         network_id="base-sepolia",
