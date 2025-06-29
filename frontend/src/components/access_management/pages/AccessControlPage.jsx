@@ -1,4 +1,8 @@
 // src/components/access_management/pages/AccessControlPage.jsx
+import ComingSoonPage from './ComingSoonPage';
+
+// Original imports preserved for future use
+/*
 import {
   Alert,
   AlertIcon,
@@ -38,8 +42,16 @@ import colors from '../../../color';
 import { agentAPI } from '../../../utils/agent-api';
 import { grantAccessToUser, revokeUserAccess, createAccessCap, getAccessCaps } from '../../../utils/blockchain';
 import { useWallet } from '../../../contexts/WalletContextProvider';
+*/
 
 
+// Temporarily disabled - showing coming soon page
+const AccessControlPage = ({ agentData }) => {
+  return <ComingSoonPage title="Access Control" />;
+};
+
+// Original component preserved for future use
+/*
 const AccessControlPage = ({ agentData }) => {
   const [isAddModalOpen,    setIsAddModalOpen]    = useState(false);
   const [newAccessAddress,  setNewAccessAddress]  = useState('');
@@ -325,7 +337,7 @@ const AccessControlPage = ({ agentData }) => {
           </Alert>
         )}
         
-        {/* Blockchain Details */}
+        {/* Blockchain Details *\/}
         <Box bg={cardBg} p={isMobile ? 3 : 4} borderRadius="md" border="1px" borderColor={borderColor}>
           <VStack align="stretch" spacing={3}>
             <Flex justify="space-between" direction={isMobile ? "column" : "row"} gap={isMobile ? 1 : 0}>
@@ -376,7 +388,7 @@ const AccessControlPage = ({ agentData }) => {
           </VStack>
         </Box>
         
-        {/* Access List */}
+        {/* Access List *\/}
         <Box>
           <Flex justify="space-between" mb={4} direction={isMobile ? "column" : "row"} gap={isMobile ? 2 : 0}>
             <Heading size={isMobile ? "sm" : "md"} color={textColor}>
@@ -479,7 +491,7 @@ const AccessControlPage = ({ agentData }) => {
         </Box>
       </VStack>
       
-      {/* Add Access Modal */}
+      {/* Add Access Modal *\/}
       <Modal 
         isOpen={isAddModalOpen} 
         onClose={() => setIsAddModalOpen(false)}
@@ -534,5 +546,6 @@ const AccessControlPage = ({ agentData }) => {
     </Box>
   );
 };
+*/
 
 export default AccessControlPage;

@@ -1,4 +1,8 @@
 // src/components/access_management/pages/PublishPage.jsx
+import ComingSoonPage from './ComingSoonPage';
+
+// Original imports preserved for future use
+/*
 import {
     Box,
     Button,
@@ -10,7 +14,15 @@ import { useState } from 'react';
 import { FiSend } from 'react-icons/fi';
 import colors from '../../../color';
 import PublishModal from '../Popup/PublishModal';
+*/
 
+// Temporarily disabled - showing coming soon page
+const PublishPage = ({ agentData, onUpdate }) => {
+  return <ComingSoonPage title="Publish Agent" />;
+};
+
+// Original component preserved for future use
+/*
 const PublishPage = ({ agentData, onUpdate }) => {
   const [isModalOpen, setIsModalOpen] = useState(true);
   
@@ -51,5 +63,6 @@ const PublishPage = ({ agentData, onUpdate }) => {
     </Box>
   );
 };
+*/
 
 export default PublishPage;
