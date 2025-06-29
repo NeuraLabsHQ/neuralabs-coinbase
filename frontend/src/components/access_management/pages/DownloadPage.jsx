@@ -15,7 +15,7 @@ import {
   useBreakpointValue,
   Stack
 } from '@chakra-ui/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiCode, FiDownload, FiFileText, FiImage } from 'react-icons/fi';
 import colors from '../../../color';
 import { agentAPI } from '../../../utils/agent-api';
@@ -24,6 +24,7 @@ import { exportFlowAsYAML } from '../../../utils/flowExportYaml';
 
 const DownloadPage = ({ agentData }) => {
   const [isExporting, setIsExporting] = useState(false);
+  const [isBreakpointReady, setIsBreakpointReady] = useState(false);
   const toast = useToast();
   const { colorMode } = useColorMode();
   const isMobile = useBreakpointValue({ base: true, md: false });
@@ -33,6 +34,20 @@ const DownloadPage = ({ agentData }) => {
   const borderColor = useColorModeValue(colors.accessManagement.flowCard.border.light, colors.accessManagement.flowCard.border.dark);
   const textColor = useColorModeValue(colors.gray[800], colors.gray[100]);
   const mutedColor = useColorModeValue(colors.gray[600], colors.gray[400]);
+  
+  // Monitor when breakpoint value is determined
+  useEffect(() => {
+    if (isMobile !== undefined) {
+      setIsBreakpointReady(true);
+    }
+  }, [isMobile]);
+  
+  // Prevent render until breakpoint is ready
+  if (!isBreakpointReady) {
+    return (
+      <Box h="100%" w="100%" bg={bgColor} />
+    );
+  }
   
   const handleExportPNG = async () => {
     setIsExporting(true);
