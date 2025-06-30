@@ -10,6 +10,7 @@ import {
 // Define the icon mapping object
 import ICON_MAP, { TYPE_TO_ICON_MAP } from '../Common/IconMap';
 import colors from '../../../color.js';
+import { isModifierKeyPressed, shortcuts } from '../../../utils/platform';
 
 const FlowCanvas = ({ 
   nodes, 
@@ -47,6 +48,7 @@ const FlowCanvas = ({
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [highlightedConnections, setHighlightedConnections] = useState([]);
   const [dragStarted, setDragStarted] = useState(false);
+  const [modifierKeyHeld, setModifierKeyHeld] = useState(false);
   
   const { colorMode } = useColorMode();
   const bgColor = useColorModeValue('canvas.body.light', 'canvas.body.dark');
@@ -168,6 +170,34 @@ const FlowCanvas = ({
     }
   }, [selectedNode, edges, viewOnlyMode]);
 
+  // Track modifier key state globally
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        setModifierKeyHeld(true);
+      }
+    };
+
+    const handleKeyUp = (e) => {
+      if (!e.ctrlKey && !e.metaKey) {
+        setModifierKeyHeld(false);
+      }
+    };
+
+    const handleBlur = () => {
+      setModifierKeyHeld(false);
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, []);
 
   // Determine if a connection is highlighted
   const isConnectionHighlighted = (connectionId) => {
@@ -178,14 +208,14 @@ const FlowCanvas = ({
 
 
 
-  // Handle node dragging
+  // Handle node dragging with improved cross-platform support
   const handleNodeMouseDown = (e, nodeId) => {
     if (e.button !== 0) return; // Only left mouse button
     
     e.stopPropagation();
     
     // Only start drag if Ctrl/Cmd is held
-    if (!e.ctrlKey && !e.metaKey) return;
+    if (!isModifierKeyPressed(e)) return;
     
     // Don't select node when starting to drag
     setDragStarted(false);
@@ -211,6 +241,10 @@ const FlowCanvas = ({
         x: nodeData.x,
         y: nodeData.y
       };
+      
+      // Track the initial modifier key state
+      const initialCtrlKey = e.ctrlKey;
+      const initialMetaKey = e.metaKey;
       
       // Use a local variable to track the current position without causing rerenders
       let latestPosition = { ...currentPos };
@@ -243,12 +277,19 @@ const FlowCanvas = ({
         }
       };
       
-      const upHandler = () => {
+      const upHandler = (event) => {
+        // Only process if this is our drag operation
+        if (!isDragging) return;
+        
         isDragging = false;
+        
+        // Clean up all event listeners
         document.removeEventListener('mousemove', moveHandler);
         document.removeEventListener('mouseup', upHandler);
         document.removeEventListener('keyup', keyUpHandler);
+        document.removeEventListener('keydown', keyDownHandler);
         window.removeEventListener('blur', blurHandler);
+        
         setDragging(false);
         
         // Reset drag started flag after a short delay
@@ -260,9 +301,26 @@ const FlowCanvas = ({
         }
       };
       
-      // Handle key release to cancel drag if Ctrl is released
+      // Handle key release to cancel drag if Ctrl/Cmd is released
       const keyUpHandler = (e) => {
-        if (!e.ctrlKey && !e.metaKey) {
+        // Check if the modifier key that initiated the drag was released
+        if (initialCtrlKey && !e.ctrlKey && e.key === 'Control') {
+          upHandler();
+        } else if (initialMetaKey && !e.metaKey && e.key === 'Meta') {
+          upHandler();
+        }
+      };
+      
+      // Also handle keydown to catch Command key on Mac
+      const keyDownHandler = (e) => {
+        // If ESC is pressed, cancel the drag
+        if (e.key === 'Escape') {
+          // Reset position to original
+          const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
+          if (nodeElement) {
+            nodeElement.setAttribute('transform', `translate(${currentPos.x}, ${currentPos.y})`);
+          }
+          hasMoved = false; // Don't save position
           upHandler();
         }
       };
@@ -275,6 +333,7 @@ const FlowCanvas = ({
       document.addEventListener('mousemove', moveHandler);
       document.addEventListener('mouseup', upHandler);
       document.addEventListener('keyup', keyUpHandler);
+      document.addEventListener('keydown', keyDownHandler);
       window.addEventListener('blur', blurHandler);
     };
     
@@ -331,8 +390,7 @@ const centerNodeInView = (nodeId) => {
   }
 };
 
-  // In your FlowCanvas.jsx file, replace the handlePortMouseDown function with this:
-// Start connecting two nodes
+  // Start connecting two nodes with improved cross-platform support
 const handlePortMouseDown = (e, nodeId, portType, portIndex) => {
   if (e.button !== 0) return; // Only left mouse button
   
@@ -343,10 +401,11 @@ const handlePortMouseDown = (e, nodeId, portType, portIndex) => {
   const clickedPort = e.target;
   const originalFill = clickedPort.getAttribute('fill');
   const originalStroke = clickedPort.getAttribute('stroke');
+  const originalStrokeWidth = clickedPort.getAttribute('stroke-width') || '2';
   
   // Highlight the port when clicked
-  clickedPort.setAttribute('fill', colors.ports.active[colorMode]); // Active port color
-  clickedPort.setAttribute('stroke', colors.green[900]); // Darker green stroke
+  clickedPort.setAttribute('fill', colors.ports?.active?.[colorMode] || (colorMode === 'dark' ? '#63B3ED' : '#3182CE')); // Active port color
+  clickedPort.setAttribute('stroke', colors.green?.[900] || '#276749'); // Darker green stroke
   clickedPort.setAttribute('stroke-width', '3');
   
   const svg = externalSvgRef?.current || svgRef.current;
@@ -354,7 +413,13 @@ const handlePortMouseDown = (e, nodeId, portType, portIndex) => {
   
   // Find the node
   const nodeData = nodes.find(n => n.id === nodeId);
-  if (!nodeData) return;
+  if (!nodeData) {
+    // Reset port appearance if node not found
+    clickedPort.setAttribute('fill', originalFill);
+    clickedPort.setAttribute('stroke', originalStroke);
+    clickedPort.setAttribute('stroke-width', originalStrokeWidth);
+    return;
+  }
   
   setConnectingNode(nodeId);
   setConnectingPort({ type: portType, index: portIndex });
@@ -385,17 +450,26 @@ const handlePortMouseDown = (e, nodeId, portType, portIndex) => {
     setConnectingPath(tempPath);
   } else {
     console.error("Canvas ref is null");
+    // Reset port appearance if canvas not found
+    clickedPort.setAttribute('fill', originalFill);
+    clickedPort.setAttribute('stroke', originalStroke);
+    clickedPort.setAttribute('stroke-width', originalStrokeWidth);
+    return;
   }
   
   let isConnecting = true;
+  let lastValidElement = null;
   
   // Update the path as the mouse moves
   const moveHandler = (e) => {
     if (!tempPath || !isConnecting) return;
     
+    // Update svgRect in case the window was resized
+    const currentSvgRect = svg.getBoundingClientRect();
+    
     // Calculate the mouse position with respect to the canvas transform
-    const mouseX = (e.clientX - svgRect.left - translate.x) / scale;
-    const mouseY = (e.clientY - svgRect.top - translate.y) / scale;
+    const mouseX = (e.clientX - currentSvgRect.left - translate.x) / scale;
+    const mouseY = (e.clientY - currentSvgRect.top - translate.y) / scale;
     
     // Update the mouse position state
     setMousePosition({ x: mouseX, y: mouseY });
@@ -410,20 +484,31 @@ const handlePortMouseDown = (e, nodeId, portType, portIndex) => {
     }
     
     tempPath.setAttribute('d', pathData);
+    
+    // Track the element under the mouse for better drop detection
+    const elementsAtPoint = document.elementsFromPoint(e.clientX, e.clientY);
+    lastValidElement = elementsAtPoint.find(el => 
+      el.tagName === 'circle' && 
+      el.hasAttribute('data-port-type')
+    );
   };
   
   const cleanup = () => {
     isConnecting = false;
+    
+    // Remove all event listeners
     document.removeEventListener('mousemove', moveHandler);
     document.removeEventListener('mouseup', upHandler);
+    document.removeEventListener('touchmove', touchMoveHandler);
+    document.removeEventListener('touchend', touchEndHandler);
     document.removeEventListener('keydown', keyHandler);
     window.removeEventListener('blur', blurHandler);
     
     // Reset the port appearance
-    if (clickedPort) {
+    if (clickedPort && clickedPort.parentNode) { // Check if port still exists
       clickedPort.setAttribute('fill', originalFill);
       clickedPort.setAttribute('stroke', originalStroke);
-      clickedPort.setAttribute('stroke-width', '2');
+      clickedPort.setAttribute('stroke-width', originalStrokeWidth);
     }
     
     // Remove the temporary path
@@ -436,54 +521,87 @@ const handlePortMouseDown = (e, nodeId, portType, portIndex) => {
     setConnectingPath(null);
   };
   
+  const handleConnection = (targetElement) => {
+    if (!targetElement) return false;
+    
+    const targetNodeId = targetElement.getAttribute('data-node-id');
+    const targetPortType = targetElement.getAttribute('data-port-type');
+    const targetPortIndex = parseInt(targetElement.getAttribute('data-port-index'), 10);
+    
+    // Prevent connecting to the same node
+    if (targetNodeId && targetNodeId !== nodeId) {
+      // Validate connection compatibility (output -> input)
+      if (
+        (portType === 'output' && targetPortType === 'input') ||
+        (portType === 'input' && targetPortType === 'output')
+      ) {
+        // Determine source and target based on the port types
+        let source, target, sourcePort, targetPort;
+        
+        if (portType === 'output') {
+          source = nodeId;
+          target = targetNodeId;
+          sourcePort = portIndex;
+          targetPort = targetPortIndex;
+        } else { // input
+          source = targetNodeId;
+          target = nodeId;
+          sourcePort = targetPortIndex;
+          targetPort = portIndex;
+        }
+        
+        onAddEdge(source, target, sourcePort, targetPort);
+        return true;
+      }
+    }
+    return false;
+  };
+  
   const upHandler = (e) => {
     if (!isConnecting) return;
     
-    // Check if the mouse is over a compatible port - FIXED METHOD
-    const elementsAtPoint = document.elementsFromPoint(e.clientX, e.clientY);
+    // Try to use the last tracked element first (more reliable)
+    if (lastValidElement && handleConnection(lastValidElement)) {
+      cleanup();
+      return;
+    }
     
-    // Find the first element that is a port
+    // Fallback to elementsFromPoint
+    const elementsAtPoint = document.elementsFromPoint(e.clientX, e.clientY);
     const portElement = elementsAtPoint.find(el => 
       el.tagName === 'circle' && 
       el.hasAttribute('data-port-type')
     );
     
     if (portElement) {
-      const targetNodeId = portElement.getAttribute('data-node-id');
-      const targetPortType = portElement.getAttribute('data-port-type');
-      const targetPortIndex = parseInt(portElement.getAttribute('data-port-index'), 10);
-      
-      // Prevent connecting to the same node
-      if (targetNodeId && targetNodeId !== nodeId) {
-        // Validate connection compatibility (output -> input)
-        if (
-          (portType === 'output' && targetPortType === 'input') ||
-          (portType === 'input' && targetPortType === 'output')
-        ) {
-          // Determine source and target based on the port types
-          let source, target, sourcePort, targetPort;
-          
-          if (portType === 'output') {
-            source = nodeId;
-            target = targetNodeId;
-            sourcePort = portIndex;
-            targetPort = targetPortIndex;
-          } else { // input
-            source = targetNodeId;
-            target = nodeId;
-            sourcePort = targetPortIndex;
-            targetPort = portIndex;
-          }
-          
-          onAddEdge(source, target, sourcePort, targetPort);
-        }
-      }
+      handleConnection(portElement);
     }
     
     cleanup();
   };
   
-  // Cancel connection if ESC is pressed
+  // Touch event handlers for touch devices
+  const touchMoveHandler = (e) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      moveHandler({
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      });
+    }
+  };
+  
+  const touchEndHandler = (e) => {
+    if (e.changedTouches.length === 1) {
+      const touch = e.changedTouches[0];
+      upHandler({
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      });
+    }
+  };
+  
+  // Cancel connection if ESC is pressed or right mouse button
   const keyHandler = (e) => {
     if (e.key === 'Escape') {
       cleanup();
@@ -495,8 +613,11 @@ const handlePortMouseDown = (e, nodeId, portType, portIndex) => {
     cleanup();
   };
   
+  // Add event listeners
   document.addEventListener('mousemove', moveHandler);
   document.addEventListener('mouseup', upHandler);
+  document.addEventListener('touchmove', touchMoveHandler, { passive: false });
+  document.addEventListener('touchend', touchEndHandler);
   document.addEventListener('keydown', keyHandler);
   window.addEventListener('blur', blurHandler);
 };
@@ -634,15 +755,15 @@ const renderNode = (node) => {
         // Don't handle click if we just finished dragging
         if (dragStarted) return;
         
-        // Pass whether Ctrl is held to skip details panel
-        onSelectNode(node.id, e.ctrlKey || e.metaKey);
+        // Pass whether Ctrl/Cmd is held to skip details panel
+        onSelectNode(node.id, isModifierKeyPressed(e));
       }}
       onMouseDown={(e) => {
         // Check if the click is on a port by looking at the event target
         const isPort = e.target.classList?.contains('node-port') || 
                       e.target.hasAttribute?.('data-port-type');
         
-        // Only handle node drag if it's not a port and Ctrl is held
+        // Only handle node drag if it's not a port and Ctrl/Cmd is held
         if (!isPort) {
           handleNodeMouseDown(e, node.id);
         }
@@ -669,12 +790,13 @@ const renderNode = (node) => {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            cursor: 'move',
+            cursor: modifierKeyHeld && !viewOnlyMode ? 'grab' : 'pointer',
             position: 'relative',
             userSelect: 'none',
-            boxShadow: isSelected ? '0 0 8px rgba(0,188,255,0.5)' : 'none',
-            transition: 'box-shadow 0.2s, transform 0.1s, width 0.3s ease-in-out',
-            color: textColor
+            boxShadow: isSelected ? '0 0 8px rgba(0,188,255,0.5)' : (modifierKeyHeld && !viewOnlyMode ? '0 0 4px rgba(59,130,246,0.3)' : 'none'),
+            transition: 'box-shadow 0.2s, transform 0.1s, width 0.3s ease-in-out, cursor 0.1s',
+            color: textColor,
+            transform: modifierKeyHeld && !viewOnlyMode ? 'scale(1.02)' : 'scale(1)'
           }}
         >
           <div style={{ 

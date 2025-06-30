@@ -10,6 +10,7 @@ import { exportFlowAsPNG } from '../../utils/flowExport';
 import { exportFlowAsJSON } from '../../utils/flowExportJson';
 import { exportFlowAsYAML, importFlowFromYAML } from '../../utils/flowExportYaml';
 import { importFlowFromJSON } from '../../utils/flowImportJson';
+import { isModifierKeyPressed } from '../../utils/platform';
 import MarketplaceDetailPanel from '../marketplace/MarketplaceContent/MarketplaceDetailPanel';
 import MarketplaceSidebar from '../marketplace/MarketplacePanel/MarketplaceSidebar';
 import BlocksPanel from './BlocksPanel/BlocksPanel';
@@ -1162,7 +1163,7 @@ const handleSaveWorkflow = async () => {
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Check if Ctrl+S (Windows/Linux) or Cmd+S (Mac) is pressed
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      if (isModifierKeyPressed(e) && e.key === 's') {
         e.preventDefault(); // Prevent browser's default save dialog
         handleSaveWorkflow();
       }

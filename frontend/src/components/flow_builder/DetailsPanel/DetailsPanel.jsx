@@ -151,14 +151,19 @@ const DetailsPanel = ({
   };
   
   const handleAddTag = (e) => {
-    if (e.key === 'Enter' && newTag.trim() && !viewOnlyMode) {
-      const tags = nodeData.tags || [];
-      if (!tags.includes(newTag.trim())) {
-        const updatedTags = [...tags, newTag.trim()];
-        onUpdateNode(selectedNode.id, { tags: updatedTags });
-        setNodeData(prev => ({ ...prev, tags: updatedTags }));
+    // Handle Enter key across platforms, preventing form submission
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Prevent any default form submission
+      
+      if (newTag.trim() && !viewOnlyMode) {
+        const tags = nodeData.tags || [];
+        if (!tags.includes(newTag.trim())) {
+          const updatedTags = [...tags, newTag.trim()];
+          onUpdateNode(selectedNode.id, { tags: updatedTags });
+          setNodeData(prev => ({ ...prev, tags: updatedTags }));
+        }
+        setNewTag("");
       }
-      setNewTag("");
     }
   };
   
