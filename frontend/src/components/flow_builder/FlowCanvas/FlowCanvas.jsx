@@ -397,6 +397,11 @@ const handlePortMouseDown = (e, nodeId, portType, portIndex) => {
   e.stopPropagation();
   e.preventDefault(); // Prevent any default behavior
   
+  // Require modifier key (Cmd on Mac, Ctrl on Windows/Linux) to start connection
+  if (!isModifierKeyPressed(e)) {
+    return;
+  }
+  
   // Add visual feedback - change the port color when clicked
   const clickedPort = e.target;
   const originalFill = clickedPort.getAttribute('fill');
@@ -837,10 +842,12 @@ const renderNode = (node) => {
             r="6"
             className="node-port"
             fill={colorMode === 'dark' ? 'white' : 'black'}
-            stroke={getNodeColors(node.type).ringColor}
-            strokeWidth="2"
+            stroke={modifierKeyHeld && !viewOnlyMode ? colors.blue[colorMode === 'dark' ? '400' : '500'] : getNodeColors(node.type).ringColor}
+            strokeWidth={modifierKeyHeld && !viewOnlyMode ? "3" : "2"}
             style={{
-              cursor: 'crosshair'
+              cursor: modifierKeyHeld && !viewOnlyMode ? 'crosshair' : 'default',
+              filter: modifierKeyHeld && !viewOnlyMode ? 'drop-shadow(0 0 4px rgba(59, 130, 246, 0.5))' : 'none',
+              transition: 'all 0.2s ease'
             }}
             data-node-id={node.id}
             data-port-type="input"
@@ -870,10 +877,12 @@ const renderNode = (node) => {
             r="6"
             className="node-port"
             fill={colorMode === 'dark' ? 'white' : 'black'}
-            stroke={getNodeColors(node.type).ringColor}
-            strokeWidth="2"
+            stroke={modifierKeyHeld && !viewOnlyMode ? colors.blue[colorMode === 'dark' ? '400' : '500'] : getNodeColors(node.type).ringColor}
+            strokeWidth={modifierKeyHeld && !viewOnlyMode ? "3" : "2"}
             style={{
-              cursor: 'crosshair'
+              cursor: modifierKeyHeld && !viewOnlyMode ? 'crosshair' : 'default',
+              filter: modifierKeyHeld && !viewOnlyMode ? 'drop-shadow(0 0 4px rgba(59, 130, 246, 0.5))' : 'none',
+              transition: 'all 0.2s ease'
             }}
             data-node-id={node.id}
             data-port-type="output"
