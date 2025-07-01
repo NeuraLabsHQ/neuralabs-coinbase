@@ -10,7 +10,7 @@ import {
 // Define the icon mapping object
 import ICON_MAP, { TYPE_TO_ICON_MAP } from '../Common/IconMap';
 import colors from '../../../color.js';
-import { isModifierKeyPressed, shortcuts } from '../../../utils/platform';
+import { isModifierKeyPressed, isMac, shortcuts } from '../../../utils/platform';
 
 const FlowCanvas = ({ 
   nodes, 
@@ -173,13 +173,13 @@ const FlowCanvas = ({
   // Track modifier key state globally
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.ctrlKey || e.metaKey) {
+      if (isMac() ? e.metaKey : e.ctrlKey) {
         setModifierKeyHeld(true);
       }
     };
 
     const handleKeyUp = (e) => {
-      if (!e.ctrlKey && !e.metaKey) {
+      if (isMac() ? !e.metaKey : !e.ctrlKey) {
         setModifierKeyHeld(false);
       }
     };
